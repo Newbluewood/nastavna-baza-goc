@@ -1,21 +1,23 @@
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 async function setup() {
   try {
     const connection = await mysql.createConnection({
-      host: 'localhost',
-      user: 'root',
-      password: '@NewSQL1'
+      host: process.env.DB_HOST || 'localhost',
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '@NewSQL1',
+      database: process.env.DB_NAME || 'baza_goc',
+      port: process.env.DB_PORT || 3306,
+      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
     });
 
-    console.log("Konektovano na MySQL.");
+    console.log("Konektovano na MySQL bazu na:", process.env.DB_HOST || 'localhost');
 
-    await connection.query('DROP DATABASE IF EXISTS baza_goc');
-    
-    await connection.query('CREATE DATABASE baza_goc CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
-    console.log("Nova baza 'baza_goc' kreirana.");
-
-    await connection.changeUser({ database: 'baza_goc' });
+    // Za Aiven cloud se po defaultu nalazimo unutar 'defaultdb', stoga uklanjamo DROP i CREATE DATABASE linije da ne padnemo na zabranama permisija
+    // await connection.query('DROP DATABASE IF EXISTS baza_goc');
+    // await connection.query('CREATE DATABASE baza_goc CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    // await connection.changeUser({ database: process.env.DB_NAME || 'baza_goc' });
 
     // 1. Pages
     await connection.query(`
