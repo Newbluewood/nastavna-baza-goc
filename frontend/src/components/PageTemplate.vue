@@ -1,0 +1,109 @@
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+
+const props = defineProps({
+  title: { type: String, default: '' },
+  textContent: { type: String, default: '' },
+  galleryItems: { type: Array, default: () => [] },
+  slides: { type: Array, default: () => [] },
+  news: { type: Array, default: () => [] },
+  gridType: { type: Number, default: 6 } // Accept 5 or 6 depending on the requested layout
+})
+
+const currentSlide = ref(0)
+let slideInterval = null
+
+const nextSlide = () => {
+  if (props.slides && props.slides.length > 0) {
+    currentSlide.value = (currentSlide.value + 1) % props.slides.length
+  }
+}
+
+const prevSlide = () => {
+  if (props.slides && props.slides.length > 0) {
+    currentSlide.value = (currentSlide.value - 1 + props.slides.length) % props.slides.length
+  }
+}
+
+onMounted(() => {
+  if (props.slides && props.slides.length > 1) {
+    slideInterval = setInterval(nextSlide, 5000)
+  }
+})
+
+onUnmounted(() => {
+  if (slideInterval) clearInterval(slideInterval)
+})
+</script>
+
+<template>
+  <div class="page-content">
+    
+    <!-- Hero Slider -->
+    <div v-if="slides && slides.length > 0" class="hero-slider" style="position: relative; width: 100%; height: 500px; overflow: hidden; background: #332317; border-radius: 0; margin-bottom: 20px;">
+      <div v-for="(slide, index) in slides" :key="index" :style="{ opacity: index === currentSlide ? 1 : 0, transition: 'opacity 0.8s ease', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }">
+        <img :src="slide.image_url" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;" />
+        <div class="slide-content" style="position: absolute; bottom: 40px; left: 40px; background: rgba(255,255,255,0.85); padding: 15px 30px; border-radius: 0;">
+           <h1 style="margin: 0; color: var(--color-nav);">{{ slide.title }}</h1>
+           <p v-if="slide.subtitle" style="margin: 5px 0 0 0; color: var(--color-text);">{{ slide.subtitle }}</p>
+           <a v-if="slide.target_link" :href="slide.target_link" style="display: inline-block; margin-top: 10px; font-weight: bold; border-bottom: 2px solid var(--color-nav);">Сазнај више</a>
+        </div>
+      </div>
+      
+      <!-- Kontrole za slajder -->
+      <button v-if="slides.length > 1" @click="prevSlide" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(205, 172, 145, 0.6); color: #fff; border: none; font-size: 1.5rem; cursor: pointer; border-radius: 0%; width: 30px; height: 40px;">&#10094;</button>
+      <button v-if="slides.length > 1" @click="nextSlide" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(205, 172, 145, 0.6); color: #fff; border: none; font-size: 1.5rem; cursor: pointer; border-radius: 0%; width: 30px; height: 40px;">&#10095;</button>
+    </div>
+    
+    <!-- Placeholder ako nema slajdera -->
+    <div v-else-if="title" class="hero-placeholder" style="margin-bottom: 20px;">
+      <h1 style="background: rgba(255, 255, 255, 0.85); padding: 10px 20px; border-radius: 0; color: var(--color-nav); margin: 0;">
+        {{ title }}
+      </h1>
+    </div>
+    
+    <hr class="section-divider" />
+    
+    <!-- Glavni Tekst -->
+    <div class="text-content" v-if="textContent">
+      <p v-html="textContent"></p>
+    </div>
+    
+    <hr class="section-divider" v-if="news && news.length > 0" />
+
+    <!-- Najnovije Vesti (News sekcija) -->
+    <div v-if="news && news.length > 0" class="news-section" style="margin: 30px 0;">
+      <h2 style="margin-bottom: 20px; border-left: 4px solid var(--color-nav); padding-left: 10px;">Актуелности</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+        
+        <div v-for="item in news" :key="item.id" class="news-card" style="border: 1px solid var(--color-border); border-radius: 0; overflow: hidden; background: #fff; display: flex; flex-direction: column;">
+          <img v-if="item.cover_image" :src="item.cover_image" style="width: 100%; height: 180px; object-fit: cover;" />
+          <div style="padding: 15px; flex: 1; display: flex; flex-direction: column;">
+             <h3 style="margin-bottom: 10px; font-size: 1.1rem;">{{ item.title }}</h3>
+             <p style="font-size: 0.85rem; margin-bottom: 15px; flex: 1;">{{ item.excerpt }}</p>
+             <a href="#" style="font-weight: bold; font-size: 0.85rem; display: inline-block;">Прочитај више &rarr;</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    
+    <hr class="section-divider" v-if="galleryItems && galleryItems.length > 0" />
+    
+    <!-- Opšta Galerija -->
+    <div v-if="galleryItems && galleryItems.length > 0">
+      <h2 style="margin-bottom: 20px; border-left: 4px solid var(--color-nav); padding-left: 10px;">Галерија</h2>
+      <div :class="(gridType === 5) ? 'photo-grid-5' : 'photo-grid-6'">
+        <a v-for="(item, index) in galleryItems" :key="index" :href="item.link || '#'" class="gallery-item-link" style="text-decoration:none; color:inherit; display: block; overflow: hidden; border-radius: 0;">
+          <div v-if="item.url" style="width: 100%; height: 150px; position: relative;">
+            <img :src="item.url" style="width: 100%; height: 100%; object-fit: cover;" />
+            <div v-if="item.name" style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.6); color: #fff; padding: 5px 10px; font-size: 0.8rem;">
+              {{ item.name }}
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</template>
