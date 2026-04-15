@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import PageTemplate from '../components/PageTemplate.vue'
+import { useLangStore } from '../stores/lang'
 
 const galleryItems = ref([])
 const slides = ref([])
@@ -10,10 +11,13 @@ const isLoading = ref(true)
 const pageTitle = ref("БАЗА ГОЧ")
 const textContent = ref("")
 
-onMounted(async () => {
+const langStore = useLangStore()
+
+const loadData = async () => {
+  isLoading.value = true
   try {
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/home`);
+    const response = await fetch(`${baseUrl}/api/home?lang=${langStore.currentLang}`);
     const data = await response.json();
     
     if (data) {
@@ -29,12 +33,20 @@ onMounted(async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+onMounted(() => {
+  loadData()
+})
+
+watch(() => langStore.currentLang, () => {
+  loadData()
 })
 </script>
 
 <template>
   <div v-if="isLoading" style="padding: 100px 20px; text-align: center; min-height: 50vh;">
-    Учитавам податке са сервера...
+    {{ langStore.currentLang === 'sr' ? 'Учитавам податке са сервера...' : 'Loading data from server...' }}
   </div>
   <PageTemplate v-else
     :title="pageTitle"
@@ -43,5 +55,6 @@ onMounted(async () => {
     :news="news"
     :galleryItems="galleryItems"
     :gridType="6"
+    :isCarousel="true"
   />
 </template>

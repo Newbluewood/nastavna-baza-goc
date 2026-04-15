@@ -1,5 +1,7 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import ImageLightbox from './ImageLightbox.vue'
+import { useLangStore } from '../stores/lang'
 
 const props = defineProps({
   title: { type: String, default: '' },
@@ -7,11 +9,25 @@ const props = defineProps({
   galleryItems: { type: Array, default: () => [] },
   slides: { type: Array, default: () => [] },
   news: { type: Array, default: () => [] },
-  gridType: { type: Number, default: 6 } // Accept 5 or 6 depending on the requested layout
+  gridType: { type: Number, default: 6 },
+  isCarousel: { type: Boolean, default: false }
 })
 
+const langStore = useLangStore()
 const currentSlide = ref(0)
 let slideInterval = null
+
+const lightboxOpen = ref(false)
+const lbIndex = ref(0)
+const lightboxImages = computed(() => {
+  return props.galleryItems.map(item => item.url).filter(url => url)
+})
+
+const openLightbox = (index) => {
+  lbIndex.value = index
+  lightboxOpen.value = true
+}
+
 
 const nextSlide = () => {
   if (props.slides && props.slides.length > 0) {
@@ -46,7 +62,7 @@ onUnmounted(() => {
         <div class="slide-content" style="position: absolute; bottom: 40px; left: 40px; background: rgba(255,255,255,0.85); padding: 15px 30px; border-radius: 0;">
            <h1 style="margin: 0; color: var(--color-nav);">{{ slide.title }}</h1>
            <p v-if="slide.subtitle" style="margin: 5px 0 0 0; color: var(--color-text);">{{ slide.subtitle }}</p>
-           <a v-if="slide.target_link" :href="slide.target_link" style="display: inline-block; margin-top: 10px; font-weight: bold; border-bottom: 2px solid var(--color-nav);">Сазнај више</a>
+           <a v-if="slide.target_link" :href="slide.target_link" style="display: inline-block; margin-top: 10px; font-weight: bold; border-bottom: 2px solid var(--color-nav);">{{ langStore.currentLang === 'sr' ? 'Сазнај више' : 'Learn more' }}</a>
         </div>
       </div>
       
@@ -73,29 +89,42 @@ onUnmounted(() => {
 
     <!-- Najnovije Vesti (News sekcija) -->
     <div v-if="news && news.length > 0" class="news-section" style="margin: 30px 0;">
-      <h2 style="margin-bottom: 20px; border-left: 4px solid var(--color-nav); padding-left: 10px;">Актуелности</h2>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-        
+      <h2 style="margin-bottom: 20px; border-left: 4px solid var(--color-nav); padding-left: 10px;">{{ langStore.currentLang === 'sr' ? 'Актуелности' : 'News & Updates' }}</h2>
+      
+      <!-- GRID -->
+      <div v-if="!isCarousel" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
         <div v-for="item in news" :key="item.id" class="news-card" style="border: 1px solid var(--color-border); border-radius: 0; overflow: hidden; background: #fff; display: flex; flex-direction: column;">
+          <img v-if="item.cover_image" :src="item.cover_image" style="width: 100%; height: 180px; object-fit: cover; cursor: pointer;" @click="openLightbox(0)" />
+          <div style="padding: 15px; flex: 1; display: flex; flex-direction: column;">
+             <h3 style="margin-bottom: 10px; font-size: 1.1rem;">{{ item.title }}</h3>
+             <p style="font-size: 0.85rem; margin-bottom: 15px; flex: 1;">{{ item.excerpt }}</p>
+             <router-link :to="item.link || `/vesti/${item.slug || item.id}`" style="font-weight: bold; font-size: 0.85rem; display: inline-block;">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAROUSEL -->
+      <div v-else class="news-carousel" style="display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 20px; scroll-snap-type: x mandatory; scrollbar-width: thin;">
+        <div v-for="item in news" :key="item.id" class="news-card carousel-item" style="flex: 0 0 calc(33.333% - 1rem); min-width: 250px; scroll-snap-align: start; border: 1px solid var(--color-border); border-radius: 0; overflow: hidden; background: #fff; display: flex; flex-direction: column;">
           <img v-if="item.cover_image" :src="item.cover_image" style="width: 100%; height: 180px; object-fit: cover;" />
           <div style="padding: 15px; flex: 1; display: flex; flex-direction: column;">
              <h3 style="margin-bottom: 10px; font-size: 1.1rem;">{{ item.title }}</h3>
              <p style="font-size: 0.85rem; margin-bottom: 15px; flex: 1;">{{ item.excerpt }}</p>
-             <a href="#" style="font-weight: bold; font-size: 0.85rem; display: inline-block;">Прочитај више &rarr;</a>
+             <router-link :to="item.link || `/vesti/${item.slug || item.id}`" style="font-weight: bold; font-size: 0.85rem; display: inline-block; color: var(--color-nav);">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
           </div>
         </div>
-
       </div>
+
     </div>
     
     <hr class="section-divider" v-if="galleryItems && galleryItems.length > 0" />
     
     <!-- Opšta Galerija -->
     <div v-if="galleryItems && galleryItems.length > 0">
-      <h2 style="margin-bottom: 20px; border-left: 4px solid var(--color-nav); padding-left: 10px;">Галерија</h2>
+      <h2 style="margin-bottom: 20px; border-left: 4px solid var(--color-nav); padding-left: 10px;">{{ langStore.currentLang === 'sr' ? 'Галерија' : 'Gallery' }}</h2>
       <div :class="(gridType === 5) ? 'photo-grid-5' : 'photo-grid-6'">
-        <a v-for="(item, index) in galleryItems" :key="index" :href="item.link || '#'" class="gallery-item-link" style="text-decoration:none; color:inherit; display: block; overflow: hidden; border-radius: 0;">
-          <div v-if="item.url" style="width: 100%; height: 150px; position: relative;">
+        <a v-for="(item, index) in galleryItems" :key="index" href="#" @click.prevent="openLightbox(index)" class="gallery-item-link" style="text-decoration:none; color:inherit; display: block; overflow: hidden; border-radius: 0;">
+          <div v-if="item.url" style="width: 100%; height: 150px; position: relative; cursor: pointer;">
             <img :src="item.url" style="width: 100%; height: 100%; object-fit: cover;" />
             <div v-if="item.name" style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.6); color: #fff; padding: 5px 10px; font-size: 0.8rem;">
               {{ item.name }}
@@ -104,6 +133,13 @@ onUnmounted(() => {
         </a>
       </div>
     </div>
+
+    <!-- Lightbox Component -->
+    <ImageLightbox 
+      v-model:isOpen="lightboxOpen"
+      :images="lightboxImages"
+      :initialIndex="lbIndex"
+    />
 
   </div>
 </template>
