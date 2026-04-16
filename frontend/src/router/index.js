@@ -6,6 +6,7 @@ import SingleNewsView from '../views/SingleNewsView.vue'
 import AdminLoginView from '../views/AdminLoginView.vue'
 import AdminNewsView from '../views/AdminNewsView.vue'
 import AdminReservationsView from '../views/AdminReservationsView.vue'
+import NotFoundView from '../views/NotFoundView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -46,6 +47,12 @@ const router = createRouter({
       name: 'admin-reservations',
       component: AdminReservationsView,
       meta: { requiresAuth: true }
+    },
+    {
+      // Catch-all: sve nepostojece rute -> NotFoundView
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: NotFoundView
     }
   ]
 })
