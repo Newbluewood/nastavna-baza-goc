@@ -59,7 +59,7 @@ onUnmounted(() => {
     <div v-if="slides && slides.length > 0" class="hero-slider" style="position: relative; width: 100%; height: 500px; overflow: hidden; background: #332317; border-radius: 0; margin-bottom: 20px;">
       <div v-for="(slide, index) in slides" :key="index" :style="{ opacity: index === currentSlide ? 1 : 0, transition: 'opacity 0.8s ease', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }">
         <img :src="slide.image_url" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;" />
-        <div class="slide-content" style="position: absolute; bottom: 40px; left: 40px; background: rgba(255,255,255,0.85); padding: 15px 30px; border-radius: 0;">
+        <div class="slide-content">
            <h1 style="margin: 0; color: var(--color-nav);">{{ slide.title }}</h1>
            <p v-if="slide.subtitle" style="margin: 5px 0 0 0; color: var(--color-text);">{{ slide.subtitle }}</p>
            <a v-if="slide.target_link" :href="slide.target_link" style="display: inline-block; margin-top: 10px; font-weight: bold; border-bottom: 2px solid var(--color-nav);">{{ langStore.currentLang === 'sr' ? 'Сазнај више' : 'Learn more' }}</a>
@@ -143,3 +143,36 @@ onUnmounted(() => {
 
   </div>
 </template>
+
+<style scoped>
+/* Hero Slide Content - Desktop */
+.slide-content {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 15px 30px;
+  border-radius: 0;
+  max-width: calc(100% - 80px);
+}
+
+/* Hero Slide Content - Mobilni */
+@media (max-width: 640px) {
+  .slide-content {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 20px;
+    width: 85%;
+    max-width: 85%;
+    text-align: center;
+    padding: 12px 20px;
+  }
+  .slide-content h1 {
+    font-size: 1.2rem;
+  }
+  .slide-content a {
+    display: block;
+    margin-top: 8px;
+  }
+}
+</style>
