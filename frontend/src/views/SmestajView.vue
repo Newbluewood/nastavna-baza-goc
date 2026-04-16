@@ -2,8 +2,9 @@
 import { ref, onMounted, watch, computed, onUnmounted } from 'vue'
 import { useLangStore } from '../stores/lang'
 import ImageLightbox from '../components/ImageLightbox.vue'
-import InquiryModal from '../components/InquiryModal.vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const slides = ref([])
 const facilities = ref([])
 const isLoading = ref(true)
@@ -21,11 +22,6 @@ let slideInterval = null
 const lightboxOpen = ref(false)
 const lbImages = ref([])
 const lbIndex = ref(0)
-
-// Za Inquiry Modal
-const inquiryOpen = ref(false)
-const selectedFacilityId = ref(null)
-const selectedFacilityName = ref("")
 
 const loadData = async () => {
   isLoading.value = true
@@ -79,10 +75,8 @@ const openGallery = (facility) => {
   lightboxOpen.value = true
 }
 
-const openInquiry = (facility) => {
-  selectedFacilityId.value = facility.id
-  selectedFacilityName.value = facility.name
-  inquiryOpen.value = true
+const viewRooms = (facility) => {
+  router.push(`/smestaj/${facility.id}`)
 }
 
 onMounted(() => {
@@ -108,7 +102,7 @@ watch(() => langStore.currentLang, () => {
     <div v-if="slides && slides.length > 0" class="hero-slider" style="position: relative; width: 100%; height: 500px; overflow: hidden; background: #332317; margin-bottom: 20px;">
       <div v-for="(slide, index) in slides" :key="index" :style="{ opacity: index === currentSlide ? 1 : 0, transition: 'opacity 0.8s ease', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }">
         <img :src="slide.image_url" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;" />
-        <div class="slide-content" style="position: absolute; bottom: 40px; left: 40px; background: rgba(255,255,255,0.85); padding: 15px 30px;">
+        <div class="slide-content">
            <h1 style="margin: 0; color: var(--color-nav);">{{ slide.title || pageTitle }}</h1>
            <p v-if="slide.subtitle" style="margin: 5px 0 0 0; color: var(--color-text);">{{ slide.subtitle }}</p>
         </div>
@@ -143,15 +137,32 @@ watch(() => langStore.currentLang, () => {
           <!-- Sadržaj objekta -->
           <div class="facility-info">
             <h3>{{ facility.name }}</h3>
+            
+            <!-- Location Badges -->
+            <div class="location-badges-row" v-if="facility.location_badges && facility.location_badges.length > 0">
+              <span class="loc-badge" v-for="badge in facility.location_badges" :key="badge">🌲 {{ badge }}</span>
+            </div>
+
             <p class="capacity">
               <strong>{{ langStore.currentLang === 'sr' ? 'Капацитет' : 'Capacity' }}:</strong> {{ facility.capacity || (langStore.currentLang === 'sr' ? 'Није наведено' : 'N/A') }}
             </p>
             <div class="description" v-html="facility.description"></div>
 
-            <!-- Dugme za upit -->
-            <button @click="openInquiry(facility)" class="inquiry-btn">
-              ✉ {{ langStore.currentLang === 'sr' ? 'Пошаљи упит' : 'Send Inquiry' }}
-            </button>
+            <!-- Actions Row -->
+            <div class="actions-row">
+              <!-- Dugme za pregled soba -->
+              <button @click="viewRooms(facility)" class="inquiry-btn">
+                🏠 {{ langStore.currentLang === 'sr' ? 'Погледај Собе' : 'View Rooms' }}
+              </button>
+
+              <!-- Link ka mapi -->
+              <a v-if="facility.latitude && facility.longitude" 
+                 :href="'https://www.google.com/maps/search/?api=1&query=' + facility.latitude + ',' + facility.longitude" 
+                 target="_blank" 
+                 class="map-btn">
+                📍 {{ langStore.currentLang === 'sr' ? 'Отвори Мапу' : 'Open Map' }}
+              </a>
+            </div>
           </div>
 
           <!-- Skica / Osnova (sutra prebacena) -->
@@ -185,24 +196,18 @@ watch(() => langStore.currentLang, () => {
     :initialIndex="lbIndex"
   />
 
-  <InquiryModal 
-    v-model:isOpen="inquiryOpen"
-    :facilityId="selectedFacilityId"
-    :facilityName="selectedFacilityName"
-  />
-
 </template>
 
 <style scoped>
 .facilities-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 30px;
 }
 
 .facility-card {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   background: #fff;
   border: 1px solid var(--color-border);
   border-radius: 0; /* oštro */
@@ -214,8 +219,8 @@ watch(() => langStore.currentLang, () => {
   position: relative;
   cursor: pointer;
   overflow: hidden;
-  height: 100%;
-  min-height: 250px;
+  height: 250px; /* Fiksna visina slike za grid */
+  flex-shrink: 0;
 }
 
 .facility-img {
@@ -247,6 +252,7 @@ watch(() => langStore.currentLang, () => {
   padding: 25px;
   display: flex;
   flex-direction: column;
+  flex: 1; /* Zauzima sav preostali prostor izmedju slike i dna kartice */
 }
 
 .facility-info h3 {
@@ -261,6 +267,38 @@ watch(() => langStore.currentLang, () => {
   font-size: 0.95rem;
   color: #555;
   margin-bottom: 15px;
+}
+
+.location-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.loc-badge {
+  background-color: #f1f1f1;
+  color: #495057;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 0;
+}
+
+.actions-row {
+  display: flex;
+  gap: 15px;
+  margin-top: auto; 
+  align-items: center;
+}
+.map-btn {
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: var(--color-nav);
+  transition: opacity 0.3s;
+}
+.map-btn:hover {
+  opacity: 0.7;
 }
 
 .description {
@@ -281,7 +319,6 @@ watch(() => langStore.currentLang, () => {
   text-transform: uppercase;
   cursor: pointer;
   transition: background 0.3s;
-  align-self: flex-start;
   border-radius: 0;
 }
 .inquiry-btn:hover {
@@ -314,11 +351,33 @@ watch(() => langStore.currentLang, () => {
 
 /* Responsivnost */
 @media (max-width: 768px) {
-  .facility-card {
+  .facilities-grid {
     grid-template-columns: 1fr;
   }
-  .facility-image-wrapper {
-    height: 250px;
+}
+
+/* Hero Slide Content */
+.slide-content {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  background: rgba(255,255,255,0.88);
+  padding: 15px 30px;
+  max-width: calc(100% - 80px);
+}
+
+@media (max-width: 640px) {
+  .slide-content {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 20px;
+    width: 85%;
+    max-width: 85%;
+    text-align: center;
+    padding: 12px 20px;
+  }
+  .slide-content h1 {
+    font-size: 1.2rem;
   }
 }
 </style>

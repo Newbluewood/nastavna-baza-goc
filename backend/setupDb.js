@@ -15,10 +15,10 @@ async function setup() {
 
     console.log("Konektovano na MySQL bazu na:", process.env.DB_HOST || 'localhost');
 
-    // Za Aiven cloud se po defaultu nalazimo unutar 'defaultdb', stoga uklanjamo DROP i CREATE DATABASE linije da ne padnemo na zabranama permisija
-    // await connection.query('DROP DATABASE IF EXISTS baza_goc');
-    // await connection.query('CREATE DATABASE baza_goc CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
-    // await connection.changeUser({ database: process.env.DB_NAME || 'baza_goc' });
+    // Reset samo tabela vezanih za smeštaj da bi izbegli konflikte pri promeni arhitekture
+    await connection.query('SET FOREIGN_KEY_CHECKS = 0');
+    await connection.query('DROP TABLE IF EXISTS inquiries, room_translations, rooms, facility_translations, facilities');
+    await connection.query('SET FOREIGN_KEY_CHECKS = 1');
 
     // 1. Pages
     await connection.query(`
@@ -40,16 +40,34 @@ async function setup() {
       )
     `);
 
-    // 2. Facilities
+    // 2. Facilities (Objekti/Zgrade)
     await connection.query(`
       CREATE TABLE IF NOT EXISTS facilities (
         id INT AUTO_INCREMENT PRIMARY KEY,
         type ENUM('smestaj', 'proizvodnja', 'infrastruktura', 'rezervat', 'ostalo') DEFAULT 'ostalo',
         name VARCHAR(255) NOT NULL,
         description TEXT,
+        latitude DECIMAL(10, 8),
+        longitude DECIMAL(11, 8),
         capacity VARCHAR(100),
         cover_image VARCHAR(255),
-        floor_plan_image VARCHAR(255)
+        floor_plan_image VARCHAR(255),
+        location_badges JSON
+      )
+    `);
+
+    // 2.1 Rooms (Sobe u okviru Objekta)
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS rooms (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        facility_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        capacity VARCHAR(100),
+        cover_image VARCHAR(255),
+        floor_plan_image VARCHAR(255),
+        amenities JSON,
+        FOREIGN KEY (facility_id) REFERENCES facilities(id) ON DELETE CASCADE
       )
     `);
 
@@ -85,7 +103,9 @@ async function setup() {
         cover_image VARCHAR(255),
         related_entity_type VARCHAR(50),
         related_entity_id INT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        likes INT DEFAULT 0,
+        slug VARCHAR(255)
       )
     `);
 
@@ -102,18 +122,35 @@ async function setup() {
       )
     `);
 
-    // 7. Inquiries
+    // 6.5 Inquiries -> target_room_id (Moved up for Foreign Key deps)
     await connection.query(`
       CREATE TABLE IF NOT EXISTS inquiries (
         id INT AUTO_INCREMENT PRIMARY KEY,
         sender_name VARCHAR(150) NOT NULL,
         email VARCHAR(150),
         phone VARCHAR(50),
-        message TEXT NOT NULL,
-        target_facility_id INT,
-        status ENUM('novo', 'obradjeno', 'odbijeno') DEFAULT 'novo',
+        message TEXT,
+        check_in DATE,
+        check_out DATE,
+        target_room_id INT,
+        status ENUM('novo', 'obradjeno', 'odbijeno', 'otkazano') DEFAULT 'novo',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (target_facility_id) REFERENCES facilities(id) ON DELETE SET NULL
+        FOREIGN KEY (target_room_id) REFERENCES rooms(id) ON DELETE SET NULL
+      )
+    `);
+
+    // 7. Reservations (Sa vezom na inquiry)
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS reservations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        room_id INT NOT NULL,
+        inquiry_id INT NULL,
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        guest_name VARCHAR(255),
+        status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'confirmed',
+        FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
+        FOREIGN KEY (inquiry_id) REFERENCES inquiries(id) ON DELETE SET NULL
       )
     `);
 
@@ -155,6 +192,18 @@ async function setup() {
     `);
 
     await connection.query(`
+      CREATE TABLE IF NOT EXISTS room_translations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        entity_id INT NOT NULL,
+        lang VARCHAR(10) NOT NULL,
+        name VARCHAR(255),
+        description TEXT,
+        UNIQUE KEY lang_entity (entity_id, lang),
+        FOREIGN KEY (entity_id) REFERENCES rooms(id) ON DELETE CASCADE
+      )
+    `);
+
+    await connection.query(`
       CREATE TABLE IF NOT EXISTS hero_slides_translations (
         id INT AUTO_INCREMENT PRIMARY KEY,
         entity_id INT NOT NULL,
@@ -188,12 +237,29 @@ async function setup() {
       ('smestaj', 'Смештајни капацитети', '<p>Наставна база Гоч поседује разноврсне смештајне објекте намењене студентима, професорима и туристима.</p>')
     `);
 
+    // Facilities (Objekti)
+    const [insertedFacilities] = await connection.query(`
+      INSERT INTO facilities (type, name, description, capacity, latitude, longitude, cover_image, location_badges) VALUES
+      ('smestaj', 'Хотел Пирамида', 'Атрактиван смештајни објекат у облику пирамиде погодан за краће и дуже индивидуалне посете као и организоване групне посете. У саставу хотела налазе се рецепција, caffe bar, ресторан са 100 места, билијар сала и учионица.', '24 лежаја', 43.559095, 20.753930, '/placeholder.jpg', '["Централни објекат", "Близу ресторана"]'),
+      ('smestaj', 'Нови Студенац', 'Репрезентативан и највећи објекат (донација ЕУ) погодан за рекреативну наставу и школу у природи. Садржи Конференцијску салу и зелену салу за састанке.', '56 лежајева', 43.559095, 20.753930, '/placeholder.jpg', '["Модеран дизајн", "Брз интернет"]'),
+      ('smestaj', 'Вила Власта', 'Вила са прелепом баштом и комфорним собама. Идеално за мирнији одмор у шумском пространству.', 'Deo od 47 лежајева', 43.558636, 20.750094, '/placeholder.jpg', '["Мирна локација", "5 мин до ски стазе"]'),
+      ('smestaj', 'Депаданс (Вила Планинка)', 'Депаданс објекат, у саставу комплекса, везан за Вилу Власту са додатним капацитетима.', 'Deo od 47 лежајева', 43.558128, 20.750183, '/placeholder.jpg', '["Повољан смештај"]'),
+      ('proizvodnja', 'Пилана', 'Постројење за машинску обраду дрвета.', '', NULL, NULL, '/placeholder.jpg', NULL)
+    `);
+
+    // Rooms (Sobe za objekte)
     await connection.query(`
-      INSERT IGNORE INTO facilities (type, name, description, capacity, cover_image) VALUES
-      ('smestaj', 'Пирамида', 'Атрактиван смештајни објекат у облику пирамиде погодан за групе.', '30 лежајева', '/placeholder.jpg'),
-      ('smestaj', 'Вила Студенац', 'Репрезентативан објекат намењен наставном особљу са комплетним комфором.', '10 лежајева', '/placeholder.jpg'),
-      ('smestaj', 'Студентски павиљон', 'Велики објекат намењен смештају студената током праксе.', '120 лежајева', '/placeholder.jpg'),
-      ('proizvodnja', 'Пилана', 'Постројење за машинску обраду дрвета.', '', '/placeholder.jpg')
+      INSERT INTO rooms (facility_id, name, description, capacity, cover_image, amenities) VALUES
+      (1, 'Двокреветна соба', 'Комфорна соба са два лежаја, купатилом и грејањем.', '2 особе', '/placeholder.jpg', '["wifi", "tv", "parking"]'),
+      (1, 'Трокреветна соба', 'Пространа соба са три лежаја.', '3 особе', '/placeholder.jpg', '["wifi", "kuhinja"]'),
+      (1, 'Четворокреветна соба', 'Идеална соба за породице. Планирајте ваш одмор.', '4 особе', '/placeholder.jpg', '["wifi", "tv"]'),
+      
+      (2, 'Двокреветна соба', 'Студенац двокреветна соба, потпуно нова и опремљена.', '2 особе', '/placeholder.jpg', '["wifi", "tv", "klima", "parking"]'),
+      (2, 'Трокреветна соба', 'Студенац трокреветна соба, погодна за веће групе.', '3 особе', '/placeholder.jpg', '["wifi", "tv"]'),
+      (2, 'Једнокреветна соба', 'Савршено за индивидуалне посетиоце.', '1 особа', '/placeholder.jpg', '["wifi"]'),
+
+      (3, 'Породична соба', 'Пространа соба у Вили Власта.', 'Од 1 до 4 особе', '/placeholder.jpg', '["wifi", "kuhinja", "parking"]'),
+      (4, 'Стандардна соба', 'Удобан смештај у Депадансу.', 'Од 1 до 4 особе', '/placeholder.jpg', '["parking"]')
     `);
 
     const defaultAdminHash = await bcrypt.hash('admin123', 10);
@@ -204,9 +270,8 @@ async function setup() {
     // Slides for Homepage
     await connection.query(`
       INSERT IGNORE INTO hero_slides (page_slug, title, subtitle, image_url, target_link, display_order) VALUES
-      ('pocetna', 'Фабрика Дрвета', 'Унапређена производња', '/placeholder.jpg', '/proizvodnja', 1),
-      ('pocetna', 'Смештај Клуб', 'Резервишите ваш боравак', '/placeholder.jpg', '/smestaj', 2),
-      ('pocetna', 'Природни Резерват', 'Гоч - Гвоздац', '/placeholder.jpg', '/rezervat', 3)
+      ('pocetna', 'Наставна База Гоч', 'Динамичан дизајн у природи', '/placeholder.jpg', '/smestaj', 1),
+      ('pocetna', 'Смештајни Капацитети', 'Резервишите ваш боравак', '/placeholder.jpg', '/smestaj', 2)
     `);
 
     // Slides for Smestaj Page
@@ -216,52 +281,36 @@ async function setup() {
       ('smestaj', 'Вила Студенац', 'Комфор и удобност', '/placeholder.jpg', '', 2)
     `);
 
-    // News
-    await connection.query(`
-      INSERT IGNORE INTO news (title, excerpt, content, cover_image) VALUES
-      ('Нови пројекат пошумљавања', 'Почела је акција посађивања нових садница...', 'Пун текст вести...', '/placeholder.jpg'),
-      ('Отворена нова сушара', 'У наставној бази пуштена у рад савремена сушара.', 'Пун текст вести...', '/placeholder.jpg'),
-      ('Посета студената из иностранства', 'Студенти из Немачке обишли су печењару и пилану.', 'Пун текст вести...', '/placeholder.jpg')
-    `);
-
-    // Galerija
-    await connection.query(`
-      INSERT IGNORE INTO media_gallery (entity_type, entity_id, image_url, sort_order) VALUES
-      ('page', 1, '/placeholder.jpg', 1),
-      ('page', 1, '/placeholder.jpg', 2),
-      ('page', 1, '/placeholder.jpg', 3)
-    `);
-
     console.log("Ubacujem engleske prevode...");
 
     await connection.query(`
-      INSERT IGNORE INTO page_translations (entity_id, lang, title, content) VALUES
-      (1, 'en', 'Goč Training Base', '<p>This is an experimental backend with a new database architecture. We are ready for news, projects, and reservations!</p>'),
-      (2, 'en', 'Accommodation Facilities', '<p>The Goč training base has various accommodation facilities intended for students, professors, and tourists.</p>')
-    `);
-
-    await connection.query(`
       INSERT IGNORE INTO facility_translations (entity_id, lang, name, description) VALUES
-      (1, 'en', 'Pyramid', 'Attractive accommodation facility in the shape of a pyramid suitable for groups.'),
-      (2, 'en', 'Villa Studenac', 'Representative facility intended for teaching staff with full comfort.'),
-      (3, 'en', 'Student Pavilion', 'Large facility intended for student accommodation during practical training.'),
-      (4, 'en', 'Sawmill', 'Plant for mechanical wood processing.')
+      (1, 'en', 'Hotel Pyramid', 'Attractive accommodation facility in the shape of a pyramid suitable for individuals and groups. It includes a reception, cafe, restaurant, billiard room and classroom.'),
+      (2, 'en', 'New Studenac', 'Representative and the largest facility suitable for recreational and nature schools. It contains a conference hall.'),
+      (3, 'en', 'Villa Vlasta', 'Villa with a beautiful garden and comfortable rooms. Ideal for a peaceful forest vacation.'),
+      (4, 'en', 'Depadans (Villa Planinka)', 'Annex building linked to Villa Vlasta with extra accommodation capacities.'),
+      (5, 'en', 'Sawmill', 'Plant for mechanical wood processing.')
     `);
 
     await connection.query(`
-      INSERT IGNORE INTO hero_slides_translations (entity_id, lang, title, subtitle) VALUES
-      (1, 'en', 'Wood Factory', 'Upgraded production'),
-      (2, 'en', 'Accommodation Club', 'Book your stay'),
-      (3, 'en', 'Nature Reserve', 'Goč - Gvozdac'),
-      (4, 'en', 'Vacation in Nature', 'The best accommodation on Goč'),
-      (5, 'en', 'Villa Studenac', 'Comfort and coziness')
+      INSERT IGNORE INTO room_translations (entity_id, lang, name, description) VALUES
+      (1, 'en', 'Double Room', 'Comfortable room with two beds, bathroom, and heating.'),
+      (2, 'en', 'Triple Room', 'Spacious room with three beds.'),
+      (3, 'en', 'Quadruple Room', 'Ideal room for families.'),
+      
+      (4, 'en', 'Double Room', 'Studenac double room, brand new and fully equipped.'),
+      (5, 'en', 'Triple Room', 'Studenac triple room, suitable for groups.'),
+      (6, 'en', 'Single Room', 'Perfect for individual visitors.'),
+
+      (7, 'en', 'Family Room', 'Spacious room in Villa Vlasta.'),
+      (8, 'en', 'Standard Room', 'Comfortable stay in Depadans.')
     `);
 
+    // Test Reservations (zauzeti datumi za sobu 1 - Piramida Dvokrevetna)
     await connection.query(`
-      INSERT IGNORE INTO news_translations (entity_id, lang, title, excerpt, content) VALUES
-      (1, 'en', 'New Afforestation Project', 'The action of planting new seedlings has started...', 'Full news text...'),
-      (2, 'en', 'New Dryer Opened', 'A modern dryer was put into operation at the training base.', 'Full news text...'),
-      (3, 'en', 'Visit of Foreign Students', 'Students from Germany visited the bakery and the sawmill.', 'Full news text...')
+      INSERT INTO reservations (room_id, start_date, end_date, guest_name) VALUES
+      (1, CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL 3 DAY), 'Test Gost 1'),
+      (1, DATE_ADD(CURRENT_DATE, INTERVAL 10 DAY), DATE_ADD(CURRENT_DATE, INTERVAL 15 DAY), 'Test Gost 2')
     `);
 
     console.log("Struktura baze uspešno postavljena!");

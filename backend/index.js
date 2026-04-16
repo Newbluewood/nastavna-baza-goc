@@ -94,7 +94,7 @@ app.get('/api/smestaj', async (req, res) => {
 
     // Dohvata sve smestajne objekte (Facilities)
     const [facilities] = await db.query(`
-      SELECT f.id, f.type, f.capacity, f.cover_image, f.floor_plan_image,
+      SELECT f.id, f.type, f.capacity, f.latitude, f.longitude, f.cover_image, f.floor_plan_image, f.location_badges,
         COALESCE(t.name, f.name) as name,
         COALESCE(t.description, f.description) as description
       FROM facilities f
@@ -125,21 +125,94 @@ app.get('/api/smestaj', async (req, res) => {
   }
 });
 
+app.get('/api/smestaj/:id', async (req, res) => {
+  try {
+    const db = require('./db');
+    const lang = req.query.lang || 'sr';
+    const { id } = req.params;
+
+    // Dohvati objekat
+    const [facilityRows] = await db.query(`
+      SELECT f.id, f.type, f.capacity, f.cover_image, f.floor_plan_image,
+        COALESCE(t.name, f.name) as name,
+        COALESCE(t.description, f.description) as description
+      FROM facilities f
+      LEFT JOIN facility_translations t ON t.entity_id = f.id AND t.lang = ?
+      WHERE f.id = ? AND f.type = 'smestaj'
+    `, [lang, id]);
+
+    if (facilityRows.length === 0) return res.status(404).json({ error: "Objekat not found" });
+    const building = facilityRows[0];
+
+    // Galerija Objekta
+    const [buildingGallery] = await db.query(
+        "SELECT image_url, caption FROM media_gallery WHERE entity_type='facility' AND entity_id=? ORDER BY sort_order ASC", 
+        [building.id]
+    );
+    building.gallery = buildingGallery || [];
+
+    // Dohvati sobe za ovaj objekat
+    const [rooms] = await db.query(`
+      SELECT r.id, r.facility_id, r.capacity, r.cover_image, r.floor_plan_image, r.amenities,
+        COALESCE(t.name, r.name) as name,
+        COALESCE(t.description, r.description) as description
+      FROM rooms r
+      LEFT JOIN room_translations t ON t.entity_id = r.id AND t.lang = ?
+      WHERE r.facility_id = ?
+    `, [lang, id]);
+
+    // Galerija po sobi
+    for (let room of rooms) {
+      const [roomGallery] = await db.query(
+        "SELECT image_url, caption FROM media_gallery WHERE entity_type='room' AND entity_id=? ORDER BY sort_order ASC",
+        [room.id]
+      );
+      room.gallery = roomGallery || [];
+    }
+
+    building.rooms = rooms;
+
+    res.json(building);
+  } catch (error) {
+    console.error("Greška pri dohvatanju soba objekta:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get('/api/rooms/:id/availability', async (req, res) => {
+  try {
+    const db = require('./db');
+    const { id } = req.params;
+    
+    // Dohvata potvrđene rezervacije (status = 'confirmed') za odabranu sobu
+    const [reservations] = await db.query(`
+      SELECT start_date, end_date 
+      FROM reservations 
+      WHERE room_id = ? AND status = 'confirmed' AND end_date >= CURRENT_DATE
+    `, [id]);
+    
+    res.json(reservations);
+  } catch (error) {
+    console.error("Greška pri dohvatanju rezervacija:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 app.post('/api/inquiries', async (req, res) => {
   try {
     const db = require('./db');
-    const { sender_name, email, phone, message, target_facility_id } = req.body;
+    const { sender_name, email, phone, message, check_in, check_out, target_room_id } = req.body;
     
-    if (!sender_name || !message) {
-      return res.status(400).json({ error: "Ime i poruka su obavezni." });
+    if (!sender_name || (!message && !check_in)) {
+      return res.status(400).json({ error: "Ime i datumi (ili poruka) su obavezni." });
     }
 
     const query = `
-      INSERT INTO inquiries (sender_name, email, phone, message, target_facility_id) 
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO inquiries (sender_name, email, phone, message, check_in, check_out, target_room_id) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
     
-    await db.query(query, [sender_name, email || null, phone || null, message, target_facility_id || null]);
+    await db.query(query, [sender_name, email || null, phone || null, message || null, check_in || null, check_out || null, target_room_id || null]);
     
     res.json({ success: true, message: "Vaš upit je uspešno poslat." });
   } catch (error) {
@@ -321,6 +394,75 @@ app.post('/api/admin/news', authMiddleware, async (req, res) => {
         console.error(err);
         res.status(500).json({ error: "Server error" });
     }
+});
+
+// ===== ADMIN: UPRAVLJANJE UPITIMA / REZERVACIJAMA =====
+
+// GET svi upiti (Admin Only)
+app.get('/api/admin/inquiries', authMiddleware, async (req, res) => {
+  try {
+    const db = require('./db');
+    const [rows] = await db.query(`
+      SELECT 
+        i.id, i.sender_name, i.email, i.phone, i.message,
+        i.check_in, i.check_out, i.status, i.created_at,
+        r.name AS room_name,
+        f.name AS facility_name
+      FROM inquiries i
+      LEFT JOIN rooms r ON r.id = i.target_room_id
+      LEFT JOIN facilities f ON f.id = r.facility_id
+      ORDER BY i.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST promeni status upita (Admin Only)
+// status moze biti: 'obradjeno', 'odbijeno', 'otkazano'
+app.post('/api/admin/inquiries/:id/status', authMiddleware, async (req, res) => {
+  try {
+    const db = require('./db');
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['obradjeno', 'odbijeno', 'otkazano'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Nevalidan status.' });
+    }
+
+    // Dohvati upit
+    const [inquiryRows] = await db.query('SELECT * FROM inquiries WHERE id = ?', [id]);
+    if (inquiryRows.length === 0) return res.status(404).json({ error: 'Upit nije pronađen.' });
+    const inquiry = inquiryRows[0];
+
+    if (status === 'obradjeno') {
+      // Automatski kreira rezervaciju ako jos ne postoji
+      const [existingRes] = await db.query('SELECT id FROM reservations WHERE inquiry_id = ?', [id]);
+      if (existingRes.length === 0 && inquiry.target_room_id && inquiry.check_in && inquiry.check_out) {
+        await db.query(
+          `INSERT INTO reservations (room_id, inquiry_id, start_date, end_date, guest_name, status)
+           VALUES (?, ?, ?, ?, ?, 'confirmed')`,
+          [inquiry.target_room_id, id, inquiry.check_in, inquiry.check_out, inquiry.sender_name]
+        );
+      }
+    }
+
+    if (status === 'otkazano') {
+      // Obriši rezervaciju vezanu za ovaj upit (oslobodi datume)
+      await db.query("UPDATE reservations SET status = 'cancelled' WHERE inquiry_id = ?", [id]);
+    }
+
+    // Ažuriraj status upita
+    await db.query('UPDATE inquiries SET status = ? WHERE id = ?', [status, id]);
+
+    res.json({ success: true, status });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.listen(PORT, () => {

@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import SmestajView from '../views/SmestajView.vue'
+import SmestajSingleView from '../views/SmestajSingleView.vue'
 import SingleNewsView from '../views/SingleNewsView.vue'
 import AdminLoginView from '../views/AdminLoginView.vue'
 import AdminNewsView from '../views/AdminNewsView.vue'
+import AdminReservationsView from '../views/AdminReservationsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,6 +21,11 @@ const router = createRouter({
       component: SmestajView
     },
     {
+      path: '/smestaj/:id',
+      name: 'smestaj-single',
+      component: SmestajSingleView
+    },
+    {
       path: '/vesti/:id',
       name: 'single-news',
       component: SingleNewsView
@@ -32,6 +39,12 @@ const router = createRouter({
       path: '/admin/vesti',
       name: 'admin-news',
       component: AdminNewsView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin/rezervacije',
+      name: 'admin-reservations',
+      component: AdminReservationsView,
       meta: { requiresAuth: true }
     }
   ]
