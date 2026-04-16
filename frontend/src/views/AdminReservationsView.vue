@@ -75,10 +75,11 @@ const changeStatus = async (inquiry, newStatus) => {
       const idx = inquiries.value.findIndex(i => i.id === inquiry.id)
       if (idx !== -1) inquiries.value[idx].status = newStatus
     } else {
-      alert('Greška pri promeni statusa.')
+      const errData = await res.json().catch(() => ({}))
+      alert(`Greška pri promeni statusa:\n${errData.error || res.statusText}`)
     }
   } catch (err) {
-    alert('Greška pri komunikaciji sa serverom.')
+    alert(`Greška pri komunikaciji sa serverom:\n${err.message}`)
   } finally {
     actionLoading.value = null
   }

@@ -424,7 +424,6 @@ app.get('/api/admin/inquiries', authMiddleware, async (req, res) => {
 });
 
 // POST promeni status upita (Admin Only)
-// status moze biti: 'obradjeno', 'odbijeno', 'otkazano'
 app.post('/api/admin/inquiries/:id/status', authMiddleware, async (req, res) => {
   try {
     const db = require('./db');
@@ -436,37 +435,71 @@ app.post('/api/admin/inquiries/:id/status', authMiddleware, async (req, res) => 
       return res.status(400).json({ error: 'Nevalidan status.' });
     }
 
-    // Dohvati upit
-    const [inquiryRows] = await db.query('SELECT * FROM inquiries WHERE id = ?', [id]);
-    if (inquiryRows.length === 0) return res.status(404).json({ error: 'Upit nije pronađen.' });
+    // Dohvati upit sa formatiranim datumima (bez timezone pomaka)
+    const [inquiryRows] = await db.query(`
+      SELECT 
+        id, sender_name, email, phone, target_room_id, status,
+        DATE_FORMAT(check_in, '%Y-%m-%d') as check_in,
+        DATE_FORMAT(check_out, '%Y-%m-%d') as check_out
+      FROM inquiries WHERE id = ?
+    `, [id]);
+
+    if (inquiryRows.length === 0) {
+      return res.status(404).json({ error: 'Upit nije pronađen.' });
+    }
     const inquiry = inquiryRows[0];
 
     if (status === 'obradjeno') {
-      // Automatski kreira rezervaciju ako jos ne postoji
-      const [existingRes] = await db.query('SELECT id FROM reservations WHERE inquiry_id = ?', [id]);
+      // Provjeri da li rezervacija vec postoji (po room_id i datumima, bez FK na inquiry_id)
+      const [existingRes] = await db.query(
+        'SELECT id FROM reservations WHERE room_id = ? AND start_date = ? AND end_date = ?',
+        [inquiry.target_room_id, inquiry.check_in, inquiry.check_out]
+      );
+
       if (existingRes.length === 0 && inquiry.target_room_id && inquiry.check_in && inquiry.check_out) {
-        await db.query(
-          `INSERT INTO reservations (room_id, inquiry_id, start_date, end_date, guest_name, status)
-           VALUES (?, ?, ?, ?, ?, 'confirmed')`,
-          [inquiry.target_room_id, id, inquiry.check_in, inquiry.check_out, inquiry.sender_name]
-        );
+        // Pokusaj INSERT sa inquiry_id (nova sema)
+        try {
+          await db.query(
+            `INSERT INTO reservations (room_id, inquiry_id, start_date, end_date, guest_name, status)
+             VALUES (?, ?, ?, ?, ?, 'confirmed')`,
+            [inquiry.target_room_id, id, inquiry.check_in, inquiry.check_out, inquiry.sender_name]
+          );
+        } catch (insertErr) {
+          // Fallback: INSERT bez inquiry_id (stara sema bez te kolone)
+          console.warn('Fallback INSERT bez inquiry_id:', insertErr.message);
+          await db.query(
+            `INSERT INTO reservations (room_id, start_date, end_date, guest_name, status)
+             VALUES (?, ?, ?, ?, 'confirmed')`,
+            [inquiry.target_room_id, inquiry.check_in, inquiry.check_out, inquiry.sender_name]
+          );
+        }
       }
     }
 
     if (status === 'otkazano') {
-      // Obriši rezervaciju vezanu za ovaj upit (oslobodi datume)
-      await db.query("UPDATE reservations SET status = 'cancelled' WHERE inquiry_id = ?", [id]);
+      // Pokusaj cancel po inquiry_id, pa fallback po room+datumima
+      try {
+        await db.query("UPDATE reservations SET status = 'cancelled' WHERE inquiry_id = ?", [id]);
+      } catch (cancelErr) {
+        console.warn('Fallback cancel po room+datumima:', cancelErr.message);
+        await db.query(
+          "UPDATE reservations SET status = 'cancelled' WHERE room_id = ? AND start_date = ? AND end_date = ?",
+          [inquiry.target_room_id, inquiry.check_in, inquiry.check_out]
+        );
+      }
     }
 
-    // Ažuriraj status upita
+    // Azuriraj status upita
     await db.query('UPDATE inquiries SET status = ? WHERE id = ?', [status, id]);
 
     res.json({ success: true, status });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    // Vraca stvarnu gresku - ne generic "Server error"
+    console.error('Greška pri promeni statusa upita:', err);
+    res.status(500).json({ error: err.message || 'Server error' });
   }
 });
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
