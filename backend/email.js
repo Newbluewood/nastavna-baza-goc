@@ -1,14 +1,78 @@
-require('dotenv').config();
 const nodemailer = require('nodemailer');
 
-// Konfiguracija transportera
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_APP_PASSWORD
+// ===== SEND HELPER =====
+// Koristi Brevo REST API ako postoji BREVO_API_KEY, inace SMTP fallback
+const sendEmail = async (to, template) => {
+  const apiKey = process.env.BREVO_API_KEY;
+
+  // --- Brevo REST API (preporuceno, bez DKIM problema) ---
+  if (apiKey) {
+    try {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': apiKey,
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: {
+            name: 'Nastavna baza Goč',
+            email: process.env.EMAIL_FROM || process.env.EMAIL_USER || 'atrijum.sfb@gmail.com'
+          },
+          to: [{ email: to }],
+          replyTo: { email: process.env.EMAIL_REPLY_TO || process.env.EMAIL_USER || 'atrijum.sfb@gmail.com' },
+          subject: template.subject,
+          htmlContent: template.html
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`[EMAIL] Brevo API: Poslat na ${to}: ${data.messageId}`);
+        return { ok: true, messageId: data.messageId };
+      } else {
+        const err = await response.json();
+        console.error(`[EMAIL] Brevo API greška:`, err);
+        return { ok: false, error: JSON.stringify(err) };
+      }
+    } catch (err) {
+      console.error(`[EMAIL] Greška:`, err.message);
+      return { ok: false, error: err.message };
+    }
   }
-});
+
+  // --- SMTP fallback (za lokalni razvoj bez Brevo) ---
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
+    console.log(`[EMAIL DEV MODE] To: ${to} | Subject: ${template.subject}`);
+    return { ok: true, dev: true };
+  }
+
+  const transporter = nodemailer.createTransport(
+    process.env.EMAIL_HOST ? {
+      host: process.env.EMAIL_HOST,
+      port: parseInt(process.env.EMAIL_PORT || '587'),
+      secure: false,
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_APP_PASSWORD }
+    } : {
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_APP_PASSWORD }
+    }
+  );
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"Nastavna baza Goč" <${process.env.EMAIL_USER}>`,
+      to, subject: template.subject, html: template.html
+    });
+    console.log(`[EMAIL] SMTP: Poslat na ${to}: ${info.messageId}`);
+    return { ok: true, messageId: info.messageId };
+  } catch (err) {
+    console.error(`[EMAIL] SMTP Greška:`, err.message);
+    return { ok: false, error: err.message };
+  }
+};
+
 
 // Helper: format datuma za email
 const fmt = (dateStr) => {
@@ -156,31 +220,87 @@ const templates = {
         </div>
       </div>
     `
+  }),
+
+  // 5. Nalog kreiran - nova lozinka
+  guestCreated: ({ name, email, password }) => ({
+    subject: 'Nastavna baza Goč — Kreiran Vam je nalog',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #332317;">
+        <div style="background: #332317; padding: 20px 30px;">
+          <h1 style="color: #cdac91; margin: 0; font-size: 1.2rem; letter-spacing: 2px;">НАСТАВНА БАЗА ГОЧ</h1>
+        </div>
+        <div style="padding: 30px; background: #fff; border: 1px solid #e8e0d8;">
+          <h2 style="color: #332317;">Добродошли, ${name}!</h2>
+          <p>Аутоматски смо Вам креирали налог на основу Вашег упита.</p>
+          <div style="background: #f5f3f0; border-left: 4px solid #cdac91; padding: 20px; margin: 20px 0;">
+            <p style="margin: 0 0 8px 0;"><strong>📧 Е-пошта:</strong> ${email}</p>
+            <p style="margin: 0;"><strong>🔑 Привремена лозинка:</strong> <span style="font-size: 1.3rem; font-family: monospace; color: #332317;">${password}</span></p>
+          </div>
+          <p style="color: #e74c3c; font-size: 0.9rem;">Препоручујемо да промените лозинку при првом пријављивању.</p>
+          <a href="${process.env.FRONTEND_URL || 'https://nastavnabazagoc.netlify.app'}/prijava"
+             style="display: inline-block; background: #332317; color: #cdac91; padding: 13px 28px; text-decoration: none; font-weight: bold; margin-top: 10px; letter-spacing: 1px;">
+            ПРИЈАВИТЕ СЕ →
+          </a>
+          <hr style="border: none; border-top: 1px solid #e8e0d8; margin: 25px 0;">
+          <p style="color: #888; font-size: 0.85rem;">Dear ${name}, we have created an account for you.<br>Email: ${email} | Temporary password: <strong>${password}</strong><br>
+          <a href="${process.env.FRONTEND_URL || 'https://nastavnabazagoc.netlify.app'}/prijava">Log in here</a></p>
+        </div>
+        <div style="background: #f5f3f0; padding: 15px 30px; text-align: center; font-size: 0.8rem; color: #888;">
+          Шумарски факултет Универзитета у Београду • nastavnabazagoc.netlify.app
+        </div>
+      </div>
+    `
+  }),
+
+  // 6. Nalog vec postoji
+  guestExists: ({ name }) => ({
+    subject: 'Nastavna baza Goč — Prijem Vašeg upita',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #332317;">
+        <div style="background: #332317; padding: 20px 30px;">
+          <h1 style="color: #cdac91; margin: 0; font-size: 1.2rem; letter-spacing: 2px;">НАСТАВНА БАЗА ГОЧ</h1>
+        </div>
+        <div style="padding: 30px; background: #fff; border: 1px solid #e8e0d8;">
+          <h2 style="color: #332317;">Поштовани/а ${name},</h2>
+          <p>Примили смо Ваш нови упит. Пратите статус путем Вашег налога.</p>
+          <a href="${process.env.FRONTEND_URL || 'https://nastavnabazagoc.netlify.app'}/moj-nalog"
+             style="display: inline-block; background: #332317; color: #cdac91; padding: 13px 28px; text-decoration: none; font-weight: bold; margin-top: 10px; letter-spacing: 1px;">
+            МОЈ НАЛОГ →
+          </a>
+        </div>
+        <div style="background: #f5f3f0; padding: 15px 30px; text-align: center; font-size: 0.8rem; color: #888;">
+          Шумарски факултет Универзитета у Београду • nastavnabazagoc.netlify.app
+        </div>
+      </div>
+    `
+  }),
+
+  // 7. Reset lozinke
+  resetPassword: ({ name, resetUrl }) => ({
+    subject: 'Nastavna baza Goč — Resetovanje lozinke',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #332317;">
+        <div style="background: #332317; padding: 20px 30px;">
+          <h1 style="color: #cdac91; margin: 0; font-size: 1.2rem; letter-spacing: 2px;">НАСТАВНА БАЗА ГОЧ</h1>
+        </div>
+        <div style="padding: 30px; background: #fff; border: 1px solid #e8e0d8;">
+          <h2 style="color: #332317;">Поштовани/а ${name},</h2>
+          <p>Примили смо захтев за ресетовање лозинке.</p>
+          <p>Кликните на дугме испод да поставите нову лозинку. Линк важи <strong>1 сат</strong>.</p>
+          <a href="${resetUrl}"
+             style="display: inline-block; background: #332317; color: #cdac91; padding: 13px 28px; text-decoration: none; font-weight: bold; margin-top: 10px; letter-spacing: 1px;">
+            РЕСЕТУЈ ЛОЗИНКУ →
+          </a>
+          <p style="margin-top: 20px; color: #888; font-size: 0.85rem;">Ако нисте захтевали ресет, игноришите овај мејл.</p>
+        </div>
+        <div style="background: #f5f3f0; padding: 15px 30px; text-align: center; font-size: 0.8rem; color: #888;">
+          Шумарски факултет Универзитета у Београду • nastavnabazagoc.netlify.app
+        </div>
+      </div>
+    `
   })
 
-};
-
-// ===== SEND HELPER =====
-const sendEmail = async (to, template) => {
-  // Ako nema konfiguracije, samo logovati (development mode)
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
-    console.log(`[EMAIL DEV MODE] To: ${to} | Subject: ${template.subject}`);
-    return { ok: true, dev: true };
-  }
-
-  try {
-    const info = await transporter.sendMail({
-      from: `"Nastavna baza Goč" <${process.env.EMAIL_USER}>`,
-      to,
-      subject: template.subject,
-      html: template.html
-    });
-    console.log(`[EMAIL] Poslat na ${to}: ${info.messageId}`);
-    return { ok: true, messageId: info.messageId };
-  } catch (err) {
-    console.error(`[EMAIL] Greška pri slanju na ${to}:`, err.message);
-    return { ok: false, error: err.message };
-  }
 };
 
 module.exports = { sendEmail, templates };

@@ -20,6 +20,28 @@ async function setup() {
     await connection.query('DROP TABLE IF EXISTS inquiries, room_translations, rooms, facility_translations, facilities');
     await connection.query('SET FOREIGN_KEY_CHECKS = 1');
 
+    // 0. Guests - mora pre inquiries zbog FK
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS guests (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(150) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        name VARCHAR(150) NOT NULL,
+        phone VARCHAR(50),
+        reset_token VARCHAR(64) NULL,
+        reset_token_expires DATETIME NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_active BOOLEAN DEFAULT TRUE,
+        vouchers JSON NULL
+      )
+    `);
+    // Dodavanje kolone u slučaju da tabela već postoji
+    try {
+      await connection.query('ALTER TABLE guests ADD COLUMN vouchers JSON NULL;');
+    } catch(err) {
+      // Ignorišemo grešku ako kolona već postoji
+    }
+
     // 1. Pages
     await connection.query(`
       CREATE TABLE IF NOT EXISTS pages (
@@ -139,7 +161,7 @@ async function setup() {
       )
     `);
 
-    // 7. Reservations (Sa vezom na inquiry)
+    // 7. Reservations (Sa vezom na inquiry i cancel_token za email link)
     await connection.query(`
       CREATE TABLE IF NOT EXISTS reservations (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -149,6 +171,7 @@ async function setup() {
         end_date DATE NOT NULL,
         guest_name VARCHAR(255),
         status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'confirmed',
+        cancel_token VARCHAR(32) NULL UNIQUE,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
         FOREIGN KEY (inquiry_id) REFERENCES inquiries(id) ON DELETE SET NULL
       )
@@ -271,14 +294,16 @@ async function setup() {
     await connection.query(`
       INSERT IGNORE INTO hero_slides (page_slug, title, subtitle, image_url, target_link, display_order) VALUES
       ('pocetna', 'Наставна База Гоч', 'Динамичан дизајн у природи', '/placeholder.jpg', '/smestaj', 1),
-      ('pocetna', 'Смештајни Капацитети', 'Резервишите ваш боравак', '/placeholder.jpg', '/smestaj', 2)
+      ('pocetna', 'Смештајни Капацитети', 'Резервишите ваш боравак', '/placeholder.jpg', '/smestaj', 2),
+      ('pocetna', 'Студентска Пракса', 'Едукативни програми у шуми', '/placeholder.jpg', '/vesti', 3)
     `);
 
     // Slides for Smestaj Page
     await connection.query(`
       INSERT IGNORE INTO hero_slides (page_slug, title, subtitle, image_url, target_link, display_order) VALUES
       ('smestaj', 'Одмор у природи', 'Најбољи смештај на Гочу', '/placeholder.jpg', '', 1),
-      ('smestaj', 'Вила Студенац', 'Комфор и удобност', '/placeholder.jpg', '', 2)
+      ('smestaj', 'Вила Студенац', 'Комфор и удобност', '/placeholder.jpg', '', 2),
+      ('smestaj', 'Хотел Пирамида', 'Ресторан и смештај', '/placeholder.jpg', '', 3)
     `);
 
     console.log("Ubacujem engleske prevode...");
@@ -313,8 +338,46 @@ async function setup() {
       (1, DATE_ADD(CURRENT_DATE, INTERVAL 10 DAY), DATE_ADD(CURRENT_DATE, INTERVAL 15 DAY), 'Test Gost 2')
     `);
 
+    // Migracija: dodaj cancel_token u reservations ako ne postoji
+    try {
+      await connection.query(`ALTER TABLE reservations ADD COLUMN cancel_token VARCHAR(32) NULL UNIQUE`);
+      console.log("✅ Dodata kolona cancel_token u reservations.");
+    } catch (alterErr) {
+      if (alterErr.errno !== 1060) throw alterErr;
+      console.log("ℹ️ Kolona cancel_token već postoji.");
+    }
+
+    // Migracija: dodaj inquiry_id u reservations ako ne postoji
+    try {
+      await connection.query(`ALTER TABLE reservations ADD COLUMN inquiry_id INT NULL`);
+      console.log("✅ Dodata kolona inquiry_id u reservations.");
+    } catch (alterErr) {
+      if (alterErr.errno !== 1060) throw alterErr;
+      console.log("ℹ️ Kolona inquiry_id već postoji.");
+    }
+
+    // Migracija: dodaj guest_id u inquiries
+    try {
+      await connection.query(`ALTER TABLE inquiries ADD COLUMN guest_id INT NULL`);
+      console.log("✅ Dodata kolona guest_id u inquiries.");
+    } catch (alterErr) {
+      if (alterErr.errno !== 1060) throw alterErr;
+      console.log("ℹ️ Kolona guest_id već postoji u inquiries.");
+    }
+
+    // Migracija: dodaj guest_id u reservations
+    try {
+      await connection.query(`ALTER TABLE reservations ADD COLUMN guest_id INT NULL`);
+      console.log("✅ Dodata kolona guest_id u reservations.");
+    } catch (alterErr) {
+      if (alterErr.errno !== 1060) throw alterErr;
+      console.log("ℹ️ Kolona guest_id već postoji u reservations.");
+    }
+
     console.log("Struktura baze uspešno postavljena!");
     await connection.end();
+
+
   } catch (error) {
     console.error("Greška:", error);
   }

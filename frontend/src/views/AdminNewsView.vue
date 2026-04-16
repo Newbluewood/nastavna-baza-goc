@@ -108,6 +108,7 @@ const submitNews = async () => {
         <a href="#">Смештај</a>
         <a href="#">Странице</a>
         <router-link to="/admin/rezervacije">Упити/Резервације</router-link>
+        <router-link to="/admin/gosti">Гости и CRM</router-link>
       </nav>
       <button class="logout-btn" @click="handleLogout">Одјави се</button>
     </aside>

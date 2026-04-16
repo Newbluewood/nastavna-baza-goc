@@ -386,3 +386,39 @@ a:hover {
 .text-content .wp-block-image {
   margin-bottom: 1rem;
 }
+
+/* ===== GUEST NAV BUTTON ===== */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.guest-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--c-braon-3);
+  color: var(--c-braon-3);
+  padding: 5px 12px;
+  cursor: pointer;
+  font-family: var(--font-base);
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-radius: 0;
+  transition: all 0.2s;
+}
+.guest-btn:hover {
+  background: var(--c-braon-3);
+  color: var(--c-braon-6);
+}
+.guest-label {
+  display: inline;
+}
+
+@media (max-width: 480px) {
+  .guest-label { display: none; }
+  .guest-btn { padding: 5px 8px; }
+}

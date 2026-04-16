@@ -3,58 +3,107 @@
     <div class="modal-content">
       <button class="close-btn" @click="close">&times;</button>
       
-      <!-- Istaknuti naslov sa Zgradom i Sobom -->
-      <div class="inquiry-header">
-        <p class="building-name">{{ buildingName }}</p>
-        <h2>{{ roomName }}</h2>
-        <span class="subtitle">{{ langStore.currentLang === 'sr' ? 'Резервација смештаја' : 'Accommodation booking' }}</span>
-      </div>
-      
-      <form @submit.prevent="submitForm" class="inquiry-form">
-        <!-- Novi Kalendar -->
-        <div class="form-group">
-          <label>{{ langStore.currentLang === 'sr' ? 'Резервишите период' : 'Select dates' }} *</label>
-          <VueDatePicker 
-            v-model="dateRange" 
-            range 
-            :enable-time-picker="false"
-            :disabled-dates="disabledDates"
-            :min-date="new Date()"
-            :placeholder="langStore.currentLang === 'sr' ? 'Изаберите датум доласка и одласка' : 'Select Check-in and Check-out dates'"
-            required
-            auto-apply
-          />
+      <!-- SUCCESS PANEL -->
+      <div v-if="success" class="success-panel">
+        <div class="success-icon">✅</div>
+        <h2>{{ langStore.currentLang === 'sr' ? 'Уpit је послат!' : 'Inquiry Sent!' }}</h2>
+        <p class="success-sub">{{ langStore.currentLang === 'sr' ? 'Очекујте одговор у року од 24 сата.' : 'Expect a response within 24 hours.' }}</p>
+
+        <!-- Nalog kreiran -->
+        <div v-if="newAccount" class="info-box account-box">
+          <div class="info-box-title">🔑 {{ langStore.currentLang === 'sr' ? 'Kreiran Vam je nalog' : 'Account Created' }}</div>
+          <p>{{ langStore.currentLang === 'sr'
+            ? 'Аутоматски смо Вам креирали налог. Лозинку налазите у emailу. Пријавите се да пратите статус резервације.'
+            : 'We automatically created an account for you. Check your email for the temporary password.' }}</p>
+          <router-link to="/prijava" class="btn-account" @click="close">
+            {{ langStore.currentLang === 'sr' ? 'Пријавите се →' : 'Login →' }}
+          </router-link>
         </div>
 
-        <div class="form-group">
-          <label>{{ langStore.currentLang === 'sr' ? 'Име и презиме' : 'Full Name' }} *</label>
-          <input type="text" v-model="form.sender_name" required />
+        <!-- Vec ima nalog -->
+        <div v-else class="info-box account-box existing">
+          <div class="info-box-title">👤 {{ langStore.currentLang === 'sr' ? 'Пратите статус' : 'Track Status' }}</div>
+          <p>{{ langStore.currentLang === 'sr'
+            ? 'Пратите статус Вашег упита у свом налогу.'
+            : 'Track your inquiry status in your account.' }}</p>
+          <router-link to="/moj-nalog" class="btn-account" @click="close">
+            {{ langStore.currentLang === 'sr' ? 'Мој налог →' : 'My Account →' }}
+          </router-link>
+        </div>
+
+        <!-- Politika otkazivanja -->
+        <div class="info-box cancel-policy">
+          <div class="info-box-title">📋 {{ langStore.currentLang === 'sr' ? 'Политика otkazivanja' : 'Cancellation Policy' }}</div>
+          <ul>
+            <li>{{ langStore.currentLang === 'sr'
+              ? '✅ Бесплатно отказивање до 7 дана пре доласка'
+              : '✅ Free cancellation up to 7 days before arrival' }}</li>
+            <li>{{ langStore.currentLang === 'sr'
+              ? '❌ Отказивање у периоду краћем од 7 дана — контактирајте нас директно'
+              : '❌ Cancellations within 7 days — contact us directly' }}</li>
+          </ul>
+        </div>
+
+        <button class="close-success-btn" @click="close">
+          {{ langStore.currentLang === 'sr' ? 'Затвори' : 'Close' }}
+        </button>
+      </div>
+
+      <!-- FORMA (skrivena kad je success) -->
+      <template v-else>
+        <!-- Istaknuti naslov sa Zgradom i Sobom -->
+        <div class="inquiry-header">
+          <p class="building-name">{{ buildingName }}</p>
+          <h2>{{ roomName }}</h2>
+          <span class="subtitle">{{ langStore.currentLang === 'sr' ? 'Резервација смештаја' : 'Accommodation booking' }}</span>
         </div>
         
-        <div class="form-group-row">
-          <div class="form-group half">
-            <label>{{ langStore.currentLang === 'sr' ? 'Електронска пошта' : 'Email' }}</label>
-            <input type="email" v-model="form.email" />
+        <form @submit.prevent="submitForm" class="inquiry-form">
+          <!-- Novi Kalendar -->
+          <div class="form-group">
+            <label>{{ langStore.currentLang === 'sr' ? 'Резервишите период' : 'Select dates' }} *</label>
+            <VueDatePicker 
+              v-model="dateRange" 
+              range 
+              :enable-time-picker="false"
+              :disabled-dates="disabledDates"
+              :min-date="new Date()"
+              :placeholder="langStore.currentLang === 'sr' ? 'Изаберите датум доласка и одласка' : 'Select Check-in and Check-out dates'"
+              required
+              auto-apply
+            />
           </div>
-          <div class="form-group half">
-            <label>{{ langStore.currentLang === 'sr' ? 'Телефон' : 'Phone' }}</label>
-            <input type="text" v-model="form.phone" />
+
+          <div class="form-group">
+            <label>{{ langStore.currentLang === 'sr' ? 'Име и презиме' : 'Full Name' }} *</label>
+            <input type="text" v-model="form.sender_name" required />
           </div>
-        </div>
+          
+          <div class="form-group-row">
+            <div class="form-group half">
+              <label>{{ langStore.currentLang === 'sr' ? 'Електронска пошта' : 'Email' }} <span style="color:red">*</span></label>
+              <input type="email" v-model="form.email" required :class="{ 'input-error': emailError }" />
+              <span v-if="emailError" class="field-error">{{ emailError }}</span>
+            </div>
+            <div class="form-group half">
+              <label>{{ langStore.currentLang === 'sr' ? 'Телефон' : 'Phone' }}</label>
+              <input type="text" v-model="form.phone" />
+            </div>
+          </div>
 
-        <div class="form-group">
-          <label>{{ langStore.currentLang === 'sr' ? 'Додатна порука (Опционо)' : 'Additional Message (Optional)' }}</label>
-          <textarea v-model="form.message" rows="3" :placeholder="langStore.currentLang === 'sr' ? 'Напишите нам уколико имате специјалне захтеве...' : 'Write us if you have any special requests...'"></textarea>
-        </div>
+          <div class="form-group">
+            <label>{{ langStore.currentLang === 'sr' ? 'Додатна порука (Опционо)' : 'Additional Message (Optional)' }}</label>
+            <textarea v-model="form.message" rows="3" :placeholder="langStore.currentLang === 'sr' ? 'Напишите нам уколико имате специјалне захтеве...' : 'Write us if you have any special requests...'"></textarea>
+          </div>
 
-        <!-- Prikaz grešaka i uspeha -->
-        <p v-if="error" class="error-msg">{{ error }}</p>
-        <p v-if="success" class="success-msg">{{ success }}</p>
+          <!-- Prikaz grešaka -->
+          <p v-if="error" class="error-msg">{{ error }}</p>
 
-        <button type="submit" class="submit-btn" :disabled="isSubmitting">
-          {{ isSubmitting ? (langStore.currentLang === 'sr' ? 'Шаљем...' : 'Sending...') : (langStore.currentLang === 'sr' ? 'Пошаљи упит' : 'Send Inquiry') }}
-        </button>
-      </form>
+          <button type="submit" class="submit-btn" :disabled="isSubmitting">
+            {{ isSubmitting ? (langStore.currentLang === 'sr' ? 'Шаљем...' : 'Sending...') : (langStore.currentLang === 'sr' ? 'Пошаљи упит' : 'Send Inquiry') }}
+          </button>
+        </form>
+      </template>
     </div>
   </div>
 </template>
@@ -87,7 +136,17 @@ const form = ref({
 
 const isSubmitting = ref(false)
 const error = ref('')
-const success = ref('')
+const success = ref(false)
+const newAccount = ref(false)
+
+// Email validacija
+const emailError = ref('')
+const validateEmail = (email) => {
+  if (!email) return 'Е-пошта је обавезна.'
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+  if (!re.test(email)) return 'Унесите исправну е-пошту (нпр. ime@gmail.com)'
+  return ''
+}
 
 const fetchAvailability = async () => {
   if (!props.roomId) return;
@@ -144,6 +203,13 @@ const submitForm = async () => {
   success.value = ''
 
   try {
+    // Validacija emaila
+    emailError.value = validateEmail(form.value.email)
+    if (emailError.value) {
+      isSubmitting.value = false
+      return
+    }
+
     let check_in = null
     let check_out = null
     if (dateRange.value && dateRange.value.length === 2) {
@@ -173,12 +239,9 @@ const submitForm = async () => {
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Server error')
 
-    success.value = langStore.currentLang === 'sr' ? 'Ваш упит је успешно послат!' : 'Your inquiry was sent successfully!'
-    
-    // Automatsko zatvaranje nakon par sekundi
-    setTimeout(() => {
-      close()
-    }, 2500)
+    newAccount.value = !!data.newAccount
+    success.value = true
+    // Bez auto-zatvaranja — korisnik sam cita i klikne Zatvori
     
   } catch (err) {
     error.value = err.message
@@ -328,4 +391,120 @@ input:focus, textarea:focus {
 :deep(.dp__input:focus) {
   border-color: var(--color-nav);
 }
+.input-error {
+  border-color: #e74c3c !important;
+}
+.field-error {
+  color: #e74c3c;
+  font-size: 0.8rem;
+  margin-top: 4px;
+  display: block;
+}
+
+/* ===== SUCCESS PANEL ===== */
+.success-panel {
+  padding: 30px 25px;
+  text-align: center;
+}
+
+.success-icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  animation: pop 0.4s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.success-panel h2 {
+  color: #332317;
+  margin: 0 0 5px;
+  font-size: 1.4rem;
+}
+
+.success-sub {
+  color: #888;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+.info-box {
+  border: 1px solid #e8e0d8;
+  border-radius: 0;
+  padding: 15px 18px;
+  margin-bottom: 12px;
+  text-align: left;
+}
+
+.info-box p {
+  margin: 6px 0 12px;
+  font-size: 0.88rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+.info-box-title {
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: #332317;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.account-box {
+  border-left: 4px solid #cdac91;
+  background: #fdf8f3;
+}
+
+.account-box.existing {
+  border-left-color: #9a714e;
+  background: #f9f6f2;
+}
+
+.btn-account {
+  display: inline-block;
+  background: #332317;
+  color: #cdac91;
+  padding: 8px 18px;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+.btn-account:hover { opacity: 0.85; }
+
+.cancel-policy {
+  border-left: 4px solid #aaa;
+  background: #f7f7f7;
+}
+
+.cancel-policy ul {
+  margin: 8px 0 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.cancel-policy ul li {
+  font-size: 0.85rem;
+  color: #555;
+  padding: 3px 0;
+  line-height: 1.5;
+}
+
+.close-success-btn {
+  margin-top: 10px;
+  background: #f5f3f0;
+  border: 1px solid #ddd;
+  color: #666;
+  padding: 10px 30px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  border-radius: 0;
+  letter-spacing: 0.5px;
+}
+.close-success-btn:hover { background: #e8e0d8; color: #332317; }
 </style>

@@ -57,18 +57,26 @@ onUnmounted(() => {
     
     <!-- Hero Slider -->
     <div v-if="slides && slides.length > 0" class="hero-slider" style="position: relative; width: 100%; height: 500px; overflow: hidden; background: #332317; border-radius: 0; margin-bottom: 20px;">
-      <div v-for="(slide, index) in slides" :key="index" :style="{ opacity: index === currentSlide ? 1 : 0, transition: 'opacity 0.8s ease', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }">
+      <div v-for="(slide, index) in slides" :key="index" :style="{ 
+        opacity: index === currentSlide ? 1 : 0, 
+        zIndex: index === currentSlide ? 1 : 0,
+        pointerEvents: index === currentSlide ? 'auto' : 'none',
+        transition: 'opacity 0.8s ease', 
+        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' 
+      }">
         <img :src="slide.image_url" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;" />
         <div class="slide-content">
            <h1 style="margin: 0; color: var(--color-nav);">{{ slide.title }}</h1>
            <p v-if="slide.subtitle" style="margin: 5px 0 0 0; color: var(--color-text);">{{ slide.subtitle }}</p>
-           <a v-if="slide.target_link" :href="slide.target_link" style="display: inline-block; margin-top: 10px; font-weight: bold; border-bottom: 2px solid var(--color-nav);">{{ langStore.currentLang === 'sr' ? 'Сазнај више' : 'Learn more' }}</a>
+           <router-link v-if="slide.target_link" :to="slide.target_link" style="display: inline-block; margin-top: 10px; font-weight: bold; border-bottom: 2px solid var(--color-nav);">
+             {{ langStore.currentLang === 'sr' ? 'Сазнај више' : 'Learn more' }}
+           </router-link>
         </div>
       </div>
       
       <!-- Kontrole za slajder -->
-      <button v-if="slides.length > 1" @click="prevSlide" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(205, 172, 145, 0.6); color: #fff; border: none; font-size: 1.5rem; cursor: pointer; border-radius: 0%; width: 30px; height: 40px;">&#10094;</button>
-      <button v-if="slides.length > 1" @click="nextSlide" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(205, 172, 145, 0.6); color: #fff; border: none; font-size: 1.5rem; cursor: pointer; border-radius: 0%; width: 30px; height: 40px;">&#10095;</button>
+      <button v-if="slides.length > 1" @click="prevSlide" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(205, 172, 145, 0.6); color: #fff; border: none; font-size: 1.5rem; cursor: pointer; border-radius: 0%; width: 30px; height: 40px;">&#10094;</button>
+      <button v-if="slides.length > 1" @click="nextSlide" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(205, 172, 145, 0.6); color: #fff; border: none; font-size: 1.5rem; cursor: pointer; border-radius: 0%; width: 30px; height: 40px;">&#10095;</button>
     </div>
     
     <!-- Placeholder ako nema slajdera -->
