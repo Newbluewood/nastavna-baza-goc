@@ -97,9 +97,21 @@ const fetchAvailability = async () => {
     const data = await res.json()
     
     let datesToDisable = []
-    data.forEach(res => {
-      let current = new Date(res.start_date)
-      const end = new Date(res.end_date)
+    data.forEach(reservation => {
+      // Fix: parsiramo datum kao lokalni (ne UTC) dodavanjem T12:00:00
+      // da ne dodje do timezone pomaka (npr. 2026-04-20 ne postane 2026-04-19)
+      const startStr = reservation.start_date
+        ? reservation.start_date.split('T')[0]  // uzmi samo YYYY-MM-DD deo
+        : null
+      const endStr = reservation.end_date
+        ? reservation.end_date.split('T')[0]
+        : null
+        
+      if (!startStr || !endStr) return;
+
+      let current = new Date(startStr + 'T12:00:00')
+      const end = new Date(endStr + 'T12:00:00')
+      
       while (current <= end) {
         datesToDisable.push(new Date(current))
         current.setDate(current.getDate() + 1)

@@ -184,9 +184,12 @@ app.get('/api/rooms/:id/availability', async (req, res) => {
     const db = require('./db');
     const { id } = req.params;
     
-    // Dohvata potvrđene rezervacije (status = 'confirmed') za odabranu sobu
+    // DATE_FORMAT vraca string 'YYYY-MM-DD' umesto JS Date objekta
+    // cime se izbegava timezone pomeraj na frontendu
     const [reservations] = await db.query(`
-      SELECT start_date, end_date 
+      SELECT 
+        DATE_FORMAT(start_date, '%Y-%m-%d') as start_date,
+        DATE_FORMAT(end_date, '%Y-%m-%d') as end_date
       FROM reservations 
       WHERE room_id = ? AND status = 'confirmed' AND end_date >= CURRENT_DATE
     `, [id]);
