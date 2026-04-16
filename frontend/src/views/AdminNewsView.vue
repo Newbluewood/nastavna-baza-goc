@@ -6,6 +6,7 @@ const router = useRouter()
 const newsList = ref([])
 const isCreating = ref(false)
 const isLoading = ref(false)
+const sidebarOpen = ref(false)
 
 const form = ref({
   title: '',
@@ -97,7 +98,10 @@ const submitNews = async () => {
 
 <template>
   <div class="admin-layout">
-    <aside class="sidebar">
+    <!-- SIDEBAR OVERLAY (mobilni) -->
+    <div class="sidebar-overlay" :class="{ active: sidebarOpen }" @click="sidebarOpen = false"></div>
+
+    <aside class="sidebar" :class="{ 'sidebar-open': sidebarOpen }">
       <h2>CMS Panel</h2>
       <nav>
         <router-link to="/admin/vesti" class="active">Вести</router-link>
@@ -109,6 +113,11 @@ const submitNews = async () => {
     </aside>
     
     <main class="main-content">
+      <!-- MOBILE TOP BAR -->
+      <div class="mobile-topbar">
+        <button class="burger-admin" @click="sidebarOpen = !sidebarOpen">☰ CMS Panel</button>
+      </div>
+
       <div v-if="!isCreating">
         <div class="page-header">
           <div>
@@ -201,6 +210,7 @@ const submitNews = async () => {
   min-height: 100vh;
   background: #f5f3f0;
   font-family: inherit;
+  position: relative;
 }
 
 /* SIDEBAR */
@@ -212,7 +222,53 @@ const submitNews = async () => {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  transition: transform 0.3s ease;
 }
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    z-index: 200;
+    transform: translateX(-100%);
+    width: 240px;
+  }
+  .sidebar.sidebar-open { transform: translateX(0); }
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 199;
+  }
+  .sidebar-overlay.active { display: block; }
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .burger-admin {
+    background: #332317;
+    color: #cdac91;
+    border: none;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0;
+  }
+  .main-content { padding: 20px 16px !important; }
+  .page-header { flex-direction: column; gap: 12px; }
+  .grid-form { flex-direction: column; }
+  .actions-col { width: 100%; }
+}
+
+@media (min-width: 769px) {
+  .mobile-topbar { display: none; }
+  .sidebar-overlay { display: none !important; }
+}
+
 .sidebar h2 {
   margin-top: 0;
   margin-bottom: 30px;

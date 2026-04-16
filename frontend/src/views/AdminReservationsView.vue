@@ -6,6 +6,7 @@ const router = useRouter()
 const inquiries = ref([])
 const isLoading = ref(true)
 const filterStatus = ref('sve')
+const sidebarOpen = ref(false)
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
@@ -105,8 +106,11 @@ const statusClass = (s) => ({
 
 <template>
   <div class="admin-layout">
+    <!-- SIDEBAR OVERLAY (mobilni) -->
+    <div class="sidebar-overlay" :class="{ active: sidebarOpen }" @click="sidebarOpen = false"></div>
+
     <!-- SIDEBAR -->
-    <aside class="sidebar">
+    <aside class="sidebar" :class="{ 'sidebar-open': sidebarOpen }">
       <h2>CMS Panel</h2>
       <nav>
         <router-link to="/admin/vesti">Вести</router-link>
@@ -119,6 +123,11 @@ const statusClass = (s) => ({
 
     <!-- MAIN -->
     <main class="main-content">
+      <!-- MOBILE TOP BAR -->
+      <div class="mobile-topbar">
+        <button class="burger-admin" @click="sidebarOpen = !sidebarOpen">☰ CMS Panel</button>
+      </div>
+
       <div class="page-header">
         <div>
           <h1>Управљање Упитима</h1>
@@ -233,6 +242,93 @@ const statusClass = (s) => ({
   min-height: 100vh;
   background: #f5f3f0;
   font-family: inherit;
+  position: relative;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 250px;
+  background: #332317;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+/* MOBILNI: sidebar je skriven van ekrana */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 200;
+    transform: translateX(-100%);
+    width: 240px;
+  }
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 199;
+  }
+  .sidebar-overlay.active {
+    display: block;
+  }
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .burger-admin {
+    background: #332317;
+    color: #cdac91;
+    border: none;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0;
+  }
+  .main-content {
+    padding: 20px 16px !important;
+  }
+  .summary-cards {
+    gap: 8px;
+  }
+  .summary-card {
+    min-width: 70px;
+    padding: 10px 12px;
+  }
+  .card-count {
+    font-size: 1.4rem;
+  }
+  .data-table th, .data-table td {
+    padding: 8px 10px;
+    font-size: 0.82rem;
+  }
+  .actions-cell {
+    min-width: 80px;
+  }
+  .action-btn {
+    padding: 6px 8px;
+    font-size: 0.78rem;
+  }
+  .page-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-topbar { display: none; }
+  .sidebar-overlay { display: none !important; }
 }
 
 /* SIDEBAR */
