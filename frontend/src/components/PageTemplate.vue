@@ -29,16 +29,29 @@ const openLightbox = (index) => {
 }
 
 
+const resetInterval = () => {
+  if (slideInterval) clearInterval(slideInterval)
+  if (props.slides && props.slides.length > 1) {
+    slideInterval = setInterval(nextSlide, 5000)
+  }
+}
+
 const nextSlide = () => {
   if (props.slides && props.slides.length > 0) {
     currentSlide.value = (currentSlide.value + 1) % props.slides.length
   }
 }
 
-const prevSlide = () => {
+const manualNextSlide = () => {
+  nextSlide()
+  resetInterval()
+}
+
+const manualPrevSlide = () => {
   if (props.slides && props.slides.length > 0) {
     currentSlide.value = (currentSlide.value - 1 + props.slides.length) % props.slides.length
   }
+  resetInterval()
 }
 
 onMounted(() => {
@@ -75,8 +88,8 @@ onUnmounted(() => {
       </div>
       
       <!-- Kontrole za slajder -->
-      <button v-if="slides.length > 1" @click="prevSlide" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(205, 172, 145, 0.6); color: #fff; border: none; font-size: 1.5rem; cursor: pointer; border-radius: 0%; width: 30px; height: 40px;">&#10094;</button>
-      <button v-if="slides.length > 1" @click="nextSlide" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(205, 172, 145, 0.6); color: #fff; border: none; font-size: 1.5rem; cursor: pointer; border-radius: 0%; width: 30px; height: 40px;">&#10095;</button>
+      <button v-if="slides.length > 1" @click="manualPrevSlide" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(205, 172, 145, 0.6); color: #fff; border: none; font-size: 1.5rem; cursor: pointer; border-radius: 0%; width: 30px; height: 40px;">&#10094;</button>
+      <button v-if="slides.length > 1" @click="manualNextSlide" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(205, 172, 145, 0.6); color: #fff; border: none; font-size: 1.5rem; cursor: pointer; border-radius: 0%; width: 30px; height: 40px;">&#10095;</button>
     </div>
     
     <!-- Placeholder ako nema slajdera -->
