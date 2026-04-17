@@ -97,7 +97,7 @@ watch(() => langStore.currentLang, () => {
     <!-- Hero / Objekat Cover -->
     <div class="hero-image" style="position: relative; width: 100%; height: 400px; overflow: hidden; background: #332317; margin-bottom: 20px;">
         <img :src="building.cover_image || '/placeholder.jpg'" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;" />
-        <div class="hero-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.85); padding: 15px 30px; text-align: center;">
+        <div class="hero-content">
            <h1 style="margin: 0; color: var(--color-nav);">{{ building.name }}</h1>
         </div>
     </div>
@@ -188,6 +188,27 @@ watch(() => langStore.currentLang, () => {
 </template>
 
 <style scoped>
+.hero-content {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  background: rgba(255,255,255,0.88);
+  padding: 15px 30px;
+  border-radius: 0;
+  max-width: calc(100% - 80px);
+}
+@media (max-width: 640px) {
+  .hero-content {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 20px;
+    width: 85%;
+    max-width: 85%;
+    text-align: center;
+    padding: 12px 20px;
+  }
+}
+
 .facilities-grid {
   display: flex;
   flex-direction: column;

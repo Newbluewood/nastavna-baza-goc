@@ -170,21 +170,23 @@ onUnmounted(() => {
 /* Hero Slide Content - Desktop */
 .slide-content {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.90);
-  padding: 20px 40px;
+  bottom: 40px;
+  left: 40px;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 15px 30px;
   border-radius: 0;
   max-width: calc(100% - 80px);
-  text-align: center;
 }
 
 /* Hero Slide Content - Mobilni */
 @media (max-width: 640px) {
   .slide-content {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 20px;
     width: 85%;
     max-width: 85%;
+    text-align: center;
     padding: 12px 20px;
   }
   .slide-content h1 {
