@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useLangStore } from '../stores/lang'
 import ImageLightbox from '../components/ImageLightbox.vue'
 import InquiryModal from '../components/InquiryModal.vue'
+import api from '../services/api.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -46,10 +47,7 @@ const getAmenities = (amenitiesArray) => {
 const loadData = async () => {
   isLoading.value = true
   try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/smestaj/${route.params.id}?lang=${langStore.currentLang}`)
-    if (!response.ok) throw new Error('Not found')
-    building.value = await response.json()
+    building.value = await api.getFacility(route.params.id)
   } catch (error) {
     console.error("Error fetching data from API:", error)
     // Moze redirect ako ne postoji

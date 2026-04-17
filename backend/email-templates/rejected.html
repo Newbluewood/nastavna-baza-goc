@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Rezervacija odbijena</title>
+</head>
+<body>
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #332317;">
+    <div style="background: #332317; padding: 20px 30px;">
+      <h1 style="color: #cdac91; margin: 0; font-size: 1.2rem; letter-spacing: 2px;">НАСТАВНА БАЗА ГОЧ</h1>
+    </div>
+    <div style="padding: 30px; background: #fff; border: 1px solid #e8e0d8;">
+      <h2 style="color: #332317;">Поштовани/а {{name}},</h2>
+      <p style="line-height: 1.7;">Жао нам је, али за тражени период <strong>не можемо потврдити</strong> Вашу резервацију.</p>
+      <div style="background: #fff8f0; border-left: 4px solid #d35400; padding: 12px 14px; margin: 12px 0;">
+        <p style="margin: 0 0 6px 0;"><strong>Разлог:</strong> {{reasonText}}</p>
+        <p style="margin: 0; font-size: 0.9rem; color: #555;">
+          {{facility}} / {{room}} &nbsp;|&nbsp; {{checkIn}} → {{checkOut}}
+        </p>
+      </div>
+      <p style="line-height: 1.7;">Позивамо Вас да проверите доступност у другом периоду или нас контактирате за додатне информације.</p>
+      <a href="{{frontendUrl}}/smestaj"
+         style="display: inline-block; background: #332317; color: #fff; padding: 12px 24px; text-decoration: none; font-weight: bold; margin-top: 10px;">
+        Погледај слободне смештаје
+      </a>
+      <hr style="border: none; border-top: 1px solid #e8e0d8; margin: 25px 0;">
+      <p style="color: #888; font-size: 0.85rem;">
+        Dear {{name}}, unfortunately we are unable to confirm your reservation for the requested period.
+        Reason: {{reasonText}}.<br>
+        Please check availability for other dates. Thank you for your interest.
+      </p>
+    </div>
+    <div style="background: #f5f3f0; padding: 15px 30px; text-align: center; font-size: 0.8rem; color: #888;">
+      Шумарски факултет Универзитета у Београду • nastavnabazagoc.netlify.app
+    </div>
+  </div>
+</body>
+</html>

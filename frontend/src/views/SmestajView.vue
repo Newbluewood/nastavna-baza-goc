@@ -3,6 +3,7 @@ import { ref, onMounted, watch, computed, onUnmounted } from 'vue'
 import { useLangStore } from '../stores/lang'
 import ImageLightbox from '../components/ImageLightbox.vue'
 import { useRouter } from 'vue-router'
+import api from '../services/api.js'
 
 const router = useRouter()
 const slides = ref([])
@@ -16,7 +17,8 @@ const langStore = useLangStore()
 
 // Za hero slider
 const currentSlide = ref(0)
-let slideInterval = null
+let slideTimer = null
+const SLIDE_DELAY_MS = 5000
 
 // Za Lightbox
 const lightboxOpen = ref(false)
@@ -26,21 +28,33 @@ const lbIndex = ref(0)
 const loadData = async () => {
   isLoading.value = true
   try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/smestaj?lang=${langStore.currentLang}`);
-    const data = await response.json();
+    const data = await api.getFacilities();
+    console.log('Facilities API response:', data)
     
     if (data) {
       pageTitle.value = data.pageTitle || pageTitle.value
       textContent.value = data.textContent || textContent.value
-      slides.value = data.slides || []
-      facilities.value = data.facilities || []
+      facilities.value = Array.isArray(data) ? data : (data.facilities || [])
+      
+      // Filtriraj samo smeštajne objekte (ne proizvodne)
+      facilities.value = facilities.value.filter(facility => facility.type === 'smestaj')
+      
+      slides.value = (data.slides && data.slides.length > 0)
+        ? data.slides
+        : facilities.value.slice(0, 5).map(facility => ({
+            image_url: facility.cover_image || facility.gallery?.[0]?.image_url || '/placeholder.jpg',
+            title: facility.name || pageTitle.value,
+            subtitle: facility.capacity || facility.type || ''
+          }))
     }
   } catch (error) {
     console.error("Error fetching data from API:", error)
   } finally {
     isLoading.value = false
-    setupInterval()
+    if (currentSlide.value >= slides.value.length) {
+      currentSlide.value = 0
+    }
+    scheduleNextSlide()
   }
 }
 
@@ -54,10 +68,29 @@ const prevSlide = () => {
     currentSlide.value = (currentSlide.value - 1 + slides.value.length) % slides.value.length
   }
 }
-const setupInterval = () => {
-  if (slideInterval) clearInterval(slideInterval)
-  if (slides.value.length > 1) {
-    slideInterval = setInterval(nextSlide, 5000)
+
+const stopAutoSlide = () => {
+  if (slideTimer) {
+    clearTimeout(slideTimer)
+    slideTimer = null
+  }
+}
+
+const scheduleNextSlide = () => {
+  stopAutoSlide()
+  if (slides.value.length <= 1) return
+
+  slideTimer = setTimeout(() => {
+    nextSlide()
+    scheduleNextSlide()
+  }, SLIDE_DELAY_MS)
+}
+
+const handleVisibilityChange = () => {
+  if (document.hidden) {
+    stopAutoSlide()
+  } else {
+    scheduleNextSlide()
   }
 }
 
@@ -80,11 +113,13 @@ const viewRooms = (facility) => {
 }
 
 onMounted(() => {
+  document.addEventListener('visibilitychange', handleVisibilityChange)
   loadData()
 })
 
 onUnmounted(() => {
-  if (slideInterval) clearInterval(slideInterval)
+  stopAutoSlide()
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 
 watch(() => langStore.currentLang, () => {

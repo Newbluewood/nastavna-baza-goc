@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Otkazivanje potvrdjeno</title>
+</head>
+<body>
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #332317;">
+    <div style="background: #332317; padding: 20px 30px;">
+      <h1 style="color: #cdac91; margin: 0; font-size: 1.2rem; letter-spacing: 2px;">НАСТАВНА БАЗА ГОЧ</h1>
+    </div>
+    <div style="padding: 30px; background: #fff; border: 1px solid #e8e0d8;">
+      <h2 style="color: #607d8b;">Резервација отказана</h2>
+      <p>Поштовани/а <strong>{{name}}</strong>,</p>
+      <p>Потврђујемо да је Ваша резервација успешно отказана.</p>
+      <div style="background: #f5f3f0; border-left: 4px solid #aaa; padding: 15px; margin: 15px 0;">
+        <p style="margin: 0 0 5px 0;"><strong>Отказано:</strong> {{facility}} — {{room}}</p>
+        <p style="margin: 0;"><strong>Период:</strong> {{checkIn}} → {{checkOut}}</p>
+      </div>
+      <p>Датуми су ослобођени и доступни за нове резервације.</p>
+      <a href="{{frontendUrl}}/smestaj"
+         style="display: inline-block; background: #332317; color: #fff; padding: 12px 24px; text-decoration: none; font-weight: bold; margin-top: 10px;">
+        Нова резервација
+      </a>
+    </div>
+    <div style="background: #f5f3f0; padding: 15px 30px; text-align: center; font-size: 0.8rem; color: #888;">
+      Шумарски факултет Универзитета у Београду • nastavnabazagoc.netlify.app
+    </div>
+  </div>
+</body>
+</html>
