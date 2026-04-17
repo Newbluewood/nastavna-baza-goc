@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const newsList = ref([])
 const isCreating = ref(false)
+const editingId = ref(null)
 const isLoading = ref(false)
 const sidebarOpen = ref(false)
 
@@ -19,8 +20,15 @@ const form = ref({
 })
 
 const fetchNews = async () => {
+  const token = localStorage.getItem('admin_token')
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-  const res = await fetch(`${baseUrl}/api/news`)
+  const res = await fetch(`${baseUrl}/api/admin/news`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  if (res.status === 401) {
+    router.push('/admin/login')
+    return
+  }
   newsList.value = await res.json()
 }
 
@@ -31,6 +39,58 @@ onMounted(() => {
 const handleLogout = () => {
   localStorage.removeItem('admin_token')
   router.push('/admin/login')
+}
+
+const resetForm = () => {
+  form.value = {
+    title: '',
+    excerpt: '',
+    content: '',
+    cover_image: '/placeholder.jpg',
+    title_en: '',
+    excerpt_en: '',
+    content_en: ''
+  }
+}
+
+const startCreate = () => {
+  editingId.value = null
+  resetForm()
+  isCreating.value = true
+}
+
+const startEdit = (news) => {
+  editingId.value = news.id
+  form.value = {
+    title: news.title || '',
+    excerpt: news.excerpt || '',
+    content: news.content || '',
+    cover_image: news.cover_image || '/placeholder.jpg',
+    title_en: news.title_en || '',
+    excerpt_en: news.excerpt_en || '',
+    content_en: news.content_en || ''
+  }
+  isCreating.value = true
+}
+
+const removeNews = async (news) => {
+  if (!confirm(`Da li ste sigurni da želite da obrišete vest "${news.title}"?`)) return
+
+  const token = localStorage.getItem('admin_token')
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+
+  const res = await fetch(`${baseUrl}/api/admin/news/${news.id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    alert(data.error || 'Greška pri brisanju vesti.')
+    return
+  }
+
+  await fetchNews()
 }
 
 const translateContent = async () => {
@@ -76,9 +136,10 @@ const submitNews = async () => {
 
   const token = localStorage.getItem('admin_token')
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+  const isEdit = !!editingId.value
   
-  const res = await fetch(`${baseUrl}/api/admin/news`, {
-      method: 'POST',
+  const res = await fetch(isEdit ? `${baseUrl}/api/admin/news/${editingId.value}` : `${baseUrl}/api/admin/news`, {
+      method: isEdit ? 'PUT' : 'POST',
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -88,10 +149,11 @@ const submitNews = async () => {
 
   if (res.ok) {
     isCreating.value = false
-    form.value = { title: '', excerpt: '', content: '', cover_image: '/placeholder.jpg', title_en: '', excerpt_en: '', content_en: '' }
+    editingId.value = null
+    resetForm()
     fetchNews()
   } else {
-    alert("Greška pri unosu vesti.")
+    alert(isEdit ? 'Greška pri izmeni vesti.' : 'Greška pri unosu vesti.')
   }
 }
 </script>
@@ -125,7 +187,7 @@ const submitNews = async () => {
             <h1>Управљање вестима</h1>
             <p class="subtitle">Додај, уреди или обриши вести на порталу.</p>
           </div>
-          <button class="add-btn" @click="isCreating = true">+ Додај Вест</button>
+          <button class="add-btn" @click="startCreate">+ Додај Вест</button>
         </div>
         
         <table class="data-table">
@@ -145,8 +207,8 @@ const submitNews = async () => {
               <td>{{ n.title }}</td>
               <td>{{ new Date(n.created_at).toLocaleDateString() }}</td>
               <td>
-                <button class="small-btn">Измени</button>
-                <button class="small-btn danger">Обриши</button>
+                <button class="small-btn" @click="startEdit(n)">Измени</button>
+                <button class="small-btn danger" @click="removeNews(n)">Обриши</button>
               </td>
             </tr>
           </tbody>
@@ -154,7 +216,7 @@ const submitNews = async () => {
       </div>
 
       <div v-else class="form-container">
-        <h2>Додавање нове вести</h2>
+        <h2>{{ editingId ? `Измена вести #${editingId}` : 'Додавање нове вести' }}</h2>
         <div class="grid-form">
           <div class="lang-col">
             <h3>Српски (Оригинал)</h3>
@@ -197,8 +259,8 @@ const submitNews = async () => {
         </div>
 
         <div class="form-actions">
-          <button class="secondary-btn" @click="isCreating = false">Одустани</button>
-          <button class="primary-btn pulse" @click="submitNews" :disabled="!form.title_en">💾 САЧУВАЈ ВЕСТ</button>
+          <button class="secondary-btn" @click="isCreating = false; editingId = null">Одустани</button>
+          <button class="primary-btn pulse" @click="submitNews" :disabled="!form.title_en">{{ editingId ? '💾 САЧУВАЈ ИЗМЕНЕ' : '💾 САЧУВАЈ ВЕСТ' }}</button>
         </div>
       </div>
     </main>

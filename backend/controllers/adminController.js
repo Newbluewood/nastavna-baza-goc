@@ -316,6 +316,138 @@ async function createNews(req, res) {
   }
 }
 
+async function getAdminNews(req, res) {
+  const db = req.app.locals.db;
+
+  const [news] = await db.query(`
+    SELECT
+      n.id,
+      n.title,
+      n.excerpt,
+      n.content,
+      n.cover_image,
+      n.slug,
+      n.likes,
+      n.created_at,
+      nt.title AS title_en,
+      nt.excerpt AS excerpt_en,
+      nt.content AS content_en
+    FROM news n
+    LEFT JOIN news_translations nt ON nt.entity_id = n.id AND nt.lang = 'en'
+    ORDER BY n.created_at DESC
+  `);
+
+  res.json(news);
+}
+
+async function getAdminNewsById(req, res) {
+  const db = req.app.locals.db;
+  const newsId = req.params.id;
+
+  const [rows] = await db.query(`
+    SELECT
+      n.id,
+      n.title,
+      n.excerpt,
+      n.content,
+      n.cover_image,
+      n.slug,
+      n.likes,
+      n.created_at,
+      nt.title AS title_en,
+      nt.excerpt AS excerpt_en,
+      nt.content AS content_en
+    FROM news n
+    LEFT JOIN news_translations nt ON nt.entity_id = n.id AND nt.lang = 'en'
+    WHERE n.id = ?
+    LIMIT 1
+  `, [newsId]);
+
+  if (rows.length === 0) {
+    return sendError(res, 404, 'News not found');
+  }
+
+  res.json(rows[0]);
+}
+
+async function updateNews(req, res) {
+  const db = req.app.locals.db;
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const newsId = req.params.id;
+    const { title, excerpt, content, cover_image, title_en, excerpt_en, content_en } = req.body;
+
+    const [exists] = await connection.query('SELECT id FROM news WHERE id = ?', [newsId]);
+    if (exists.length === 0) {
+      return sendError(res, 404, 'News not found');
+    }
+
+    await connection.query(`
+      UPDATE news
+      SET title = ?, excerpt = ?, content = ?, cover_image = ?
+      WHERE id = ?
+    `, [title, excerpt || null, content, cover_image || '/placeholder.jpg', newsId]);
+
+    if (title_en || excerpt_en || content_en) {
+      await connection.query(`
+        INSERT INTO news_translations (entity_id, lang, title, excerpt, content)
+        VALUES (?, 'en', ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          title = VALUES(title),
+          excerpt = VALUES(excerpt),
+          content = VALUES(content)
+      `, [newsId, title_en || null, excerpt_en || null, content_en || null]);
+    } else {
+      await connection.query(
+        "DELETE FROM news_translations WHERE entity_id = ? AND lang = 'en'",
+        [newsId]
+      );
+    }
+
+    await connection.commit();
+
+    res.json({ message: 'News updated successfully' });
+  } catch (err) {
+    await connection.rollback();
+    throw err;
+  } finally {
+    connection.release();
+  }
+}
+
+async function deleteNews(req, res) {
+  const db = req.app.locals.db;
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const newsId = req.params.id;
+
+    await connection.query(
+      "DELETE FROM media_gallery WHERE entity_type = 'news' AND entity_id = ?",
+      [newsId]
+    );
+
+    const [deleted] = await connection.query('DELETE FROM news WHERE id = ?', [newsId]);
+    if (deleted.affectedRows === 0) {
+      return sendError(res, 404, 'News not found');
+    }
+
+    await connection.commit();
+
+    res.json({ message: 'News deleted successfully' });
+  } catch (err) {
+    await connection.rollback();
+    throw err;
+  } finally {
+    connection.release();
+  }
+}
+
 async function getGuests(req, res) {
   const db = req.app.locals.db;
 
@@ -370,4 +502,15 @@ async function addVoucher(req, res) {
   res.json({ message: 'Voucher created successfully', voucherId });
 }
 
-module.exports = { getInquiries, getInquiryActivity, updateInquiryStatus, createNews, getGuests, addVoucher };
+module.exports = {
+  getInquiries,
+  getInquiryActivity,
+  updateInquiryStatus,
+  createNews,
+  getAdminNews,
+  getAdminNewsById,
+  updateNews,
+  deleteNews,
+  getGuests,
+  addVoucher
+};
