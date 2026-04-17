@@ -2,9 +2,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGuestStore } from '../stores/guest'
+import { useLangStore } from '../stores/lang'
 
 const router = useRouter()
 const guestStore = useGuestStore()
+const langStore = useLangStore()
 
 const email = ref('')
 const password = ref('')
@@ -65,7 +67,7 @@ const handleForgot = async () => {
     <div class="login-box">
 
       <div class="brand-bar">
-        <span>НАСТАВНА БАЗА ГОЧ</span>
+        <span>{{ langStore.currentLang === 'sr' ? 'НАСТАВНА БАЗА ГОЧ' : 'TEACHING BASE GOC' }}</span>
       </div>
 
       <!-- Login forma -->
@@ -75,53 +77,53 @@ const handleForgot = async () => {
             <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
           </svg>
         </div>
-        <h1>Пријава</h1>
-        <p class="subtitle">Пратите статус Ваших резервација</p>
+        <h1>{{ langStore.currentLang === 'sr' ? 'Пријава' : 'Login' }}</h1>
+        <p class="subtitle">{{ langStore.currentLang === 'sr' ? 'Пратите статус Ваших резервација' : 'Track your reservation status' }}</p>
 
         <div class="form-group">
-          <label>Е-пошта</label>
+          <label>{{ langStore.currentLang === 'sr' ? 'Е-пошта' : 'Email' }}</label>
           <input v-model="email" type="email" placeholder="ime@email.com" @keyup.enter="handleLogin" />
         </div>
         <div class="form-group">
-          <label>Лозинка</label>
+          <label>{{ langStore.currentLang === 'sr' ? 'Лозинка' : 'Password' }}</label>
           <input v-model="password" type="password" placeholder="••••••••" @keyup.enter="handleLogin" />
         </div>
 
         <p v-if="error" class="error-msg">{{ error }}</p>
 
         <button class="btn-primary" @click="handleLogin" :disabled="isLoading">
-          <span v-if="isLoading">Учитавам...</span>
-          <span v-else>ПРИЈАВИТЕ СЕ →</span>
+          <span v-if="isLoading">{{ langStore.currentLang === 'sr' ? 'Учитавам...' : 'Loading...' }}</span>
+          <span v-else>{{ langStore.currentLang === 'sr' ? 'ПРИЈАВИТЕ СЕ →' : 'LOG IN →' }}</span>
         </button>
 
-        <button class="btn-link" @click="showForgot = true">Заборавили сте лозинку?</button>
+        <button class="btn-link" @click="showForgot = true">{{ langStore.currentLang === 'sr' ? 'Заборавили сте лозинку?' : 'Forgot password?' }}</button>
       </div>
 
       <!-- Forgot password forma -->
       <div v-else class="form-body">
-        <h1>Ресет лозинке</h1>
-        <p class="subtitle">Унесите email и телефон са регистрације</p>
+        <h1>{{ langStore.currentLang === 'sr' ? 'Ресет лозинке' : 'Reset Password' }}</h1>
+        <p class="subtitle">{{ langStore.currentLang === 'sr' ? 'Унесите email и телефон са регистрације' : 'Enter the email and phone from your registration' }}</p>
 
         <div class="form-group">
-          <label>Е-пошта</label>
+          <label>{{ langStore.currentLang === 'sr' ? 'Е-пошта' : 'Email' }}</label>
           <input v-model="forgotEmail" type="email" placeholder="ime@email.com" />
         </div>
         <div class="form-group">
-          <label>Телефон</label>
+          <label>{{ langStore.currentLang === 'sr' ? 'Телефон' : 'Phone' }}</label>
           <input v-model="forgotPhone" type="tel" placeholder="+381 6x xxx xxxx" />
         </div>
 
         <p v-if="forgotMsg" class="info-msg">{{ forgotMsg }}</p>
 
         <button class="btn-primary" @click="handleForgot" :disabled="forgotLoading">
-          <span v-if="forgotLoading">Шаљем...</span>
-          <span v-else>ПОШАЉИ ЛИНК →</span>
+          <span v-if="forgotLoading">{{ langStore.currentLang === 'sr' ? 'Шаљем...' : 'Sending...' }}</span>
+          <span v-else>{{ langStore.currentLang === 'sr' ? 'ПОШАЉИ ЛИНК →' : 'SEND LINK →' }}</span>
         </button>
-        <button class="btn-link" @click="showForgot = false">← Назад на пријаву</button>
+        <button class="btn-link" @click="showForgot = false">{{ langStore.currentLang === 'sr' ? '← Назад на пријаву' : '← Back to Login' }}</button>
       </div>
 
       <div class="footer-note">
-        Немате налог? Аутоматски се креира при резервацији.
+        {{ langStore.currentLang === 'sr' ? 'Немате налог? Аутоматски се креира при резервацији.' : "Don't have an account? It's automatically created upon your first reservation." }}
       </div>
     </div>
   </div>

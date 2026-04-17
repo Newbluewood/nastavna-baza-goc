@@ -24,7 +24,7 @@ const fetchNews = async () => {
   }
 }
 
-onMounted(() => {
+const loadAll = () => {
   fetchNews()
   // Mock page text
   pageData.value = {
@@ -33,7 +33,11 @@ onMounted(() => {
       ? '<p>Пратите најновија дешавања, најаве едукативних програма и вести из Наставне базе Гоч.</p>'
       : '<p>Follow the latest events, educational program announcements, and news from the Goč Teaching Base.</p>'
   }
-})
+}
+
+onMounted(loadAll)
+import { watch } from 'vue'
+watch(() => langStore.currentLang, loadAll)
 </script>
 
 <template>

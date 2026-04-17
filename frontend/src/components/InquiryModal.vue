@@ -6,7 +6,7 @@
       <!-- SUCCESS PANEL -->
       <div v-if="success" class="success-panel">
         <div class="success-icon">✅</div>
-        <h2>{{ langStore.currentLang === 'sr' ? 'Уpit је послат!' : 'Inquiry Sent!' }}</h2>
+        <h2>{{ langStore.currentLang === 'sr' ? 'Упит је послат!' : 'Inquiry Sent!' }}</h2>
         <p class="success-sub">{{ langStore.currentLang === 'sr' ? 'Очекујте одговор у року од 24 сата.' : 'Expect a response within 24 hours.' }}</p>
 
         <!-- Nalog kreiran -->
@@ -33,7 +33,7 @@
 
         <!-- Politika otkazivanja -->
         <div class="info-box cancel-policy">
-          <div class="info-box-title">📋 {{ langStore.currentLang === 'sr' ? 'Политика otkazivanja' : 'Cancellation Policy' }}</div>
+          <div class="info-box-title">📋 {{ langStore.currentLang === 'sr' ? 'Политика отказивања' : 'Cancellation Policy' }}</div>
           <ul>
             <li>{{ langStore.currentLang === 'sr'
               ? '✅ Бесплатно отказивање до 7 дана пре доласка'

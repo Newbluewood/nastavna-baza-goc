@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import ImageLightbox from './ImageLightbox.vue'
 import { useLangStore } from '../stores/lang'
 
@@ -54,11 +54,11 @@ const manualPrevSlide = () => {
   resetInterval()
 }
 
-onMounted(() => {
-  if (props.slides && props.slides.length > 1) {
-    slideInterval = setInterval(nextSlide, 5000)
+watch(() => props.slides, (newVal) => {
+  if (newVal && newVal.length > 1) {
+    resetInterval()
   }
-})
+}, { immediate: true })
 
 onUnmounted(() => {
   if (slideInterval) clearInterval(slideInterval)
@@ -93,10 +93,11 @@ onUnmounted(() => {
     </div>
     
     <!-- Placeholder ako nema slajdera -->
-    <div v-else-if="title" class="hero-placeholder" style="margin-bottom: 20px;">
-      <h1 style="background: rgba(255, 255, 255, 0.85); padding: 10px 20px; border-radius: 0; color: var(--color-nav); margin: 0;">
-        {{ title }}
-      </h1>
+    <div v-else-if="title" class="hero-slider" style="position: relative; width: 100%; height: 500px; overflow: hidden; background: #332317; border-radius: 0; margin-bottom: 20px;">
+      <img src="/placeholder.jpg" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;" />
+      <div class="slide-content">
+        <h1 style="margin: 0; color: var(--color-nav);">{{ title }}</h1>
+      </div>
     </div>
     
     <hr class="section-divider" />
@@ -169,30 +170,28 @@ onUnmounted(() => {
 /* Hero Slide Content - Desktop */
 .slide-content {
   position: absolute;
-  bottom: 40px;
-  left: 40px;
-  background: rgba(255, 255, 255, 0.88);
-  padding: 15px 30px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.90);
+  padding: 20px 40px;
   border-radius: 0;
   max-width: calc(100% - 80px);
+  text-align: center;
 }
 
 /* Hero Slide Content - Mobilni */
 @media (max-width: 640px) {
   .slide-content {
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 20px;
     width: 85%;
     max-width: 85%;
-    text-align: center;
     padding: 12px 20px;
   }
   .slide-content h1 {
     font-size: 1.2rem;
   }
   .slide-content a {
-    display: block;
+    display: inline-block;
     margin-top: 8px;
   }
 }

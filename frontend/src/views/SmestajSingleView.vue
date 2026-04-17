@@ -97,7 +97,7 @@ watch(() => langStore.currentLang, () => {
     <!-- Hero / Objekat Cover -->
     <div class="hero-image" style="position: relative; width: 100%; height: 400px; overflow: hidden; background: #332317; margin-bottom: 20px;">
         <img :src="building.cover_image || '/placeholder.jpg'" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;" />
-        <div class="hero-content" style="position: absolute; bottom: 40px; left: 40px; background: rgba(255,255,255,0.85); padding: 15px 30px;">
+        <div class="hero-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.85); padding: 15px 30px; text-align: center;">
            <h1 style="margin: 0; color: var(--color-nav);">{{ building.name }}</h1>
         </div>
     </div>
