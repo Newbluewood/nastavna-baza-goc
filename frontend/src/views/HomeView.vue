@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import PageTemplate from '../components/PageTemplate.vue'
 import { useLangStore } from '../stores/lang'
+import api from '../services/api.js'
 
 const galleryItems = ref([])
 const slides = ref([])
@@ -16,16 +17,24 @@ const langStore = useLangStore()
 const loadData = async () => {
   isLoading.value = true
   try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/home?lang=${langStore.currentLang}`);
-    const data = await response.json();
+    const data = await api.getHome();
+    console.log('Home API response:', data)
     
     if (data) {
       pageTitle.value = data.pageTitle || pageTitle.value
       textContent.value = data.textContent || textContent.value
-      slides.value = data.slides || []
       news.value = data.news || []
-      galleryItems.value = data.galleryItems || []
+      galleryItems.value = (data.facilities || []).map(facility => ({
+        url: facility.cover_image || facility.image || '/placeholder.jpg',
+        name: facility.name || facility.type || ''
+      }))
+      slides.value = (data.slides && data.slides.length > 0)
+        ? data.slides
+        : news.value.slice(0, 5).map(item => ({
+            image_url: item.cover_image || '/placeholder.jpg',
+            title: item.title || pageTitle.value,
+            subtitle: item.excerpt || ''
+          }))
     }
   } catch (error) {
     console.error("Error fetching data from API:", error)

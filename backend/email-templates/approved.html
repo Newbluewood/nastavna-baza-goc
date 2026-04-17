@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Rezervacija odobrena</title>
+</head>
+<body>
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #332317;">
+    <div style="background: #332317; padding: 20px 30px;">
+      <h1 style="color: #cdac91; margin: 0; font-size: 1.2rem; letter-spacing: 2px;">НАСТАВНА БАЗА ГОЧ</h1>
+    </div>
+    <div style="padding: 30px; background: #fff; border: 1px solid #e8e0d8;">
+      <h2 style="color: #27ae60;">✅ Резервација потврђена!</h2>
+      <p>Поштовани/а <strong>{{name}}</strong>,</p>
+      <p>Са задовољством Вас обавештавамо да је Ваша резервација <strong>одобрена</strong>.</p>
+
+      <div style="background: #f5f3f0; border-left: 4px solid #cdac91; padding: 20px; margin: 20px 0;">
+        <p style="margin: 0 0 8px 0;"><strong>📍 Објекат:</strong> {{facility}}</p>
+        <p style="margin: 0 0 8px 0;"><strong>🛏 Смештај:</strong> {{room}}</p>
+        <p style="margin: 0 0 8px 0;"><strong>📅 Долазак:</strong> {{checkIn}}</p>
+        <p style="margin: 0 0 8px 0;"><strong>📅 Одлазак:</strong> {{checkOut}}</p>
+        {{#guestCount}}<p style="margin: 0;"><strong>👥 Број особа:</strong> {{guestCount}}</p>{{/guestCount}}
+      </div>
+
+      <div style="background: #fff3e0; border: 1px solid #ffcc80; padding: 15px; margin: 20px 0; border-radius: 0;">
+        <p style="margin: 0 0 8px 0; font-weight: bold;">ℹ️ Отказивање резервације</p>
+        <p style="margin: 0 0 8px 0; font-size: 0.9rem;">Резервацију можете отказати <strong>без накнаде</strong> до <strong>{{cancelDeadline}}</strong> (7 дана пре доласка).</p>
+        <a href="{{cancelUrl}}" style="display: inline-block; background: #e74c3c; color: #fff; padding: 10px 20px; text-decoration: none; font-weight: bold; margin-top: 5px;">
+          Откажи резервацију
+        </a>
+      </div>
+
+      <p style="color: #888; font-size: 0.85rem; margin-top: 25px;">
+        Dear {{name}}, your reservation has been <strong>confirmed</strong>.<br>
+        Facility: {{facility}} | Room: {{room}} | {{checkIn}} → {{checkOut}}<br>
+        Free cancellation until: {{cancelDeadline}} &nbsp;|&nbsp; <a href="{{cancelUrl}}">Cancel reservation</a>
+      </p>
+    </div>
+    <div style="background: #f5f3f0; padding: 15px 30px; text-align: center; font-size: 0.8rem; color: #888;">
+      Шумарски факултет Универзитета у Београду • nastavnabazagoc.netlify.app
+    </div>
+  </div>
+</body>
+</html>

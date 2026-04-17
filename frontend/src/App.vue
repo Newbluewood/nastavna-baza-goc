@@ -42,7 +42,7 @@ const handleGuestNav = () => {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
               <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
             </svg>
-            <span class="guest-label">{{ guestStore.isLoggedIn ? (guestStore.guest?.name?.split(' ')[0] || 'Nalog') : (langStore.currentLang === 'sr' ? 'Prijava' : 'Login') }}</span>
+            <span class="guest-label">{{ guestStore.isLoggedIn ? (guestStore.guest?.name?.split(' ')[0] || 'Nalog') : langStore.t('common.login') }}</span>
           </button>
         </div>
       </div>
@@ -54,33 +54,27 @@ const handleGuestNav = () => {
         </div>
         <nav class="main-nav" :class="{ 'is-open': isMenuOpen }">
           <router-link to="/" class="nav-link" @click="closeMenu">
-            <span class="nav-bold" v-if="langStore.currentLang === 'sr'">ПОЧЕТНА</span>
-            <span class="nav-bold" v-else>HOME</span>
+            <span class="nav-bold">{{ langStore.t('nav.home') }}</span>
           </router-link>
           <span class="nav-sep">|</span>
           <router-link to="/smestaj" class="nav-link" @click="closeMenu">
-            <span class="nav-bold" v-if="langStore.currentLang === 'sr'">СМЕШТАЈ</span>
-            <span class="nav-bold" v-else>ACCOMMODATION</span>
+            <span class="nav-bold">{{ langStore.t('nav.accommodation') }}</span>
           </router-link>
           <span class="nav-sep">|</span>
           <router-link to="/vesti" class="nav-link" @click="closeMenu">
-            <span class="nav-bold" v-if="langStore.currentLang === 'sr'">ВЕСТИ</span>
-            <span class="nav-bold" v-else>NEWS</span>
+            <span class="nav-bold">{{ langStore.t('nav.news') }}</span>
           </router-link>
           <span class="nav-sep">|</span>
           <router-link to="/edukacija" class="nav-link" @click="closeMenu">
-            <span class="nav-bold" v-if="langStore.currentLang === 'sr'">ЕДУКАЦИЈА</span>
-            <span class="nav-bold" v-else>EDUCATION</span>
+            <span class="nav-bold">{{ langStore.t('nav.education') }}</span>
           </router-link>
           <span class="nav-sep">|</span>
           <router-link to="/istrazivanje" class="nav-link" @click="closeMenu">
-            <span class="nav-bold" v-if="langStore.currentLang === 'sr'">ИСТРАЖИВАЊE</span>
-            <span class="nav-bold" v-else>RESEARCH</span>
+            <span class="nav-bold">{{ langStore.t('nav.research') }}</span>
           </router-link>
           <span class="nav-sep">|</span>
           <router-link to="/kontakt" class="nav-link" @click="closeMenu">
-            <span class="nav-bold" v-if="langStore.currentLang === 'sr'">КОНТАКТ</span>
-            <span class="nav-bold" v-else>CONTACT</span>
+            <span class="nav-bold">{{ langStore.t('nav.contact') }}</span>
           </router-link>
         </nav>
       </div>
@@ -91,29 +85,18 @@ const handleGuestNav = () => {
     </main>
 
     <footer class="footer">
-      <div class="footer-col" v-if="langStore.currentLang === 'sr'">
-        <p><strong>Шумарски факултет</strong><br>
-        Универзитета у Београду<br>
-        Кнеза Вишеслава 1<br>
-        11 000 Београд, Србија</p>
-      </div>
-      <div class="footer-col" v-else>
-        <p><strong>Faculty of Forestry</strong><br>
-        University of Belgrade<br>
-        Kneza Višeslava 1<br>
-        11000 Belgrade, Serbia</p>
+      <div class="footer-col">
+        <p><strong>{{ langStore.t('footer.faculty') }}</strong><br>
+        {{ langStore.t('footer.university') }}<br>
+        {{ langStore.t('footer.address') }}<br>
+        {{ langStore.t('footer.city') }}</p>
       </div>
       <div class="footer-col">
         <p><a href="mailto:projektovanje@sfb.bg.ac.rs">projektovanje@sfb.bg.ac.rs</a><br>
         <a href="http://www.sfb.bg.ac.rs" target="_blank">www.sfb.bg.ac.rs</a></p>
       </div>
-      <div class="footer-col footer-credits" v-if="langStore.currentLang === 'sr'">
-        <p>сајт | Небојша Симовић<br>
-        мултимедија | Јован Митровић</p>
-      </div>
-      <div class="footer-col footer-credits" v-else>
-        <p>website | Nebojša Simović<br>
-        multimedia | Jovan Mitrović</p>
+      <div class="footer-col footer-credits">
+        <p v-html="langStore.t('footer.credits')"></p>
       </div>
       <div class="footer-col footer-social">
         <div class="social-icons">

@@ -3,6 +3,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useLangStore } from '../stores/lang'
 import ImageLightbox from '../components/ImageLightbox.vue'
+import api from '../services/api.js'
 
 const route = useRoute()
 const langStore = useLangStore()
@@ -26,20 +27,8 @@ const openLightbox = (index) => {
 const loadNews = async () => {
   isLoading.value = true
   try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-    
-    const res = await fetch(`${baseUrl}/api/news/${route.params.id}?lang=${langStore.currentLang}`, {
-      signal: controller.signal
-    })
-    
-    clearTimeout(timeoutId);
-    
-    if (res.ok) {
-      newsItem.value = await res.json()
-      isLiked.value = !!localStorage.getItem(`liked_news_${newsItem.value.id}`)
-    }
+    newsItem.value = await api.getNewsItem(route.params.id)
+    isLiked.value = !!localStorage.getItem(`liked_news_${newsItem.value.id}`)
   } catch (err) {
     debugError.value = err.message || JSON.stringify(err);
     console.error("Error loading news", err)
@@ -56,19 +45,15 @@ const handleLike = async () => {
   if (!newsItem.value) return
   const storageKey = `liked_news_${newsItem.value.id}`
   if (localStorage.getItem(storageKey)) {
-    alert(langStore.currentLang === 'sr' ? "Већ сте лајковали ову вест!" : "You already liked this news!")
+    alert(langStore.t('common.error') + ': ' + (langStore.currentLang === 'sr' ? "Већ сте лајковали ову вест!" : "You already liked this news!"))
     return
   }
 
   try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-    const res = await fetch(`${baseUrl}/api/news/${newsItem.value.id}/like`, { method: 'POST' })
-    if (res.ok) {
-      const data = await res.json()
-      newsItem.value.likes = data.likes
-      localStorage.setItem(storageKey, 'true')
-      isLiked.value = true
-    }
+    const data = await api.likeNews(newsItem.value.id)
+    newsItem.value.likes = data.likes
+    localStorage.setItem(storageKey, 'true')
+    isLiked.value = true
   } catch (err) {
     console.error(err)
   }

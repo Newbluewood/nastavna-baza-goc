@@ -2,9 +2,13 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGuestStore } from '../stores/guest'
+import { useLangStore } from '../stores/lang'
+import { VueDatePicker } from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 
 const router = useRouter()
 const guestStore = useGuestStore()
+const langStore = useLangStore()
 
 const reservations = ref([])
 const isLoading = ref(true)
@@ -22,6 +26,13 @@ const cancellingId = ref(null)
 
 // Vouchers
 const voucherLoading = ref(null)
+
+// Change dates modal
+const isModalOpen = ref(false)
+const selectedReservation = ref(null)
+const modalDateRange = ref(null)
+const modalError = ref('')
+const modalLoading = ref(false)
 
 const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
@@ -50,6 +61,20 @@ const canCancel = (row) => {
   if (row.reservation_status === 'cancelled') return false
   if (row.inquiry_status !== 'obradjeno') return false
   return daysUntil(row.res_start) >= 7
+}
+
+const canModifyOrCancel = (row) => {
+  // Može da otkaže samo ako je "obradjeno" i ima 7+ dana
+  if (row.reservation_status === 'cancelled') return false
+  if (row.inquiry_status !== 'obradjeno') return false
+  return daysUntil(row.res_start) >= 7
+}
+
+const canModifyDates = (row) => {
+  // Može da menja termine ako je "novo" ili "obradjeno"
+  if (row.reservation_status === 'cancelled') return false
+  if (row.inquiry_status !== 'novo' && row.inquiry_status !== 'obradjeno') return false
+  return true
 }
 
 // Datum krajnjeg roka za otkazivanje (checkin - 7 dana)
@@ -95,6 +120,82 @@ const cancelReservation = async (row) => {
     reservations.value = await updated.json()
   } finally {
     cancellingId.value = null
+  }
+}
+
+const openChangeModal = (row) => {
+  if (!canModifyDates(row)) {
+    alert(langStore.currentLang === 'sr'
+      ? 'Datume ne možete menjati za ovu rezervaciju jer je već otkazana ili odbijena.'
+      : 'You cannot change dates for this reservation as it has been cancelled or rejected.'
+    )
+    return
+  }
+  selectedReservation.value = row
+  modalDateRange.value = null
+  modalError.value = ''
+  isModalOpen.value = true
+}
+
+const closeChangeModal = () => {
+  isModalOpen.value = false
+  selectedReservation.value = null
+  modalDateRange.value = null
+  modalError.value = ''
+}
+
+const submitChangeDates = async () => {
+  if (!selectedReservation.value || !modalDateRange.value || modalDateRange.value.length !== 2) {
+    modalError.value = 'Molimo izaberite datume za boravak'
+    return
+  }
+
+  modalError.value = ''
+  modalLoading.value = true
+
+  try {
+    const dt1 = new Date(modalDateRange.value[0])
+    const dt2 = new Date(modalDateRange.value[1])
+    dt1.setMinutes(dt1.getMinutes() - dt1.getTimezoneOffset())
+    dt2.setMinutes(dt2.getMinutes() - dt2.getTimezoneOffset())
+    const checkIn = dt1.toISOString().split('T')[0]
+    const checkOut = dt2.toISOString().split('T')[0]
+
+    const res = await fetch(`${BASE}/api/guests/reservations/${selectedReservation.value.inquiry_id}`, {
+      method: 'PATCH',
+      headers: { ...guestStore.authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ check_in: checkIn, check_out: checkOut })
+    })
+
+    const data = await res.json()
+    if (!res.ok) {
+      modalError.value = data.error || 'Greška pri promeni datuma'
+      return
+    }
+
+    // Refresh i zatvori modal
+    const updated = await fetch(`${BASE}/api/guests/reservations`, { headers: guestStore.authHeaders() })
+    reservations.value = await updated.json()
+    
+    closeChangeModal()
+    
+    // Različita poruka u zavisnosti od toga da li je admin već pregledao
+    const wasApproved = selectedReservation.value.inquiry_status === 'obradjeno'
+    if (wasApproved) {
+      alert(langStore.currentLang === 'sr' 
+        ? 'Datumi su promenjeni. Administrator će pregledati nove termine i poslati vam potvrdu.'
+        : 'Dates have been changed. Administrator will review the new dates and send confirmation.'
+      )
+    } else {
+      alert(langStore.currentLang === 'sr'
+        ? 'Datumi su promenjeni. Administrator će pregledati vaši novi zahtev.'
+        : 'Dates have been changed. Administrator will review your request.'
+      )
+    }
+  } catch (err) {
+    modalError.value = err.message
+  } finally {
+    modalLoading.value = false
   }
 }
 
@@ -209,6 +310,9 @@ const handleLogout = () => {
                   За {{ daysUntil(row.res_start) }} дана
                 </span>
               </div>
+              <div v-if="row.inquiry_status === 'odbijeno' && row.rejection_reason" class="reject-reason">
+                <strong>Разлог одбијања:</strong> {{ row.rejection_reason }}
+              </div>
             </div>
 
             <!-- Footer sa cancel info - uvek prikazujemo za odobrene rezervacije -->
@@ -217,16 +321,24 @@ const handleLogout = () => {
               class="res-card-footer"
               :class="cancelDeadlinePassed(row.res_start) ? 'footer-locked' : 'footer-open'"
             >
-              <template v-if="canCancel(row)">
-                <button
-                  class="btn-cancel"
-                  @click="cancelReservation(row)"
-                  :disabled="cancellingId === row.inquiry_id"
-                >
-                  {{ cancellingId === row.inquiry_id ? 'Отказујем...' : '🚫 Откажи резервацију' }}
-                </button>
+              <template v-if="canModifyOrCancel(row)">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                  <button
+                    class="btn-cancel"
+                    @click="cancelReservation(row)"
+                    :disabled="cancellingId === row.inquiry_id"
+                  >
+                    {{ cancellingId === row.inquiry_id ? 'Отказујем...' : '🚫 Откажи резервацију' }}
+                  </button>
+                  <button
+                    class="btn-change"
+                    @click="openChangeModal(row)"
+                  >
+                    ✏️ Промени termine
+                  </button>
+                </div>
                 <span class="cancel-note">
-                  ✅ Бесплатно отказивање до <strong>{{ cancelDeadline(row.res_start) }}</strong>
+                  ✅ Бесплатно отказивање и промена до <strong>{{ cancelDeadline(row.res_start) }}</strong>
                 </span>
               </template>
               <template v-else>
@@ -236,6 +348,17 @@ const handleLogout = () => {
                   За помоћ контактирајте нас.
                 </span>
               </template>
+            </div>
+
+            <!-- Change dates button for "novo" status -->
+            <div v-if="row.inquiry_status === 'novo' && row.reservation_status !== 'cancelled'" class="res-card-footer footer-novo">
+              <button
+                class="btn-change"
+                @click="openChangeModal(row)"
+              >
+                ✏️ Промени termine
+              </button>
+              <span class="change-note">Промена датума пре него што администратор преглед</span>
             </div>
           </div>
         </div>
@@ -299,6 +422,37 @@ const handleLogout = () => {
         <button class="btn-primary-full" @click="changePassword" :disabled="pwLoading">
           {{ pwLoading ? 'Чувам...' : 'САЧУВАЈ НОВУ ЛОЗИНКУ' }}
         </button>
+      </div>
+    </div>
+
+    <!-- CHANGE DATES MODAL -->
+    <div v-if="isModalOpen" class="modal-overlay" @click.self="closeChangeModal">
+      <div class="modal-content">
+        <button class="close-btn" @click="closeChangeModal">&times;</button>
+        <h2>Промени Termine</h2>
+        <div v-if="selectedReservation" class="modal-info">
+          <p><strong>{{ selectedReservation.facility_name }}</strong> / {{ selectedReservation.room_name }}</p>
+          <p>Тренутни датуми: {{ fmt(selectedReservation.check_in || selectedReservation.res_start) }} - {{ fmt(selectedReservation.check_out || selectedReservation.res_end) }}</p>
+        </div>
+        <form @submit.prevent="submitChangeDates" style="display: flex; flex-direction: column; gap: 15px;">
+          <div class="form-group">
+            <label>Нови датуми *</label>
+            <VueDatePicker 
+              v-model="modalDateRange" 
+              range 
+              :enable-time-picker="false"
+              :min-date="new Date()"
+              placeholder="Изаберите датуме"
+              required
+              auto-apply
+            />
+          </div>
+          <p v-if="modalError" class="error-msg">{{ modalError }}</p>
+          <button type="submit" class="btn-primary-full" :disabled="modalLoading">
+            {{ modalLoading ? 'Чувам...' : 'САЧУВАЈ НОВЕ ДАТУМЕ' }}
+          </button>
+          <button type="button" class="btn-secondary" @click="closeChangeModal">Отпусти</button>
+        </form>
       </div>
     </div>
   </div>
@@ -414,6 +568,15 @@ const handleLogout = () => {
 .date-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 5px; font-size: 0.9rem; }
 .date-row.meta { font-size: 0.8rem; color: #aaa; }
 
+.reject-reason {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-left: 4px solid #c62828;
+  background: #fff4f4;
+  color: #7f1d1d;
+  font-size: 0.86rem;
+}
+
 .res-card-footer {
   padding: 12px 18px;
   background: #fdf8f3;
@@ -500,6 +663,70 @@ const handleLogout = () => {
 .error-msg { color: #e74c3c; font-size: 0.85rem; margin-bottom: 10px; }
 .success-msg { color: #27ae60; font-size: 0.85rem; margin-bottom: 10px; background: #e8f5e9; padding: 10px; }
 
+.btn-change {
+  background: #2196F3;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border-radius: 0;
+}
+.btn-change:hover { background: #1976D2; }
+.btn-change:disabled { background: #ccc; cursor: not-allowed; }
+
+/* MODAL STYLES */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 30px;
+  width: 90%;
+  max-width: 450px;
+  border: 1px solid #ddd;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.close-btn {
+  position: absolute;
+  top: 12px; right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.modal-info {
+  background: #f9f9f9;
+  padding: 12px;
+  margin-bottom: 20px;
+  border-left: 4px solid #2196F3;
+  font-size: 0.9rem;
+}
+.modal-info p { margin: 5px 0; }
+
+.btn-secondary {
+  width: 100%;
+  background: #ddd;
+  color: #333;
+  border: none;
+  padding: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 0;
+}
+.btn-secondary:hover { background: #bbb; }
+
 @media (max-width: 600px) {
   .dash-header { padding: 0 15px; }
   .dash-brand { font-size: 0.65rem; }
@@ -550,4 +777,18 @@ const handleLogout = () => {
 .btn-redeem:hover { background: #ad1457; }
 .btn-redeem:disabled { opacity: 0.5; }
 .redeem-stamp { font-size: 0.75rem; color: #2e7d32; font-weight: bold; text-align: right; }
+
+.footer-novo {
+  background: #e3f2fd;
+  border-top-color: #90caf9;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.change-note {
+  font-size: 0.78rem;
+  color: #1976D2;
+  font-style: italic;
+}
 </style>

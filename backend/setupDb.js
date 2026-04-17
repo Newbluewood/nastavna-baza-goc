@@ -155,11 +155,20 @@ async function setup() {
         check_in DATE,
         check_out DATE,
         target_room_id INT,
+        rejection_reason TEXT NULL,
         status ENUM('novo', 'obradjeno', 'odbijeno', 'otkazano') DEFAULT 'novo',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (target_room_id) REFERENCES rooms(id) ON DELETE SET NULL
       )
     `);
+
+    try {
+      await connection.query('ALTER TABLE inquiries ADD COLUMN rejection_reason TEXT NULL');
+    } catch (err) {
+      if (err.code !== 'ER_DUP_FIELDNAME') {
+        console.warn('Upozorenje: inquiries.rejection_reason kolona nije dodata:', err.message);
+      }
+    }
 
     // 7. Reservations (Sa vezom na inquiry i cancel_token za email link)
     await connection.query(`
@@ -172,10 +181,28 @@ async function setup() {
         guest_name VARCHAR(255),
         status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'confirmed',
         cancel_token VARCHAR(32) NULL UNIQUE,
+        UNIQUE KEY unique_room_dates_status (room_id, start_date, end_date, status),
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
         FOREIGN KEY (inquiry_id) REFERENCES inquiries(id) ON DELETE SET NULL
       )
     `);
+
+    // Za postojece baze: ukloni stari indeks ako postoji, zatim dodaj novi po statusu.
+    try {
+      await connection.query('ALTER TABLE reservations DROP INDEX unique_room_dates');
+    } catch (err) {
+      if (err.code !== 'ER_CANT_DROP_FIELD_OR_KEY') {
+        console.warn('Upozorenje: stari unique_room_dates indeks nije obrisan:', err.message);
+      }
+    }
+
+    try {
+      await connection.query('ALTER TABLE reservations ADD UNIQUE KEY unique_room_dates_status (room_id, start_date, end_date, status)');
+    } catch (err) {
+      if (err.code !== 'ER_DUP_KEYNAME') {
+        console.warn('Upozorenje: unique_room_dates_status indeks nije dodat:', err.message);
+      }
+    }
 
     // 8. Media Gallery
     await connection.query(`

@@ -6,46 +6,38 @@
       <!-- SUCCESS PANEL -->
       <div v-if="success" class="success-panel">
         <div class="success-icon">✅</div>
-        <h2>{{ langStore.currentLang === 'sr' ? 'Упит је послат!' : 'Inquiry Sent!' }}</h2>
-        <p class="success-sub">{{ langStore.currentLang === 'sr' ? 'Очекујте одговор у року од 24 сата.' : 'Expect a response within 24 hours.' }}</p>
+        <h2>{{ langStore.t('inquiry.sent') }}</h2>
+        <p class="success-sub">{{ langStore.t('inquiry.expectResponse') }}</p>
 
         <!-- Nalog kreiran -->
         <div v-if="newAccount" class="info-box account-box">
-          <div class="info-box-title">🔑 {{ langStore.currentLang === 'sr' ? 'Kreiran Vam je nalog' : 'Account Created' }}</div>
-          <p>{{ langStore.currentLang === 'sr'
-            ? 'Аутоматски смо Вам креирали налог. Лозинку налазите у emailу. Пријавите се да пратите статус резервације.'
-            : 'We automatically created an account for you. Check your email for the temporary password.' }}</p>
+          <div class="info-box-title">🔑 {{ langStore.t('inquiry.accountCreated') }}</div>
+          <p>{{ langStore.t('inquiry.accountCreatedDesc') }}</p>
           <router-link to="/prijava" class="btn-account" @click="close">
-            {{ langStore.currentLang === 'sr' ? 'Пријавите се →' : 'Login →' }}
+            {{ langStore.t('inquiry.loginBtn') }}
           </router-link>
         </div>
 
         <!-- Vec ima nalog -->
         <div v-else class="info-box account-box existing">
-          <div class="info-box-title">👤 {{ langStore.currentLang === 'sr' ? 'Пратите статус' : 'Track Status' }}</div>
-          <p>{{ langStore.currentLang === 'sr'
-            ? 'Пратите статус Вашег упита у свом налогу.'
-            : 'Track your inquiry status in your account.' }}</p>
+          <div class="info-box-title">👤 {{ langStore.t('inquiry.trackStatus') }}</div>
+          <p>{{ langStore.t('inquiry.trackStatusDesc') }}</p>
           <router-link to="/moj-nalog" class="btn-account" @click="close">
-            {{ langStore.currentLang === 'sr' ? 'Мој налог →' : 'My Account →' }}
+            {{ langStore.t('inquiry.myAccountBtn') }}
           </router-link>
         </div>
 
         <!-- Politika otkazivanja -->
         <div class="info-box cancel-policy">
-          <div class="info-box-title">📋 {{ langStore.currentLang === 'sr' ? 'Политика отказивања' : 'Cancellation Policy' }}</div>
+          <div class="info-box-title">📋 {{ langStore.t('inquiry.cancellationPolicy') }}</div>
           <ul>
-            <li>{{ langStore.currentLang === 'sr'
-              ? '✅ Бесплатно отказивање до 7 дана пре доласка'
-              : '✅ Free cancellation up to 7 days before arrival' }}</li>
-            <li>{{ langStore.currentLang === 'sr'
-              ? '❌ Отказивање у периоду краћем од 7 дана — контактирајте нас директно'
-              : '❌ Cancellations within 7 days — contact us directly' }}</li>
+            <li>{{ langStore.t('inquiry.freeCancellation') }}</li>
+            <li>{{ langStore.t('inquiry.contactCancellation') }}</li>
           </ul>
         </div>
 
         <button class="close-success-btn" @click="close">
-          {{ langStore.currentLang === 'sr' ? 'Затвори' : 'Close' }}
+          {{ langStore.t('inquiry.close') }}
         </button>
       </div>
 
@@ -55,52 +47,52 @@
         <div class="inquiry-header">
           <p class="building-name">{{ buildingName }}</p>
           <h2>{{ roomName }}</h2>
-          <span class="subtitle">{{ langStore.currentLang === 'sr' ? 'Резервација смештаја' : 'Accommodation booking' }}</span>
+          <span class="subtitle">{{ langStore.t('inquiry.bookingTitle') }}</span>
         </div>
         
         <form @submit.prevent="submitForm" class="inquiry-form">
           <!-- Novi Kalendar -->
           <div class="form-group">
-            <label>{{ langStore.currentLang === 'sr' ? 'Резервишите период' : 'Select dates' }} *</label>
+            <label>{{ langStore.t('inquiry.selectDates') }} *</label>
             <VueDatePicker 
               v-model="dateRange" 
               range 
               :enable-time-picker="false"
               :disabled-dates="disabledDates"
               :min-date="new Date()"
-              :placeholder="langStore.currentLang === 'sr' ? 'Изаберите датум доласка и одласка' : 'Select Check-in and Check-out dates'"
+              :placeholder="langStore.t('inquiry.selectDatesPlaceholder')"
               required
               auto-apply
             />
           </div>
 
           <div class="form-group">
-            <label>{{ langStore.currentLang === 'sr' ? 'Име и презиме' : 'Full Name' }} *</label>
+            <label>{{ langStore.t('inquiry.fullName') }} *</label>
             <input type="text" v-model="form.sender_name" required />
           </div>
           
           <div class="form-group-row">
             <div class="form-group half">
-              <label>{{ langStore.currentLang === 'sr' ? 'Електронска пошта' : 'Email' }} <span style="color:red">*</span></label>
+              <label>{{ langStore.t('inquiry.email') }} <span style="color:red">*</span></label>
               <input type="email" v-model="form.email" required :class="{ 'input-error': emailError }" />
               <span v-if="emailError" class="field-error">{{ emailError }}</span>
             </div>
             <div class="form-group half">
-              <label>{{ langStore.currentLang === 'sr' ? 'Телефон' : 'Phone' }}</label>
+              <label>{{ langStore.t('inquiry.phone') }}</label>
               <input type="text" v-model="form.phone" />
             </div>
           </div>
 
           <div class="form-group">
-            <label>{{ langStore.currentLang === 'sr' ? 'Додатна порука (Опционо)' : 'Additional Message (Optional)' }}</label>
-            <textarea v-model="form.message" rows="3" :placeholder="langStore.currentLang === 'sr' ? 'Напишите нам уколико имате специјалне захтеве...' : 'Write us if you have any special requests...'"></textarea>
+            <label>{{ langStore.t('inquiry.additionalMessage') }}</label>
+            <textarea v-model="form.message" rows="3" :placeholder="langStore.t('inquiry.messagePlaceholder')"></textarea>
           </div>
 
           <!-- Prikaz grešaka -->
           <p v-if="error" class="error-msg">{{ error }}</p>
 
           <button type="submit" class="submit-btn" :disabled="isSubmitting">
-            {{ isSubmitting ? (langStore.currentLang === 'sr' ? 'Шаљем...' : 'Sending...') : (langStore.currentLang === 'sr' ? 'Пошаљи упит' : 'Send Inquiry') }}
+            {{ isSubmitting ? langStore.t('inquiry.sending') : langStore.t('inquiry.sendInquiry') }}
           </button>
         </form>
       </template>
@@ -113,6 +105,7 @@ import { ref, watch, onMounted } from 'vue'
 import { useLangStore } from '../stores/lang'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
+import api from '../services/api.js'
 
 const props = defineProps({
   isOpen: Boolean,
@@ -142,18 +135,16 @@ const newAccount = ref(false)
 // Email validacija
 const emailError = ref('')
 const validateEmail = (email) => {
-  if (!email) return 'Е-пошта је обавезна.'
+  if (!email) return langStore.t('common.error') + ': ' + (langStore.currentLang === 'sr' ? 'Е-пошта је обавезна.' : 'Email is required.')
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-  if (!re.test(email)) return 'Унесите исправну е-пошту (нпр. ime@gmail.com)'
+  if (!re.test(email)) return langStore.t('common.error') + ': ' + (langStore.currentLang === 'sr' ? 'Унесите исправну е-пошту (нпр. ime@gmail.com)' : 'Enter a valid email (e.g. name@gmail.com)')
   return ''
 }
 
 const fetchAvailability = async () => {
   if (!props.roomId) return;
   try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-    const res = await fetch(`${baseUrl}/api/rooms/${props.roomId}/availability`)
-    const data = await res.json()
+    const data = await api.checkAvailability(props.roomId)
     
     let datesToDisable = []
     data.forEach(reservation => {
@@ -222,29 +213,27 @@ const submitForm = async () => {
        check_out = dt2.toISOString().split('T')[0];
     }
 
-    if (!check_in) throw new Error(langStore.currentLang === 'sr' ? "Молимо вас изаберите дане у календару." : "Please select dates in the calendar.")
+    if (!check_in) throw new Error(langStore.t('common.error') + ': ' + (langStore.currentLang === 'sr' ? "Молимо вас изаберите дане у календару." : "Please select dates in the calendar."))
 
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-    const res = await fetch(`${baseUrl}/api/inquiries`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...form.value,
-        check_in,
-        check_out,
-        target_room_id: props.roomId
-      })
+    const data = await api.submitInquiry({
+      ...form.value,
+      check_in,
+      check_out,
+      target_room_id: props.roomId
     })
     
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Server error')
-
     newAccount.value = !!data.newAccount
     success.value = true
     // Bez auto-zatvaranja — korisnik sam cita i klikne Zatvori
     
   } catch (err) {
-    error.value = err.message
+    if (err.status === 409) {
+      error.value = langStore.currentLang === 'sr'
+        ? 'Соба није доступна за изабране датуме. Молимо вас изаберите друге датуме.'
+        : 'Room is not available for the selected dates. Please choose different dates.'
+    } else {
+      error.value = err.message
+    }
   } finally {
     isSubmitting.value = false
   }
