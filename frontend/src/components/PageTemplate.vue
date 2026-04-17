@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onUnmounted, computed, watch } from 'vue'
 import ImageLightbox from './ImageLightbox.vue'
 import { useLangStore } from '../stores/lang'
 
@@ -28,7 +28,6 @@ const openLightbox = (index) => {
   lightboxOpen.value = true
 }
 
-
 const nextSlide = () => {
   if (props.slides && props.slides.length > 0) {
     currentSlide.value = (currentSlide.value + 1) % props.slides.length
@@ -41,11 +40,13 @@ const prevSlide = () => {
   }
 }
 
-onMounted(() => {
-  if (props.slides && props.slides.length > 1) {
+// Pokreni slider čim slides stignu (sa API-ja ili odmah)
+watch(() => props.slides?.length, (len) => {
+  if (slideInterval) { clearInterval(slideInterval); slideInterval = null }
+  if (len && len > 1) {
     slideInterval = setInterval(nextSlide, 5000)
   }
-})
+}, { immediate: true })
 
 onUnmounted(() => {
   if (slideInterval) clearInterval(slideInterval)
