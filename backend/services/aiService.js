@@ -95,7 +95,7 @@ function getLocalRewrite(text, { lang = 'sr', tone = 'professional' } = {}) {
 }
 
 function getChatMaxWords() {
-  return Number.parseInt(process.env.AI_CHAT_MAX_WORDS || '55', 10);
+  return Number.parseInt(process.env.AI_CHAT_MAX_WORDS || '45', 10);
 }
 
 function getChatMaxChars() {

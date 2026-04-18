@@ -414,7 +414,7 @@ async function planStayChat(req, res) {
           'Ako dolazite samo u obilazak Goca, mogu predloziti plan obilaska.'
         ],
         follow_up_question: 'Da li zelite rezervaciju smestaja ili dolazite samo u obilazak Goca?',
-        assistant_message: `${weatherSummary} Da li zelite rezervaciju smestaja ili dolazite samo u obilazak Goca?`,
+        assistant_message: `${weatherSummary} Zelite li da nastavimo na rezervaciju smestaja ili plan obilaska?`,
         assistant_provider_mode: aiContract?.source || 'heuristic',
         ai_contract: aiContract
       };
@@ -457,7 +457,6 @@ async function planStayChat(req, res) {
 
   // Weather action without date — ask for date instead of booking flow
   if (actionName === 'fetch_weather') {
-    const weatherLead = aiContract?.reply?.text || 'Mogu da proverim vremensku prognozu.';
     const userMessage = String(payload?.message || '').toLowerCase();
     const wantsGeneralTrend = /ovih dana|sledece nedelje|sljedece nedelje|next week|narednih dana/.test(userMessage);
 
@@ -482,8 +481,8 @@ async function planStayChat(req, res) {
         'Ako zelite rezervaciju, napisite termin, broj osoba i duzinu boravka.',
         'Ako dolazite samo u obilazak, mogu odmah predloziti aktivnosti na Gocu.'
       ],
-      follow_up_question: 'Da li zelite rezervaciju smestaja ili dolazite samo u obilazak Goca?',
-      assistant_message: `${trendText}${weatherLead} Da bih dao tacnu prognozu po datumu, potreban mi je datum dolaska. Da li zelite rezervaciju smestaja ili dolazite samo u obilazak Goca?`,
+      follow_up_question: 'Posaljite datum dolaska ili recite da li zelite smestaj ili samo obilazak.',
+      assistant_message: `${trendText}Za tacnu prognozu potreban je datum dolaska. Posaljite datum ili recite da li zelite smestaj ili samo obilazak.`,
       assistant_provider_mode: aiContract?.source || 'heuristic',
       ai_contract: aiContract
     };
