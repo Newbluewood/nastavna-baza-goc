@@ -6,17 +6,21 @@ class ApiService {
   }
 
   async request(endpoint, options = {}) {
+    const { authMode = 'any', ...requestOptions } = options;
     const url = `${this.baseURL}${endpoint}`;
     const config = {
       headers: {
         'Content-Type': 'application/json',
-        ...options.headers
+        ...requestOptions.headers
       },
-      ...options
+      ...requestOptions
     };
 
-    // Add auth token if available
-    const token = this.getAuthToken();
+    // Add auth token based on endpoint auth mode
+    const token = authMode === 'guest'
+      ? this.getGuestToken()
+      : (authMode === 'none' ? null : this.getAuthToken());
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -37,6 +41,10 @@ class ApiService {
   getAuthToken() {
     // Check both admin and guest tokens
     return localStorage.getItem('admin_token') || localStorage.getItem('guest_token');
+  }
+
+  getGuestToken() {
+    return localStorage.getItem('guest_token');
   }
 
   // Public endpoints
@@ -109,6 +117,7 @@ class ApiService {
   async chatReserveStay(payload) {
     return this.request('/api/chat/reserve-stay', {
       method: 'POST',
+      authMode: 'guest',
       body: JSON.stringify(payload || {})
     });
   }

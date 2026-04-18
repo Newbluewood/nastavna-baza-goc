@@ -13,7 +13,7 @@ const inputEl = ref(null)
 const pendingReserve = ref(null)
 const guestName = ref('')
 const guestEmail = ref('')
-const visitsByFacility = ref({})
+const visitsByCard = ref({})
 
 watch(isOpen, async (open) => {
   if (!open) return
@@ -51,7 +51,7 @@ function persistGuestChatState() {
   const payload = {
     messages: messages.value.slice(-80),
     context: context.value,
-    visitsByFacility: visitsByFacility.value
+    visitsByCard: visitsByCard.value
   }
 
   localStorage.setItem(GUEST_CHAT_STORAGE_KEY, JSON.stringify(payload))
@@ -77,8 +77,8 @@ function restoreGuestChatState() {
         ...parsed.context
       }
     }
-    if (parsed.visitsByFacility && typeof parsed.visitsByFacility === 'object') {
-      visitsByFacility.value = parsed.visitsByFacility
+    if (parsed.visitsByCard && typeof parsed.visitsByCard === 'object') {
+      visitsByCard.value = parsed.visitsByCard
     }
   } catch {
     localStorage.removeItem(GUEST_CHAT_STORAGE_KEY)
@@ -90,7 +90,7 @@ onMounted(() => {
 })
 
 watch(
-  [messages, context, visitsByFacility],
+  [messages, context, visitsByCard],
   () => {
     persistGuestChatState()
   },
@@ -246,7 +246,9 @@ function goToLogin() {
   router.push('/prijava')
 }
 
-async function loadVisitSuggestions(facilityId, checkIn) {
+async function loadVisitSuggestions(facilityId, roomId, checkIn) {
+  const cardKey = `${facilityId}-${roomId}`
+
   if (!facilityId) {
     pushAssistantText('Za ovaj predlog nedostaju podaci o objektu. Posaljite novi upit za osvezene predloge.')
     return
@@ -257,7 +259,7 @@ async function loadVisitSuggestions(facilityId, checkIn) {
     return
   }
 
-  const cached = visitsByFacility.value[facilityId]
+  const cached = visitsByCard.value[cardKey]
   if (Array.isArray(cached) && cached.length > 0) return
 
   const effectiveCheckIn = checkIn || context.value.check_in
@@ -280,9 +282,9 @@ async function loadVisitSuggestions(facilityId, checkIn) {
       pushAssistantText(result.weather.summary)
     }
 
-    visitsByFacility.value = {
-      ...visitsByFacility.value,
-      [facilityId]: result.suggestions || []
+    visitsByCard.value = {
+      ...visitsByCard.value,
+      [cardKey]: result.suggestions || []
     }
   } catch (error) {
     pushAssistantText(error?.data?.error || error?.message || 'Predlozi obilaska trenutno nisu dostupni.')
@@ -335,12 +337,12 @@ async function loadVisitSuggestions(facilityId, checkIn) {
               <small>{{ item.rationale?.join(', ') }}</small>
 
               <div class="stay-card-actions">
-                <button type="button" @click="loadVisitSuggestions(item.facility_id, msg.criteria?.check_in)">Predlozi obilazak</button>
+                <button type="button" @click="loadVisitSuggestions(item.facility_id, item.room_id, msg.criteria?.check_in)">Predlozi obilazak</button>
                 <button type="button" class="reserve-btn" @click="askForReservation(item, msg.criteria)">Rezervisi</button>
               </div>
 
-              <ul v-if="visitsByFacility[item.facility_id]?.length" class="visit-list">
-                <li v-for="visit in visitsByFacility[item.facility_id]" :key="visit.id">
+              <ul v-if="visitsByCard[`${item.facility_id}-${item.room_id}`]?.length" class="visit-list">
+                <li v-for="visit in visitsByCard[`${item.facility_id}-${item.room_id}`]" :key="visit.id">
                   {{ visit.name }}
                   <span v-if="visit.distance_minutes"> ({{ visit.distance_minutes }} min)</span>
                 </li>
@@ -350,7 +352,7 @@ async function loadVisitSuggestions(facilityId, checkIn) {
         </div>
       </div>
 
-      <div v-if="pendingReserve && !localStorage.getItem('guest_token')" class="reserve-form">
+      <div v-if="pendingReserve && !hasGuestToken()" class="reserve-form">
         <input v-model="guestName" type="text" placeholder="Ime i prezime" />
         <input v-model="guestEmail" type="email" placeholder="Email" />
         <div class="reserve-form-actions">
@@ -492,11 +494,14 @@ async function loadVisitSuggestions(facilityId, checkIn) {
   align-self: flex-start;
   border: 1px solid #67462e;
   background: #67462e;
-  color: #fff;
   font-size: 0.68rem;
   font-weight: 700;
   padding: 2px 6px;
   margin-bottom: 2px;
+}
+
+.stay-card .recommend-badge {
+  color: #fff;
 }
 
 .stay-card strong {
