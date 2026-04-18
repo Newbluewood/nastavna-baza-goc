@@ -111,7 +111,15 @@ const props = defineProps({
   isOpen: Boolean,
   roomId: Number,
   roomName: String,
-  buildingName: String
+  buildingName: String,
+  initialCheckIn: {
+    type: String,
+    default: ''
+  },
+  initialCheckOut: {
+    type: String,
+    default: ''
+  }
 })
 
 const emit = defineEmits(['update:isOpen'])
@@ -139,6 +147,14 @@ const validateEmail = (email) => {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
   if (!re.test(email)) return langStore.t('common.error') + ': ' + (langStore.currentLang === 'sr' ? 'Унесите исправну е-пошту (нпр. ime@gmail.com)' : 'Enter a valid email (e.g. name@gmail.com)')
   return ''
+}
+
+const parseDateOnly = (value) => {
+  if (!value) return null
+  const normalized = String(value).trim().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return null
+  const parsed = new Date(`${normalized}T12:00:00`)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
 const fetchAvailability = async () => {
@@ -177,7 +193,13 @@ const fetchAvailability = async () => {
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     form.value = { sender_name: '', email: '', phone: '', message: '' }
-    dateRange.value = null
+    const checkInDate = parseDateOnly(props.initialCheckIn)
+    const checkOutDate = parseDateOnly(props.initialCheckOut)
+    if (checkInDate && checkOutDate && checkOutDate >= checkInDate) {
+      dateRange.value = [checkInDate, checkOutDate]
+    } else {
+      dateRange.value = null
+    }
     error.value = ''
     success.value = ''
     fetchAvailability()

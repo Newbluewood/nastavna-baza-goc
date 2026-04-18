@@ -22,6 +22,7 @@ const lbIndex = ref(0)
 const inquiryOpen = ref(false)
 const selectedRoomId = ref(null)
 const selectedRoomName = ref("")
+const queryInquiryHandled = ref(false)
 
 const amenityMapping = {
   wifi: { sr: 'Бесплатан WiFi', en: 'Free WiFi', icon: '📶' },
@@ -48,6 +49,7 @@ const loadData = async () => {
   isLoading.value = true
   try {
     building.value = await api.getFacility(route.params.id, langStore.currentLang)
+    openInquiryFromQuery()
   } catch (error) {
     console.error("Error fetching data from API:", error)
     // Moze redirect ako ne postoji
@@ -76,6 +78,21 @@ const openInquiry = (room) => {
   inquiryOpen.value = true
 }
 
+const openInquiryFromQuery = () => {
+  if (queryInquiryHandled.value) return
+  if (String(route.query.openInquiry || '') !== '1') return
+
+  const rooms = building.value?.rooms || []
+  if (!rooms.length) return
+
+  const roomId = Number(route.query.roomId)
+  const targetRoom = rooms.find((room) => Number(room.id) === roomId)
+  if (!targetRoom) return
+
+  openInquiry(targetRoom)
+  queryInquiryHandled.value = true
+}
+
 onMounted(() => {
   loadData()
 })
@@ -83,6 +100,14 @@ onMounted(() => {
 watch(() => langStore.currentLang, () => {
   loadData()
 })
+
+watch(
+  () => [route.query.openInquiry, route.query.roomId, route.params.id],
+  () => {
+    queryInquiryHandled.value = false
+    openInquiryFromQuery()
+  }
+)
 </script>
 
 <template>
@@ -181,6 +206,8 @@ watch(() => langStore.currentLang, () => {
     :roomId="selectedRoomId"
     :roomName="selectedRoomName"
     :buildingName="building?.name"
+    :initialCheckIn="typeof route.query.checkIn === 'string' ? route.query.checkIn : ''"
+    :initialCheckOut="typeof route.query.checkOut === 'string' ? route.query.checkOut : ''"
   />
 
 </template>

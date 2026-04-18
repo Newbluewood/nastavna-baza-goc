@@ -1,10 +1,11 @@
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useGuestStore } from '../stores/guest'
 import { useLangStore } from '../stores/lang'
 
 const router = useRouter()
+const route = useRoute()
 const guestStore = useGuestStore()
 const langStore = useLangStore()
 
@@ -31,7 +32,12 @@ const handleLogin = async () => {
   error.value = ''
   try {
     await guestStore.login(email.value, password.value)
-    router.push('/moj-nalog')
+    const redirectPath = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+    if (redirectPath && redirectPath.startsWith('/')) {
+      router.push(redirectPath)
+    } else {
+      router.push('/moj-nalog')
+    }
   } catch (e) {
     error.value = e.message
   } finally {

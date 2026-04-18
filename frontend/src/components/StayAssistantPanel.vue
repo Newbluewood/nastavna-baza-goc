@@ -12,8 +12,6 @@ const busy = ref(false)
 const inputText = ref('')
 const inputEl = ref(null)
 const pendingReserve = ref(null)
-const guestName = ref('')
-const guestEmail = ref('')
 const visitsByCard = ref({})
 
 watch(isOpen, async (open) => {
@@ -139,6 +137,34 @@ function deriveCheckOut(checkIn, stayLengthDays) {
   return date.toISOString().slice(0, 10)
 }
 
+function buildInquiryTargetRoute(item, payload) {
+  if (!item?.facility_id || !payload?.target_room_id || !payload?.check_in || !payload?.check_out) {
+    return null
+  }
+
+  return {
+    name: 'smestaj-single',
+    params: { id: String(item.facility_id) },
+    query: {
+      openInquiry: '1',
+      roomId: String(payload.target_room_id),
+      checkIn: String(payload.check_in),
+      checkOut: String(payload.check_out)
+    }
+  }
+}
+
+function navigateToInquiry(targetRoute) {
+  if (!targetRoute) {
+    pushAssistantText('Ne mogu da otvorim formu za ovaj predlog. Posaljite novi upit pa pokusajte ponovo.')
+    return
+  }
+
+  pendingReserve.value = null
+  isOpen.value = false
+  router.push(targetRoute)
+}
+
 async function sendMessage() {
   if (!canSend.value) return
 
@@ -200,92 +226,38 @@ function askForReservation(item, criteria = null) {
 
   pendingReserve.value = {
     ...item,
-    reservation_payload: payload
+    reservation_payload: payload,
+    inquiry_target: buildInquiryTargetRoute(item, payload)
   }
 
   const hasGuestToken = Boolean(localStorage.getItem('guest_token'))
   if (hasGuestToken) {
-    createReservation()
+    navigateToInquiry(pendingReserve.value.inquiry_target)
     return
   }
 
-  pushAssistantText('Za rezervaciju mi trebaju ime i prezime i email. Ako vec imate nalog, prijavite se pa nastavljamo odmah.')
-}
-
-async function createReservation() {
-  if (busy.value) return
-  if (!pendingReserve.value) return
-
-  const hasGuestToken = Boolean(localStorage.getItem('guest_token'))
-  if (!hasGuestToken && (!guestName.value.trim() || !guestEmail.value.trim())) {
-    pushAssistantText('Unesite ime i prezime i email da nastavim rezervaciju.')
-    return
-  }
-
-  busy.value = true
-  try {
-    const payload = {
-      ...pendingReserve.value.reservation_payload,
-      message: 'Rezervacija pokrenuta iz chat panela.',
-      sender_name: hasGuestToken ? undefined : guestName.value.trim(),
-      email: hasGuestToken ? undefined : guestEmail.value.trim()
-    }
-
-    const result = await api.chatReserveStay(payload)
-    pushAssistantText(result.message || 'Rezervacija je pokrenuta. Potvrda ce stici na email.')
-    pendingReserve.value = null
-    guestName.value = ''
-    guestEmail.value = ''
-  } catch (error) {
-    if (error?.status === 401 || error?.status === 403) {
-      localStorage.removeItem('guest_token')
-      pushAssistantText('Sesija je istekla. Unesite ime i email pa cu nastaviti rezervaciju, ili se prijavite ponovo.')
-      return
-    }
-
-    if (error?.status === 400 && String(error?.data?.error || '').includes('sender_name and email are required')) {
-      localStorage.removeItem('guest_token')
-      pushAssistantText('Sesija vise nije vazeca. Unesite ime i email pa cu odmah nastaviti rezervaciju.')
-      return
-    }
-
-    if (error?.status === 409 && error?.data?.status === 'unavailable') {
-      pushAssistantText('Naiskrenije se izvinjavamo — zbog internih reorganizacija, ponudjeni smestaj trenutno nije dostupan. Mozete potraziti drugi termin ili nas kontaktirati za vise informacija. Hvala na razumevanju.')
-      pendingReserve.value = null
-      return
-    }
-
-    if (error?.data?.status === 'login_required') {
-      pushAssistantText('Vec postoji nalog za taj email. Prijavite se da nastavim rezervaciju.')
-      return
-    }
-
-    const backendError = String(error?.data?.error || error?.data?.message || error?.message || '')
-    if (backendError.includes('target_room_id, check_in and check_out are required')) {
-      pushAssistantText('Nedostaju podaci o terminu ili sobi. Posaljite novi upit pa pokusajte ponovo.')
-      return
-    }
-
-    if (backendError.includes('sender_name and email are required')) {
-      pushAssistantText('Unesite ime i email pa kliknite ponovo na slanje rezervacije.')
-      return
-    }
-
-    pushAssistantText('Rezervacija trenutno nije uspela. Pokusajte ponovo za nekoliko sekundi.')
-  } finally {
-    busy.value = false
-  }
+  pushAssistantText('Pre usmeravanja na formu, recite da li imate nalog.')
 }
 
 function closeReservationModal() {
-  if (busy.value) return
   pendingReserve.value = null
 }
 
 function goToLogin() {
+  const targetRoute = pendingReserve.value?.inquiry_target
+  const redirectTarget = targetRoute ? router.resolve(targetRoute).fullPath : '/smestaj'
+
   pendingReserve.value = null
   isOpen.value = false
-  router.push('/prijava')
+  router.push({
+    path: '/prijava',
+    query: { redirect: redirectTarget }
+  })
+}
+
+function continueWithoutAccount() {
+  const targetRoute = pendingReserve.value?.inquiry_target
+  navigateToInquiry(targetRoute)
 }
 
 watch(
@@ -415,15 +387,13 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
 
     <Teleport to="body">
       <div v-if="pendingReserve && !hasGuestToken()" class="reserve-modal-overlay" @click.self="closeReservationModal">
-        <div class="reserve-modal" role="dialog" aria-modal="true" aria-label="Unos podataka za rezervaciju">
+        <div class="reserve-modal" role="dialog" aria-modal="true" aria-label="Izbor toka za rezervaciju">
           <button type="button" class="reserve-modal-close" @click="closeReservationModal" aria-label="Zatvori">✕</button>
-          <strong>Podaci za rezervaciju</strong>
-          <small>Unesite ime i email da zavrsim rezervaciju.</small>
-          <input v-model="guestName" type="text" placeholder="Ime i prezime" />
-          <input v-model="guestEmail" type="email" placeholder="Email" />
+          <strong>Nastavak rezervacije</strong>
+          <small>Za nastavak koristimo standardnu formu za rezervaciju. Da li imate nalog?</small>
           <div class="reserve-form-actions">
-            <button type="button" @click="createReservation" :disabled="busy">Posalji rezervaciju</button>
-            <button type="button" class="ghost-btn" @click="goToLogin" :disabled="busy">Imam nalog, prijava</button>
+            <button type="button" @click="goToLogin">Imam nalog</button>
+            <button type="button" class="ghost-btn" @click="continueWithoutAccount">Nemam nalog</button>
           </div>
         </div>
       </div>
