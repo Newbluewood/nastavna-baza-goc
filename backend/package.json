@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "start:clean": "powershell -NoProfile -Command \"$p=(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess); if($p){Stop-Process -Id $p -Force}; Set-Location .; node index.js\"",
     "db:init:dry": "node InitialConfigDB.js",
     "db:init:run": "node InitialConfigDB.js --execute",
     "migrate:dry": "node migrateDb.js",

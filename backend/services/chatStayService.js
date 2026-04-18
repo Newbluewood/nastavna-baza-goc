@@ -369,6 +369,32 @@ function scoreOption(item, criteria, totalGuests) {
   return score;
 }
 
+function pickRecommendedRoomId(preferredItems, totalGuests) {
+  const candidates = preferredItems
+    .map((item) => {
+      const capacity = parseCapacityRange(item.room_capacity, item.room_capacity_min, item.room_capacity_max);
+      const max = Number(capacity.max || 0);
+      const overflow = max ? max - Number(totalGuests || 0) : 999;
+      return {
+        room_id: Number(item.room_id),
+        overflow,
+        score: Number(item.score || 0)
+      };
+    })
+    .filter((item) => Number.isFinite(item.room_id) && item.overflow >= 0);
+
+  if (!candidates.length) {
+    return null;
+  }
+
+  candidates.sort((a, b) => {
+    if (a.overflow !== b.overflow) return a.overflow - b.overflow;
+    return b.score - a.score;
+  });
+
+  return candidates[0].room_id;
+}
+
 async function loadRoomMatrix(db) {
   const [rows] = await db.query(`
     SELECT
@@ -486,6 +512,7 @@ async function planStay(db, payload) {
 
   const preferred = fits.filter((item) => item.available).slice(0, 3);
   const fallback = fits.filter((item) => !item.available).slice(0, 3);
+  const recommendedRoomId = pickRecommendedRoomId(preferred, criteria.total_guests);
 
   return {
     status: preferred.length ? 'suggestions_ready' : 'alternatives_only',
@@ -499,7 +526,11 @@ async function planStay(db, payload) {
       facility_name: item.facility_name,
       room_id: item.room_id,
       room_name: item.room_name,
+      room_capacity: item.room_capacity,
+      room_capacity_min: item.room_capacity_min,
+      room_capacity_max: item.room_capacity_max,
       available: item.available,
+      is_recommended: Number(item.room_id) === Number(recommendedRoomId),
       score: item.score,
       rationale: item.rationale,
       cover_image: item.room_cover_image || item.facility_cover_image,

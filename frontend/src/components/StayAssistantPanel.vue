@@ -127,6 +127,17 @@ function rememberContext(criteria) {
   }
 }
 
+function deriveCheckOut(checkIn, stayLengthDays) {
+  if (!checkIn || !Number.isFinite(Number(stayLengthDays)) || Number(stayLengthDays) <= 0) {
+    return null
+  }
+
+  const date = new Date(`${checkIn}T12:00:00`)
+  if (Number.isNaN(date.getTime())) return null
+  date.setDate(date.getDate() + Number(stayLengthDays))
+  return date.toISOString().slice(0, 10)
+}
+
 async function sendMessage() {
   if (!canSend.value) return
 
@@ -163,8 +174,30 @@ async function sendMessage() {
   }
 }
 
-function askForReservation(item) {
-  pendingReserve.value = item
+function askForReservation(item, criteria = null) {
+  if (!item || !item.room_id) {
+    pushAssistantText('Ne mogu da pokrenem rezervaciju za ovaj predlog. Posaljite novi upit pa pokusavamo ponovo.')
+    return
+  }
+
+  const payload = {
+    ...(item.reservation_payload || {}),
+    target_room_id: item.reservation_payload?.target_room_id || item.room_id,
+    check_in: item.reservation_payload?.check_in || criteria?.check_in || context.value.check_in,
+    check_out: item.reservation_payload?.check_out
+      || criteria?.check_out
+      || deriveCheckOut(criteria?.check_in || context.value.check_in, criteria?.stay_length_days || context.value.stay_length_days)
+  }
+
+  if (!payload.check_in || !payload.check_out) {
+    pushAssistantText('Nedostaje termin za rezervaciju. Napisite ponovo datum dolaska i broj dana pa cu odmah pokrenuti rezervaciju.')
+    return
+  }
+
+  pendingReserve.value = {
+    ...item,
+    reservation_payload: payload
+  }
 
   const hasGuestToken = Boolean(localStorage.getItem('guest_token'))
   if (hasGuestToken) {
@@ -214,14 +247,30 @@ function goToLogin() {
 }
 
 async function loadVisitSuggestions(facilityId, checkIn) {
-  if (!facilityId || busy.value) return
-  if (visitsByFacility.value[facilityId]) return
+  if (!facilityId) {
+    pushAssistantText('Za ovaj predlog nedostaju podaci o objektu. Posaljite novi upit za osvezene predloge.')
+    return
+  }
+
+  if (busy.value) {
+    pushAssistantText('Sacekajte da zavrsim prethodni zahtev pa odmah dajem predloge obilaska.')
+    return
+  }
+
+  const cached = visitsByFacility.value[facilityId]
+  if (Array.isArray(cached) && cached.length > 0) return
+
+  const effectiveCheckIn = checkIn || context.value.check_in
+  if (!effectiveCheckIn) {
+    pushAssistantText('Nedostaje datum dolaska za predlog obilaska. Napisite datum pa nastavljamo.')
+    return
+  }
 
   busy.value = true
   try {
     const result = await api.chatSuggestVisit({
       facility_id: facilityId,
-      check_in: checkIn,
+      check_in: effectiveCheckIn,
       weather_mode: 'any',
       family: true,
       lang: 'sr'
@@ -235,8 +284,8 @@ async function loadVisitSuggestions(facilityId, checkIn) {
       ...visitsByFacility.value,
       [facilityId]: result.suggestions || []
     }
-  } catch {
-    pushAssistantText('Predlozi obilaska trenutno nisu dostupni.')
+  } catch (error) {
+    pushAssistantText(error?.data?.error || error?.message || 'Predlozi obilaska trenutno nisu dostupni.')
   } finally {
     busy.value = false
   }
@@ -275,14 +324,19 @@ async function loadVisitSuggestions(facilityId, checkIn) {
           <p>{{ msg.text }}</p>
 
           <div v-if="msg.type === 'suggestions' && msg.suggestions?.length" class="stay-suggestions">
-            <div v-for="item in msg.suggestions" :key="`${item.facility_id}-${item.room_id}`" class="stay-card">
+            <div
+              v-for="item in msg.suggestions"
+              :key="`${item.facility_id}-${item.room_id}`"
+              :class="['stay-card', { 'is-recommended': item.is_recommended }]"
+            >
+              <span v-if="item.is_recommended" class="recommend-badge">Preporuka za Vas</span>
               <strong>{{ item.facility_name }}</strong>
               <span>{{ item.room_name }}</span>
               <small>{{ item.rationale?.join(', ') }}</small>
 
               <div class="stay-card-actions">
-                <button @click="loadVisitSuggestions(item.facility_id, msg.criteria?.check_in)">Predlozi obilazak</button>
-                <button class="reserve-btn" @click="askForReservation(item)">Rezervisi</button>
+                <button type="button" @click="loadVisitSuggestions(item.facility_id, msg.criteria?.check_in)">Predlozi obilazak</button>
+                <button type="button" class="reserve-btn" @click="askForReservation(item, msg.criteria)">Rezervisi</button>
               </div>
 
               <ul v-if="visitsByFacility[item.facility_id]?.length" class="visit-list">
@@ -300,8 +354,8 @@ async function loadVisitSuggestions(facilityId, checkIn) {
         <input v-model="guestName" type="text" placeholder="Ime i prezime" />
         <input v-model="guestEmail" type="email" placeholder="Email" />
         <div class="reserve-form-actions">
-          <button @click="createReservation" :disabled="busy">Potvrdi rezervaciju</button>
-          <button class="ghost-btn" @click="goToLogin">Imam nalog, prijava</button>
+          <button type="button" @click="createReservation" :disabled="busy">Potvrdi rezervaciju</button>
+          <button type="button" class="ghost-btn" @click="goToLogin">Imam nalog, prijava</button>
         </div>
       </div>
 
@@ -313,7 +367,7 @@ async function loadVisitSuggestions(facilityId, checkIn) {
           placeholder="Npr. Dolazimo sledece nedelje, 2 odraslih i 2 dece na 3 dana"
           @keyup.enter="sendMessage"
         />
-        <button @click="sendMessage" :disabled="!canSend">Posalji</button>
+        <button type="button" @click="sendMessage" :disabled="!canSend">Posalji</button>
       </div>
     </div>
   </div>
@@ -427,6 +481,22 @@ async function loadVisitSuggestions(facilityId, checkIn) {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.stay-card.is-recommended {
+  background: #f3e2d4;
+  border-color: #9a714e;
+}
+
+.recommend-badge {
+  align-self: flex-start;
+  border: 1px solid #67462e;
+  background: #67462e;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  margin-bottom: 2px;
 }
 
 .stay-card strong {
