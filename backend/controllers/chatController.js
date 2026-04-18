@@ -6,6 +6,80 @@ const chatMetricsService = require('../services/chatMetricsService');
 const { getForecastForUpcomingDays } = require('../services/weatherService');
 const chatContextGuardService = require('../services/chatContextGuardService');
 
+function getDestinationCoordinates() {
+  const lat = Number(process.env.GOC_DESTINATION_LAT || process.env.WEATHER_LAT || 43.559095);
+  const lon = Number(process.env.GOC_DESTINATION_LON || process.env.WEATHER_LON || 20.75393);
+  return {
+    lat: Number.isFinite(lat) ? lat : 43.559095,
+    lon: Number.isFinite(lon) ? lon : 20.75393
+  };
+}
+
+function getDestinationLabel() {
+  return String(process.env.GOC_DESTINATION_LABEL || 'Nastavna baza Goc').trim();
+}
+
+function extractOriginFromMessage(message = '') {
+  const source = String(message || '').trim();
+  if (!source) return null;
+
+  const lower = source.toLowerCase();
+  const byPattern = [
+    /od\s+([a-zA-Z\u0106\u0107\u0160\u0161\u017D\u017E\u0110\u0111\-\s]{2,60})$/i,
+    /iz\s+([a-zA-Z\u0106\u0107\u0160\u0161\u017D\u017E\u0110\u0111\-\s]{2,60})$/i,
+    /dolazim\s+iz\s+([a-zA-Z\u0106\u0107\u0160\u0161\u017D\u017E\u0110\u0111\-\s]{2,60})/i,
+    /krecem\s+iz\s+([a-zA-Z\u0106\u0107\u0160\u0161\u017D\u017E\u0110\u0111\-\s]{2,60})/i
+  ];
+
+  for (const re of byPattern) {
+    const m = source.match(re);
+    if (m?.[1]) {
+      const origin = m[1].replace(/[.,!?;:]+$/g, '').trim();
+      if (origin.length >= 2) return origin;
+    }
+  }
+
+  if (/^([a-zA-Z\u0106\u0107\u0160\u0161\u017D\u017E\u0110\u0111\-\s]{2,60})$/.test(source)
+    && !/vreme|smestaj|rezervis|obilazak|noc|dan|odras|dece|deca|dete/i.test(lower)) {
+    return source.trim();
+  }
+
+  return null;
+}
+
+function createGoogleMapsDirectionsLink(origin) {
+  const destination = getDestinationCoordinates();
+  const originEncoded = encodeURIComponent(String(origin || '').trim());
+  const destinationEncoded = encodeURIComponent(`${destination.lat},${destination.lon}`);
+  return `https://www.google.com/maps/dir/?api=1&origin=${originEncoded}&destination=${destinationEncoded}&travelmode=driving`;
+}
+
+function formatVisitSuggestionText(result = {}, userMessage = '') {
+  const allSuggestions = Array.isArray(result?.suggestions) ? result.suggestions : [];
+  if (!allSuggestions.length) {
+    return 'Trenutno nemam predloge obilaska za taj upit, ali mogu predloziti smestaj i plan boravka.';
+  }
+
+  const source = String(userMessage || '').toLowerCase();
+  const wantsFood = /kafana|restoran|gde\s+da\s+jedem|rucak|vecera/.test(source);
+
+  const restaurants = allSuggestions.filter((item) => String(item?.type || '').toLowerCase() === 'restaurant');
+  const nonRestaurants = allSuggestions.filter((item) => String(item?.type || '').toLowerCase() !== 'restaurant');
+
+  const preferred = wantsFood
+    ? [...restaurants, ...nonRestaurants]
+    : [...nonRestaurants, ...restaurants];
+
+  const top = preferred.slice(0, 4);
+  const names = top.map((item) => item?.name).filter(Boolean);
+  if (!names.length) {
+    return 'Imam predloge obilaska i ugostiteljske ponude u blizini, pa mogu odmah da suzim po vasim interesovanjima.';
+  }
+
+  const weatherPart = result?.weather?.summary ? `${result.weather.summary} ` : '';
+  return `${weatherPart}Predlog za obilazak u blizini: ${names.join(', ')}.`;
+}
+
 function getActionFromResult(result = {}) {
   if (result?.status === 'needs_input') {
     return {
@@ -170,6 +244,141 @@ async function planStayChat(req, res) {
 
   // Dispatcher: execute action defined by AI contract
   const actionName = aiContract?.action?.name || 'search_rooms';
+
+  if (actionName === 'route_help') {
+    const origin = extractOriginFromMessage(payload?.message || '');
+
+    if (!origin) {
+      const askRouteResponse = {
+        status: 'needs_input',
+        criteria: {
+          ...(payload?.context || {}),
+          pending_slot: 'route_origin'
+        },
+        suggestions: [],
+        alternatives: [],
+        next_actions: [
+          'Kad stignemo rutu, mogu pomoci i oko smestaja.',
+          'Ako dolazite samo u obilazak, mogu preporuciti aktivnosti na Gocu.'
+        ],
+        follow_up_question: 'Odakle dolazite? Poslacu vam najbrzu rutu do Nastavne baze Goc.',
+        assistant_message: 'Naravno. Odakle dolazite? Poslacu vam Google Maps rutu do Nastavne baze Goc, pa mozemo odmah dalje na smestaj ili obilazak.',
+        assistant_provider_mode: aiContract?.source || 'heuristic',
+        ai_contract: aiContract
+      };
+
+      chatMetricsService.recordPlanStayTurn({
+        guardClass: aiContract?.guard?.class,
+        intentName: aiContract?.intent?.name,
+        actionName: aiContract?.action?.name,
+        decisionSource: aiContract?.source,
+        assistantProviderMode: askRouteResponse.assistant_provider_mode,
+        assistantText: askRouteResponse.assistant_message
+      });
+
+      return res.json(askRouteResponse);
+    }
+
+    const mapLink = createGoogleMapsDirectionsLink(origin);
+    const destinationLabel = getDestinationLabel();
+    const routeResponse = {
+      status: 'needs_input',
+      criteria: {
+        ...(payload?.context || {}),
+        pending_slot: null
+      },
+      suggestions: [],
+      alternatives: [],
+      next_actions: [
+        'Ako zelite, mogu odmah da predlozim smestaj za vas termin.',
+        'Ako ste za obilazak, mogu dati plan aktivnosti za dan/dva.'
+      ],
+      follow_up_question: 'Da li zelite da nastavimo ka rezervaciji smestaja ili samo obilasku Goca?',
+      assistant_message: `Odlicno. Ruta od ${origin} do ${destinationLabel}: ${mapLink} Da li zelite da nastavimo ka rezervaciji smestaja ili samo obilasku Goca?`,
+      assistant_provider_mode: aiContract?.source || 'heuristic',
+      ai_contract: aiContract
+    };
+
+    chatMetricsService.recordPlanStayTurn({
+      guardClass: aiContract?.guard?.class,
+      intentName: aiContract?.intent?.name,
+      actionName: aiContract?.action?.name,
+      decisionSource: aiContract?.source,
+      assistantProviderMode: routeResponse.assistant_provider_mode,
+      assistantText: routeResponse.assistant_message
+    });
+
+    return res.json(routeResponse);
+  }
+
+  if (actionName === 'fetch_visits') {
+    try {
+      const visitResult = await suggestVisit(req.app.locals.db, {
+        facility_id: payload?.context?.facility_id || null,
+        check_in: payload?.context?.check_in || null,
+        weather_mode: 'any',
+        family: Number(payload?.context?.children || 0) > 0,
+        lang: 'sr'
+      });
+
+      const lead = formatVisitSuggestionText(visitResult, payload?.message || '');
+      const visitResponse = {
+        status: 'needs_input',
+        criteria: {
+          ...(payload?.context || {}),
+          pending_slot: null
+        },
+        suggestions: [],
+        alternatives: [],
+        visit_suggestions: Array.isArray(visitResult?.suggestions) ? visitResult.suggestions.slice(0, 6) : [],
+        next_actions: [
+          'Ako zelite, mogu odmah da predlozim smestaj prema terminu i broju osoba.',
+          'Ako ostajete samo na obilasku, mogu suziti predloge po hrani, prirodi ili laganoj setnji.'
+        ],
+        follow_up_question: 'Da li zelite da nastavimo ka rezervaciji smestaja ili ostajemo na planu obilaska?',
+        assistant_message: `${lead} Da li zelite da nastavimo ka rezervaciji smestaja ili ostajemo na planu obilaska?`,
+        assistant_provider_mode: aiContract?.source || 'heuristic',
+        ai_contract: aiContract
+      };
+
+      chatMetricsService.recordPlanStayTurn({
+        guardClass: aiContract?.guard?.class,
+        intentName: aiContract?.intent?.name,
+        actionName: aiContract?.action?.name,
+        decisionSource: aiContract?.source,
+        assistantProviderMode: visitResponse.assistant_provider_mode,
+        assistantText: visitResponse.assistant_message
+      });
+
+      return res.json(visitResponse);
+    } catch {
+      const fallbackVisitResponse = {
+        status: 'needs_input',
+        criteria: payload?.context || {},
+        suggestions: [],
+        alternatives: [],
+        next_actions: [
+          'Mogu odmah da pomognem oko smestaja i rezervacije.',
+          'Mogu i da predlozim obilazak cim unesete zeljeni datum.'
+        ],
+        follow_up_question: 'Da li zelite da nastavimo na rezervaciju smestaja ili plan obilaska?',
+        assistant_message: 'Trenutno ne mogu da ucitam predloge obilaska iz baze. Da li zelite da nastavimo na rezervaciju smestaja ili plan obilaska?',
+        assistant_provider_mode: 'local-fallback',
+        ai_contract: aiContract
+      };
+
+      chatMetricsService.recordPlanStayTurn({
+        guardClass: aiContract?.guard?.class,
+        intentName: aiContract?.intent?.name,
+        actionName: aiContract?.action?.name,
+        decisionSource: aiContract?.source,
+        assistantProviderMode: fallbackVisitResponse.assistant_provider_mode,
+        assistantText: fallbackVisitResponse.assistant_message
+      });
+
+      return res.json(fallbackVisitResponse);
+    }
+  }
 
   if (actionName === 'fetch_weather' && payload?.context?.check_in) {
     // Weather intent with date available — fetch forecast

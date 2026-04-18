@@ -98,6 +98,10 @@ function getChatMaxWords() {
   return Number.parseInt(process.env.AI_CHAT_MAX_WORDS || '55', 10);
 }
 
+function getChatMaxChars() {
+  return Number.parseInt(process.env.AI_CHAT_MAX_CHARS || '420', 10);
+}
+
 function getChatMaxTokens() {
   return Number.parseInt(process.env.AI_CHAT_MAX_OUTPUT_TOKENS || '120', 10);
 }
@@ -110,6 +114,21 @@ function getChatCacheMaxEntries() {
   return Number.parseInt(process.env.AI_CHAT_CACHE_MAX_ENTRIES || '300', 10);
 }
 
+function truncateToChars(text, maxChars) {
+  const source = String(text || '').trim();
+  if (!source) return '';
+  if (!Number.isFinite(Number(maxChars)) || Number(maxChars) <= 0) {
+    return source;
+  }
+
+  const limit = Number(maxChars);
+  if (source.length <= limit) {
+    return source;
+  }
+
+  return `${source.slice(0, Math.max(0, limit - 3)).trim()}...`;
+}
+
 function shouldUseLiveIntent() {
   return String(process.env.AI_CHAT_USE_LIVE_INTENT || 'true').toLowerCase() === 'true';
 }
@@ -117,6 +136,7 @@ function shouldUseLiveIntent() {
 const ALLOWED_INTENTS = new Set([
   'search_rooms',
   'weather',
+  'route_help',
   'suggest_visit',
   'reserve_start',
   'faq',
@@ -128,6 +148,7 @@ const ALLOWED_ACTIONS = new Set([
   'none',
   'search_rooms',
   'fetch_weather',
+  'route_help',
   'fetch_visits',
   'open_inquiry_form',
   'redirect_login'
@@ -231,7 +252,10 @@ function normalizeDecision(raw = {}, fallback = {}) {
     normalized.reply.text = 'Mogu da pomognem oko smestaja i rezervacije na sajtu Nastavne baze Goc.';
   }
 
-  normalized.reply.text = truncateToWords(normalized.reply.text, getChatMaxWords());
+  normalized.reply.text = truncateToChars(
+    truncateToWords(normalized.reply.text, getChatMaxWords()),
+    getChatMaxChars()
+  );
   return normalized;
 }
 
@@ -285,6 +309,33 @@ function detectHeuristicDecision(message, context = {}) {
         text: checkIn
           ? 'Proveravam vremensku prognozu za taj datum.'
           : 'Mogu da proverim vreme cim unesete tacan datum dolaska.'
+      }
+    });
+  }
+
+  const routeRequested = /kako\s+da\s+stign|kako\s+da\s+dodjem|kako\s+do\s+goc|ruta|put\s+do|navigacij|google\s*maps|mapa|directions|route|odakle\s+da\s+krenem/.test(src);
+  const pendingRoute = String(context?.pending_slot || '').toLowerCase() === 'route_origin';
+  if (routeRequested || pendingRoute) {
+    return normalizeDecision({
+      guard: { class: 'in_domain', reason: 'route_query' },
+      intent: { name: 'route_help', confidence: 0.9 },
+      entities,
+      action: { name: 'route_help', params: {}, requires_confirmation: false },
+      reply: {
+        text: 'Mogu da pomognem oko dolaska do Nastavne baze Goc. Napisite odakle dolazite.'
+      }
+    });
+  }
+
+  const visitRequested = /obilazak|aktivnost|aktivnosti|sta\s+obi[cć]|izlet|atrakcij|kafana|kafan|restoran|gde\s+da\s+jedem|rucak|vecera|sightseeing|visit/.test(src);
+  if (visitRequested) {
+    return normalizeDecision({
+      guard: { class: 'in_domain', reason: 'visit_query' },
+      intent: { name: 'suggest_visit', confidence: 0.88 },
+      entities,
+      action: { name: 'fetch_visits', params: {}, requires_confirmation: false },
+      reply: {
+        text: 'Mogu da predlozim aktivnosti i dobru restoransku ponudu na Gocu i u blizini.'
       }
     });
   }
@@ -513,7 +564,7 @@ class AIService {
       };
 
       const response = await this.callAnthropic(
-        `Classify this chat turn for a booking assistant. Return ONLY valid JSON with keys: version, guard, intent, entities, action, reply. guard.class must be one of in_domain,out_of_domain,unsafe. intent.name must be one of search_rooms,weather,suggest_visit,reserve_start,faq,smalltalk,unknown. action.name must be one of none,search_rooms,fetch_weather,fetch_visits,open_inquiry_form,redirect_login. Keep reply.text concise and under ${getChatMaxWords()} words in ${lang === 'en' ? 'English' : 'Serbian Latin'}.`,
+        `Classify this chat turn for a booking assistant. Return ONLY valid JSON with keys: version, guard, intent, entities, action, reply. guard.class must be one of in_domain,out_of_domain,unsafe. intent.name must be one of search_rooms,weather,route_help,suggest_visit,reserve_start,faq,smalltalk,unknown. action.name must be one of none,search_rooms,fetch_weather,route_help,fetch_visits,open_inquiry_form,redirect_login. Keep reply.text concise and under ${getChatMaxWords()} words in ${lang === 'en' ? 'English' : 'Serbian Latin'}.`,
         toJsonString(promptPayload),
         { maxTokens: 220 }
       );
@@ -702,13 +753,13 @@ class AIService {
 
     try {
       const reply = await this.callAnthropic(
-        `You are a concise booking assistant for Nastavna baza Goc. Reply in ${lang === 'en' ? 'English' : 'Serbian (Latin script)'} naturally and politely. Keep the answer under ${getChatMaxWords()} words. Never invent availability or dates; use only provided facts. Ask at most one question. Avoid repetition and robotic phrasing. Return only plain text.`,
+        `You are a concise booking assistant for Nastavna baza Goc. Reply in ${lang === 'en' ? 'English' : 'Serbian (Latin script)'} naturally and politely. Keep the answer under ${getChatMaxWords()} words. Never invent availability or dates; use only provided facts. Ask at most one question. Avoid repetition and robotic phrasing. Always gently steer user to site-related topics (smestaj, rezervacija, dolazak, aktivnosti). Return only plain text.`,
         `User message: ${String(userMessage || '').slice(0, 220)}\nFacts: ${JSON.stringify(compactFacts)}`,
         { maxTokens: getChatMaxTokens() }
       );
 
       const liveResult = {
-        text: truncateToWords(reply, getChatMaxWords()),
+        text: truncateToChars(truncateToWords(reply, getChatMaxWords()), getChatMaxChars()),
         provider_mode: 'live'
       };
 
