@@ -144,7 +144,7 @@ function goToLogin() {
   router.push('/prijava')
 }
 
-async function loadVisitSuggestions(facilityId) {
+async function loadVisitSuggestions(facilityId, checkIn) {
   if (!facilityId || busy.value) return
   if (visitsByFacility.value[facilityId]) return
 
@@ -152,10 +152,16 @@ async function loadVisitSuggestions(facilityId) {
   try {
     const result = await api.chatSuggestVisit({
       facility_id: facilityId,
+      check_in: checkIn,
       weather_mode: 'any',
       family: true,
       lang: 'sr'
     })
+
+    if (result?.weather?.summary) {
+      pushAssistantText(result.weather.summary)
+    }
+
     visitsByFacility.value = {
       ...visitsByFacility.value,
       [facilityId]: result.suggestions || []
@@ -170,14 +176,25 @@ async function loadVisitSuggestions(facilityId) {
 
 <template>
   <div class="stay-assistant-wrapper">
-    <button class="stay-assistant-toggle" @click="isOpen = !isOpen">
-      {{ isOpen ? 'Zatvori asistenta' : 'Asistent za smestaj' }}
+    <button
+      class="stay-assistant-toggle"
+      :class="{ 'is-open': isOpen }"
+      @click="isOpen = !isOpen"
+      :aria-label="isOpen ? 'Zatvori asistenta' : 'Otvori asistenta za smestaj'"
+      :title="isOpen ? 'Zatvori asistenta' : 'Asistent za smestaj'"
+    >
+      <template v-if="!isOpen">
+        <img src="/buble-chat.png" alt="Chat" class="chat-bubble-icon" />
+      </template>
+      <template v-else>
+        Zatvori asistenta
+      </template>
     </button>
 
     <div v-if="isOpen" class="stay-assistant-panel">
       <div class="stay-assistant-head">
-        <strong>Goč Asistent</strong>
-        <small>Smestaj, obilazak i rezervacija</small>
+        <strong>Asistent za smestaj</strong>
+        <small>Nastavna baza Goc</small>
       </div>
 
       <div class="stay-assistant-body">
@@ -195,7 +212,7 @@ async function loadVisitSuggestions(facilityId) {
               <small>{{ item.rationale?.join(', ') }}</small>
 
               <div class="stay-card-actions">
-                <button @click="loadVisitSuggestions(item.facility_id)">Predlozi obilazak</button>
+                <button @click="loadVisitSuggestions(item.facility_id, msg.criteria?.check_in)">Predlozi obilazak</button>
                 <button class="reserve-btn" @click="askForReservation(item)">Rezervisi</button>
               </div>
 
@@ -235,26 +252,48 @@ async function loadVisitSuggestions(facilityId) {
 <style scoped>
 .stay-assistant-wrapper {
   position: fixed;
-  right: 18px;
+  right: 8px;
   bottom: 18px;
   z-index: 1200;
   width: min(360px, calc(100vw - 24px));
+  transform: scale(1.2);
+  transform-origin: bottom right;
 }
 
 .stay-assistant-toggle {
-  width: 100%;
-  border: 1px solid #67462e;
-  background: #cdac91;
-  color: #332317;
+  width: 56px;
+  height: 56px;
+  border: 3px solid var(--c-braon-6);
+  background: rgba(103, 70, 46, 0.9);
+  color: #fff;
   font-family: var(--font-base);
   font-weight: 700;
-  padding: 10px 12px;
+  padding: 0;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stay-assistant-toggle.is-open {
+  width: 100%;
+  height: auto;
+  justify-content: center;
+  padding: 10px 12px;
+  border: 3px solid var(--c-braon-6);
+  background: var(--c-braon-5);
+  color: #fff;
+}
+
+.chat-bubble-icon {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
 }
 
 .stay-assistant-panel {
   margin-top: 8px;
-  border: 1px solid #67462e;
+  border: 3px solid var(--c-braon-6);
   background: #fff;
   display: flex;
   flex-direction: column;
@@ -421,9 +460,19 @@ async function loadVisitSuggestions(facilityId) {
 
 @media (max-width: 640px) {
   .stay-assistant-wrapper {
-    right: 10px;
+    right: 4px;
     bottom: 10px;
     width: calc(100vw - 20px);
+  }
+
+  .stay-assistant-toggle {
+    width: 52px;
+    height: 52px;
+  }
+
+  .stay-assistant-toggle.is-open {
+    width: 100%;
+    height: auto;
   }
 }
 </style>

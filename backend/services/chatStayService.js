@@ -1,3 +1,5 @@
+const { getForecastForDate } = require('./weatherService');
+
 function normalizeJsonArray(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value;
@@ -325,9 +327,36 @@ async function planStay(db, payload) {
 
 async function suggestVisit(db, payload) {
   const facilityId = Number(payload.facility_id);
-  const weatherMode = String(payload.weather_mode || 'any').toLowerCase();
+  const requestedWeatherMode = String(payload.weather_mode || 'any').toLowerCase();
   const isFamily = Boolean(payload.family || payload.children || payload.with_family);
   const lang = String(payload.lang || 'sr').toLowerCase();
+  const checkIn = String(payload.check_in || '').trim();
+
+  let weatherLocation = null;
+  if (Number.isFinite(facilityId) && facilityId > 0) {
+    const [facilityRows] = await db.query(
+      `
+      SELECT latitude, longitude
+      FROM facilities
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [facilityId]
+    );
+
+    const facility = facilityRows?.[0];
+    if (facility?.latitude != null && facility?.longitude != null) {
+      weatherLocation = {
+        latitude: Number(facility.latitude),
+        longitude: Number(facility.longitude)
+      };
+    }
+  }
+
+  const forecast = await getForecastForDate(checkIn, weatherLocation || undefined);
+  const weatherMode = requestedWeatherMode !== 'any'
+    ? requestedWeatherMode
+    : (forecast.available ? forecast.mode : 'any');
 
   const [rows] = await db.query(
     `
@@ -381,6 +410,7 @@ async function suggestVisit(db, payload) {
     status: 'ok',
     facility_id: Number.isFinite(facilityId) ? facilityId : null,
     weather_mode: weatherMode,
+    weather: forecast,
     suggestions: filtered.map((row) => ({
       id: row.id,
       type: row.type,
