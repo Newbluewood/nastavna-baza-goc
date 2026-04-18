@@ -1,31 +1,39 @@
 @font-face {
-  font-family: 'FOF24';
-  src: url('./assets/fonts/FOF24-Light.otf') format('opentype');
+  font-family: "FOF24";
+  src: url("./assets/fonts/FOF24-Light.woff2") format("woff2"),
+       url("./assets/fonts/FOF24-Light.otf") format("opentype");
   font-weight: 300;
+  font-style: normal;
 }
 @font-face {
-  font-family: 'FOF24';
-  src: url('./assets/fonts/FOF24-Medium.otf') format('opentype');
+  font-family: "FOF24";
+  src: url("./assets/fonts/FOF24-Medium.woff2") format("woff2"),
+       url("./assets/fonts/FOF24-Medium.otf") format("opentype");
   font-weight: 400;
+  font-style: normal;
 }
 @font-face {
-  font-family: 'FOF24';
-  src: url('./assets/fonts/FOF24-SemiBold.otf') format('opentype');
+  font-family: "FOF24";
+  src: url("./assets/fonts/FOF24-SemiBold.woff2") format("woff2"),
+       url("./assets/fonts/FOF24-SemiBold.otf") format("opentype");
   font-weight: 600;
+  font-style: normal;
 }
 @font-face {
-  font-family: 'FOF24';
-  src: url('./assets/fonts/FOF24-Bold.otf') format('opentype');
+  font-family: "FOF24";
+  src: url("./assets/fonts/FOF24-Bold.woff2") format("woff2"),
+       url("./assets/fonts/FOF24-Bold.otf") format("opentype");
   font-weight: 700;
+  font-style: normal;
 }
 
 :root {
   /* Color Palette - Braon */
-  --c-braon-1: #FFF1E6;
+  --c-braon-1: #fff1e6;
   --c-braon-2: #e3c4ad;
-  --c-braon-3: #CDAC91;
-  --c-braon-4: #9A714E;
-  --c-braon-5: #67462E;
+  --c-braon-3: #cdac91;
+  --c-braon-4: #9a714e;
+  --c-braon-5: #67462e;
   --c-braon-6: #332317;
 
   --color-background: #ffffff;
@@ -36,12 +44,14 @@
   --color-border: var(--c-braon-6);
   --color-social: var(--c-braon-4);
   --color-accent: var(--c-braon-3);
-  
-  --font-base: 'FOF24', sans-serif;
+
+  --font-base: "FOF24", sans-serif;
   --content-max-width: 780px;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -55,7 +65,12 @@ body {
   line-height: 1.6;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   margin-top: 0;
   margin-bottom: 1rem;
@@ -144,13 +159,18 @@ a:hover {
   transition: all 0.3s ease;
 }
 
-.nav-link.router-link-active, .nav-link:hover {
+.nav-link.router-link-active,
+.nav-link:hover {
   border: 1px solid var(--color-border);
 }
 
-.nav-regular { font-weight: 400; }
-.nav-bold { font-weight: 600; }
-.nav-sep { 
+.nav-regular {
+  font-weight: 400;
+}
+.nav-bold {
+  font-weight: 600;
+}
+.nav-sep {
   color: var(--c-braon-6);
   /* Neutralise gap by adding negative margin so the | stays tight */
   margin: 0 -0.4rem;
@@ -419,7 +439,9 @@ a:hover {
 }
 
 @media (max-width: 600px) {
-  .site-logo { width: 190px; }
+  .site-logo {
+    width: 190px;
+  }
   .header-right {
     flex-direction: column;
     align-items: flex-end;
@@ -428,5 +450,8 @@ a:hover {
 }
 
 @media (max-width: 480px) {
-  .guest-btn { padding: 4px 10px; font-size: 0.7rem; }
+  .guest-btn {
+    padding: 4px 10px;
+    font-size: 0.7rem;
+  }
 }
