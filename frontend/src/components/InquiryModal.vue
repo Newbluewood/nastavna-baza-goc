@@ -52,6 +52,10 @@
         
         <form @submit.prevent="submitForm" class="inquiry-form">
           <p v-if="isGuestLoggedIn" class="login-note">Ulogovani ste. Ime i email su automatski popunjeni.</p>
+          <div v-if="isGuestLoggedIn" class="guest-summary-box">
+            <p><strong>Ime:</strong> {{ form.sender_name || '-' }}</p>
+            <p><strong>Email:</strong> {{ form.email || '-' }}</p>
+          </div>
           <!-- Novi Kalendar -->
           <div class="form-group">
             <label>{{ langStore.t('inquiry.selectDates') }} *</label>
@@ -67,18 +71,18 @@
             />
           </div>
 
-          <div class="form-group">
+          <div v-if="!isGuestLoggedIn" class="form-group">
             <label>{{ langStore.t('inquiry.fullName') }} *</label>
             <input type="text" v-model="form.sender_name" :required="!isGuestLoggedIn" :readonly="isGuestLoggedIn" />
           </div>
           
           <div class="form-group-row">
-            <div class="form-group half">
+            <div v-if="!isGuestLoggedIn" class="form-group half">
               <label>{{ langStore.t('inquiry.email') }} <span style="color:red">*</span></label>
               <input type="email" v-model="form.email" :required="!isGuestLoggedIn" :readonly="isGuestLoggedIn" :class="{ 'input-error': emailError }" />
               <span v-if="emailError" class="field-error">{{ emailError }}</span>
             </div>
-            <div class="form-group half">
+            <div class="form-group" :class="!isGuestLoggedIn ? 'half' : ''">
               <label>{{ langStore.t('inquiry.phone') }}</label>
               <input type="text" v-model="form.phone" />
             </div>
@@ -355,6 +359,23 @@ const submitForm = async () => {
   background: #f2f8f3;
   color: #2f5e3b;
   font-size: 0.85rem;
+}
+
+.guest-summary-box {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #d7e2db;
+  background: #f9fcfa;
+  color: #2a4734;
+  font-size: 0.84rem;
+}
+
+.guest-summary-box p {
+  margin: 0;
+}
+
+.guest-summary-box p + p {
+  margin-top: 4px;
 }
 
 .form-group {
