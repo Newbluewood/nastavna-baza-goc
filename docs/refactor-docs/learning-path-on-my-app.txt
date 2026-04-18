@@ -52,11 +52,11 @@ Tek onda push + PR + deploy.
 
 6. Mentorski dokumenti u projektu
 
-docs/MENTORSHIP_PLAN.md
+docs/refactor-docs/MENTORSHIP_PLAN.md
 - Glavni plan mentorstva i milestone-i.
 
-docs/CLIENT_READINESS_CHECKLIST.md
+docs/refactor-docs/CLIENT_READINESS_CHECKLIST.md
 - Checklista za klijentsku spremnost i pre-deploy kontrolu.
 
-docs/SESSION_01_SQL_ALIGNMENT.md
+docs/refactor-docs/SESSION_01_SQL_ALIGNMENT.md
 - Prva radna sesija: uskladjivanje SQL upita sa realnom Aiven semom.

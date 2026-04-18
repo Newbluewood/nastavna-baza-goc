@@ -12,7 +12,7 @@ Cilj: da ovaj projekat razumes dovoljno dobro da ga samostalno odrzavas, branis 
 2. Dijagnostika: sta je trenutno pogresno ili rizicno.
 3. Ispravka: minimalna izmena sa jasnim razlogom.
 4. Verifikacija: test + rezultat.
-5. Dokumentacija: upis u REFACTORING_LOG.md.
+5. Dokumentacija: upis u docs/refactor-docs/REFACTORING_LOG.md.
 
 ## 3. Milestone-i
 

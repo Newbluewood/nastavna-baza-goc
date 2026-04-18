@@ -245,7 +245,7 @@ Podeljene rute u separate fajlove:
   - like counter se vraca na prethodnu vrednost
 - Verifikacija:
   - `npm run smoke:routes` -> uspesno
-- Dodat release runbook u `docs/RELEASE_HANDBOOK.md`
+- Dodat release runbook u `docs/refactor-docs/RELEASE_HANDBOOK.md`
 
 ### 26. Write-flow smoke + robustnost email/date tokova (April 17, 2026)
 - Dodat `backend/smokeTestWriteFlow.js`:
@@ -263,11 +263,11 @@ Podeljene rute u separate fajlove:
   - `npm run smoke:all` -> uspesno
 
 ### 27. Scope i release policy dokumentovani (April 17, 2026)
-- Dodat `docs/PROJECT_CONTEXT_AND_SCOPE.md` sa:
+- Dodat `docs/refactor-docs/PROJECT_CONTEXT_AND_SCOPE.md` sa:
   - infrastrukturnim kontekstom (Aiven/Render/Netlify/Brevo)
   - potvrdjenim poslovnim funkcionalnostima
   - pravilom: bez hard reset-a dok se ne dodje do merge/release faze
-- `docs/RELEASE_HANDBOOK.md` uskladjen sa aktivnom razvojnom politikom
+- `docs/refactor-docs/RELEASE_HANDBOOK.md` uskladjen sa aktivnom razvojnom politikom
 
 ---
 

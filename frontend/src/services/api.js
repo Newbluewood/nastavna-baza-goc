@@ -74,6 +74,24 @@ class ApiService {
     return this.request(`/api/news/${id}?lang=${lang}`);
   }
 
+  async getAIStatus() {
+    return this.request('/api/ai/ping');
+  }
+
+  async aiProofread(text, lang = 'sr') {
+    return this.request('/api/ai/proofread', {
+      method: 'POST',
+      body: JSON.stringify({ text, lang })
+    });
+  }
+
+  async aiRewrite(text, lang = 'sr', tone = 'professional') {
+    return this.request('/api/ai/rewrite', {
+      method: 'POST',
+      body: JSON.stringify({ text, lang, tone })
+    });
+  }
+
   async likeNews(id) {
     return this.request(`/api/news/${id}/like`, {
       method: 'POST'

@@ -11,7 +11,7 @@ Uskladiti rute koje jos koriste stare kolone (`name_sr`, `title_sr`, `published`
 2. Uskladi jednu po jednu rutu sa realnim kolonama.
 3. Restart backend.
 4. Testiraj endpoint-e.
-5. Upisi rezultat u REFACTORING_LOG.md.
+5. Upisi rezultat u docs/refactor-docs/REFACTORING_LOG.md.
 
 ## Trenutni backlog neslaganja (prioritet)
 1. backend/routes/admin.js ✅
