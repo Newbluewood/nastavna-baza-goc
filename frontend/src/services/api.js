@@ -44,12 +44,12 @@ class ApiService {
     return this.request(`/api/home?lang=${lang}`);
   }
 
-  async getFacilities() {
-    return this.request('/api/smestaj');
+  async getFacilities(lang = 'sr') {
+    return this.request(`/api/smestaj?lang=${lang}`);
   }
 
-  async getFacility(id) {
-    return this.request(`/api/smestaj/${id}`);
+  async getFacility(id, lang = 'sr') {
+    return this.request(`/api/smestaj/${id}?lang=${lang}`);
   }
 
   async checkAvailability(roomId, startDate, endDate) {

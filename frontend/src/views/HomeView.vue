@@ -17,7 +17,7 @@ const langStore = useLangStore()
 const loadData = async () => {
   isLoading.value = true
   try {
-    const data = await api.getHome(langStore.currentLang);
+    const data = await api.getHome(langStore.currentLang)
     console.log('Home API response:', data)
     
     if (data) {
@@ -38,7 +38,9 @@ const loadData = async () => {
     }
   } catch (error) {
     console.error("Error fetching data from API:", error)
-    textContent.value = "<p>Подаци се тренутно учитавају са локалног бекенда...</p>"
+    textContent.value = langStore.currentLang === 'sr'
+      ? "<p>Подаци се тренутно учитавају са локалног бекенда...</p>"
+      : "<p>Data is currently loading from the local backend...</p>"
   } finally {
     isLoading.value = false
   }

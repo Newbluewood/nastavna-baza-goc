@@ -7,16 +7,22 @@ const { sendError } = require('../utils/response');
 async function getHome(req, res) {
   const db = req.app.locals.db;
   const lang = req.query.lang || 'sr';
+  const langParam = lang === 'sr' ? '__none__' : lang;
 
   const [facilities] = await db.query(`
-    SELECT f.*, GROUP_CONCAT(mg.image_url) as gallery_urls
+    SELECT f.id, f.type,
+      COALESCE(ft.name, f.name) AS name,
+      COALESCE(ft.description, f.description) AS description,
+      f.capacity, f.latitude, f.longitude, f.cover_image, f.floor_plan_image, f.location_badges,
+      GROUP_CONCAT(mg.image_url) as gallery_urls
     FROM facilities f
+    LEFT JOIN facility_translations ft ON f.id = ft.entity_id AND ft.lang = ?
     LEFT JOIN media_gallery mg ON mg.entity_id = f.id AND mg.entity_type = 'facility'
     WHERE f.type = 'smestaj'
     GROUP BY f.id
     ORDER BY f.id
     LIMIT 6
-  `);
+  `, [langParam]);
 
   facilities.forEach(facility => {
     facility.gallery = facility.gallery_urls ? facility.gallery_urls.split(',') : [];
@@ -36,38 +42,67 @@ async function getHome(req, res) {
     GROUP BY n.id
     ORDER BY n.created_at DESC
     LIMIT 3
-  `, [lang === 'sr' ? '__none__' : lang]);
+  `, [langParam]);
 
   news.forEach(item => {
     item.gallery = item.gallery_urls ? item.gallery_urls.split(',') : [];
     delete item.gallery_urls;
   });
 
-  const pageTitle = lang === 'en' ? 'TEACHING BASE GOČ' : 'БАЗА ГОЧ';
-  const textContent = lang === 'en'
+  const [pages] = await db.query(`
+    SELECT COALESCE(pt.title, p.title) AS title,
+           COALESCE(pt.content, p.content) AS content
+    FROM pages p
+    LEFT JOIN page_translations pt ON p.id = pt.entity_id AND pt.lang = ?
+    WHERE p.slug = 'pocetna'
+    LIMIT 1
+  `, [langParam]);
+
+  const [slides] = await db.query(`
+    SELECT hs.id,
+      COALESCE(hst.title, hs.title) AS title,
+      COALESCE(hst.subtitle, hs.subtitle) AS subtitle,
+      hs.image_url,
+      hs.target_link,
+      hs.display_order
+    FROM hero_slides hs
+    LEFT JOIN hero_slides_translations hst ON hs.id = hst.entity_id AND hst.lang = ?
+    WHERE hs.page_slug = 'pocetna'
+    ORDER BY hs.display_order ASC, hs.id ASC
+  `, [langParam]);
+
+  const pageTitle = pages.length > 0 ? pages[0].title : (lang === 'en' ? 'TEACHING BASE GOČ' : 'БАЗА ГОЧ');
+  const textContent = pages.length > 0 ? pages[0].content : (lang === 'en'
     ? 'Welcome to the Goč Teaching Base of the Faculty of Forestry, University of Belgrade.'
-    : 'Добродошли на Наставну базу Гоч Шумарског факултета Универзитета у Београду.';
+    : 'Добродошли на Наставну базу Гоч Шумарског факултета Универзитета у Београду.');
 
   res.json({
     news,
     facilities,
     pageTitle,
     textContent,
-    slides: []
+    slides
   });
 }
 
 async function getFacilities(req, res) {
   const db = req.app.locals.db;
+  const lang = req.query.lang || 'sr';
+  const langParam = lang === 'sr' ? '__none__' : lang;
 
   const [facilities] = await db.query(`
-    SELECT f.*, GROUP_CONCAT(mg.image_url) as gallery_urls
+    SELECT f.id, f.type,
+      COALESCE(ft.name, f.name) AS name,
+      COALESCE(ft.description, f.description) AS description,
+      f.capacity, f.latitude, f.longitude, f.cover_image, f.floor_plan_image, f.location_badges,
+      GROUP_CONCAT(mg.image_url) as gallery_urls
     FROM facilities f
+    LEFT JOIN facility_translations ft ON f.id = ft.entity_id AND ft.lang = ?
     LEFT JOIN media_gallery mg ON mg.entity_id = f.id AND mg.entity_type = 'facility'
     WHERE f.type = 'smestaj'
     GROUP BY f.id
     ORDER BY f.id
-  `);
+  `, [langParam]);
 
   facilities.forEach(facility => {
     facility.gallery = facility.gallery_urls ? facility.gallery_urls.split(',') : [];
@@ -80,14 +115,21 @@ async function getFacilities(req, res) {
 async function getFacility(req, res) {
   const db = req.app.locals.db;
   const facilityId = req.params.id;
+  const lang = req.query.lang || 'sr';
+  const langParam = lang === 'sr' ? '__none__' : lang;
 
   const [facilities] = await db.query(`
-    SELECT f.*, GROUP_CONCAT(mg.image_url) as gallery_urls
+    SELECT f.id, f.type,
+      COALESCE(ft.name, f.name) AS name,
+      COALESCE(ft.description, f.description) AS description,
+      f.capacity, f.latitude, f.longitude, f.cover_image, f.floor_plan_image, f.location_badges,
+      GROUP_CONCAT(mg.image_url) as gallery_urls
     FROM facilities f
+    LEFT JOIN facility_translations ft ON f.id = ft.entity_id AND ft.lang = ?
     LEFT JOIN media_gallery mg ON mg.entity_id = f.id AND mg.entity_type = 'facility'
     WHERE f.id = ?
     GROUP BY f.id
-  `, [facilityId]);
+  `, [langParam, facilityId]);
 
   if (facilities.length === 0) {
     return sendError(res, 404, 'Facility not found');
@@ -98,12 +140,17 @@ async function getFacility(req, res) {
   delete facility.gallery_urls;
 
   const [rooms] = await db.query(`
-    SELECT r.*, GROUP_CONCAT(mg.image_url) as room_gallery_urls
+    SELECT r.id, r.facility_id,
+      COALESCE(rt.name, r.name) AS name,
+      COALESCE(rt.description, r.description) AS description,
+      r.capacity, r.cover_image, r.floor_plan_image, r.amenities,
+      GROUP_CONCAT(mg.image_url) as room_gallery_urls
     FROM rooms r
+    LEFT JOIN room_translations rt ON r.id = rt.entity_id AND rt.lang = ?
     LEFT JOIN media_gallery mg ON mg.entity_id = r.id AND mg.entity_type = 'room'
     WHERE r.facility_id = ?
     GROUP BY r.id
-  `, [facilityId]);
+  `, [langParam, facilityId]);
 
   rooms.forEach(room => {
     room.gallery = room.room_gallery_urls ? room.room_gallery_urls.split(',') : [];

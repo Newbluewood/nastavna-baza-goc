@@ -47,7 +47,7 @@ const getAmenities = (amenitiesArray) => {
 const loadData = async () => {
   isLoading.value = true
   try {
-    building.value = await api.getFacility(route.params.id)
+    building.value = await api.getFacility(route.params.id, langStore.currentLang)
   } catch (error) {
     console.error("Error fetching data from API:", error)
     // Moze redirect ako ne postoji

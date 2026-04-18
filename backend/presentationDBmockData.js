@@ -88,6 +88,79 @@ async function seedSlides(connection, shouldExecute) {
   }
 }
 
+async function seedTranslations(connection, shouldExecute) {
+  const facilityTranslations = [
+    [1, 'en', 'Hotel Pyramid', 'Representative hotel facility for individual and group visits.'],
+    [2, 'en', 'New Studenac', 'The largest facility for recreational classes and presentations.'],
+    [3, 'en', 'Villa Vlasta', 'Quieter accommodation for smaller groups and family stays.']
+  ];
+
+  for (const ft of facilityTranslations) {
+    await executeOrPrint(
+      connection,
+      'INSERT INTO facility_translations (entity_id, lang, name, description) VALUES (?, ?, ?, ?)',
+      ft, `seed facility_translation en #${ft[0]}`, shouldExecute
+    );
+  }
+
+  const roomTranslations = [
+    [1, 'en', 'Double Room', 'Comfortable room with two beds.'],
+    [2, 'en', 'Triple Room', 'Spacious room for a small group.'],
+    [3, 'en', 'Conference Room', 'Room suitable for teachers and guest lecturers.'],
+    [4, 'en', 'Student Room', 'Basic, tidy accommodation for students.'],
+    [5, 'en', 'Family Room', 'Quiet room with extra space.']
+  ];
+
+  for (const rt of roomTranslations) {
+    await executeOrPrint(
+      connection,
+      'INSERT INTO room_translations (entity_id, lang, name, description) VALUES (?, ?, ?, ?)',
+      rt, `seed room_translation en #${rt[0]}`, shouldExecute
+    );
+  }
+
+  const newsTranslations = [
+    [1, 'en', 'New Base Presentation', 'Refreshed first impression for client demonstration.', 'This is demonstration news content for the first walkthrough of the system.'],
+    [2, 'en', 'Accommodation Capacities Ready', 'Demo facilities and rooms populated with placeholder content.', 'Content is exclusively for UI presentation and basic flow demonstration.'],
+    [3, 'en', 'Reservation Workflow', 'Client can see the flow from initial inquiry to admin processing.', 'This text is an example and should be replaced with real content before production use.']
+  ];
+
+  for (const nt of newsTranslations) {
+    await executeOrPrint(
+      connection,
+      'INSERT INTO news_translations (entity_id, lang, title, excerpt, content) VALUES (?, ?, ?, ?, ?)',
+      nt, `seed news_translation en #${nt[0]}`, shouldExecute
+    );
+  }
+
+  const slideTranslations = [
+    [1, 'en', 'Teaching Base Goč', 'First impression for client presentation'],
+    [2, 'en', 'Accommodation & Infrastructure', 'Overview of facilities, rooms and amenities'],
+    [3, 'en', 'Presentation Accommodation', 'Demo facilities with placeholder photos']
+  ];
+
+  for (const st of slideTranslations) {
+    await executeOrPrint(
+      connection,
+      'INSERT INTO hero_slides_translations (entity_id, lang, title, subtitle) VALUES (?, ?, ?, ?)',
+      st, `seed hero_slides_translation en #${st[0]}`, shouldExecute
+    );
+  }
+
+  const pageTranslations = [
+    [1, 'en', 'Teaching Base Goč', 'Home presentation page.'],
+    [2, 'en', 'Accommodation', 'Basic information about accommodation.']
+  ];
+
+  for (const pt of pageTranslations) {
+    await executeOrPrint(
+      connection,
+      'INSERT INTO page_translations (entity_id, lang, title, content) VALUES (?, ?, ?, ?)',
+      pt, `seed page_translation en #${pt[0]}`, shouldExecute
+    );
+  }
+}
+
 async function seedGallery(connection, shouldExecute) {
   const galleryItems = [
     ['facility', 1, placeholder, 'Хотел Пирамида', 1],
@@ -125,6 +198,7 @@ async function run() {
     await seedFacilitiesAndRooms(connection, shouldExecute);
     await seedNews(connection, shouldExecute);
     await seedSlides(connection, shouldExecute);
+    await seedTranslations(connection, shouldExecute);
     await seedGallery(connection, shouldExecute);
 
     console.log('presentationDBmockData finished.');

@@ -28,7 +28,7 @@ const lbIndex = ref(0)
 const loadData = async () => {
   isLoading.value = true
   try {
-    const data = await api.getFacilities();
+    const data = await api.getFacilities(langStore.currentLang);
     console.log('Facilities API response:', data)
     
     if (data) {
