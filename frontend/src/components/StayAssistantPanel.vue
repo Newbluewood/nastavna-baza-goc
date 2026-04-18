@@ -245,6 +245,12 @@ async function createReservation() {
       return
     }
 
+    if (error?.status === 409 && error?.data?.status === 'unavailable') {
+      pushAssistantText('Naiskrenije se izvinjavamo — zbog internih reorganizacija, ponudjeni smestaj trenutno nije dostupan. Mozete potraziti drugi termin ili nas kontaktirati za vise informacija. Hvala na razumevanju.')
+      pendingReserve.value = null
+      return
+    }
+
     if (error?.data?.status === 'login_required') {
       pushAssistantText('Vec postoji nalog za taj email. Prijavite se da nastavim rezervaciju.')
       return
@@ -396,6 +402,7 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
 
     <div v-if="pendingReserve && !hasGuestToken()" class="reserve-modal-overlay" @click.self="closeReservationModal">
       <div class="reserve-modal" role="dialog" aria-modal="true" aria-label="Unos podataka za rezervaciju">
+        <button type="button" class="reserve-modal-close" @click="closeReservationModal" aria-label="Zatvori">✕</button>
         <strong>Podaci za rezervaciju</strong>
         <small>Unesite ime i email da zavrsim rezervaciju.</small>
         <input v-model="guestName" type="text" placeholder="Ime i prezime" />
@@ -587,14 +594,31 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
 }
 
 .reserve-modal {
+  position: relative;
   width: min(360px, calc(100vw - 24px));
   background: #fffaf5;
   border: 2px solid var(--c-braon-6);
   box-shadow: 0 12px 32px rgba(34, 22, 14, 0.24);
-  padding: 12px;
+  padding: 28px 12px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.reserve-modal-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: #67462e;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+}
+.reserve-modal-close:hover {
+  color: #332317;
 }
 
 .reserve-modal strong {
