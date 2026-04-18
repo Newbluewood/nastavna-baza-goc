@@ -3,6 +3,32 @@ const { planStay, suggestVisit } = require('../services/chatStayService');
 const { createInquiryWithGuest } = require('../services/inquiryService');
 const aiService = require('../services/aiService');
 
+function getActionFromResult(result = {}) {
+  if (result?.status === 'needs_input') {
+    return {
+      name: 'none',
+      params: {},
+      requires_confirmation: false
+    };
+  }
+
+  if (Array.isArray(result?.suggestions) && result.suggestions.length > 0) {
+    return {
+      name: 'search_rooms',
+      params: {
+        suggestions_count: result.suggestions.length
+      },
+      requires_confirmation: false
+    };
+  }
+
+  return {
+    name: 'none',
+    params: {},
+    requires_confirmation: false
+  };
+}
+
 async function attachAssistantMessage(payload, result) {
   try {
     const mode = result?.status === 'needs_input' ? 'needs_input' : 'suggestions';
@@ -32,9 +58,42 @@ async function attachAssistantMessage(payload, result) {
 
 async function planStayChat(req, res) {
   const payload = req.body || {};
+  const aiContract = await aiService.decideChatTurn({
+    message: payload?.message || '',
+    context: payload?.context || {},
+    lang: 'sr'
+  });
+
+  if (aiContract?.guard?.class && aiContract.guard.class !== 'in_domain') {
+    return res.json({
+      status: 'blocked',
+      criteria: payload?.context || {},
+      suggestions: [],
+      alternatives: [],
+      next_actions: [],
+      assistant_message: aiContract?.reply?.text || 'Ovde sam za pitanja o smestaju i rezervaciji Nastavne baze Goc.',
+      assistant_provider_mode: aiContract?.source || 'heuristic',
+      ai_contract: aiContract
+    });
+  }
+
   const result = await planStay(req.app.locals.db, payload);
   const response = await attachAssistantMessage(payload, result);
-  return res.json(response);
+  return res.json({
+    ...response,
+    ai_contract: {
+      ...(aiContract || {}),
+      guard: {
+        class: 'in_domain',
+        reason: aiContract?.guard?.reason || 'accommodation_query'
+      },
+      action: getActionFromResult(response),
+      reply: {
+        text: response?.assistant_message || aiContract?.reply?.text || '',
+        style: 'friendly_concise'
+      }
+    }
+  });
 }
 
 async function suggestVisitChat(req, res) {

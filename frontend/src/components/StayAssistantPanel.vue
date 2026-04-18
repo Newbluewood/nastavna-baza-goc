@@ -272,6 +272,11 @@ async function sendMessage() {
 
     const aiMessage = pickAssistantMessage(result)
 
+    if (result?.status === 'blocked' || result?.ai_contract?.guard?.class === 'out_of_domain' || result?.ai_contract?.guard?.class === 'unsafe') {
+      pushAssistantText(aiMessage || 'Ovde sam za pitanja o smestaju i rezervaciji Nastavne baze Goc.')
+      return
+    }
+
     if (result.status === 'needs_input') {
       pushAssistantText(aiMessage || result.follow_up_question || 'Recite mi jos malo detalja pa nastavljamo.')
       return
@@ -286,14 +291,18 @@ async function sendMessage() {
       }
     }
 
-    messages.value.push({
-      role: 'assistant',
-      type: 'suggestions',
-      text: aiMessage || summarizeSuggestions(result.suggestions),
-      criteria: result.criteria,
-      suggestions: result.suggestions || [],
-      alternatives: result.alternatives || []
-    })
+    const hasSuggestions = Array.isArray(result.suggestions) && result.suggestions.length > 0
+    const hasAlternatives = Array.isArray(result.alternatives) && result.alternatives.length > 0
+    if (hasSuggestions || hasAlternatives) {
+      messages.value.push({
+        role: 'assistant',
+        type: 'suggestions',
+        text: aiMessage || summarizeSuggestions(result.suggestions),
+        criteria: result.criteria,
+        suggestions: result.suggestions || [],
+        alternatives: result.alternatives || []
+      })
+    }
   } catch (error) {
     pushAssistantText(error?.data?.error || error.message || 'Chat servis trenutno nije dostupan.')
   } finally {
