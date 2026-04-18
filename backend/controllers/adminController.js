@@ -1,5 +1,6 @@
 const { INQUIRY_STATUS } = require('../config/constants');
 const emailService = require('../services/emailService');
+const chatMetricsService = require('../services/chatMetricsService');
 const { sendError } = require('../utils/response');
 
 function sanitizeGalleryItems(items) {
@@ -614,6 +615,11 @@ async function getRoomMap(req, res) {
   res.json({ date, facilities: Object.values(facilityMap) });
 }
 
+async function getChatMetrics(req, res) {
+  const snapshot = chatMetricsService.getSnapshot();
+  return res.json(snapshot);
+}
+
 module.exports = {
   getInquiries,
   getInquiryActivity,
@@ -625,5 +631,6 @@ module.exports = {
   deleteNews,
   getGuests,
   addVoucher,
-  getRoomMap
+  getRoomMap,
+  getChatMetrics
 };

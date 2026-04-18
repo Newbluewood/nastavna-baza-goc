@@ -13,7 +13,8 @@ const {
 	deleteNews,
 	getGuests,
 	addVoucher,
-	getRoomMap
+	getRoomMap,
+	getChatMetrics
 } = require('../controllers/adminController');
 
 const router = express.Router();
@@ -29,5 +30,6 @@ router.delete('/news/:id',         adminAuthMiddleware,                         
 router.get('/guests',              adminAuthMiddleware,                                      asyncHandler(getGuests));
 router.post('/guests/:id/vouchers', adminAuthMiddleware,                                     asyncHandler(addVoucher));
 router.get('/room-map',            adminAuthMiddleware,                                      asyncHandler(getRoomMap));
+router.get('/chat-metrics',        adminAuthMiddleware,                                      asyncHandler(getChatMetrics));
 
 module.exports = router;

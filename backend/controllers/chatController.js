@@ -2,6 +2,7 @@ const { sendError } = require('../utils/response');
 const { planStay, suggestVisit } = require('../services/chatStayService');
 const { createInquiryWithGuest } = require('../services/inquiryService');
 const aiService = require('../services/aiService');
+const chatMetricsService = require('../services/chatMetricsService');
 
 function getActionFromResult(result = {}) {
   if (result?.status === 'needs_input') {
@@ -65,7 +66,7 @@ async function planStayChat(req, res) {
   });
 
   if (aiContract?.guard?.class && aiContract.guard.class !== 'in_domain') {
-    return res.json({
+    const blockedResponse = {
       status: 'blocked',
       criteria: payload?.context || {},
       suggestions: [],
@@ -74,12 +75,23 @@ async function planStayChat(req, res) {
       assistant_message: aiContract?.reply?.text || 'Ovde sam za pitanja o smestaju i rezervaciji Nastavne baze Goc.',
       assistant_provider_mode: aiContract?.source || 'heuristic',
       ai_contract: aiContract
+    };
+
+    chatMetricsService.recordPlanStayTurn({
+      guardClass: aiContract?.guard?.class,
+      intentName: aiContract?.intent?.name,
+      actionName: aiContract?.action?.name,
+      decisionSource: aiContract?.source,
+      assistantProviderMode: blockedResponse.assistant_provider_mode,
+      assistantText: blockedResponse.assistant_message
     });
+
+    return res.json(blockedResponse);
   }
 
   const result = await planStay(req.app.locals.db, payload);
   const response = await attachAssistantMessage(payload, result);
-  return res.json({
+  const finalResponse = {
     ...response,
     ai_contract: {
       ...(aiContract || {}),
@@ -93,7 +105,18 @@ async function planStayChat(req, res) {
         style: 'friendly_concise'
       }
     }
+  };
+
+  chatMetricsService.recordPlanStayTurn({
+    guardClass: finalResponse?.ai_contract?.guard?.class,
+    intentName: finalResponse?.ai_contract?.intent?.name,
+    actionName: finalResponse?.ai_contract?.action?.name,
+    decisionSource: aiContract?.source,
+    assistantProviderMode: finalResponse?.assistant_provider_mode,
+    assistantText: finalResponse?.assistant_message
   });
+
+  return res.json(finalResponse);
 }
 
 async function suggestVisitChat(req, res) {
