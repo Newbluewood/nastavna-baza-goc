@@ -209,6 +209,7 @@ function askForReservation(item, criteria = null) {
 }
 
 async function createReservation() {
+  if (busy.value) return
   if (!pendingReserve.value) return
 
   const hasGuestToken = Boolean(localStorage.getItem('guest_token'))
@@ -248,10 +249,27 @@ async function createReservation() {
       pushAssistantText('Vec postoji nalog za taj email. Prijavite se da nastavim rezervaciju.')
       return
     }
-    pushAssistantText(error?.data?.error || error?.data?.message || error.message || 'Rezervacija trenutno nije uspela.')
+
+    const backendError = String(error?.data?.error || error?.data?.message || error?.message || '')
+    if (backendError.includes('target_room_id, check_in and check_out are required')) {
+      pushAssistantText('Nedostaju podaci o terminu ili sobi. Posaljite novi upit pa pokusajte ponovo.')
+      return
+    }
+
+    if (backendError.includes('sender_name and email are required')) {
+      pushAssistantText('Unesite ime i email pa kliknite ponovo na slanje rezervacije.')
+      return
+    }
+
+    pushAssistantText('Rezervacija trenutno nije uspela. Pokusajte ponovo za nekoliko sekundi.')
   } finally {
     busy.value = false
   }
+}
+
+function closeReservationModal() {
+  if (busy.value) return
+  pendingReserve.value = null
 }
 
 function goToLogin() {
@@ -364,15 +382,6 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
         </div>
       </div>
 
-      <div v-if="pendingReserve && !hasGuestToken()" class="reserve-form">
-        <input v-model="guestName" type="text" placeholder="Ime i prezime" />
-        <input v-model="guestEmail" type="email" placeholder="Email" />
-        <div class="reserve-form-actions">
-          <button type="button" @click="createReservation" :disabled="busy">Potvrdi rezervaciju</button>
-          <button type="button" class="ghost-btn" @click="goToLogin">Imam nalog, prijava</button>
-        </div>
-      </div>
-
       <div class="stay-assistant-input">
         <input
           ref="inputEl"
@@ -382,6 +391,19 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
           @keyup.enter="sendMessage"
         />
         <button type="button" @click="sendMessage" :disabled="!canSend">Posalji</button>
+      </div>
+    </div>
+
+    <div v-if="pendingReserve && !hasGuestToken()" class="reserve-modal-overlay" @click.self="closeReservationModal">
+      <div class="reserve-modal" role="dialog" aria-modal="true" aria-label="Unos podataka za rezervaciju">
+        <strong>Podaci za rezervaciju</strong>
+        <small>Unesite ime i email da zavrsim rezervaciju.</small>
+        <input v-model="guestName" type="text" placeholder="Ime i prezime" />
+        <input v-model="guestEmail" type="email" placeholder="Email" />
+        <div class="reserve-form-actions">
+          <button type="button" @click="createReservation" :disabled="busy">Posalji rezervaciju</button>
+          <button type="button" class="ghost-btn" @click="goToLogin" :disabled="busy">Imam nalog, prijava</button>
+        </div>
       </div>
     </div>
   </div>
@@ -554,15 +576,36 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
   font-size: 0.76rem;
 }
 
-.reserve-form {
-  border-top: 1px solid #e3c4ad;
-  padding: 8px;
+.reserve-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 27, 17, 0.42);
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
 }
 
-.reserve-form input {
+.reserve-modal {
+  width: min(360px, calc(100vw - 24px));
+  background: #fffaf5;
+  border: 2px solid var(--c-braon-6);
+  box-shadow: 0 12px 32px rgba(34, 22, 14, 0.24);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reserve-modal strong {
+  color: #332317;
+}
+
+.reserve-modal small {
+  color: #67462e;
+}
+
+.reserve-modal input {
   border: 1px solid #c8b3a4;
   padding: 8px;
   font-size: 0.8rem;
