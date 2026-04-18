@@ -1,9 +1,10 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import api from '../services/api'
 
 const router = useRouter()
+const route = useRoute()
 const GUEST_CHAT_STORAGE_KEY = 'stay_assistant_guest_chat_v1'
 
 const isOpen = ref(false)
@@ -109,7 +110,7 @@ function summarizeSuggestions(items) {
   }
 
   const names = items.map((item) => `${item.facility_name} / ${item.room_name}`).join('; ')
-  return `Predlazem: ${names}. Ako zelite, mogu i da pokrenem rezervaciju.`
+  return `Predlazem: ${names}. Ako zelite, mogu da suzim izbor po vasim prioritetima.`
 }
 
 function rememberContext(criteria) {
@@ -156,7 +157,10 @@ async function sendMessage() {
     }
 
     if (Array.isArray(result.next_actions) && result.next_actions.length) {
-      pushAssistantText(result.next_actions[0])
+      const nonReservationHint = result.next_actions.find((line) => !/rezervacij/i.test(String(line)))
+      if (nonReservationHint) {
+        pushAssistantText(nonReservationHint)
+      }
     }
 
     messages.value.push({
@@ -279,8 +283,17 @@ function closeReservationModal() {
 }
 
 function goToLogin() {
+  pendingReserve.value = null
+  isOpen.value = false
   router.push('/prijava')
 }
+
+watch(
+  () => route.fullPath,
+  () => {
+    pendingReserve.value = null
+  }
+)
 
 async function loadVisitSuggestions(facilityId, roomId, checkIn) {
   const cardKey = `${facilityId}-${roomId}`

@@ -36,14 +36,35 @@ const modalLoading = ref(false)
 
 const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
+const normalizeDate = (value) => {
+  if (!value) return null
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value
+  }
+
+  const raw = String(value).trim()
+  if (!raw) return null
+
+  const ymd = raw.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (ymd) {
+    const parsed = new Date(`${ymd[1]}-${ymd[2]}-${ymd[3]}T12:00:00`)
+    return Number.isNaN(parsed.getTime()) ? null : parsed
+  }
+
+  const parsed = new Date(raw)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
 const fmt = (d) => {
-  if (!d) return '—'
-  return new Date(d + 'T12:00:00').toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  const parsed = normalizeDate(d)
+  if (!parsed) return '—'
+  return parsed.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 const daysUntil = (d) => {
-  if (!d) return null
-  const t = new Date(d + 'T12:00:00')
+  const t = normalizeDate(d)
+  if (!t) return null
   const now = new Date(); now.setHours(12,0,0,0)
   return Math.round((t - now) / 86400000)
 }
