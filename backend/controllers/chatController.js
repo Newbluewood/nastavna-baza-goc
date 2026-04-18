@@ -89,41 +89,12 @@ async function planStayChat(req, res) {
     return res.json(blockedResponse);
   }
 
-  // Check intent — if it's a special case (weather), handle separately
-  const intentName = aiContract?.intent?.name || 'unknown';
-  
-  if (intentName === 'weather') {
-    const checkIn = payload?.context?.check_in;
-    
-    // If we don't have check_in date yet, ask for it
-    if (!checkIn) {
-      const weatherResponse = {
-        status: 'needs_input',
-        criteria: payload?.context || {},
-        suggestions: [],
-        alternatives: [],
-        next_actions: [],
-        follow_up_question: aiContract?.reply?.text || 'Za vremensku prognozu trebam tacan datum dolaska.',
-        assistant_message: aiContract?.reply?.text || 'Mogu da proverim vremensku prognozu.',
-        assistant_provider_mode: aiContract?.source || 'heuristic',
-        ai_contract: aiContract
-      };
+  // Dispatcher: execute action defined by AI contract
+  const actionName = aiContract?.action?.name || 'search_rooms';
 
-      chatMetricsService.recordPlanStayTurn({
-        guardClass: aiContract?.guard?.class,
-        intentName: aiContract?.intent?.name,
-        actionName: aiContract?.action?.name,
-        decisionSource: aiContract?.source,
-        assistantProviderMode: weatherResponse.assistant_provider_mode,
-        assistantText: weatherResponse.assistant_message
-      });
-
-      return res.json(weatherResponse);
-    }
-
-    // We have check_in, so try to fetch weather for a facility
+  if (actionName === 'fetch_weather' && payload?.context?.check_in) {
+    // Weather intent with date available — fetch forecast
     try {
-      // First get facility suggestions to know which facility to check weather for
       const bookingResult = await planStay(req.app.locals.db, payload);
       const suggestions = Array.isArray(bookingResult?.suggestions) ? bookingResult.suggestions : [];
       const firstFacilityId = suggestions[0]?.facility_id;
@@ -131,11 +102,10 @@ async function planStayChat(req, res) {
       let weatherSummary = 'Ne mogu da proverim vremensku prognozu za taj datum u ovom trenutku.';
 
       if (firstFacilityId) {
-        // Fetch weather for the recommended facility
         const { suggestVisit } = require('../services/chatStayService');
         const visitResult = await suggestVisit(req.app.locals.db, {
           facility_id: firstFacilityId,
-          check_in: checkIn,
+          check_in: payload?.context?.check_in,
           weather_mode: 'any',
           family: Number(payload?.context?.children || 0) > 0,
           lang: 'sr'
@@ -169,7 +139,7 @@ async function planStayChat(req, res) {
 
       return res.json(weatherResponse);
     } catch (error) {
-      const weatherResponse = {
+      const errorResponse = {
         status: 'needs_input',
         criteria: payload?.context || {},
         suggestions: [],
@@ -186,15 +156,15 @@ async function planStayChat(req, res) {
         intentName: aiContract?.intent?.name,
         actionName: aiContract?.action?.name,
         decisionSource: aiContract?.source,
-        assistantProviderMode: weatherResponse.assistant_provider_mode,
-        assistantText: weatherResponse.assistant_message
+        assistantProviderMode: errorResponse.assistant_provider_mode,
+        assistantText: errorResponse.assistant_message
       });
 
-      return res.json(weatherResponse);
+      return res.json(errorResponse);
     }
   }
 
-  // Normal booking flow
+  // Default: search_rooms action or any other action — proceed with deterministic booking
   const result = await planStay(req.app.locals.db, payload);
   const response = await attachAssistantMessage(payload, result);
   const finalResponse = {
