@@ -400,19 +400,21 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
       </div>
     </div>
 
-    <div v-if="pendingReserve && !hasGuestToken()" class="reserve-modal-overlay" @click.self="closeReservationModal">
-      <div class="reserve-modal" role="dialog" aria-modal="true" aria-label="Unos podataka za rezervaciju">
-        <button type="button" class="reserve-modal-close" @click="closeReservationModal" aria-label="Zatvori">✕</button>
-        <strong>Podaci za rezervaciju</strong>
-        <small>Unesite ime i email da zavrsim rezervaciju.</small>
-        <input v-model="guestName" type="text" placeholder="Ime i prezime" />
-        <input v-model="guestEmail" type="email" placeholder="Email" />
-        <div class="reserve-form-actions">
-          <button type="button" @click="createReservation" :disabled="busy">Posalji rezervaciju</button>
-          <button type="button" class="ghost-btn" @click="goToLogin" :disabled="busy">Imam nalog, prijava</button>
+    <Teleport to="body">
+      <div v-if="pendingReserve && !hasGuestToken()" class="reserve-modal-overlay" @click.self="closeReservationModal">
+        <div class="reserve-modal" role="dialog" aria-modal="true" aria-label="Unos podataka za rezervaciju">
+          <button type="button" class="reserve-modal-close" @click="closeReservationModal" aria-label="Zatvori">✕</button>
+          <strong>Podaci za rezervaciju</strong>
+          <small>Unesite ime i email da zavrsim rezervaciju.</small>
+          <input v-model="guestName" type="text" placeholder="Ime i prezime" />
+          <input v-model="guestEmail" type="email" placeholder="Email" />
+          <div class="reserve-form-actions">
+            <button type="button" @click="createReservation" :disabled="busy">Posalji rezervaciju</button>
+            <button type="button" class="ghost-btn" @click="goToLogin" :disabled="busy">Imam nalog, prijava</button>
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
@@ -583,77 +585,6 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
   font-size: 0.76rem;
 }
 
-.reserve-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(40, 27, 17, 0.42);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1500;
-}
-
-.reserve-modal {
-  position: relative;
-  width: min(360px, calc(100vw - 24px));
-  background: #fffaf5;
-  border: 2px solid var(--c-braon-6);
-  box-shadow: 0 12px 32px rgba(34, 22, 14, 0.24);
-  padding: 28px 12px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.reserve-modal-close {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  color: #67462e;
-  cursor: pointer;
-  line-height: 1;
-  padding: 2px 6px;
-}
-.reserve-modal-close:hover {
-  color: #332317;
-}
-
-.reserve-modal strong {
-  color: #332317;
-}
-
-.reserve-modal small {
-  color: #67462e;
-}
-
-.reserve-modal input {
-  border: 1px solid #c8b3a4;
-  padding: 8px;
-  font-size: 0.8rem;
-}
-
-.reserve-form-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.reserve-form-actions button {
-  flex: 1;
-  border: 1px solid #67462e;
-  background: #cdac91;
-  color: #332317;
-  cursor: pointer;
-  font-size: 0.76rem;
-  padding: 7px 8px;
-}
-
-.reserve-form-actions .ghost-btn {
-  background: #fff;
-}
-
 .stay-assistant-input {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -704,5 +635,84 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
     width: 100%;
     height: auto;
   }
+}
+</style>
+
+<style>
+/* Reservation modal — teleported to body, cannot be scoped */
+.reserve-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 27, 17, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+}
+
+.reserve-modal {
+  position: relative;
+  width: min(400px, calc(100vw - 32px));
+  background: #fffaf5;
+  border: 2px solid #67462e;
+  box-shadow: 0 16px 48px rgba(34, 22, 14, 0.32);
+  padding: 32px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: 'Georgia', serif;
+}
+
+.reserve-modal strong {
+  font-size: 1.1rem;
+  color: #332317;
+}
+
+.reserve-modal small {
+  color: #67462e;
+  font-size: 0.85rem;
+}
+
+.reserve-modal input {
+  border: 1px solid #c8b3a4;
+  padding: 10px;
+  font-size: 0.9rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.reserve-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #67462e;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+}
+.reserve-modal-close:hover { color: #332317; }
+
+.reserve-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.reserve-form-actions button {
+  flex: 1;
+  border: 1px solid #67462e;
+  background: #cdac91;
+  color: #332317;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 9px 10px;
+  font-family: 'Georgia', serif;
+}
+
+.reserve-form-actions .ghost-btn {
+  background: #fff;
 }
 </style>
