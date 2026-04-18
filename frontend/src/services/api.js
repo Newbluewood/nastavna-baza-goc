@@ -92,6 +92,27 @@ class ApiService {
     });
   }
 
+  async chatPlanStay(payload) {
+    return this.request('/api/chat/plan-stay', {
+      method: 'POST',
+      body: JSON.stringify(payload || {})
+    });
+  }
+
+  async chatSuggestVisit(payload) {
+    return this.request('/api/chat/suggest-visit', {
+      method: 'POST',
+      body: JSON.stringify(payload || {})
+    });
+  }
+
+  async chatReserveStay(payload) {
+    return this.request('/api/chat/reserve-stay', {
+      method: 'POST',
+      body: JSON.stringify(payload || {})
+    });
+  }
+
   async likeNews(id) {
     return this.request(`/api/news/${id}/like`, {
       method: 'POST'

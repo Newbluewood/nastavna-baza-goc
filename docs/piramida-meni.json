@@ -1,0 +1,152 @@
+{
+  "meni": {
+    "predjela": [
+      {
+        "ime": "Domaća pršuta i sir sa Goča",
+        "namernice": ["pršuta", "sir", "pogača"],
+        "cena": 850
+      },
+      {
+        "ime": "Pogača ispod sača sa kajmakom",
+        "namernice": ["pogača", "kajmak"],
+        "cena": 600
+      }
+    ],
+    "supe_i_corbe": [
+      {
+        "ime": "Teleća čorba",
+        "namernice": ["teletina", "povrće", "začini"],
+        "cena": 450
+      },
+      {
+        "ime": "Supa od pečuraka",
+        "namernice": ["šumske pečurke", "povrće", "začini"],
+        "cena": 400
+      }
+    ],
+    "glavna_jela": [
+      {
+        "ime": "Jagnjetina ispod sača",
+        "namernice": ["jagnjetina", "krompir", "luk", "začini"],
+        "cena": 1600
+      },
+      {
+        "ime": "Pastrmka sa žara",
+        "namernice": ["pastrmka", "limun", "začini"],
+        "cena": 1200
+      },
+      {
+        "ime": "Pileći file u sosu od pečuraka",
+        "namernice": ["pileći file", "pečurke", "pavlaka", "začini"],
+        "cena": 950
+      },
+      {
+        "ime": "Sarma sa domaćim kiselim kupusom",
+        "namernice": ["kupus", "mleveno meso", "pirinač", "začini"],
+        "cena": 900
+      }
+    ],
+    "prilozi": [
+      {
+        "ime": "Krompir iz rerne sa začinskim biljem",
+        "namernice": ["krompir", "ruzmarin", "maslinovo ulje"],
+        "cena": 350
+      },
+      {
+        "ime": "Domaća proja",
+        "namernice": ["kukuruzno brašno", "sir", "jaja"],
+        "cena": 300
+      },
+      {
+        "ime": "Kiselo mleko",
+        "namernice": ["mleko", "fermentisana kultura"],
+        "cena": 250
+      }
+    ],
+    "salate": [
+      {
+        "ime": "Šopska salata",
+        "namernice": ["paradajz", "krastavac", "paprika", "sir"],
+        "cena": 400
+      },
+      {
+        "ime": "Kupus salata",
+        "namernice": ["kupus", "sirće", "ulje"],
+        "cena": 250
+      },
+      {
+        "ime": "Sezonska mešana salata",
+        "namernice": ["paradajz", "krastavac", "zelena salata", "luk"],
+        "cena": 350
+      }
+    ],
+    "poslastice": [
+      {
+        "ime": "Pita sa jabukama i orasima",
+        "namernice": ["jabuke", "orah", "cimet", "kore"],
+        "cena": 500
+      },
+      {
+        "ime": "Štrudla sa makom",
+        "namernice": ["mak", "brašno", "šećer"],
+        "cena": 550
+      },
+      {
+        "ime": "Med i orasi",
+        "namernice": ["domaći med", "orah"],
+        "cena": 400
+      }
+    ],
+    "pica": [
+      {
+        "ime": "Domaća rakija",
+        "namernice": ["šljiva", "dunja"],
+        "cena": 250
+      },
+      {
+        "ime": "Vino iz Župe",
+        "namernice": ["grožđe"],
+        "cena": 450
+      },
+      {
+        "ime": "Planinska voda",
+        "namernice": ["izvor voda"],
+        "cena": 150
+      }
+    ],
+    "kafe": [
+      {
+        "ime": "Domaća kafa",
+        "namernice": ["mlevena kafa"],
+        "cena": 200
+      },
+      {
+        "ime": "Espresso",
+        "namernice": ["espresso kafa"],
+        "cena": 250
+      },
+      {
+        "ime": "Kapucino",
+        "namernice": ["espresso kafa", "mleko", "pena"],
+        "cena": 300
+      }
+    ],
+    "sokovi": [
+      {
+        "ime": "Sok od maline",
+        "namernice": ["malina", "šećer", "voda"],
+        "cena": 300
+      },
+      {
+        "ime": "Sok od kupine",
+        "namernice": ["kupina", "šećer", "voda"],
+        "cena": 300
+      },
+      {
+        "ime": "Sok od borovnice",
+        "namernice": ["borovnica", "šećer", "voda"],
+        "cena": 350
+      }
+    ]
+  }
+}

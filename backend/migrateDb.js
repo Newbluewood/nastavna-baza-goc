@@ -171,6 +171,71 @@ async function run() {
     await ensureColumn(conn, 'reservations', 'inquiry_id', 'inquiry_id INT NULL');
     await ensureColumn(conn, 'news', 'slug', 'slug VARCHAR(255) NULL');
     await ensureColumn(conn, 'news', 'likes', 'likes INT DEFAULT 0');
+    await ensureColumn(conn, 'facilities', 'capacity_min', 'capacity_min INT NULL');
+    await ensureColumn(conn, 'facilities', 'capacity_max', 'capacity_max INT NULL');
+    await ensureColumn(conn, 'facilities', 'stay_tags', 'stay_tags JSON NULL');
+    await ensureColumn(conn, 'rooms', 'capacity_min', 'capacity_min INT NULL');
+    await ensureColumn(conn, 'rooms', 'capacity_max', 'capacity_max INT NULL');
+    await ensureColumn(conn, 'rooms', 'stay_tags', 'stay_tags JSON NULL');
+
+    await ensureTable(
+      conn,
+      'attractions',
+      `
+      CREATE TABLE ${q('attractions')} (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        type VARCHAR(50) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        distance_km DECIMAL(6,2) NULL,
+        distance_minutes INT NULL,
+        family_friendly BOOLEAN DEFAULT TRUE,
+        weather_tags JSON NULL,
+        season_tags JSON NULL,
+        suitable_for JSON NULL,
+        location_badges JSON NULL,
+        cover_image VARCHAR(255),
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+      `
+    );
+
+    await ensureTable(
+      conn,
+      'attraction_translations',
+      `
+      CREATE TABLE ${q('attraction_translations')} (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        entity_id INT NOT NULL,
+        lang VARCHAR(10) NOT NULL,
+        name VARCHAR(255),
+        description TEXT,
+        UNIQUE KEY ${q('lang_entity')} (${q('entity_id')}, ${q('lang')}),
+        CONSTRAINT ${q('fk_attraction_translations_entity_id')} FOREIGN KEY (${q('entity_id')}) REFERENCES ${q('attractions')} (${q('id')}) ON DELETE CASCADE
+      )
+      `
+    );
+
+    await ensureTable(
+      conn,
+      'restaurant_menu_items',
+      `
+      CREATE TABLE ${q('restaurant_menu_items')} (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        attraction_id INT NOT NULL,
+        lang VARCHAR(10) NOT NULL DEFAULT 'sr',
+        category VARCHAR(100),
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        price DECIMAL(10,2) NULL,
+        is_available BOOLEAN DEFAULT TRUE,
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT ${q('fk_restaurant_menu_items_attraction_id')} FOREIGN KEY (${q('attraction_id')}) REFERENCES ${q('attractions')} (${q('id')}) ON DELETE CASCADE
+      )
+      `
+    );
 
     await ensureIndex(
       conn,
@@ -191,6 +256,20 @@ async function run() {
       'news',
       'uq_news_slug',
       `CREATE UNIQUE INDEX ${q('uq_news_slug')} ON ${q('news')} (${q('slug')})`
+    );
+
+    await ensureIndex(
+      conn,
+      'attractions',
+      'idx_attractions_type',
+      `CREATE INDEX ${q('idx_attractions_type')} ON ${q('attractions')} (${q('type')})`
+    );
+
+    await ensureIndex(
+      conn,
+      'restaurant_menu_items',
+      'idx_restaurant_menu_items_attraction_id',
+      `CREATE INDEX ${q('idx_restaurant_menu_items_attraction_id')} ON ${q('restaurant_menu_items')} (${q('attraction_id')})`
     );
 
     await ensureForeignKey(

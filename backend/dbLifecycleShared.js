@@ -33,8 +33,24 @@ async function executeOrPrint(connection, sql, params, description, shouldExecut
   }
 }
 
+async function tableExists(connection, tableName) {
+  const [rows] = await connection.query(
+    `
+      SELECT 1
+      FROM information_schema.tables
+      WHERE table_schema = DATABASE() AND table_name = ?
+      LIMIT 1
+    `,
+    [tableName]
+  );
+
+  return rows.length > 0;
+}
+
 async function resetApplicationTables(connection, shouldExecute) {
   const tablesInOrder = [
+    'restaurant_menu_items',
+    'attraction_translations',
     'hero_slides_translations',
     'news_translations',
     'page_translations',
@@ -45,6 +61,7 @@ async function resetApplicationTables(connection, shouldExecute) {
     'inquiries',
     'rooms',
     'facilities',
+    'attractions',
     'hero_slides',
     'news',
     'guests',
@@ -55,6 +72,11 @@ async function resetApplicationTables(connection, shouldExecute) {
   await executeOrPrint(connection, 'SET FOREIGN_KEY_CHECKS = 0', [], 'disable foreign key checks', shouldExecute);
 
   for (const tableName of tablesInOrder) {
+    const exists = await tableExists(connection, tableName);
+    if (!exists) {
+      console.log(`SKIP: table ${tableName} does not exist`);
+      continue;
+    }
     await executeOrPrint(connection, `TRUNCATE TABLE \`${tableName}\``, [], `truncate ${tableName}`, shouldExecute);
   }
 
