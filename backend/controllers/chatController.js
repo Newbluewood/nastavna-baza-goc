@@ -3,6 +3,8 @@ const { planStay, suggestVisit } = require('../services/chatStayService');
 const { createInquiryWithGuest } = require('../services/inquiryService');
 const aiService = require('../services/aiService');
 const chatMetricsService = require('../services/chatMetricsService');
+const { getForecastForUpcomingDays } = require('../services/weatherService');
+const chatContextGuardService = require('../services/chatContextGuardService');
 
 function getActionFromResult(result = {}) {
   if (result?.status === 'needs_input') {
@@ -59,6 +61,57 @@ async function attachAssistantMessage(payload, result) {
 
 async function planStayChat(req, res) {
   const payload = req.body || {};
+
+  const lockState = chatContextGuardService.checkLock(req);
+  if (lockState.locked) {
+    const lockResponse = {
+      status: 'blocked',
+      criteria: payload?.context || {},
+      suggestions: [],
+      alternatives: [],
+      next_actions: [],
+      assistant_message: lockState.message,
+      assistant_provider_mode: 'context-guard',
+      ai_contract: {
+        version: '1.0',
+        guard: {
+          class: 'unsafe',
+          reason: 'temporary_chat_cooldown'
+        },
+        intent: {
+          name: 'unknown',
+          confidence: 1
+        },
+        action: {
+          name: 'none',
+          params: {},
+          requires_confirmation: false
+        },
+        reply: {
+          text: lockState.message,
+          style: 'friendly_concise'
+        },
+        source: 'context-guard'
+      },
+      chat_lock: {
+        active: true,
+        until: lockState.lockUntil,
+        strikes: lockState.strikes
+      }
+    };
+
+    chatMetricsService.recordPlanStayTurn({
+      guardClass: 'unsafe',
+      intentName: 'unknown',
+      actionName: 'none',
+      decisionSource: 'context-guard',
+      assistantProviderMode: lockResponse.assistant_provider_mode,
+      assistantText: lockResponse.assistant_message
+    });
+
+    return res.json(lockResponse);
+  }
+
   const aiContract = await aiService.decideChatTurn({
     message: payload?.message || '',
     context: payload?.context || {},
@@ -66,15 +119,39 @@ async function planStayChat(req, res) {
   });
 
   if (aiContract?.guard?.class && aiContract.guard.class !== 'in_domain') {
+    const outResult = aiContract?.guard?.class === 'out_of_domain'
+      ? chatContextGuardService.registerOutOfDomain(req)
+      : { locked: false, strikes: 0, message: null };
+
+    const assistantMessage = outResult.message
+      || aiContract?.reply?.text
+      || 'Ovde sam za pitanja o smestaju i rezervaciji Nastavne baze Goc.';
+
     const blockedResponse = {
       status: 'blocked',
       criteria: payload?.context || {},
       suggestions: [],
       alternatives: [],
       next_actions: [],
-      assistant_message: aiContract?.reply?.text || 'Ovde sam za pitanja o smestaju i rezervaciji Nastavne baze Goc.',
+      assistant_message: assistantMessage,
       assistant_provider_mode: aiContract?.source || 'heuristic',
-      ai_contract: aiContract
+      ai_contract: {
+        ...aiContract,
+        reply: {
+          ...(aiContract?.reply || {}),
+          text: assistantMessage
+        }
+      },
+      chat_lock: outResult.locked
+        ? {
+          active: true,
+          until: outResult.lockUntil,
+          strikes: outResult.strikes
+        }
+        : {
+          active: false,
+          strikes: outResult.strikes
+        }
     };
 
     chatMetricsService.recordPlanStayTurn({
@@ -88,6 +165,8 @@ async function planStayChat(req, res) {
 
     return res.json(blockedResponse);
   }
+
+  chatContextGuardService.registerInDomain(req);
 
   // Dispatcher: execute action defined by AI contract
   const actionName = aiContract?.action?.name || 'search_rooms';
@@ -121,9 +200,12 @@ async function planStayChat(req, res) {
         criteria: payload?.context || {},
         suggestions: [],
         alternatives: [],
-        next_actions: [],
-        follow_up_question: weatherSummary,
-        assistant_message: weatherSummary,
+        next_actions: [
+          'Ako zelite, mogu odmah da nastavim sa rezervacijom smestaja.',
+          'Ako dolazite samo u obilazak Goca, mogu predloziti plan obilaska.'
+        ],
+        follow_up_question: 'Da li zelite rezervaciju smestaja ili dolazite samo u obilazak Goca?',
+        assistant_message: `${weatherSummary} Da li zelite rezervaciju smestaja ili dolazite samo u obilazak Goca?`,
         assistant_provider_mode: aiContract?.source || 'heuristic',
         ai_contract: aiContract
       };
@@ -164,7 +246,52 @@ async function planStayChat(req, res) {
     }
   }
 
-  // Default: search_rooms action or any other action — proceed with deterministic booking
+  // Weather action without date — ask for date instead of booking flow
+  if (actionName === 'fetch_weather') {
+    const weatherLead = aiContract?.reply?.text || 'Mogu da proverim vremensku prognozu.';
+    const userMessage = String(payload?.message || '').toLowerCase();
+    const wantsGeneralTrend = /ovih dana|sledece nedelje|sljedece nedelje|next week|narednih dana/.test(userMessage);
+
+    let trendText = '';
+    if (wantsGeneralTrend) {
+      try {
+        const trend = await getForecastForUpcomingDays(7);
+        if (trend?.available && trend?.summary) {
+          trendText = `${trend.summary} `;
+        }
+      } catch {
+        // Keep flow deterministic even if weather provider is unavailable.
+      }
+    }
+
+    const weatherAskResponse = {
+      status: 'needs_input',
+      criteria: payload?.context || {},
+      suggestions: [],
+      alternatives: [],
+      next_actions: [
+        'Ako zelite rezervaciju, napisite termin, broj osoba i duzinu boravka.',
+        'Ako dolazite samo u obilazak, mogu odmah predloziti aktivnosti na Gocu.'
+      ],
+      follow_up_question: 'Da li zelite rezervaciju smestaja ili dolazite samo u obilazak Goca?',
+      assistant_message: `${trendText}${weatherLead} Da bih dao tacnu prognozu po datumu, potreban mi je datum dolaska. Da li zelite rezervaciju smestaja ili dolazite samo u obilazak Goca?`,
+      assistant_provider_mode: aiContract?.source || 'heuristic',
+      ai_contract: aiContract
+    };
+
+    chatMetricsService.recordPlanStayTurn({
+      guardClass: aiContract?.guard?.class,
+      intentName: aiContract?.intent?.name,
+      actionName: aiContract?.action?.name,
+      decisionSource: aiContract?.source,
+      assistantProviderMode: weatherAskResponse.assistant_provider_mode,
+      assistantText: weatherAskResponse.assistant_message
+    });
+
+    return res.json(weatherAskResponse);
+  }
+
+  // Default: search_rooms or other actions
   const result = await planStay(req.app.locals.db, payload);
   const response = await attachAssistantMessage(payload, result);
   const finalResponse = {

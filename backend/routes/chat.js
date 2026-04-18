@@ -5,7 +5,7 @@ const { planStayChat, suggestVisitChat, reserveStayChat } = require('../controll
 
 const router = express.Router();
 
-router.post('/plan-stay', asyncHandler(planStayChat));
+router.post('/plan-stay', optionalGuestAuthMiddleware, asyncHandler(planStayChat));
 router.post('/suggest-visit', asyncHandler(suggestVisitChat));
 router.post('/reserve-stay', optionalGuestAuthMiddleware, asyncHandler(reserveStayChat));
 

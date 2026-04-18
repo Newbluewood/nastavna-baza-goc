@@ -119,6 +119,20 @@ function parseGuestBreakdown(message, context, pendingSlot = null) {
   const adultsValue = adultsDigitMatch ? Number(adultsDigitMatch[1]) : adultsFromWord;
   const childrenValue = childrenDigitMatch ? Number(childrenDigitMatch[1]) : childrenFromWord;
 
+  const couplePatterns = [
+    /\b(supruga|suprug|zena|partnerka|partner)\s+i\s+ja\b/i,
+    /\bja\s+i\s+(supruga|suprug|zena|partnerka|partner)\b/i,
+    /\bnas\s+dvoje\b/i,
+    /\bmi\s+smo\s+par\b/i,
+    /\bpar\s+smo\b/i
+  ];
+  if (!adultsValue && !childrenValue && couplePatterns.some((re) => re.test(normalizedSource))) {
+    return {
+      adults: 2,
+      children: 0
+    };
+  }
+
   // Check for solo/alone patterns: explicit "sam", "solo", "alone", or "samo ja/mene"
   const soloPatterns = /\b(sam|solo|alone|samo\s+ja|samo\s+mene|samo\s+i|dosao\s+sam|dosla\s+sam|dolazim\s+sam|dolazim\s+sama)\b/i;
   
@@ -154,6 +168,17 @@ function parseStayLength(message, context, pendingSlot = null) {
   }
 
   const source = String(message || '').toLowerCase();
+
+  const rangeWithUnit = source.match(/\b(\d{1,2})\s*[-–]\s*(\d{1,2})\s*(no[cć]i?|dana|dan)\b/i);
+  if (rangeWithUnit) {
+    return Math.max(Number(rangeWithUnit[1]), Number(rangeWithUnit[2]));
+  }
+
+  const rangeWithoutUnit = source.match(/\b(\d{1,2})\s*[-–]\s*(\d{1,2})\b/);
+  if (rangeWithoutUnit && pendingSlot === 'stay_length_days') {
+    return Math.max(Number(rangeWithoutUnit[1]), Number(rangeWithoutUnit[2]));
+  }
+
   const match = source.match(/(\d+)\s*(no[cć]i?|dana|dan)/i);
   if (match) {
     return Number(match[1]);

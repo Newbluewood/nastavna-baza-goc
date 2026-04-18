@@ -41,6 +41,37 @@ function buildSummary(mode, dayData) {
   return `Prognoza za izabrani datum: ${srLabelForMode(mode)} (${temperatureText}, padavine ${Math.round(precip)}%).`;
 }
 
+function formatIsoDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function buildUpcomingSummary(days, daily = {}) {
+  const maxList = Array.isArray(daily.temperature_2m_max) ? daily.temperature_2m_max.map(Number).filter(Number.isFinite) : [];
+  const minList = Array.isArray(daily.temperature_2m_min) ? daily.temperature_2m_min.map(Number).filter(Number.isFinite) : [];
+  const precipList = Array.isArray(daily.precipitation_probability_max)
+    ? daily.precipitation_probability_max.map(Number).filter(Number.isFinite)
+    : [];
+
+  const overallMax = maxList.length ? Math.round(Math.max(...maxList)) : null;
+  const overallMin = minList.length ? Math.round(Math.min(...minList)) : null;
+  const avgPrecip = precipList.length
+    ? Math.round(precipList.reduce((sum, item) => sum + item, 0) / precipList.length)
+    : null;
+  const rainyDays = precipList.filter((value) => value >= 60).length;
+
+  const tempPart = (overallMin != null && overallMax != null)
+    ? `Danju oko ${overallMax}°C, nocu oko ${overallMin}°C`
+    : 'Temperatura je promenljiva';
+  const precipPart = avgPrecip != null
+    ? `Prosecna sansa za padavine je oko ${avgPrecip}%`
+    : 'Padavine su promenljive';
+  const rainDaysPart = rainyDays > 0
+    ? `moguce su padavine u oko ${rainyDays}/${days} dana.`
+    : 'nije najavljena znacajna kisa.';
+
+  return `U narednih ${days} dana na Gocu: ${tempPart}. ${precipPart}, ${rainDaysPart}`;
+}
+
 async function getForecastForDate(checkIn, options = {}) {
   if (!isIsoDate(checkIn)) {
     return {
@@ -97,6 +128,55 @@ async function getForecastForDate(checkIn, options = {}) {
   }
 }
 
+async function getForecastForUpcomingDays(days = 7, options = {}) {
+  const safeDays = Math.max(1, Math.min(14, Number(days) || 7));
+
+  const latitude = toNumber(options.latitude, toNumber(process.env.WEATHER_LAT, 43.559095));
+  const longitude = toNumber(options.longitude, toNumber(process.env.WEATHER_LON, 20.75393));
+  const timezone = process.env.WEATHER_TIMEZONE || 'Europe/Belgrade';
+
+  const start = new Date();
+  start.setHours(12, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + safeDays - 1);
+
+  const params = new URLSearchParams({
+    latitude: String(latitude),
+    longitude: String(longitude),
+    timezone,
+    daily: 'weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+    start_date: formatIsoDate(start),
+    end_date: formatIsoDate(end)
+  });
+
+  try {
+    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.reason || `HTTP ${response.status}`);
+    }
+
+    return {
+      available: true,
+      source: 'open-meteo',
+      days: safeDays,
+      start_date: formatIsoDate(start),
+      end_date: formatIsoDate(end),
+      location: { latitude, longitude },
+      summary: buildUpcomingSummary(safeDays, data?.daily || {}),
+      data: data?.daily || {}
+    };
+  } catch (error) {
+    return {
+      available: false,
+      days: safeDays,
+      reason: 'provider_unavailable',
+      error: error.message
+    };
+  }
+}
+
 module.exports = {
-  getForecastForDate
+  getForecastForDate,
+  getForecastForUpcomingDays
 };
