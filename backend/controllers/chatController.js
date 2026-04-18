@@ -93,28 +93,105 @@ async function planStayChat(req, res) {
   const intentName = aiContract?.intent?.name || 'unknown';
   
   if (intentName === 'weather') {
-    const weatherResponse = {
-      status: 'needs_input',
-      criteria: payload?.context || {},
-      suggestions: [],
-      alternatives: [],
-      next_actions: [],
-      follow_up_question: aiContract?.reply?.text || 'Za vremensku prognozu trebam tacan datum dolaska.',
-      assistant_message: aiContract?.reply?.text || 'Mogu da proverim vremensku prognozu.',
-      assistant_provider_mode: aiContract?.source || 'heuristic',
-      ai_contract: aiContract
-    };
+    const checkIn = payload?.context?.check_in;
+    
+    // If we don't have check_in date yet, ask for it
+    if (!checkIn) {
+      const weatherResponse = {
+        status: 'needs_input',
+        criteria: payload?.context || {},
+        suggestions: [],
+        alternatives: [],
+        next_actions: [],
+        follow_up_question: aiContract?.reply?.text || 'Za vremensku prognozu trebam tacan datum dolaska.',
+        assistant_message: aiContract?.reply?.text || 'Mogu da proverim vremensku prognozu.',
+        assistant_provider_mode: aiContract?.source || 'heuristic',
+        ai_contract: aiContract
+      };
 
-    chatMetricsService.recordPlanStayTurn({
-      guardClass: aiContract?.guard?.class,
-      intentName: aiContract?.intent?.name,
-      actionName: aiContract?.action?.name,
-      decisionSource: aiContract?.source,
-      assistantProviderMode: weatherResponse.assistant_provider_mode,
-      assistantText: weatherResponse.assistant_message
-    });
+      chatMetricsService.recordPlanStayTurn({
+        guardClass: aiContract?.guard?.class,
+        intentName: aiContract?.intent?.name,
+        actionName: aiContract?.action?.name,
+        decisionSource: aiContract?.source,
+        assistantProviderMode: weatherResponse.assistant_provider_mode,
+        assistantText: weatherResponse.assistant_message
+      });
 
-    return res.json(weatherResponse);
+      return res.json(weatherResponse);
+    }
+
+    // We have check_in, so try to fetch weather for a facility
+    try {
+      // First get facility suggestions to know which facility to check weather for
+      const bookingResult = await planStay(req.app.locals.db, payload);
+      const suggestions = Array.isArray(bookingResult?.suggestions) ? bookingResult.suggestions : [];
+      const firstFacilityId = suggestions[0]?.facility_id;
+
+      let weatherSummary = 'Ne mogu da proverim vremensku prognozu za taj datum u ovom trenutku.';
+
+      if (firstFacilityId) {
+        // Fetch weather for the recommended facility
+        const { suggestVisit } = require('../services/chatStayService');
+        const visitResult = await suggestVisit(req.app.locals.db, {
+          facility_id: firstFacilityId,
+          check_in: checkIn,
+          weather_mode: 'any',
+          family: Number(payload?.context?.children || 0) > 0,
+          lang: 'sr'
+        });
+
+        if (visitResult?.weather?.summary) {
+          weatherSummary = visitResult.weather.summary;
+        }
+      }
+
+      const weatherResponse = {
+        status: 'needs_input',
+        criteria: payload?.context || {},
+        suggestions: [],
+        alternatives: [],
+        next_actions: [],
+        follow_up_question: weatherSummary,
+        assistant_message: weatherSummary,
+        assistant_provider_mode: aiContract?.source || 'heuristic',
+        ai_contract: aiContract
+      };
+
+      chatMetricsService.recordPlanStayTurn({
+        guardClass: aiContract?.guard?.class,
+        intentName: aiContract?.intent?.name,
+        actionName: aiContract?.action?.name,
+        decisionSource: aiContract?.source,
+        assistantProviderMode: weatherResponse.assistant_provider_mode,
+        assistantText: weatherResponse.assistant_message
+      });
+
+      return res.json(weatherResponse);
+    } catch (error) {
+      const weatherResponse = {
+        status: 'needs_input',
+        criteria: payload?.context || {},
+        suggestions: [],
+        alternatives: [],
+        next_actions: [],
+        follow_up_question: 'Ne mogu da proverim vremensku prognozu. Pokušajte ponovo ili nastavite sa rezervacijom.',
+        assistant_message: 'Ne mogu da proverim vremensku prognozu. Pokušajte ponovo ili nastavite sa rezervacijom.',
+        assistant_provider_mode: 'local-fallback',
+        ai_contract: aiContract
+      };
+
+      chatMetricsService.recordPlanStayTurn({
+        guardClass: aiContract?.guard?.class,
+        intentName: aiContract?.intent?.name,
+        actionName: aiContract?.action?.name,
+        decisionSource: aiContract?.source,
+        assistantProviderMode: weatherResponse.assistant_provider_mode,
+        assistantText: weatherResponse.assistant_message
+      });
+
+      return res.json(weatherResponse);
+    }
   }
 
   // Normal booking flow
