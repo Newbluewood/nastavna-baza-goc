@@ -101,17 +101,32 @@ function parseGuestBreakdown(message, context, pendingSlot = null) {
   }
 
   const source = String(message || '').toLowerCase();
-  const adultsMatch = source.match(/(\d+)\s*(odrasl[a-z]*|adult[a-z]*)/i);
-  const childrenMatch = source.match(/(\d+)\s*(dece|deca|deteta|dete|child[a-z]*)/i);
+  const normalizedSource = normalizeText(source);
 
-  if (!adultsMatch && !childrenMatch && /\b(sam|solo|alone)\b/i.test(source)) {
+  const adultsDigitMatch = source.match(/(\d+)\s*(odrasl[a-z]*|adult[a-z]*)/i);
+  const childrenDigitMatch = source.match(/(\d+)\s*(dece|deca|deteta|dete|child[a-z]*)/i);
+
+  const adultsWordMatch = normalizedSource.match(/\b([a-z]+)\s*(odrasl[a-z]*|adult[a-z]*)\b/i);
+  const childrenWordMatch = normalizedSource.match(/\b([a-z]+)\s*(dece|deca|deteta|dete|child[a-z]*)\b/i);
+
+  const adultsFromWord = adultsWordMatch && NUMBER_WORDS[adultsWordMatch[1]]
+    ? Number(NUMBER_WORDS[adultsWordMatch[1]])
+    : 0;
+  const childrenFromWord = childrenWordMatch && NUMBER_WORDS[childrenWordMatch[1]]
+    ? Number(NUMBER_WORDS[childrenWordMatch[1]])
+    : 0;
+
+  const adultsValue = adultsDigitMatch ? Number(adultsDigitMatch[1]) : adultsFromWord;
+  const childrenValue = childrenDigitMatch ? Number(childrenDigitMatch[1]) : childrenFromWord;
+
+  if (!adultsValue && !childrenValue && /\b(sam|solo|alone)\b/i.test(source)) {
     return {
       adults: 1,
       children: 0
     };
   }
 
-  if (!adultsMatch && !childrenMatch && pendingSlot === 'guest_breakdown') {
+  if (!adultsValue && !childrenValue && pendingSlot === 'guest_breakdown') {
     const standaloneGuests = parseStandaloneCount(source);
     if (Number.isFinite(standaloneGuests) && standaloneGuests > 0) {
       return {
@@ -122,8 +137,8 @@ function parseGuestBreakdown(message, context, pendingSlot = null) {
   }
 
   return {
-    adults: adultsMatch ? Number(adultsMatch[1]) : 0,
-    children: childrenMatch ? Number(childrenMatch[1]) : 0
+    adults: adultsValue,
+    children: childrenValue
   };
 }
 

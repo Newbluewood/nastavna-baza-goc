@@ -137,6 +137,69 @@ function deriveCheckOut(checkIn, stayLengthDays) {
   return date.toISOString().slice(0, 10)
 }
 
+function isWeatherQuestion(text) {
+  const source = String(text || '').toLowerCase()
+  return /vreme|temperatur|kis|sunc|prognoz|weather/.test(source)
+}
+
+function extractPreferredFacilityFromMessages() {
+  for (let i = messages.value.length - 1; i >= 0; i -= 1) {
+    const msg = messages.value[i]
+    if (msg?.type !== 'suggestions' || !Array.isArray(msg?.suggestions) || !msg.suggestions.length) {
+      continue
+    }
+
+    const recommended = msg.suggestions.find((item) => item?.is_recommended && Number(item?.facility_id) > 0)
+    if (recommended) {
+      return Number(recommended.facility_id)
+    }
+
+    const firstValid = msg.suggestions.find((item) => Number(item?.facility_id) > 0)
+    if (firstValid) {
+      return Number(firstValid.facility_id)
+    }
+  }
+
+  return null
+}
+
+async function answerWeatherFromContext() {
+  const checkIn = context.value.check_in
+  if (!checkIn) {
+    pushAssistantText('Da bih rekao kakvo ce vreme biti tada, potreban mi je tacan datum dolaska (YYYY-MM-DD).')
+    return true
+  }
+
+  const facilityId = extractPreferredFacilityFromMessages()
+  if (!facilityId) {
+    pushAssistantText('Mogu da procenim vreme cim prvo predlozim smestaj za vas termin.')
+    return true
+  }
+
+  busy.value = true
+  try {
+    const result = await api.chatSuggestVisit({
+      facility_id: facilityId,
+      check_in: checkIn,
+      weather_mode: 'any',
+      family: Boolean(Number(context.value.children || 0) > 0),
+      lang: 'sr'
+    })
+
+    if (result?.weather?.summary) {
+      pushAssistantText(result.weather.summary)
+    } else {
+      pushAssistantText('Za taj datum trenutno nemam pouzdanu vremensku prognozu, ali mogu da predlozim obilazak.')
+    }
+  } catch (error) {
+    pushAssistantText(error?.data?.error || error?.message || 'Trenutno ne mogu da proverim vremensku prognozu.')
+  } finally {
+    busy.value = false
+  }
+
+  return true
+}
+
 function buildInquiryTargetRoute(item, payload) {
   if (!item?.facility_id || !payload?.target_room_id || !payload?.check_in || !payload?.check_out) {
     return null
@@ -171,6 +234,31 @@ async function sendMessage() {
   const text = inputText.value.trim()
   messages.value.push({ role: 'user', type: 'text', text })
   inputText.value = ''
+
+  if (pendingReserve.value) {
+    if (/\b(imam nalog|vec imam nalog|prijava|uloguj|ulogovati|login|log in)\b/i.test(text)) {
+      goToLogin()
+      return
+    }
+
+    if (/\b(nemam nalog|bez naloga|guest|gost)\b/i.test(text)) {
+      continueWithoutAccount()
+      return
+    }
+
+    if (isWeatherQuestion(text)) {
+      const handledWeather = await answerWeatherFromContext()
+      if (handledWeather) return
+    }
+
+    pushAssistantText('Za nastavak rezervacije napišite "imam nalog" ili "nemam nalog", pa vas vodim na formu.')
+    return
+  }
+
+  if (isWeatherQuestion(text) && context.value.check_in) {
+    const handledWeather = await answerWeatherFromContext()
+    if (handledWeather) return
+  }
 
   busy.value = true
   try {
