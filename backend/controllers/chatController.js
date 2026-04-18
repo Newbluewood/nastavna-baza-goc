@@ -89,6 +89,35 @@ async function planStayChat(req, res) {
     return res.json(blockedResponse);
   }
 
+  // Handle weather intent specially
+  if (aiContract?.intent?.name === 'weather') {
+    const checkIn = payload?.context?.check_in;
+    const replyText = aiContract?.reply?.text || 'Mogu da proverim vremensku prognozu. Posebno je korisna ako znamo tacan datum dolaska.';
+
+    const weatherResponse = {
+      status: 'needs_input',
+      criteria: payload?.context || {},
+      suggestions: [],
+      alternatives: [],
+      next_actions: ['Za preciznu vremensku prognozu, navedite datum dolaska.'],
+      follow_up_question: checkIn ? 'Proveravam vremensku prognozu za taj datum...' : 'Koja je planirana data vašeg dolaska?',
+      assistant_message: replyText,
+      assistant_provider_mode: aiContract?.source || 'heuristic',
+      ai_contract: aiContract
+    };
+
+    chatMetricsService.recordPlanStayTurn({
+      guardClass: aiContract?.guard?.class,
+      intentName: aiContract?.intent?.name,
+      actionName: aiContract?.action?.name,
+      decisionSource: aiContract?.source,
+      assistantProviderMode: weatherResponse.assistant_provider_mode,
+      assistantText: weatherResponse.assistant_message
+    });
+
+    return res.json(weatherResponse);
+  }
+
   const result = await planStay(req.app.locals.db, payload);
   const response = await attachAssistantMessage(payload, result);
   const finalResponse = {
