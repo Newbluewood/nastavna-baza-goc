@@ -6,6 +6,7 @@ const { sendError } = require('../utils/response');
 
 async function getHome(req, res) {
   const db = req.app.locals.db;
+  const lang = req.query.lang || 'sr';
 
   const [facilities] = await db.query(`
     SELECT f.*, GROUP_CONCAT(mg.image_url) as gallery_urls
@@ -23,24 +24,35 @@ async function getHome(req, res) {
   });
 
   const [news] = await db.query(`
-    SELECT n.*, GROUP_CONCAT(mg.image_url) as gallery_urls
+    SELECT n.id,
+      COALESCE(nt.title, n.title) AS title,
+      COALESCE(nt.excerpt, n.excerpt) AS excerpt,
+      COALESCE(nt.content, n.content) AS content,
+      n.cover_image, n.created_at, n.slug, n.likes,
+      GROUP_CONCAT(mg.image_url) as gallery_urls
     FROM news n
+    LEFT JOIN news_translations nt ON n.id = nt.entity_id AND nt.lang = ?
     LEFT JOIN media_gallery mg ON mg.entity_id = n.id AND mg.entity_type = 'news'
     GROUP BY n.id
     ORDER BY n.created_at DESC
     LIMIT 3
-  `);
+  `, [lang === 'sr' ? '__none__' : lang]);
 
   news.forEach(item => {
     item.gallery = item.gallery_urls ? item.gallery_urls.split(',') : [];
     delete item.gallery_urls;
   });
 
+  const pageTitle = lang === 'en' ? 'TEACHING BASE GOČ' : 'БАЗА ГОЧ';
+  const textContent = lang === 'en'
+    ? 'Welcome to the Goč Teaching Base of the Faculty of Forestry, University of Belgrade.'
+    : 'Добродошли на Наставну базу Гоч Шумарског факултета Универзитета у Београду.';
+
   res.json({
     news,
     facilities,
-    pageTitle: "БАЗА ГОЧ",
-    textContent: "Добродошли на Наставну базу Гоч Шумарског факултета Универзитета у Београду.",
+    pageTitle,
+    textContent,
     slides: []
   });
 }
@@ -201,12 +213,18 @@ async function submitInquiry(req, res) {
 
 async function getNewsList(req, res) {
   const db = req.app.locals.db;
+  const lang = req.query.lang || 'sr';
 
   const [news] = await db.query(`
-    SELECT id, title, excerpt, content, cover_image, created_at, slug, likes
-    FROM news
-    ORDER BY created_at DESC
-  `);
+    SELECT n.id,
+      COALESCE(nt.title, n.title) AS title,
+      COALESCE(nt.excerpt, n.excerpt) AS excerpt,
+      COALESCE(nt.content, n.content) AS content,
+      n.cover_image, n.created_at, n.slug, n.likes
+    FROM news n
+    LEFT JOIN news_translations nt ON n.id = nt.entity_id AND nt.lang = ?
+    ORDER BY n.created_at DESC
+  `, [lang === 'sr' ? '__none__' : lang]);
 
   res.json(news);
 }
@@ -214,17 +232,23 @@ async function getNewsList(req, res) {
 async function getSingleNews(req, res) {
   const db = req.app.locals.db;
   const newsRef = req.params.id;
+  const lang = req.query.lang || 'sr';
   const isNumericRef = /^\d+$/.test(newsRef);
+  const langParam = lang === 'sr' ? '__none__' : lang;
 
-  const [news] = isNumericRef
-    ? await db.query(`
-        SELECT id, title, excerpt, content, cover_image, created_at, slug, likes
-        FROM news WHERE id = ? LIMIT 1
-      `, [Number(newsRef)])
-    : await db.query(`
-        SELECT id, title, excerpt, content, cover_image, created_at, slug, likes
-        FROM news WHERE slug = ? LIMIT 1
-      `, [newsRef]);
+  const whereClause = isNumericRef ? 'n.id = ?' : 'n.slug = ?';
+  const param = isNumericRef ? Number(newsRef) : newsRef;
+
+  const [news] = await db.query(`
+    SELECT n.id,
+      COALESCE(nt.title, n.title) AS title,
+      COALESCE(nt.excerpt, n.excerpt) AS excerpt,
+      COALESCE(nt.content, n.content) AS content,
+      n.cover_image, n.created_at, n.slug, n.likes
+    FROM news n
+    LEFT JOIN news_translations nt ON n.id = nt.entity_id AND nt.lang = ?
+    WHERE ${whereClause} LIMIT 1
+  `, [langParam, param]);
 
   if (news.length === 0) {
     return sendError(res, 404, 'News not found');

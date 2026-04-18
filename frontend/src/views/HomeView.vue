@@ -17,7 +17,7 @@ const langStore = useLangStore()
 const loadData = async () => {
   isLoading.value = true
   try {
-    const data = await api.getHome();
+    const data = await api.getHome(langStore.currentLang);
     console.log('Home API response:', data)
     
     if (data) {

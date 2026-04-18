@@ -27,7 +27,7 @@ const openLightbox = (index) => {
 const loadNews = async () => {
   isLoading.value = true
   try {
-    newsItem.value = await api.getNewsItem(route.params.id)
+    newsItem.value = await api.getNewsItem(route.params.id, langStore.currentLang)
     isLiked.value = !!localStorage.getItem(`liked_news_${newsItem.value.id}`)
   } catch (err) {
     debugError.value = err.message || JSON.stringify(err);

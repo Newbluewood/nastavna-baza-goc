@@ -12,7 +12,7 @@ const pageData = ref(null)
 const fetchNews = async () => {
   isLoading.value = true
   try {
-    news.value = await api.getNews()
+    news.value = await api.getNews(langStore.currentLang)
   } catch (err) {
     console.error('Greška pri učitavanju vesti:', err)
   } finally {

@@ -40,8 +40,8 @@ class ApiService {
   }
 
   // Public endpoints
-  async getHome() {
-    return this.request('/api/home');
+  async getHome(lang = 'sr') {
+    return this.request(`/api/home?lang=${lang}`);
   }
 
   async getFacilities() {
@@ -66,12 +66,12 @@ class ApiService {
     });
   }
 
-  async getNews() {
-    return this.request('/api/news');
+  async getNews(lang = 'sr') {
+    return this.request(`/api/news?lang=${lang}`);
   }
 
-  async getNewsItem(id) {
-    return this.request(`/api/news/${id}`);
+  async getNewsItem(id, lang = 'sr') {
+    return this.request(`/api/news/${id}?lang=${lang}`);
   }
 
   async likeNews(id) {
