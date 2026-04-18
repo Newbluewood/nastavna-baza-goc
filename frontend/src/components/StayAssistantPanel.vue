@@ -277,17 +277,21 @@ async function sendMessage() {
       return
     }
 
-    if (aiMessage) {
-      pushAssistantText(aiMessage)
-    } else if (Array.isArray(result.next_actions) && result.next_actions.length) {
-      const nonReservationHint = result.next_actions.find((line) => !/rezervacij/i.test(String(line)))
-      if (nonReservationHint) {
-        pushAssistantText(nonReservationHint)
+    const hasSuggestions = Array.isArray(result.suggestions) && result.suggestions.length > 0
+    const hasAlternatives = Array.isArray(result.alternatives) && result.alternatives.length > 0
+    
+    // Only push message as separate bubble if there are NO suggestions; suggestions will show message in their card
+    if (!hasSuggestions && !hasAlternatives) {
+      if (aiMessage) {
+        pushAssistantText(aiMessage)
+      } else if (Array.isArray(result.next_actions) && result.next_actions.length) {
+        const nonReservationHint = result.next_actions.find((line) => !/rezervacij/i.test(String(line)))
+        if (nonReservationHint) {
+          pushAssistantText(nonReservationHint)
+        }
       }
     }
 
-    const hasSuggestions = Array.isArray(result.suggestions) && result.suggestions.length > 0
-    const hasAlternatives = Array.isArray(result.alternatives) && result.alternatives.length > 0
     if (hasSuggestions || hasAlternatives) {
       messages.value.push({
         role: 'assistant',
