@@ -373,6 +373,28 @@ watch(
   }
 )
 
+function clearChat() {
+  messages.value = [
+    {
+      role: 'assistant',
+      type: 'text',
+      text: 'Zdravo! Pomazem oko smestaja na Gocu. Napisite broj osoba, termin i koliko dana zelite da ostanete.'
+    }
+  ]
+  context.value = {
+    adults: null,
+    children: null,
+    check_in: null,
+    stay_length_days: null,
+    pending_slot: null,
+    preferences: []
+  }
+  visitsByCard.value = {}
+  pendingReserve.value = null
+  inputText.value = ''
+  localStorage.removeItem(GUEST_CHAT_STORAGE_KEY)
+}
+
 async function loadVisitSuggestions(facilityId, roomId, checkIn) {
   const cardKey = `${facilityId}-${roomId}`
 
@@ -440,8 +462,21 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
 
     <div v-if="isOpen" class="stay-assistant-panel">
       <div class="stay-assistant-head">
-        <strong>Asistent za smestaj</strong>
-        <small>Nastavna baza Goc</small>
+        <div class="stay-assistant-head-top">
+          <div>
+            <strong>Asistent za smestaj</strong>
+            <small>Nastavna baza Goc</small>
+          </div>
+          <button
+            type="button"
+            class="stay-clear-btn"
+            @click="clearChat"
+            title="Očisti razgovor i počni ispočetka"
+            aria-label="Očisti chat"
+          >
+            Novi chat
+          </button>
+        </div>
       </div>
 
       <div class="stay-assistant-body">
@@ -543,6 +578,23 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
   color: #fff;
 }
 
+.stay-clear-btn {
+  background: #e8d5c4;
+  color: #67462e;
+  border: 1px solid #c8b3a4;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.stay-clear-btn:hover {
+  background: #dcc4b3;
+  border-color: #b8a39a;
+}
+
 .chat-bubble-icon {
   width: 34px;
   height: 34px;
@@ -562,6 +614,19 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
   padding: 10px 12px;
   border-bottom: 1px solid #e3c4ad;
   background: #fff7f0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stay-assistant-head-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.stay-assistant-head-top div {
   display: flex;
   flex-direction: column;
   gap: 2px;
