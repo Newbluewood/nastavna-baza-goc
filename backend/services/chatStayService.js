@@ -40,6 +40,13 @@ function parseGuestBreakdown(message, context) {
   const adultsMatch = source.match(/(\d+)\s*(odrasl[a-z]*|adult[a-z]*)/i);
   const childrenMatch = source.match(/(\d+)\s*(dece|deca|deteta|dete|child[a-z]*)/i);
 
+  if (!adultsMatch && !childrenMatch && /\b(sam|solo|alone)\b/i.test(source)) {
+    return {
+      adults: 1,
+      children: 0
+    };
+  }
+
   return {
     adults: adultsMatch ? Number(adultsMatch[1]) : 0,
     children: childrenMatch ? Number(childrenMatch[1]) : 0
@@ -59,6 +66,74 @@ function parseStayLength(message, context) {
   return match ? Number(match[1]) : null;
 }
 
+function normalizeText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function formatIsoDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function nextWeekdayDate(baseDate, targetDay, forceNextWeek = false) {
+  const currentDay = baseDate.getDay();
+  let delta = (targetDay - currentDay + 7) % 7;
+
+  if (delta === 0 || forceNextWeek) {
+    delta += 7;
+  }
+
+  const result = new Date(baseDate);
+  result.setDate(result.getDate() + delta);
+  return formatIsoDate(result);
+}
+
+function resolveNaturalDate(message) {
+  const source = normalizeText(message);
+  if (!source) return null;
+
+  const now = new Date();
+  now.setHours(12, 0, 0, 0);
+
+  const dayWords = [
+    { day: 1, words: ['ponedeljak', 'ponedeljka', 'monday'] },
+    { day: 2, words: ['utorak', 'utorka', 'tuesday'] },
+    { day: 3, words: ['sreda', 'sredu', 'srede', 'wednesday'] },
+    { day: 4, words: ['cetvrtak', 'cetvrtka', 'thursday'] },
+    { day: 5, words: ['petak', 'petka', 'friday'] },
+    { day: 6, words: ['subota', 'subote', 'saturday'] },
+    { day: 0, words: ['nedelja', 'nedelje', 'sunday'] }
+  ];
+
+  if (/\bdanas\b|\btoday\b/.test(source)) {
+    return formatIsoDate(now);
+  }
+
+  if (/\bsutra\b|\btomorrow\b/.test(source)) {
+    const date = new Date(now);
+    date.setDate(date.getDate() + 1);
+    return formatIsoDate(date);
+  }
+
+  if (/\bprekosutra\b|\bday after tomorrow\b/.test(source)) {
+    const date = new Date(now);
+    date.setDate(date.getDate() + 2);
+    return formatIsoDate(date);
+  }
+
+  const forceNextWeek = /\b(sledece|sledeci|iduce|iduci|next)\b/.test(source);
+  for (const option of dayWords) {
+    const hasDayWord = option.words.some((word) => source.includes(word));
+    if (hasDayWord) {
+      return nextWeekdayDate(now, option.day, forceNextWeek);
+    }
+  }
+
+  return null;
+}
+
 function parseArrivalHints(message, context) {
   const explicitDate = String(context.check_in || '').trim();
   const source = String(message || '').toLowerCase();
@@ -74,6 +149,14 @@ function parseArrivalHints(message, context) {
   if (dateInMessage) {
     return {
       check_in: dateInMessage[1],
+      arrival_hint: null
+    };
+  }
+
+  const naturalDate = resolveNaturalDate(source);
+  if (naturalDate) {
+    return {
+      check_in: naturalDate,
       arrival_hint: null
     };
   }

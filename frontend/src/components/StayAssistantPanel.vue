@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
 
@@ -8,10 +8,17 @@ const router = useRouter()
 const isOpen = ref(false)
 const busy = ref(false)
 const inputText = ref('')
+const inputEl = ref(null)
 const pendingReserve = ref(null)
 const guestName = ref('')
 const guestEmail = ref('')
 const visitsByFacility = ref({})
+
+watch(isOpen, async (open) => {
+  if (!open) return
+  await nextTick()
+  inputEl.value?.focus()
+})
 
 const context = ref({
   adults: null,
@@ -238,6 +245,7 @@ async function loadVisitSuggestions(facilityId, checkIn) {
 
       <div class="stay-assistant-input">
         <input
+          ref="inputEl"
           v-model="inputText"
           type="text"
           placeholder="Npr. Dolazimo sledece nedelje, 2 odraslih i 2 dece na 3 dana"
@@ -439,9 +447,15 @@ async function loadVisitSuggestions(facilityId, checkIn) {
 }
 
 .stay-assistant-input input {
-  border: 1px solid #c8b3a4;
+  border: 1px solid var(--c-braon-6);
+  background: transparent;
   padding: 9px;
   font-size: 0.8rem;
+}
+
+.stay-assistant-input input:focus {
+  outline: none;
+  border-color: var(--c-braon-6);
 }
 
 .stay-assistant-input button {
