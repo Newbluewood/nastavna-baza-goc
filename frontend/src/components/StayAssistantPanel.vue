@@ -260,11 +260,6 @@ async function sendMessage() {
     return
   }
 
-  if (isWeatherQuestion(text) && context.value.check_in) {
-    const handledWeather = await answerWeatherFromContext()
-    if (handledWeather) return
-  }
-
   busy.value = true
   try {
     const result = await api.chatPlanStay({ message: text, context: context.value })

@@ -89,7 +89,35 @@ async function planStayChat(req, res) {
     return res.json(blockedResponse);
   }
 
-  // Execute booking logic via AI-decided action; planStay() is smart enough to handle all cases
+  // Check intent — if it's a special case (weather), handle separately
+  const intentName = aiContract?.intent?.name || 'unknown';
+  
+  if (intentName === 'weather') {
+    const weatherResponse = {
+      status: 'needs_input',
+      criteria: payload?.context || {},
+      suggestions: [],
+      alternatives: [],
+      next_actions: [],
+      follow_up_question: aiContract?.reply?.text || 'Za vremensku prognozu trebam tacan datum dolaska.',
+      assistant_message: aiContract?.reply?.text || 'Mogu da proverim vremensku prognozu.',
+      assistant_provider_mode: aiContract?.source || 'heuristic',
+      ai_contract: aiContract
+    };
+
+    chatMetricsService.recordPlanStayTurn({
+      guardClass: aiContract?.guard?.class,
+      intentName: aiContract?.intent?.name,
+      actionName: aiContract?.action?.name,
+      decisionSource: aiContract?.source,
+      assistantProviderMode: weatherResponse.assistant_provider_mode,
+      assistantText: weatherResponse.assistant_message
+    });
+
+    return res.json(weatherResponse);
+  }
+
+  // Normal booking flow
   const result = await planStay(req.app.locals.db, payload);
   const response = await attachAssistantMessage(payload, result);
   const finalResponse = {
