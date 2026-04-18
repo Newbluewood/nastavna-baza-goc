@@ -29,7 +29,71 @@ function parseCapacityRange(label, minValue, maxValue) {
   };
 }
 
-function parseGuestBreakdown(message, context) {
+const NUMBER_WORDS = {
+  jedan: 1,
+  jedna: 1,
+  jedno: 1,
+  dva: 2,
+  dve: 2,
+  dvoje: 2,
+  troje: 3,
+  tri: 3,
+  cetiri: 4,
+  cetvoro: 4,
+  pet: 5,
+  petoro: 5,
+  sest: 6,
+  sedam: 7,
+  osam: 8,
+  devet: 9,
+  deset: 10,
+  jedanaest: 11,
+  dvanaest: 12,
+  trinaest: 13,
+  cetrnaest: 14,
+  petnaest: 15,
+  sesnaest: 16,
+  sedamnaest: 17,
+  osamnaest: 18,
+  devetnaest: 19,
+  dvadeset: 20,
+  twenty: 20
+};
+
+function normalizeText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function parseStandaloneCount(source) {
+  const normalizedSource = normalizeText(source);
+  const onlyDigits = normalizedSource.match(/^\s*(\d{1,2})\s*$/);
+  if (onlyDigits) {
+    return Number(onlyDigits[1]);
+  }
+
+  const words = normalizedSource.split(/\s+/).filter(Boolean);
+  if (words.length === 1 && NUMBER_WORDS[words[0]]) {
+    return NUMBER_WORDS[words[0]];
+  }
+
+  const groupMatch = normalizedSource.match(/\bnas\s+je\s+(\d{1,2}|[a-z]+)\b/);
+  if (groupMatch) {
+    const token = groupMatch[1];
+    if (/^\d{1,2}$/.test(token)) {
+      return Number(token);
+    }
+    if (NUMBER_WORDS[token]) {
+      return NUMBER_WORDS[token];
+    }
+  }
+
+  return null;
+}
+
+function parseGuestBreakdown(message, context, pendingSlot = null) {
   const adults = Number(context.adults || 0);
   const children = Number(context.children || 0);
   if (adults || children) {
@@ -47,13 +111,23 @@ function parseGuestBreakdown(message, context) {
     };
   }
 
+  if (!adultsMatch && !childrenMatch && pendingSlot === 'guest_breakdown') {
+    const standaloneGuests = parseStandaloneCount(source);
+    if (Number.isFinite(standaloneGuests) && standaloneGuests > 0) {
+      return {
+        adults: standaloneGuests,
+        children: 0
+      };
+    }
+  }
+
   return {
     adults: adultsMatch ? Number(adultsMatch[1]) : 0,
     children: childrenMatch ? Number(childrenMatch[1]) : 0
   };
 }
 
-function parseStayLength(message, context) {
+function parseStayLength(message, context, pendingSlot = null) {
   if (Number(context.stay_length_days) > 0) {
     return Number(context.stay_length_days);
   }
@@ -63,14 +137,38 @@ function parseStayLength(message, context) {
 
   const source = String(message || '').toLowerCase();
   const match = source.match(/(\d+)\s*(no[cć]i?|dana|dan)/i);
-  return match ? Number(match[1]) : null;
-}
+  if (match) {
+    return Number(match[1]);
+  }
 
-function normalizeText(value) {
-  return String(value || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+  const normalizedSource = normalizeText(source);
+  const words = normalizedSource.split(/\s+/).filter(Boolean);
+  const dayUnits = new Set(['noc', 'noci', 'dan', 'dana', 'day', 'days', 'night', 'nights']);
+
+  for (let i = 0; i < words.length; i += 1) {
+    const current = words[i];
+    const next = words[i + 1];
+    if (NUMBER_WORDS[current] && dayUnits.has(next)) {
+      return NUMBER_WORDS[current];
+    }
+  }
+
+  if (pendingSlot === 'stay_length_days') {
+    const standaloneDays = parseStandaloneCount(normalizedSource);
+    if (Number.isFinite(standaloneDays) && standaloneDays > 0) {
+      return standaloneDays;
+    }
+  }
+
+  const compactDigit = normalizedSource.match(/\b(\d{1,2})\s*(dana|dan|noci|noc)\b/);
+  if (compactDigit) {
+    const days = Number(compactDigit[1]);
+    if (days > 0 && days <= 31) {
+      return days;
+    }
+  }
+
+  return null;
 }
 
 function formatIsoDate(date) {
@@ -208,6 +306,19 @@ function buildFollowUpQuestion(criteria) {
   return 'Recite mi još samo broj gostiju i termin pa mogu da predložim konkretan smeštaj.';
 }
 
+function getPendingSlot(criteria) {
+  if (!criteria.adults && !criteria.children) {
+    return 'guest_breakdown';
+  }
+  if (!criteria.check_in) {
+    return 'check_in';
+  }
+  if (!criteria.stay_length_days) {
+    return 'stay_length_days';
+  }
+  return null;
+}
+
 function deriveCheckOut(checkIn, stayLengthDays) {
   const date = new Date(`${checkIn}T12:00:00`);
   date.setDate(date.getDate() + Number(stayLengthDays));
@@ -328,9 +439,10 @@ async function markUnavailableRooms(db, rows, checkIn, checkOut) {
 async function planStay(db, payload) {
   const message = String(payload.message || '');
   const context = payload.context || {};
-  const guestBreakdown = parseGuestBreakdown(message, context);
+  const pendingSlot = String(context.pending_slot || '').toLowerCase() || null;
+  const guestBreakdown = parseGuestBreakdown(message, context, pendingSlot);
   const arrival = parseArrivalHints(message, context);
-  const stayLengthDays = parseStayLength(message, context);
+  const stayLengthDays = parseStayLength(message, context, pendingSlot);
   const preferences = extractPreferences(message, context);
 
   const criteria = {
@@ -340,8 +452,11 @@ async function planStay(db, payload) {
     check_in: arrival.check_in,
     arrival_hint: arrival.arrival_hint,
     stay_length_days: stayLengthDays,
-    preferences
+    preferences,
+    pending_slot: null
   };
+
+  criteria.pending_slot = getPendingSlot(criteria);
 
   if (!criteria.total_guests || !criteria.check_in || !criteria.stay_length_days) {
     return {
@@ -376,6 +491,7 @@ async function planStay(db, payload) {
     status: preferred.length ? 'suggestions_ready' : 'alternatives_only',
     criteria: {
       ...criteria,
+      pending_slot: null,
       check_out: checkOut
     },
     suggestions: preferred.map((item) => ({

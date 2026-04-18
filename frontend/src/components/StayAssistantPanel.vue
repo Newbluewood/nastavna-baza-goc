@@ -1,9 +1,10 @@
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
 
 const router = useRouter()
+const GUEST_CHAT_STORAGE_KEY = 'stay_assistant_guest_chat_v1'
 
 const isOpen = ref(false)
 const busy = ref(false)
@@ -25,6 +26,7 @@ const context = ref({
   children: null,
   check_in: null,
   stay_length_days: null,
+  pending_slot: null,
   preferences: []
 })
 
@@ -35,6 +37,65 @@ const messages = ref([
     text: 'Zdravo! Pomazem oko smestaja na Gocu. Napisite broj osoba, termin i koliko dana zelite da ostanete.'
   }
 ])
+
+function hasGuestToken() {
+  return Boolean(localStorage.getItem('guest_token'))
+}
+
+function persistGuestChatState() {
+  if (hasGuestToken()) {
+    localStorage.removeItem(GUEST_CHAT_STORAGE_KEY)
+    return
+  }
+
+  const payload = {
+    messages: messages.value.slice(-80),
+    context: context.value,
+    visitsByFacility: visitsByFacility.value
+  }
+
+  localStorage.setItem(GUEST_CHAT_STORAGE_KEY, JSON.stringify(payload))
+}
+
+function restoreGuestChatState() {
+  if (hasGuestToken()) {
+    localStorage.removeItem(GUEST_CHAT_STORAGE_KEY)
+    return
+  }
+
+  const raw = localStorage.getItem(GUEST_CHAT_STORAGE_KEY)
+  if (!raw) return
+
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed.messages) && parsed.messages.length) {
+      messages.value = parsed.messages
+    }
+    if (parsed.context && typeof parsed.context === 'object') {
+      context.value = {
+        ...context.value,
+        ...parsed.context
+      }
+    }
+    if (parsed.visitsByFacility && typeof parsed.visitsByFacility === 'object') {
+      visitsByFacility.value = parsed.visitsByFacility
+    }
+  } catch {
+    localStorage.removeItem(GUEST_CHAT_STORAGE_KEY)
+  }
+}
+
+onMounted(() => {
+  restoreGuestChatState()
+})
+
+watch(
+  [messages, context, visitsByFacility],
+  () => {
+    persistGuestChatState()
+  },
+  { deep: true }
+)
 
 const canSend = computed(() => inputText.value.trim().length > 0 && !busy.value)
 
@@ -61,6 +122,7 @@ function rememberContext(criteria) {
     stay_length_days: Number.isFinite(Number(criteria.stay_length_days))
       ? Number(criteria.stay_length_days)
       : context.value.stay_length_days,
+    pending_slot: criteria.pending_slot ?? context.value.pending_slot,
     preferences: Array.isArray(criteria.preferences) ? criteria.preferences : context.value.preferences
   }
 }
@@ -272,7 +334,7 @@ async function loadVisitSuggestions(facilityId, checkIn) {
   width: 56px;
   height: 56px;
   border: 3px solid var(--c-braon-6);
-  background: rgba(103, 70, 46, 0.9);
+  background: #fff7f0;
   color: #fff;
   font-family: var(--font-base);
   font-weight: 700;
