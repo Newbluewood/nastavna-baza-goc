@@ -232,6 +232,18 @@ async function createReservation() {
     guestName.value = ''
     guestEmail.value = ''
   } catch (error) {
+    if (error?.status === 401 || error?.status === 403) {
+      localStorage.removeItem('guest_token')
+      pushAssistantText('Sesija je istekla. Unesite ime i email pa cu nastaviti rezervaciju, ili se prijavite ponovo.')
+      return
+    }
+
+    if (error?.status === 400 && String(error?.data?.error || '').includes('sender_name and email are required')) {
+      localStorage.removeItem('guest_token')
+      pushAssistantText('Sesija vise nije vazeca. Unesite ime i email pa cu odmah nastaviti rezervaciju.')
+      return
+    }
+
     if (error?.data?.status === 'login_required') {
       pushAssistantText('Vec postoji nalog za taj email. Prijavite se da nastavim rezervaciju.')
       return

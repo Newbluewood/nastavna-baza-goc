@@ -40,12 +40,12 @@ const optionalGuestAuthMiddleware = (req, res, next) => {
 
   const token = authHeader.split(' ')[1];
   if (!token) {
-    return res.status(401).json({ error: 'Token nije pronađen.' });
+    return next();
   }
 
   jwt.verify(token, process.env.GUEST_JWT_SECRET || 'guest_secret_change_in_production', (err, user) => {
     if (err) {
-      return res.status(403).json({ error: 'Nevažeći token. Prijavite se ponovo.' });
+      return next();
     }
     req.user = user;
     next();

@@ -40,11 +40,20 @@ class ApiService {
 
   getAuthToken() {
     // Check both admin and guest tokens
-    return localStorage.getItem('admin_token') || localStorage.getItem('guest_token');
+    return this.normalizeToken(localStorage.getItem('admin_token'))
+      || this.normalizeToken(localStorage.getItem('guest_token'));
   }
 
   getGuestToken() {
-    return localStorage.getItem('guest_token');
+    return this.normalizeToken(localStorage.getItem('guest_token'));
+  }
+
+  normalizeToken(token) {
+    const value = String(token || '').trim();
+    if (!value || value === 'undefined' || value === 'null') {
+      return null;
+    }
+    return value;
   }
 
   // Public endpoints
