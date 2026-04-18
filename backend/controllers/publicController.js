@@ -4,6 +4,64 @@ const { INQUIRY_STATUS } = require('../config/constants');
 const emailService = require('../services/emailService');
 const { sendError } = require('../utils/response');
 
+const BADGE_TRANSLATIONS = {
+  'Централни објекат': 'Central building',
+  'Близу ресторана': 'Near the restaurant',
+  'Ресторан': 'Restaurant',
+  'Модеран дизајн': 'Modern design',
+  'Брз интернет': 'Fast internet',
+  'Конференцијска сала': 'Conference hall',
+  'Мирна локација': 'Quiet location',
+  '5 мин до ски стазе': '5 min from the ski slope',
+  'Башта': 'Garden',
+  'Повољан смештај': 'Affordable accommodation'
+};
+
+function normalizeJsonArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function localizeCapacity(value, lang) {
+  if (!value || lang !== 'en') return value;
+
+  let localized = String(value).trim();
+
+  localized = localized.replace(/^Deo od\s+(\d+)\s+лежајева$/i, 'Part of $1 beds');
+  localized = localized.replace(/^Од\s+(\d+)\s+до\s+(\d+)\s+особе$/i, 'From $1 to $2 guests');
+  localized = localized.replace(/^Од\s+(\d+)\s+до\s+(\d+)\s+особа$/i, 'From $1 to $2 guests');
+  localized = localized.replace(/^(\d+)\s+особа$/i, '$1 guest');
+  localized = localized.replace(/^(\d+)\s+особе$/i, '$1 guests');
+  localized = localized.replace(/^(\d+)\s+лежаја$/i, '$1 beds');
+  localized = localized.replace(/^(\d+)\s+лежајева$/i, '$1 beds');
+
+  return localized;
+}
+
+function localizeBadges(value, lang) {
+  const badges = normalizeJsonArray(value);
+  if (lang !== 'en') return badges;
+  return badges.map((badge) => BADGE_TRANSLATIONS[badge] || badge);
+}
+
+function localizeFacility(facility, lang) {
+  facility.capacity = localizeCapacity(facility.capacity, lang);
+  facility.location_badges = localizeBadges(facility.location_badges, lang);
+  return facility;
+}
+
+function localizeRoom(room, lang) {
+  room.capacity = localizeCapacity(room.capacity, lang);
+  return room;
+}
+
 async function getHome(req, res) {
   const db = req.app.locals.db;
   const lang = req.query.lang || 'sr';
@@ -27,6 +85,7 @@ async function getHome(req, res) {
   facilities.forEach(facility => {
     facility.gallery = facility.gallery_urls ? facility.gallery_urls.split(',') : [];
     delete facility.gallery_urls;
+    localizeFacility(facility, lang);
   });
 
   const [news] = await db.query(`
@@ -107,6 +166,7 @@ async function getFacilities(req, res) {
   facilities.forEach(facility => {
     facility.gallery = facility.gallery_urls ? facility.gallery_urls.split(',') : [];
     delete facility.gallery_urls;
+    localizeFacility(facility, lang);
   });
 
   res.json(facilities);
@@ -138,6 +198,7 @@ async function getFacility(req, res) {
   const facility = facilities[0];
   facility.gallery = facility.gallery_urls ? facility.gallery_urls.split(',') : [];
   delete facility.gallery_urls;
+  localizeFacility(facility, lang);
 
   const [rooms] = await db.query(`
     SELECT r.id, r.facility_id,
@@ -155,6 +216,7 @@ async function getFacility(req, res) {
   rooms.forEach(room => {
     room.gallery = room.room_gallery_urls ? room.room_gallery_urls.split(',') : [];
     delete room.room_gallery_urls;
+    localizeRoom(room, lang);
   });
 
   facility.rooms = rooms;
