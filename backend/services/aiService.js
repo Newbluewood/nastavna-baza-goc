@@ -94,6 +94,48 @@ function getLocalRewrite(text, { lang = 'sr', tone = 'professional' } = {}) {
   };
 }
 
+function getChatMaxWords() {
+  return Number.parseInt(process.env.AI_CHAT_MAX_WORDS || '55', 10);
+}
+
+function getLocalChatReply(payload = {}) {
+  const {
+    mode = 'general',
+    lang = 'sr',
+    followUpQuestion = '',
+    missing = {},
+    suggestions = []
+  } = payload;
+
+  const top = Array.isArray(suggestions) ? suggestions.slice(0, 3) : [];
+  const names = top
+    .map((item) => `${item?.facility_name || ''} / ${item?.room_name || ''}`.trim())
+    .filter(Boolean)
+    .join('; ');
+
+  if (mode === 'needs_input') {
+    const text = followUpQuestion
+      || (missing?.guest_breakdown
+        ? 'Recite broj odraslih i dece.'
+        : missing?.check_in
+          ? 'Posaljite tacan datum dolaska.'
+          : 'Koliko dana zelite da ostanete?');
+    return truncateToWords(sentenceCase(text), getChatMaxWords());
+  }
+
+  if (mode === 'suggestions') {
+    if (!names) {
+      return truncateToWords('Nemam raspolozive opcije za trazeni termin, ali mogu da predlozim alternativne datume.', getChatMaxWords());
+    }
+    const text = lang === 'en'
+      ? `I found options: ${names}. If you want, I can help you pick the best match.`
+      : `Nasao sam opcije: ${names}. Ako zelite, mogu da vam pomognem da suzimo najbolji izbor.`;
+    return truncateToWords(sentenceCase(text), getChatMaxWords());
+  }
+
+  return truncateToWords('Mogu da pomognem oko smestaja, termina i obilazaka. Recite sta vam je trenutno najbitnije.', getChatMaxWords());
+}
+
 class AIService {
   getStatus() {
     const enabledFlag = String(process.env.AI_ENABLED || 'false').toLowerCase() === 'true';
@@ -158,6 +200,11 @@ class AIService {
 
   getMaxOutputTokens() {
     return Number.parseInt(process.env.AI_MAX_OUTPUT_TOKENS || '180', 10);
+  }
+
+  isChatAssistantEnabled() {
+    const flag = String(process.env.AI_CHAT_ASSISTANT_ENABLED || 'true').toLowerCase() === 'true';
+    return flag && this.isEnabled();
   }
 
   async callAnthropic(systemPrompt, userText) {
@@ -251,6 +298,78 @@ class AIService {
       return {
         ...fallback,
         notes: [...(fallback.notes || []), `Live AI unavailable: ${error.message}`]
+      };
+    }
+  }
+
+  async composeChatReply(payload = {}) {
+    const {
+      mode = 'general',
+      lang = 'sr',
+      userMessage = '',
+      followUpQuestion = '',
+      missing = {},
+      suggestions = [],
+      criteria = {}
+    } = payload;
+
+    const fallbackText = getLocalChatReply({
+      mode,
+      lang,
+      followUpQuestion,
+      missing,
+      suggestions
+    });
+
+    if (!this.isChatAssistantEnabled()) {
+      return {
+        text: fallbackText,
+        provider_mode: 'local-fallback'
+      };
+    }
+
+    const status = this.getStatus();
+    if (status.mode !== 'live' || status.provider !== 'anthropic') {
+      return {
+        text: fallbackText,
+        provider_mode: 'local-fallback'
+      };
+    }
+
+    const compactFacts = {
+      mode,
+      follow_up_question: followUpQuestion || null,
+      missing,
+      criteria: {
+        adults: criteria?.adults || null,
+        children: criteria?.children || null,
+        check_in: criteria?.check_in || null,
+        stay_length_days: criteria?.stay_length_days || null
+      },
+      suggestions: Array.isArray(suggestions)
+        ? suggestions.slice(0, 3).map((item) => ({
+          facility_name: item?.facility_name,
+          room_name: item?.room_name,
+          rationale: Array.isArray(item?.rationale) ? item.rationale.slice(0, 2) : []
+        }))
+        : []
+    };
+
+    try {
+      const reply = await this.callAnthropic(
+        `You are a concise booking assistant for Nastavna baza Goc. Reply in ${lang === 'en' ? 'English' : 'Serbian (Latin script)'} naturally and politely. Keep the answer under ${getChatMaxWords()} words. Never invent availability or dates; use only provided facts. Ask at most one question. Avoid repetition and robotic phrasing. Return only plain text.`,
+        `User message: ${String(userMessage || '').slice(0, 400)}\nFacts: ${JSON.stringify(compactFacts)}`
+      );
+
+      return {
+        text: truncateToWords(reply, getChatMaxWords()),
+        provider_mode: 'live'
+      };
+    } catch (error) {
+      return {
+        text: fallbackText,
+        provider_mode: 'local-fallback',
+        notes: [`Live AI unavailable: ${error.message}`]
       };
     }
   }

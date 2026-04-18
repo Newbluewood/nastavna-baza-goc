@@ -1,10 +1,40 @@
 const { sendError } = require('../utils/response');
 const { planStay, suggestVisit } = require('../services/chatStayService');
 const { createInquiryWithGuest } = require('../services/inquiryService');
+const aiService = require('../services/aiService');
+
+async function attachAssistantMessage(payload, result) {
+  try {
+    const mode = result?.status === 'needs_input' ? 'needs_input' : 'suggestions';
+    const aiReply = await aiService.composeChatReply({
+      mode,
+      lang: 'sr',
+      userMessage: payload?.message || '',
+      followUpQuestion: result?.follow_up_question || '',
+      missing: result?.missing || {},
+      criteria: result?.criteria || {},
+      suggestions: result?.suggestions || []
+    });
+
+    if (aiReply?.text) {
+      return {
+        ...result,
+        assistant_message: aiReply.text,
+        assistant_provider_mode: aiReply.provider_mode || 'unknown'
+      };
+    }
+  } catch {
+    // Keep deterministic flow even if AI layer fails.
+  }
+
+  return result;
+}
 
 async function planStayChat(req, res) {
-  const result = await planStay(req.app.locals.db, req.body || {});
-  return res.json(result);
+  const payload = req.body || {};
+  const result = await planStay(req.app.locals.db, payload);
+  const response = await attachAssistantMessage(payload, result);
+  return res.json(response);
 }
 
 async function suggestVisitChat(req, res) {

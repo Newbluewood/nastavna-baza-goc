@@ -111,6 +111,11 @@ function summarizeSuggestions(items) {
   return `Predlazem: ${names}. Ako zelite, mogu da suzim izbor po vasim prioritetima.`
 }
 
+function pickAssistantMessage(result) {
+  const msg = String(result?.assistant_message || '').trim()
+  return msg || null
+}
+
 function rememberContext(criteria) {
   if (!criteria || typeof criteria !== 'object') return
   context.value = {
@@ -265,12 +270,16 @@ async function sendMessage() {
     const result = await api.chatPlanStay({ message: text, context: context.value })
     rememberContext(result.criteria)
 
+    const aiMessage = pickAssistantMessage(result)
+
     if (result.status === 'needs_input') {
-      pushAssistantText(result.follow_up_question || 'Recite mi jos malo detalja pa nastavljamo.')
+      pushAssistantText(aiMessage || result.follow_up_question || 'Recite mi jos malo detalja pa nastavljamo.')
       return
     }
 
-    if (Array.isArray(result.next_actions) && result.next_actions.length) {
+    if (aiMessage) {
+      pushAssistantText(aiMessage)
+    } else if (Array.isArray(result.next_actions) && result.next_actions.length) {
       const nonReservationHint = result.next_actions.find((line) => !/rezervacij/i.test(String(line)))
       if (nonReservationHint) {
         pushAssistantText(nonReservationHint)
@@ -280,7 +289,7 @@ async function sendMessage() {
     messages.value.push({
       role: 'assistant',
       type: 'suggestions',
-      text: summarizeSuggestions(result.suggestions),
+      text: aiMessage || summarizeSuggestions(result.suggestions),
       criteria: result.criteria,
       suggestions: result.suggestions || [],
       alternatives: result.alternatives || []
