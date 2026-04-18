@@ -256,6 +256,7 @@ async function submitInquiry(req, res) {
   try {
     const result = await createInquiryWithGuest(db, {
       ...req.validated,
+      guestId: req.user?.id || null,
       allowExistingGuestByEmail: true
     });
 

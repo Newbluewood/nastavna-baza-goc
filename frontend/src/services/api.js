@@ -79,6 +79,7 @@ class ApiService {
   async submitInquiry(data) {
     return this.request('/api/inquiries', {
       method: 'POST',
+      authMode: 'guest',
       body: JSON.stringify(data)
     });
   }

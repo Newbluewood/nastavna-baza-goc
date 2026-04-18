@@ -27,6 +27,40 @@ const validateRequest = (schema) => (req, res, next) => {
   next();
 };
 
+const validateInquiryRequest = () => (req, res, next) => {
+  const { body } = req;
+  const errors = [];
+  const isAuthenticatedGuest = Boolean(req.user?.id);
+
+  Object.keys(schemas.inquiry).forEach((key) => {
+    const rules = schemas.inquiry[key];
+    const shouldSkipRequired = isAuthenticatedGuest && (key === 'sender_name' || key === 'email');
+
+    if (rules.required && !shouldSkipRequired && !body[key]) {
+      errors.push(`${key} is required`);
+    }
+
+    if (rules.type === 'email' && body[key] && !/\S+@\S+\.\S+/.test(body[key])) {
+      errors.push(`${key} must be a valid email`);
+    }
+
+    if (rules.min && body[key] && body[key].length < rules.min) {
+      errors.push(`${key} must be at least ${rules.min} characters`);
+    }
+
+    if (rules.max && body[key] && body[key].length > rules.max) {
+      errors.push(`${key} must be at most ${rules.max} characters`);
+    }
+  });
+
+  if (errors.length > 0) {
+    return res.status(400).json({ error: errors.join(', ') });
+  }
+
+  req.validated = body;
+  next();
+};
+
 // Schemas (enhanced simple validation)
 const schemas = {
   login: {
@@ -78,5 +112,6 @@ const schemas = {
 
 module.exports = {
   validateRequest,
+  validateInquiryRequest,
   schemas
 };
