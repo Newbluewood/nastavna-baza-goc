@@ -119,7 +119,10 @@ function parseGuestBreakdown(message, context, pendingSlot = null) {
   const adultsValue = adultsDigitMatch ? Number(adultsDigitMatch[1]) : adultsFromWord;
   const childrenValue = childrenDigitMatch ? Number(childrenDigitMatch[1]) : childrenFromWord;
 
-  if (!adultsValue && !childrenValue && /\b(sam|solo|alone)\b/i.test(source)) {
+  // Check for solo/alone patterns: explicit "sam", "solo", "alone", or "samo ja/mene"
+  const soloPatterns = /\b(sam|solo|alone|samo\s+ja|samo\s+mene|samo\s+i|dosao\s+sam|dosla\s+sam|dolazim\s+sam|dolazim\s+sama)\b/i;
+  
+  if (!adultsValue && !childrenValue && soloPatterns.test(source)) {
     return {
       adults: 1,
       children: 0
