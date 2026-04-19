@@ -372,11 +372,15 @@ function buildUserPrompt(message, facts, roomResults, context, history) {
 
 // ─── Local Fallback ───
 
-function getLocalChatFallback(message, facts, roomResults) {
+function getLocalChatFallback(message, facts, roomResults, lang = 'sr') {
+  const isEn = lang === 'en';
+
   if (roomResults?.suggestions?.length > 0) {
     const roomNames = roomResults.suggestions.slice(0, 3)
       .map(s => `${s.facility_name} / ${s.room_name}`).join(', ');
-    return `Пронашао сам слободне собе: ${roomNames}. Кликните "Резервиши" на картици која вам одговара.`;
+    return isEn
+      ? `I found available rooms: ${roomNames}. Click "Reserve" on the card you prefer.`
+      : `Пронашао сам слободне собе: ${roomNames}. Кликните "Резервиши" на картици која вам одговара.`;
   }
 
   if (facts.length > 0) {
@@ -384,17 +388,21 @@ function getLocalChatFallback(message, facts, roomResults) {
       .map(f => f.name || f.ime || f.question || f.type || f.item)
       .filter(Boolean);
     if (names.length > 0) {
-      return `Ево шта имам из наше понуде: ${names.join(', ')}. Питајте ме за детаље.`;
+      return isEn
+        ? `Here's what I have from our offer: ${names.join(', ')}. Ask me for details.`
+        : `Ево шта имам из наше понуде: ${names.join(', ')}. Питајте ме за детаље.`;
     }
   }
 
   if (roomResults?.status === 'needs_input' && roomResults?.missing) {
-    if (roomResults.missing.guest_breakdown) return 'Колико вас долази? (број одраслих и деце)';
-    if (roomResults.missing.check_in) return 'Који датум доласка планирате?';
-    if (roomResults.missing.stay_length_days) return 'Колико дана/ноћи желите да останете?';
+    if (roomResults.missing.guest_breakdown) return isEn ? 'How many guests are coming? (adults and children)' : 'Колико вас долази? (број одраслих и деце)';
+    if (roomResults.missing.check_in) return isEn ? 'What arrival date are you planning?' : 'Који датум доласка планирате?';
+    if (roomResults.missing.stay_length_days) return isEn ? 'How many days/nights do you want to stay?' : 'Колико дана/ноћи желите да останете?';
   }
 
-  return 'Могу да помогнем око смештаја, активности, ресторана и свега везаног за Наставну базу Гоч. Питајте слободно!';
+  return isEn
+    ? 'I can help with accommodation, activities, restaurant and everything related to Nastavna Baza Goč. Ask away!'
+    : 'Могу да помогнем око смештаја, активности, ресторана и свега везаног за Наставну базу Гоч. Питајте слободно!';
 }
 
 // ─── AIService Class ───
@@ -575,7 +583,7 @@ class AIService {
     }
 
     // Local fallback
-    const fallbackText = getLocalChatFallback(message, relevantFacts, roomResults);
+    const fallbackText = getLocalChatFallback(message, relevantFacts, roomResults, lang);
     const result = { text: fallbackText, provider_mode: 'local-fallback' };
     cacheReply(cacheKey, result);
     return result;

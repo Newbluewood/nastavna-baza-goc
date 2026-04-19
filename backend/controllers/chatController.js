@@ -8,6 +8,7 @@ const chatContextGuardService = require('../services/chatContextGuardService');
 async function planStayChat(req, res) {
   const payload = req.body || {};
   const userMessage = String(payload?.message || '').trim();
+  const lang = ['en', 'sr'].includes(payload?.lang) ? payload.lang : 'sr';
 
   if (!userMessage) {
     return sendError(res, 400, 'Message is required');
@@ -27,7 +28,9 @@ async function planStayChat(req, res) {
 
     return res.json({
       status: 'blocked',
-      assistant_message: 'Не могу да помогнем са тим захтевом. Питајте ме о смештају, активностима или ресторану на Гочу.',
+      assistant_message: lang === 'en'
+        ? 'I cannot help with that request. Ask me about accommodation, activities or the restaurant at Goč.'
+        : 'Не могу да помогнем са тим захтевом. Питајте ме о смештају, активностима или ресторану на Гочу.',
       assistant_provider_mode: 'guard',
       criteria: payload?.context || {},
       suggestions: [],
@@ -36,7 +39,7 @@ async function planStayChat(req, res) {
   }
 
   // 2. Soft guard tracking (no lockout, just metrics)
-  const guardState = chatContextGuardService.check(req, safety.class);
+  const guardState = chatContextGuardService.check(req, safety.class, lang);
 
   // 3. Get room/booking data — planStay handles entity parsing internally
   //    This is cheap when booking context is incomplete (just parsing, no DB query)
@@ -53,7 +56,7 @@ async function planStayChat(req, res) {
     context: payload?.context || {},
     roomResults,
     history: payload?.history || [],
-    lang: 'sr'
+    lang
   });
 
   // 5. Append gentle OOD reminder if needed

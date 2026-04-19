@@ -63,14 +63,19 @@ function decayStrikes(entry, now) {
   }
 }
 
-function getReminderByStrikes(strikes) {
+function getReminderByStrikes(strikes, lang = 'sr') {
   if (strikes < config.warnThreshold) return null;
+  const isEn = lang === 'en';
 
   if (strikes < config.reminderThreshold) {
-    return 'Могу да помогнем око боравка у Наставној бази Гоч: смештај, активности, ресторан и долазак.';
+    return isEn
+      ? 'I can help with your stay at Nastavna Baza Goč: accommodation, activities, restaurant and directions.'
+      : 'Могу да помогнем око боравка у Наставној бази Гоч: смештај, активности, ресторан и долазак.';
   }
 
-  return 'Ту сам за питања везана за Наставну базу Гоч — смештај, резервације, обилазак и ресторан.';
+  return isEn
+    ? 'I\'m here for questions about Nastavna Baza Goč — accommodation, reservations, visits and restaurant.'
+    : 'Ту сам за питања везана за Наставну базу Гоч — смештај, резервације, обилазак и ресторан.';
 }
 
 /**
@@ -78,7 +83,7 @@ function getReminderByStrikes(strikes) {
  * Tracks OOD strikes for metrics, returns optional reminder.
  * NO lockout — user is never blocked for OOD messages.
  */
-function check(req, safetyClass) {
+function check(req, safetyClass, lang = 'sr') {
   if (!config.enabled) {
     return { reminder: null, strikes: 0 };
   }
@@ -98,7 +103,7 @@ function check(req, safetyClass) {
   }
 
   return {
-    reminder: getReminderByStrikes(entry.strikes),
+    reminder: getReminderByStrikes(entry.strikes, lang),
     strikes: entry.strikes
   };
 }

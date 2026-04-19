@@ -2,9 +2,12 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../services/api'
+import { useLangStore } from '../stores/lang'
 
 const router = useRouter()
 const route = useRoute()
+const langStore = useLangStore()
+const t = (key) => langStore.t(key)
 const GUEST_CHAT_STORAGE_KEY = 'stay_assistant_guest_chat_v1'
 
 const isOpen = ref(false)
@@ -33,7 +36,7 @@ const messages = ref([
   {
     role: 'assistant',
     type: 'text',
-    text: 'Здраво! Помажем око смештаја на Гочу. Напишите број особа, термин и колико дана желите да останете.'
+    text: t('chat.greeting')
   }
 ])
 
@@ -104,11 +107,11 @@ function pushAssistantText(text) {
 
 function summarizeSuggestions(items) {
   if (!Array.isArray(items) || !items.length) {
-    return 'Немам расположиве предлоге за тражени период, али могу да понудим алтернативу датума.'
+    return t('chat.noSuggestions')
   }
 
   const names = items.map((item) => `${item.facility_name} / ${item.room_name}`).join('; ')
-  return `Предлажем: ${names}. Ако желите, могу да сузим избор по вашим приоритетима.`
+  return t('chat.suggest').replace('{names}', names)
 }
 
 function pickAssistantMessage(result) {
@@ -177,7 +180,7 @@ function buildInquiryTargetRoute(item, payload) {
 
 function navigateToInquiry(targetRoute) {
   if (!targetRoute) {
-    pushAssistantText('Не могу да отворим форму за овај предлог. Пошаљите нови упит па покушајте поново.')
+    pushAssistantText(t('chat.cannotOpenForm'))
     return
   }
 
@@ -205,7 +208,7 @@ async function sendMessage() {
       .slice(-6)
       .map(m => ({ role: m.role, text: m.text }))
 
-    const result = await api.chatPlanStay({ message: text, context: context.value, history })
+    const result = await api.chatPlanStay({ message: text, context: context.value, history, lang: langStore.currentLang })
     rememberContext(result.criteria)
 
     // Show rate limit warning if approaching limit
@@ -216,7 +219,7 @@ async function sendMessage() {
     const aiMessage = pickAssistantMessage(result)
 
     if (result?.status === 'blocked') {
-      pushAssistantText(aiMessage || 'Овде сам за питања о смештају и резервацији Наставне базе Гоч.')
+      pushAssistantText(aiMessage || t('chat.blockedFallback'))
       return
     }
 
@@ -235,13 +238,13 @@ async function sendMessage() {
     } else if (aiMessage) {
       pushAssistantText(aiMessage)
     } else {
-      pushAssistantText('Питајте ме о смештају, активностима, ресторану или било чему везаном за Гоч.')
+      pushAssistantText(t('chat.genericFallback'))
     }
   } catch (error) {
     if (error.status === 429 && error.retryAfter) {
-      pushAssistantText(`Превише порука у кратком року. Можете наставити за ${error.retryAfter} секунди.`)
+      pushAssistantText(t('chat.rateLimited').replace('{seconds}', error.retryAfter))
     } else {
-      pushAssistantText(error?.data?.error || error.message || 'Chat сервис тренутно није доступан.')
+      pushAssistantText(error?.data?.error || error.message || t('chat.serviceUnavailable'))
     }
   } finally {
     busy.value = false
@@ -250,7 +253,7 @@ async function sendMessage() {
 
 function askForReservation(item, criteria = null) {
   if (!item || !item.room_id) {
-    pushAssistantText('Не могу да покренем резервацију за овај предлог. Пошаљите нови упит па покушавамо поново.')
+    pushAssistantText(t('chat.cannotReserve'))
     return
   }
 
@@ -264,7 +267,7 @@ function askForReservation(item, criteria = null) {
   }
 
   if (!payload.check_in || !payload.check_out) {
-    pushAssistantText('Недостаје термин за резервацију. Напишите поново датум доласка и број дана па ћу одмах покренути резервацију.')
+    pushAssistantText(t('chat.missingDates'))
     return
   }
 
@@ -316,7 +319,7 @@ function clearChat() {
     {
       role: 'assistant',
       type: 'text',
-      text: 'Здраво! Помажем око смештаја на Гочу. Напишите број особа, термин и колико дана желите да останете.'
+      text: t('chat.greeting')
     }
   ]
   context.value = {
@@ -337,12 +340,12 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
   const cardKey = `${facilityId}-${roomId}`
 
   if (!facilityId) {
-    pushAssistantText('За овај предлог недостају подаци о објекту. Пошаљите нови упит за освежене предлоге.')
+    pushAssistantText(t('chat.missingFacility'))
     return
   }
 
   if (busy.value) {
-    pushAssistantText('Сачекајте да завршим претходни захтев па одмах дајем предлоге обиласка.')
+    pushAssistantText(t('chat.waitPrevious'))
     return
   }
 
@@ -351,7 +354,7 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
 
   const effectiveCheckIn = checkIn || context.value.check_in
   if (!effectiveCheckIn) {
-    pushAssistantText('Недостаје датум доласка за предлог обиласка. Напишите датум па настављамо.')
+    pushAssistantText(t('chat.missingDateVisit'))
     return
   }
 
@@ -362,7 +365,7 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
       check_in: effectiveCheckIn,
       weather_mode: 'any',
       family: true,
-      lang: 'sr'
+      lang: langStore.currentLang
     })
 
     if (result?.weather?.summary) {
@@ -374,7 +377,7 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
       [cardKey]: result.suggestions || []
     }
   } catch (error) {
-    pushAssistantText(error?.data?.error || error?.message || 'Предлози обиласка тренутно нису доступни.')
+    pushAssistantText(error?.data?.error || error?.message || t('chat.visitUnavailable'))
   } finally {
     busy.value = false
   }
@@ -387,14 +390,14 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
       class="stay-assistant-toggle"
       :class="{ 'is-open': isOpen }"
       @click="isOpen = !isOpen"
-      :aria-label="isOpen ? 'Затвори асистента' : 'Отвори асистента за смештај'"
-      :title="isOpen ? 'Затвори асистента' : 'Асистент за смештај'"
+      :aria-label="isOpen ? t('chat.toggleClose') : t('chat.toggleOpen')"
+      :title="isOpen ? t('chat.toggleClose') : t('chat.toggleOpen')"
     >
       <template v-if="!isOpen">
         <img src="/buble-chat.png" alt="Chat" class="chat-bubble-icon" />
       </template>
       <template v-else>
-        Затвори асистента
+        {{ t('chat.toggleClose') }}
       </template>
     </button>
 
@@ -402,17 +405,17 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
       <div class="stay-assistant-head">
         <div class="stay-assistant-head-top">
           <div>
-            <strong>Асистент за смештај</strong>
-            <small>Наставна база Гоч</small>
+            <strong>{{ t('chat.assistantTitle') }}</strong>
+            <small>{{ t('chat.subtitle') }}</small>
           </div>
           <button
             type="button"
             class="stay-clear-btn"
             @click="clearChat"
-            title="Очисти разговор и почни испочетка"
-            aria-label="Очисти чат"
+            :title="t('chat.newChatTitle')"
+            :aria-label="t('chat.newChatTitle')"
           >
-            Нови чат
+            {{ t('chat.newChat') }}
           </button>
         </div>
       </div>
@@ -431,14 +434,14 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
               :key="`${item.facility_id}-${item.room_id}`"
               :class="['stay-card', { 'is-recommended': item.is_recommended }]"
             >
-              <span v-if="item.is_recommended" class="recommend-badge">Препорука за Вас</span>
+              <span v-if="item.is_recommended" class="recommend-badge">{{ t('chat.recommended') }}</span>
               <strong>{{ item.facility_name }}</strong>
               <span>{{ item.room_name }}</span>
               <small>{{ item.rationale?.join(', ') }}</small>
 
               <div class="stay-card-actions">
-                <button type="button" @click="loadVisitSuggestions(item.facility_id, item.room_id, msg.criteria?.check_in)">Предложи обилазак</button>
-                <button type="button" class="reserve-btn" @click="askForReservation(item, msg.criteria)">Резервиши</button>
+                <button type="button" @click="loadVisitSuggestions(item.facility_id, item.room_id, msg.criteria?.check_in)">{{ t('chat.suggestVisit') }}</button>
+                <button type="button" class="reserve-btn" @click="askForReservation(item, msg.criteria)">{{ t('chat.reserve') }}</button>
               </div>
 
               <ul v-if="visitsByCard[`${item.facility_id}-${item.room_id}`]?.length" class="visit-list">
@@ -457,22 +460,22 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
           ref="inputEl"
           v-model="inputText"
           type="text"
-          placeholder="Нпр. Долазимо следеће недеље, 2 одраслих и 2 деце на 3 дана"
+          :placeholder="t('chat.placeholder')"
           @keyup.enter="sendMessage"
         />
-        <button type="button" @click="sendMessage" :disabled="!canSend">Пошаљи</button>
+        <button type="button" @click="sendMessage" :disabled="!canSend">{{ t('chat.send') }}</button>
       </div>
     </div>
 
     <Teleport to="body">
       <div v-if="pendingReserve && !hasGuestToken()" class="reserve-modal-overlay" @click.self="closeReservationModal">
         <div class="reserve-modal" role="dialog" aria-modal="true" aria-label="Izbor toka za rezervaciju">
-          <button type="button" class="reserve-modal-close" @click="closeReservationModal" aria-label="Затвори">✕</button>
-          <strong>Наставак резервације</strong>
-          <small>За наставак користимо стандардну форму за резервацију. Да ли имате налог?</small>
+          <button type="button" class="reserve-modal-close" @click="closeReservationModal" :aria-label="t('chat.close')">✕</button>
+          <strong>{{ t('chat.modalTitle') }}</strong>
+          <small>{{ t('chat.modalDesc') }}</small>
           <div class="reserve-form-actions">
-            <button type="button" @click="goToLogin">Имам налог</button>
-            <button type="button" class="ghost-btn" @click="continueWithoutAccount">Немам налог</button>
+            <button type="button" @click="goToLogin">{{ t('chat.hasAccount') }}</button>
+            <button type="button" class="ghost-btn" @click="continueWithoutAccount">{{ t('chat.noAccount') }}</button>
           </div>
         </div>
       </div>
