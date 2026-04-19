@@ -117,15 +117,15 @@ onMounted(async () => {
     return
   }
   await guestStore.fetchMe()
+  if (!guestStore.isLoggedIn) { router.push('/prijava'); return }
   try {
     const res = await fetch(`${BASE}/api/guests/reservations`, {
       headers: guestStore.authHeaders()
     })
-    if (!res.ok) { guestStore.logout(); router.push('/prijava'); return }
-    reservations.value = await res.json()
-  } finally {
-    isLoading.value = false
-  }
+    if (res.status === 401 || res.status === 403) { guestStore.logout(); router.push('/prijava'); return }
+    if (res.ok) reservations.value = await res.json()
+  } catch { /* network error – stay on page */ }
+  isLoading.value = false
 })
 
 const cancelReservation = async (row) => {

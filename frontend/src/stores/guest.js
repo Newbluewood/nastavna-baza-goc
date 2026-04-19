@@ -35,9 +35,10 @@ export const useGuestStore = defineStore('guest', () => {
       const res = await fetch(`${BASE}/api/guests/me`, {
         headers: { Authorization: `Bearer ${token.value}` }
       })
-      if (!res.ok) { logout(); return }
+      if (res.status === 401 || res.status === 403) { logout(); return }
+      if (!res.ok) return
       guest.value = await res.json()
-    } catch { logout() }
+    } catch { /* network error – keep token, don't logout */ }
   }
 
   const authHeaders = () => ({ Authorization: `Bearer ${token.value}`, 'Content-Type': 'application/json' })

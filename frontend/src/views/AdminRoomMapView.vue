@@ -71,7 +71,10 @@ function hideTooltip() {
 
 function fmtDate(d) {
   if (!d) return '—'
-  return new Date(d + 'T12:00:00').toLocaleDateString('sr-RS', {
+  const raw = String(d).trim()
+  const ymd = raw.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  const parsed = ymd ? new Date(`${ymd[1]}-${ymd[2]}-${ymd[3]}T12:00:00`) : new Date(raw)
+  return isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString('sr-RS', {
     day: '2-digit', month: '2-digit', year: 'numeric'
   })
 }
