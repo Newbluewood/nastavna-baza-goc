@@ -702,6 +702,56 @@ async function deleteStaffMember(req, res) {
   res.json({ message: 'Staff member deleted' });
 }
 
+// ─── PAGES CRUD ───────────────────────────────────────────────
+
+async function getPages(req, res) {
+  const db = req.app.locals.db;
+  const [rows] = await db.query('SELECT * FROM pages ORDER BY id ASC');
+  res.json(rows);
+}
+
+async function getPageById(req, res) {
+  const db = req.app.locals.db;
+  const [rows] = await db.query('SELECT * FROM pages WHERE id = ?', [req.params.id]);
+  if (!rows.length) return sendError(res, 404, 'Page not found');
+  res.json(rows[0]);
+}
+
+async function createPage(req, res) {
+  const db = req.app.locals.db;
+  const { slug, title, content } = req.body;
+  if (!slug || !title) return sendError(res, 400, 'Slug and title are required');
+
+  const [existing] = await db.query('SELECT id FROM pages WHERE slug = ?', [slug]);
+  if (existing.length) return sendError(res, 409, 'Page with this slug already exists');
+
+  const [result] = await db.query(
+    'INSERT INTO pages (slug, title, content) VALUES (?, ?, ?)',
+    [slug, title, content || null]
+  );
+  res.json({ message: 'Page created', pageId: result.insertId });
+}
+
+async function updatePage(req, res) {
+  const db = req.app.locals.db;
+  const { title, content } = req.body;
+  if (!title) return sendError(res, 400, 'Title is required');
+
+  const [result] = await db.query(
+    'UPDATE pages SET title = ?, content = ? WHERE id = ?',
+    [title, content || null, req.params.id]
+  );
+  if (result.affectedRows === 0) return sendError(res, 404, 'Page not found');
+  res.json({ message: 'Page updated' });
+}
+
+async function deletePage(req, res) {
+  const db = req.app.locals.db;
+  const [result] = await db.query('DELETE FROM pages WHERE id = ?', [req.params.id]);
+  if (result.affectedRows === 0) return sendError(res, 404, 'Page not found');
+  res.json({ message: 'Page deleted' });
+}
+
 module.exports = {
   getInquiries,
   getInquiryActivity,
@@ -722,5 +772,10 @@ module.exports = {
   getStaff,
   createStaffMember,
   updateStaffMember,
-  deleteStaffMember
+  deleteStaffMember,
+  getPages,
+  getPageById,
+  createPage,
+  updatePage,
+  deletePage
 };

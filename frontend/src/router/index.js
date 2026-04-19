@@ -16,6 +16,8 @@ import AdminGuestsView from '../views/AdminGuestsView.vue'
 import AdminRoomMapView from '../views/AdminRoomMapView.vue'
 import AdminProjectsView from '../views/AdminProjectsView.vue'
 import AdminStaffView from '../views/AdminStaffView.vue'
+import AdminPagesView from '../views/AdminPagesView.vue'
+import PageView from '../views/PageView.vue'
 import ContactView from '../views/ContactView.vue'
 
 const router = createRouter({
@@ -37,6 +39,10 @@ const router = createRouter({
     { path: '/admin/mapa-soba', name: 'admin-room-map', component: AdminRoomMapView, meta: { requiresAuth: true } },
     { path: '/admin/projekti', name: 'admin-projects', component: AdminProjectsView, meta: { requiresAuth: true } },
     { path: '/admin/osoblje', name: 'admin-staff', component: AdminStaffView, meta: { requiresAuth: true } },
+    { path: '/admin/stranice', name: 'admin-pages', component: AdminPagesView, meta: { requiresAuth: true } },
+    { path: '/edukacija', name: 'edukacija', component: PageView, meta: { pageSlug: 'edukacija' } },
+    { path: '/istrazivanje', name: 'istrazivanje', component: PageView, meta: { pageSlug: 'istrazivanje' } },
+    { path: '/o-nama', name: 'o-nama', component: PageView, meta: { pageSlug: 'o-nama' } },
     { path: '/cancel/:token', name: 'cancel', component: CancelView },
     { path: '/prijava', name: 'prijava', component: GuestLoginView },
     { path: '/moj-nalog', name: 'moj-nalog', component: GuestDashboardView, meta: { requiresGuestAuth: true } },

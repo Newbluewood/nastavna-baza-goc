@@ -356,6 +356,25 @@ async function getContactPage(req, res) {
   res.json({ staff, projects });
 }
 
+async function getPageBySlug(req, res) {
+  const db = req.app.locals.db;
+  const lang = req.query.lang || 'sr';
+  const langParam = lang === 'en' ? 'en' : null;
+
+  const [rows] = await db.query(`
+    SELECT p.slug,
+           COALESCE(pt.title, p.title) AS title,
+           COALESCE(pt.content, p.content) AS content
+    FROM pages p
+    LEFT JOIN page_translations pt ON p.id = pt.entity_id AND pt.lang = ?
+    WHERE p.slug = ?
+    LIMIT 1
+  `, [langParam, req.params.slug]);
+
+  if (!rows.length) return sendError(res, 404, 'Page not found');
+  res.json(rows[0]);
+}
+
 module.exports = {
   getHome,
   getFacilities,
@@ -365,5 +384,6 @@ module.exports = {
   getNewsList,
   getSingleNews,
   likeNews,
-  getContactPage
+  getContactPage,
+  getPageBySlug
 };

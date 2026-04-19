@@ -96,6 +96,10 @@ class ApiService {
     return this.request('/api/kontakt');
   }
 
+  async getPageBySlug(slug, lang = 'sr') {
+    return this.request(`/api/pages/${slug}?lang=${lang}`);
+  }
+
   async getAIStatus() {
     return this.request('/api/ai/ping');
   }

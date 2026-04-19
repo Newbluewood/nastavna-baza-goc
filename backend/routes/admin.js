@@ -22,7 +22,12 @@ const {
 	getStaff,
 	createStaffMember,
 	updateStaffMember,
-	deleteStaffMember
+	deleteStaffMember,
+	getPages,
+	getPageById,
+	createPage,
+	updatePage,
+	deletePage
 } = require('../controllers/adminController');
 
 const router = express.Router();
@@ -51,5 +56,12 @@ router.get('/staff',               adminAuthMiddleware,                         
 router.post('/staff',              adminAuthMiddleware,                                      asyncHandler(createStaffMember));
 router.put('/staff/:id',           adminAuthMiddleware,                                      asyncHandler(updateStaffMember));
 router.delete('/staff/:id',        adminAuthMiddleware,                                      asyncHandler(deleteStaffMember));
+
+// Pages CRUD
+router.get('/pages',               adminAuthMiddleware,                                      asyncHandler(getPages));
+router.get('/pages/:id',           adminAuthMiddleware,                                      asyncHandler(getPageById));
+router.post('/pages',              adminAuthMiddleware,                                      asyncHandler(createPage));
+router.put('/pages/:id',           adminAuthMiddleware,                                      asyncHandler(updatePage));
+router.delete('/pages/:id',        adminAuthMiddleware,                                      asyncHandler(deletePage));
 
 module.exports = router;
