@@ -272,7 +272,7 @@ async function seedNews(connection, shouldExecute) {
 
 async function seedSlides(connection, shouldExecute) {
   const slides = [
-    ['pocetna', 'Наставна база Гоч', 'Први утисак за клијентску презентацију', placeholder, '/smestaj', 1],
+    ['pocetna', 'Наставна база Гоч', 'Први утисак за клијентску презентацију', placeholder, '/vesti', 1],
     ['pocetna', 'Смештај и инфраструктура', 'Преглед објеката, соба и садржаја', placeholder, '/smestaj', 2],
     ['smestaj', 'Презентациони смештај', 'Демо објекти са placeholder фотографијама', placeholder, '/smestaj', 1]
   ];
