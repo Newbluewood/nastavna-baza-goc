@@ -133,6 +133,24 @@ function parseGuestBreakdown(message, context, pendingSlot = null) {
     };
   }
 
+  // "za dvoje/troje/cetvoro/petoro" etc. — group count as adults
+  const groupWordMatch = normalizedSource.match(/\bza\s+([a-z]+)\b/);
+  if (!adultsValue && !childrenValue && groupWordMatch && NUMBER_WORDS[groupWordMatch[1]]) {
+    return {
+      adults: NUMBER_WORDS[groupWordMatch[1]],
+      children: 0
+    };
+  }
+
+  // Also match standalone "nas je [N]" or "dolazi nas [N]"
+  const groupDigitMatch = normalizedSource.match(/\b(za|nas|dolazi\s+nas)\s+(\d{1,2})\b/);
+  if (!adultsValue && !childrenValue && groupDigitMatch) {
+    return {
+      adults: Number(groupDigitMatch[2]),
+      children: 0
+    };
+  }
+
   // Check for solo/alone patterns: explicit "sam", "solo", "alone", or "samo ja/mene"
   const soloPatterns = /\b(sam|solo|alone|samo\s+ja|samo\s+mene|samo\s+i|dosao\s+sam|dosla\s+sam|dolazim\s+sam|dolazim\s+sama)\b/i;
   
@@ -381,6 +399,42 @@ function parseArrivalHints(message, context) {
     };
   }
 
+  // Exact day+month: "26 aprila", "26. aprila", "15 juna", "3 maja" etc.
+  const DAY_MONTH_NAMES = {
+    januar: 1, januara: 1,
+    februar: 2, februara: 2,
+    mart: 3, marta: 3,
+    april: 4, aprila: 4,
+    maj: 5, maja: 5,
+    jun: 6, juna: 6, juni: 6,
+    jul: 7, jula: 7, juli: 7,
+    avgust: 8, avgusta: 8,
+    septembar: 9, septembra: 9,
+    oktobar: 10, oktobra: 10,
+    novembar: 11, novembra: 11,
+    decembar: 12, decembra: 12
+  };
+
+  const monthNamePattern = Object.keys(DAY_MONTH_NAMES).join('|');
+  const dayMonthRegex = new RegExp(`\\b(\\d{1,2})\\.?\\s*(${monthNamePattern})\\b`);
+  const normalized = normalizeText(source);
+  const dayMonthMatch = normalized.match(dayMonthRegex);
+  if (dayMonthMatch) {
+    const day = Number(dayMonthMatch[1]);
+    const monthNum = DAY_MONTH_NAMES[dayMonthMatch[2]];
+    if (monthNum && day > 0 && day <= 31) {
+      const year = new Date().getFullYear();
+      const date = new Date(year, monthNum - 1, day, 12, 0, 0);
+      if (date < new Date()) {
+        date.setFullYear(year + 1);
+      }
+      return {
+        check_in: formatIsoDate(date),
+        arrival_hint: null
+      };
+    }
+  }
+
   if (source.includes('sledece nedelje') || source.includes('sljedece nedelje') || source.includes('next week')) {
     return {
       check_in: null,
@@ -396,22 +450,22 @@ function parseArrivalHints(message, context) {
   }
 
   // Month-only references: "u avgustu", "avgusta", "u junu", "juna" etc.
+  // Only match when NO day number precedes the month name
   const MONTH_HINT_PATTERNS = [
-    { month: 1, label: 'januar', regex: /\b(u\s+)?januar[ua]?\b/ },
-    { month: 2, label: 'februar', regex: /\b(u\s+)?februar[ua]?\b/ },
-    { month: 3, label: 'mart', regex: /\b(u\s+)?mart[ua]?\b/ },
-    { month: 4, label: 'april', regex: /\b(u\s+)?april[ua]?\b/ },
-    { month: 5, label: 'maj', regex: /\b(u\s+)?maj[ua]?\b/ },
-    { month: 6, label: 'jun', regex: /\b(u\s+)?jun[uia]?\b/ },
-    { month: 7, label: 'jul', regex: /\b(u\s+)?jul[uia]?\b/ },
-    { month: 8, label: 'avgust', regex: /\b(u\s+)?avgust[ua]?\b/ },
-    { month: 9, label: 'septembar', regex: /\b(u\s+)?septemb(ar|ra)\b/ },
-    { month: 10, label: 'oktobar', regex: /\b(u\s+)?oktob(ar|ra)\b/ },
-    { month: 11, label: 'novembar', regex: /\b(u\s+)?novemb(ar|ra)\b/ },
-    { month: 12, label: 'decembar', regex: /\b(u\s+)?decemb(ar|ra)\b/ }
+    { month: 1, label: 'januar', regex: /(?<!\d\s*)\b(u\s+)?januar[ua]?\b/ },
+    { month: 2, label: 'februar', regex: /(?<!\d\s*)\b(u\s+)?februar[ua]?\b/ },
+    { month: 3, label: 'mart', regex: /(?<!\d\s*)\b(u\s+)?mart[ua]?\b/ },
+    { month: 4, label: 'april', regex: /(?<!\d\s*)\b(u\s+)?april[ua]?\b/ },
+    { month: 5, label: 'maj', regex: /(?<!\d\s*)\b(u\s+)?maj[ua]?\b/ },
+    { month: 6, label: 'jun', regex: /(?<!\d\s*)\b(u\s+)?jun[uia]?\b/ },
+    { month: 7, label: 'jul', regex: /(?<!\d\s*)\b(u\s+)?jul[uia]?\b/ },
+    { month: 8, label: 'avgust', regex: /(?<!\d\s*)\b(u\s+)?avgust[ua]?\b/ },
+    { month: 9, label: 'septembar', regex: /(?<!\d\s*)\b(u\s+)?septemb(ar|ra)\b/ },
+    { month: 10, label: 'oktobar', regex: /(?<!\d\s*)\b(u\s+)?oktob(ar|ra)\b/ },
+    { month: 11, label: 'novembar', regex: /(?<!\d\s*)\b(u\s+)?novemb(ar|ra)\b/ },
+    { month: 12, label: 'decembar', regex: /(?<!\d\s*)\b(u\s+)?decemb(ar|ra)\b/ }
   ];
 
-  const normalized = normalizeText(source);
   for (const mp of MONTH_HINT_PATTERNS) {
     if (mp.regex.test(normalized)) {
       return {

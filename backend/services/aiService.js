@@ -285,7 +285,13 @@ function buildSystemPrompt(lang = 'sr') {
       '- Ako nemaš podatke za pitanje, reci iskreno.',
       '- Piši na srpskom latiničnom pismu.',
       '- Odgovaraj kao čovek, ne kao robot.',
-      '- NIKAD ne reci korisniku da "nemaš real-time informacije" — ti ih IMAŠ u kontekstu.'
+      '- NIKAD ne reci korisniku da "nemaš real-time informacije" — ti ih IMAŠ u kontekstu.',
+      '',
+      'REZERVACIJA:',
+      '- Kad korisnik ima sve podatke (osobe, datum, noći), sistem automatski prikazuje kartice sa sobama i dugmetom "Rezerviši". NE traži kontakt podatke — to radi forma automatski.',
+      '- NIKAD ne pitaj za ime, email, telefon — to popunjava rezervacioni formular.',
+      '- Ako korisnik kaže "rezerviši" ili "želim da rezervišem", reci mu da klikne dugme "Rezerviši" na kartici sobe koja mu odgovara.',
+      '- Tvoja uloga je da pomogneš u izboru sobe, NE da prikupljaš podatke za rezervaciju.'
     ].join('\n')
     : [
       'You are a friendly assistant for Nastavna Baza Goč — a mountain lodge for rest, education and recreation on Goč mountain near Vrnjačka Banja, Serbia.',
@@ -299,7 +305,12 @@ function buildSystemPrompt(lang = 'sr') {
       '- If you lack data for a question, say so honestly.',
       '- Write in English.',
       '- Sound human, not robotic.',
-      '- NEVER tell the user you lack real-time info — you DO have it in the context.'
+      '- NEVER tell the user you lack real-time info — you DO have it in the context.',
+      '',
+      'RESERVATION:',
+      '- When all data is present, the system automatically shows room cards with a "Reserve" button. Do NOT ask for contact details — the form handles that.',
+      '- NEVER ask for name, email, or phone — the reservation form collects those.',
+      '- If the user says "reserve", tell them to click the "Reserve" button on their preferred room card.'
     ].join('\n');
 }
 
@@ -322,9 +333,9 @@ function buildUserPrompt(message, facts, roomResults, context, history) {
 
   if (roomResults?.suggestions?.length > 0) {
     const rooms = roomResults.suggestions.map(s =>
-      `- ${s.facility_name} / ${s.room_name} (kapacitet: ${s.capacity_label || '?'}, ${s.is_recommended ? 'PREPORUČENO' : 'dostupno'})`
+      `- ${s.facility_name} / ${s.room_name} (kapacitet: ${s.room_capacity_min || '?'}–${s.room_capacity_max || '?'}, ${s.is_recommended ? 'PREPORUČENO' : 'dostupno'})`
     ).join('\n');
-    parts.push(`SLOBODNE SOBE za traženi termin (ŽIVI podaci iz baze):\n${rooms}\nOve sobe su stvarno slobodne — pomeni ih korisniku.`);
+    parts.push(`SLOBODNE SOBE za traženi termin (ŽIVI podaci iz baze):\n${rooms}\nOve sobe su stvarno slobodne — pomeni ih korisniku. Sistem automatski prikazuje kartice sa dugmetom "Rezerviši" — NE traži kontakt podatke.`);
   } else if (roomResults?.status === 'needs_input' && roomResults?.missing) {
     const missingLabels = {
       guest_breakdown: 'broj osoba (odrasli i deca)',
