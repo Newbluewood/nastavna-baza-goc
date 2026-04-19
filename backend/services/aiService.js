@@ -547,7 +547,9 @@ class AIService {
             cacheReply(cacheKey, result);
             return result;
           }
-        } catch { /* fall through to local fallback */ }
+        } catch (err) {
+          console.error('[aiService] Live AI failed, falling back:', err.message);
+        }
       }
     }
 
