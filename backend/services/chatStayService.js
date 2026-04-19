@@ -275,6 +275,37 @@ function resolveNaturalDate(message) {
   return null;
 }
 
+function parseDayRange(message) {
+  const source = normalizeText(message);
+
+  const dayWordsList = [
+    { day: 0, words: ['nedelja', 'nedelje', 'nedeljom'] },
+    { day: 1, words: ['ponedeljak', 'ponedeljka', 'ponedeljkom'] },
+    { day: 2, words: ['utorak', 'utorka', 'utorkom'] },
+    { day: 3, words: ['sreda', 'sredu', 'srede', 'sredom'] },
+    { day: 4, words: ['cetvrtak', 'cetvrtka', 'cetvrtkom'] },
+    { day: 5, words: ['petak', 'petka', 'petkom'] },
+    { day: 6, words: ['subota', 'subote', 'subotom'] }
+  ];
+
+  const rangeMatch = source.match(/od\s+(\S+)\s+do\s+(\S+)/);
+  if (!rangeMatch) return null;
+
+  let startDay = null;
+  let endDay = null;
+  for (const opt of dayWordsList) {
+    if (opt.words.some(w => rangeMatch[1].includes(w))) startDay = opt.day;
+    if (opt.words.some(w => rangeMatch[2].includes(w))) endDay = opt.day;
+  }
+
+  if (startDay === null || endDay === null) return null;
+
+  let diff = (endDay - startDay + 7) % 7;
+  if (diff === 0) diff = 7;
+
+  return { startDay, endDay, stayLengthDays: diff };
+}
+
 function parseArrivalHints(message, context) {
   const explicitDate = String(context.check_in || '').trim();
   const source = String(message || '').toLowerCase();
@@ -524,6 +555,21 @@ async function planStay(db, payload) {
     preferences,
     pending_slot: null
   };
+
+  // Infer stay length from "od [day] do [day]" pattern
+  if (!criteria.stay_length_days) {
+    const dayRange = parseDayRange(message);
+    if (dayRange) {
+      criteria.stay_length_days = dayRange.stayLengthDays;
+      // Also resolve check_in from range start if missing
+      if (!criteria.check_in) {
+        const forceNext = /\b(sledec|sledeci|iduce|iduci|next)\b/.test(normalizeText(message));
+        const now = new Date();
+        now.setHours(12, 0, 0, 0);
+        criteria.check_in = nextWeekdayDate(now, dayRange.startDay, forceNext);
+      }
+    }
+  }
 
   criteria.pending_slot = getPendingSlot(criteria);
 
