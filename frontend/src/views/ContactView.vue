@@ -25,6 +25,12 @@ const statusLabel = (s) => ({
   планиран: langStore.currentLang === 'sr' ? 'Планиран' : 'Planned',
   завршен: langStore.currentLang === 'sr' ? 'Завршен' : 'Completed'
 }[s] || s)
+
+const statusClass = (s) => ({
+  активан: 'active',
+  планиран: 'planned',
+  завршен: 'completed'
+}[s] || 'unknown')
 </script>
 
 <template>
@@ -92,7 +98,7 @@ const statusLabel = (s) => ({
           <div v-for="project in projects" :key="project.id" class="project-card">
             <div class="project-header">
               <strong>{{ project.title }}</strong>
-              <span class="project-status" :class="project.status">{{ statusLabel(project.status) }}</span>
+              <span class="project-status" :class="statusClass(project.status)">{{ statusLabel(project.status) }}</span>
             </div>
             <p>{{ project.description }}</p>
           </div>
@@ -225,9 +231,9 @@ const statusLabel = (s) => ({
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.project-status.активан { background: #e8f5e9; color: #27ae60; }
-.project-status.планиран { background: #fff3e0; color: #e67e22; }
-.project-status.завршен { background: #eceff1; color: #607d8b; }
+.project-status.active { background: #e8f5e9; color: #27ae60; }
+.project-status.planned { background: #fff3e0; color: #e67e22; }
+.project-status.completed { background: #eceff1; color: #607d8b; }
 .project-card p { margin: 0; color: #67462e; font-size: 0.88rem; line-height: 1.5; }
 
 /* MOBILE */
