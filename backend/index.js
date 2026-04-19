@@ -6,6 +6,10 @@ const errorHandler = require('./middleware/errorHandler');
 
 console.log('Starting server...');
 
+// Static for staff photos
+const path = require('path');
+app.use('/uploads/staff', express.static(path.join(__dirname, 'uploads', 'staff')));
+
 // Routes
 const publicRoutes = require('./routes/public');
 console.log('Public routes required:', typeof publicRoutes);

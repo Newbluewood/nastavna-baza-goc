@@ -119,7 +119,10 @@ onMounted(() => fetchPages())
             <input v-model="form.title" type="text" placeholder="Наслов странице" />
           </div>
           <div class="form-group">
-            <label>Slug *</label>
+            <label>
+              <span class="red-star">*</span> Slug
+              <span class="slug-hint"> (mora biti na latinici, bez slova sa kvačicama: š, č, ć, ž, đ. Primer: edukacija)</span>
+            </label>
             <input v-model="form.slug" type="text" placeholder="npr. edukacija" :disabled="!!editingId" />
             <small v-if="!editingId" class="hint">URL путања (нпр. edukacija → /edukacija)</small>
           </div>
@@ -251,3 +254,16 @@ onMounted(() => fetchPages())
 
 .loading-msg, .empty-msg { text-align: center; padding: 40px; color: #999; }
 </style>
+
+.red-star {
+  color: #e74c3c;
+  font-weight: bold;
+  font-size: 1em;
+  margin-right: 2px;
+}
+.slug-hint {
+  color: #b94a48;
+  font-size: 0.92em;
+  font-weight: 400;
+  font-style: italic;
+}

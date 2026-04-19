@@ -30,7 +30,19 @@ const {
 	deletePage
 } = require('../controllers/adminController');
 
+
+const { staffPhotoUpload } = require('../uploadMiddleware');
+const path = require('path');
+const fs = require('fs');
+
 const router = express.Router();
+// Staff photo upload
+router.post('/upload/staff-photo', adminAuthMiddleware, staffPhotoUpload.single('photo'), (req, res) => {
+	if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+	// Return relative URL for frontend
+	const relPath = path.join('uploads', 'staff', req.file.filename).replace(/\\/g, '/');
+	res.json({ url: '/' + relPath });
+});
 
 router.get('/inquiries',           adminAuthMiddleware,                                      asyncHandler(getInquiries));
 router.get('/inquiries/:id/activity', adminAuthMiddleware,                                   asyncHandler(getInquiryActivity));
