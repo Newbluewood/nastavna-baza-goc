@@ -100,10 +100,10 @@ const canModifyDates = (row) => {
 
 // Datum krajnjeg roka za otkazivanje (checkin - 7 dana)
 const cancelDeadline = (dateStr) => {
-  if (!dateStr) return null
-  const d = new Date(dateStr + 'T12:00:00')
+  const d = normalizeDate(dateStr)
+  if (!d) return null
   d.setDate(d.getDate() - 7)
-  return fmt(d.toISOString().split('T')[0])
+  return fmt(d)
 }
 
 const cancelDeadlinePassed = (dateStr) => {
