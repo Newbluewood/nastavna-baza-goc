@@ -75,7 +75,7 @@ const fetchNews = async () => {
   const res = await fetch(`${baseUrl}/api/admin/news`, {
     headers: { 'Authorization': `Bearer ${token}` }
   })
-  if (res.status === 401) {
+  if (res.status === 401 || res.status === 403) {
     router.push('/admin/login')
     return
   }
@@ -146,7 +146,7 @@ const startEdit = async (news) => {
       headers: { 'Authorization': `Bearer ${token}` }
     })
 
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 403) {
       router.push('/admin/login')
       return
     }

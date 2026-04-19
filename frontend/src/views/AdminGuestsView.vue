@@ -25,7 +25,7 @@ const fetchGuests = async () => {
     const res = await fetch(`${baseUrl}/api/admin/guests`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 403) {
       router.push('/admin/login')
       return
     }

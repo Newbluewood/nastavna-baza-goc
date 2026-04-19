@@ -46,7 +46,7 @@ async function fetchRoomMap() {
     const res = await fetch(`${baseUrl}/api/admin/room-map?date=${selectedDate.value}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-    if (res.status === 401) { router.push('/admin/login'); return }
+    if (res.status === 401 || res.status === 403) { router.push('/admin/login'); return }
     const data = await res.json()
     facilities.value = data.facilities || []
   } catch (err) {
