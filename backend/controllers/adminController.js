@@ -289,6 +289,7 @@ async function updateInquiryStatus(req, res) {
         await emailTask();
       } catch (emailErr) {
         console.warn('Email delivery failed after inquiry status update:', emailErr.message);
+        return res.json({ message: 'Status updated successfully', emailWarning: `Email nije poslat: ${emailErr.message}` });
       }
     }
 

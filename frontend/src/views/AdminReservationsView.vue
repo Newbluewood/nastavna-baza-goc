@@ -211,9 +211,13 @@ const changeStatus = async (inquiry, newStatus) => {
       body: JSON.stringify({ status: newStatus })
     })
     if (res.ok) {
+      const data = await res.json().catch(() => ({}))
       // Lokalno azuriraj status bez ponovnog fetcha
       const idx = inquiries.value.findIndex(i => i.id === inquiry.id)
       if (idx !== -1) inquiries.value[idx].status = newStatus
+      if (data.emailWarning) {
+        alert(`⚠️ Status je ažuriran, ali email NIJE poslat gostu:\n${data.emailWarning}`)
+      }
     } else {
       const errData = await res.json().catch(() => ({}))
       if (res.status === 409 && errData.autoRejected) {
