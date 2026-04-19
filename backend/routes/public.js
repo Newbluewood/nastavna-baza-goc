@@ -4,7 +4,7 @@ const { validateRequest, validateInquiryRequest, schemas } = require('../middlew
 const { optionalGuestAuthMiddleware } = require('../middleware/auth');
 const {
   getHome, getFacilities, getFacility, getRoomAvailability,
-  submitInquiry, getNewsList, getSingleNews, likeNews
+  submitInquiry, getNewsList, getSingleNews, likeNews, getContactPage
 } = require('../controllers/publicController');
 
 const router = express.Router();
@@ -25,5 +25,6 @@ router.post('/inquiries', optionalGuestAuthMiddleware, validateInquiryRequest(),
 router.get('/news',                           asyncHandler(getNewsList));
 router.get('/news/:id',                       asyncHandler(getSingleNews));
 router.post('/news/:id/like',                 asyncHandler(likeNews));
+router.get('/kontakt',                        asyncHandler(getContactPage));
 
 module.exports = router;

@@ -483,12 +483,10 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
 <style scoped>
 .stay-assistant-wrapper {
   position: fixed;
-  right: 8px;
+  right: 16px;
   bottom: 18px;
   z-index: 1200;
-  width: min(360px, calc(100vw - 24px));
-  transform: scale(1.2);
-  transform-origin: bottom right;
+  width: min(380px, calc(100vw - 32px));
 }
 
 .stay-assistant-toggle {
@@ -713,20 +711,33 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
 
 @media (max-width: 640px) {
   .stay-assistant-wrapper {
-    right: 4px;
-    bottom: 10px;
-    width: calc(100vw - 20px);
+    right: 0;
+    bottom: 0;
+    width: 100vw;
   }
 
   .stay-assistant-toggle {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
   }
 
   .stay-assistant-toggle.is-open {
+    position: static;
     width: 100%;
     height: auto;
   }
+
+  .stay-assistant-panel {
+    max-height: 80vh;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .chat-bubble-icon { width: 28px; height: 28px; }
 }
 </style>
 

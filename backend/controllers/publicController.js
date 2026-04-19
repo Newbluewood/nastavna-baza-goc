@@ -97,7 +97,7 @@ async function getHome(req, res) {
     LEFT JOIN media_gallery mg ON mg.entity_id = n.id AND mg.entity_type = 'news'
     GROUP BY n.id
     ORDER BY n.created_at DESC
-    LIMIT 3
+    LIMIT 7
   `, [langParam]);
 
   news.forEach(item => {
@@ -349,6 +349,13 @@ async function likeNews(req, res) {
   res.json({ message: 'Liked', likes: rows[0]?.likes ?? 0 });
 }
 
+async function getContactPage(req, res) {
+  const db = req.app.locals.db;
+  const [staff] = await db.query('SELECT id, full_name, role, contact_email, photo_url FROM staff ORDER BY id');
+  const [projects] = await db.query('SELECT id, title, description, status, start_date FROM projects ORDER BY start_date DESC');
+  res.json({ staff, projects });
+}
+
 module.exports = {
   getHome,
   getFacilities,
@@ -357,5 +364,6 @@ module.exports = {
   submitInquiry,
   getNewsList,
   getSingleNews,
-  likeNews
+  likeNews,
+  getContactPage
 };
