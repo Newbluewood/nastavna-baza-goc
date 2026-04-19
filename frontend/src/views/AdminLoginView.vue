@@ -42,11 +42,11 @@ const handleLogin = async () => {
       <form @submit.prevent="handleLogin">
         <div class="form-group">
           <label>Корисничко име</label>
-          <input type="text" v-model="username" required>
+          <input type="text" v-model="username" required autocomplete="username">
         </div>
         <div class="form-group">
           <label>Лозинка</label>
-          <input type="password" v-model="password" required>
+          <input type="password" v-model="password" required autocomplete="current-password">
         </div>
         <button type="submit" :disabled="isLoading">
           {{ isLoading ? 'Пријављивање...' : 'Пријави се' }}

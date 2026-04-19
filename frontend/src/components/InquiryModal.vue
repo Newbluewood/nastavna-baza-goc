@@ -73,18 +73,18 @@
 
           <div v-if="!isGuestLoggedIn" class="form-group">
             <label>{{ langStore.t('inquiry.fullName') }} *</label>
-            <input type="text" v-model="form.sender_name" :required="!isGuestLoggedIn" :readonly="isGuestLoggedIn" />
+            <input type="text" v-model="form.sender_name" :required="!isGuestLoggedIn" :readonly="isGuestLoggedIn" autocomplete="name" />
           </div>
           
           <div class="form-group-row">
             <div v-if="!isGuestLoggedIn" class="form-group half">
               <label>{{ langStore.t('inquiry.email') }} <span style="color:red">*</span></label>
-              <input type="email" v-model="form.email" :required="!isGuestLoggedIn" :readonly="isGuestLoggedIn" :class="{ 'input-error': emailError }" />
+              <input type="email" v-model="form.email" :required="!isGuestLoggedIn" :readonly="isGuestLoggedIn" :class="{ 'input-error': emailError }" autocomplete="email" />
               <span v-if="emailError" class="field-error">{{ emailError }}</span>
             </div>
             <div class="form-group" :class="!isGuestLoggedIn ? 'half' : ''">
               <label>{{ langStore.t('inquiry.phone') }}</label>
-              <input type="text" v-model="form.phone" />
+              <input type="tel" v-model="form.phone" autocomplete="tel" />
             </div>
           </div>
 
@@ -449,10 +449,35 @@ input:focus, textarea:focus {
 :deep(.dp__input) {
   border-radius: 0;
   border: 1px solid var(--color-border);
-  padding: 10px;
+  padding: 12px 14px;
+  font-size: 1.05rem;
 }
 :deep(.dp__input:focus) {
   border-color: var(--color-nav);
+}
+
+/* Krupniji kalendar */
+:deep(.dp__calendar_header_item) {
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 6px 0;
+}
+:deep(.dp__cell_inner) {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+:deep(.dp__month_year_select) {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* Zauzeti (disabled) datumi - crvenkasto + precrtano */
+:deep(.dp__cell_disabled) {
+  color: #c0392b !important;
+  font-weight: 700;
+  text-decoration: line-through;
+  opacity: 0.7;
 }
 .input-error {
   border-color: #e74c3c !important;
