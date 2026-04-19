@@ -1,0 +1,24 @@
+{
+  "events": [
+    {
+      "naziv": "Zimski ski kamp",
+      "opis": "Organizovan kamp za decu i omladinu sa obukom skijanja i zimskim aktivnostima.",
+      "datum": "2026-01-15"
+    },
+    {
+      "naziv": "Letnja škola prirode",
+      "opis": "Edukativni program za učenike i studente o flori i fauni Goča.",
+      "datum": "2026-07-10"
+    },
+    {
+      "naziv": "Festival planinske hrane",
+      "opis": "Degustacija tradicionalnih jela i pića iz regiona.",
+      "datum": "2026-08-20"
+    },
+    {
+      "naziv": "Planinarski maraton",
+      "opis": "Takmičenje u pešačenju kroz označene staze Goča.",
+      "datum": "2026-09-05"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "accommodation": [
+    {"type": "jednokrevetna", "price": 3500},
+    {"type": "dvokrevetna", "price": 5000}
+  ],
+  "activities": [
+    {"name": "Planinarska tura", "price": 800},
+    {"name": "Skijanje", "price": 1200}
+  ],
+  "food": [
+    {"item": "Doručak", "price": 600},
+    {"item": "Ručak", "price": 1200}
+  ]
+}

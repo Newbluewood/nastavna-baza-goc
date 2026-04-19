@@ -1,0 +1,34 @@
+{
+  "prices": {
+    "smestaj": [
+      {
+        "tip": "Planinska kuća",
+        "cena_po_noci": 3500
+      },
+      {
+        "tip": "Soba u Nastavnoj bazi",
+        "cena_po_noci": 2500
+      }
+    ],
+    "aktivnosti": [
+      {
+        "aktivnost": "Skijanje (dnevna karta)",
+        "cena": 1500
+      },
+      {
+        "aktivnost": "Planinarska tura",
+        "cena": 1000
+      }
+    ],
+    "hrana": [
+      {
+        "stavka": "Dnevni meni u restoranu",
+        "cena": 1200
+      },
+      {
+        "stavka": "Tradicionalna večera",
+        "cena": 1800
+      }
+    ]
+  }
+}

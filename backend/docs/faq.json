@@ -1,0 +1,20 @@
+{
+  "faq": [
+    {
+      "pitanje": "Kako da dođem do Goča?",
+      "odgovor": "Goč se nalazi 12 km od Vrnjačke Banje i 20 km od Kraljeva. Do njega se dolazi lokalnim putem ili organizovanim prevozom."
+    },
+    {
+      "pitanje": "Da li postoje sadržaji za decu?",
+      "odgovor": "Da, dostupni su edukativni programi, sportski tereni i radionice u Nastavnoj bazi Gvozdac."
+    },
+    {
+      "pitanje": "Koje su najpopularnije aktivnosti?",
+      "odgovor": "Skijanje, planinarenje, posete vidikovcima i degustacija lokalne hrane."
+    },
+    {
+      "pitanje": "Da li je moguć smeštaj?",
+      "odgovor": "Da, u Nastavnoj bazi Gvozdac i okolnim planinskim kućama postoji mogućnost smeštaja."
+    }
+  ]
+}
