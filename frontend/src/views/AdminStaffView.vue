@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import AdminSidebar from '../components/AdminSidebar.vue'
 
+const router = useRouter()
 const sidebar = ref(null)
 const staff = ref([])
 const isLoading = ref(true)
@@ -21,6 +23,7 @@ const fetchStaff = async () => {
   isLoading.value = true
   try {
     const res = await fetch(`${baseUrl}/api/admin/staff`, { headers: authHeaders() })
+    if (res.status === 401 || res.status === 403) { router.push('/admin/login'); return }
     if (res.ok) staff.value = await res.json()
   } catch (err) {
     console.error('Failed to load staff:', err)
