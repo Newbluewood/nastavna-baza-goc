@@ -395,6 +395,32 @@ function parseArrivalHints(message, context) {
     };
   }
 
+  // Month-only references: "u avgustu", "avgusta", "u junu", "juna" etc.
+  const MONTH_HINT_PATTERNS = [
+    { month: 1, label: 'januar', regex: /\b(u\s+)?januar[ua]?\b/ },
+    { month: 2, label: 'februar', regex: /\b(u\s+)?februar[ua]?\b/ },
+    { month: 3, label: 'mart', regex: /\b(u\s+)?mart[ua]?\b/ },
+    { month: 4, label: 'april', regex: /\b(u\s+)?april[ua]?\b/ },
+    { month: 5, label: 'maj', regex: /\b(u\s+)?maj[ua]?\b/ },
+    { month: 6, label: 'jun', regex: /\b(u\s+)?jun[uia]?\b/ },
+    { month: 7, label: 'jul', regex: /\b(u\s+)?jul[uia]?\b/ },
+    { month: 8, label: 'avgust', regex: /\b(u\s+)?avgust[ua]?\b/ },
+    { month: 9, label: 'septembar', regex: /\b(u\s+)?septemb(ar|ra)\b/ },
+    { month: 10, label: 'oktobar', regex: /\b(u\s+)?oktob(ar|ra)\b/ },
+    { month: 11, label: 'novembar', regex: /\b(u\s+)?novemb(ar|ra)\b/ },
+    { month: 12, label: 'decembar', regex: /\b(u\s+)?decemb(ar|ra)\b/ }
+  ];
+
+  const normalized = normalizeText(source);
+  for (const mp of MONTH_HINT_PATTERNS) {
+    if (mp.regex.test(normalized)) {
+      return {
+        check_in: null,
+        arrival_hint: `month_${mp.label}`
+      };
+    }
+  }
+
   return {
     check_in: null,
     arrival_hint: null
@@ -419,6 +445,17 @@ function buildFollowUpQuestion(criteria) {
   if (!criteria.check_in) {
     if (criteria.arrival_hint === 'next_week') {
       return 'Koji vam tačno datum dolaska sledeće nedelje odgovara? Pošaljite datum u formatu YYYY-MM-DD.';
+    }
+    if (criteria.arrival_hint?.startsWith('month_')) {
+      const monthLabel = criteria.arrival_hint.replace('month_', '');
+      const MONTH_EXAMPLE = {
+        januar: '01-15', februar: '02-15', mart: '03-15', april: '04-15',
+        maj: '05-15', jun: '06-15', jul: '07-15', avgust: '08-15',
+        septembar: '09-15', oktobar: '10-15', novembar: '11-15', decembar: '12-15'
+      };
+      const year = new Date().getFullYear();
+      const example = `${year}-${MONTH_EXAMPLE[monthLabel] || '08-15'}`;
+      return `Važi, ${monthLabel}! Koji tačan datum u tom mesecu planirate dolazak? (npr. ${example})`;
     }
     return 'Koji vam je tačan datum dolaska? Pošaljite datum u formatu YYYY-MM-DD.';
   }
