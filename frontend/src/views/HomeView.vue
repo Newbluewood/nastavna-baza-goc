@@ -33,7 +33,8 @@ const loadData = async () => {
         : news.value.slice(0, 5).map(item => ({
             image_url: item.cover_image || '/placeholder.jpg',
             title: item.title || pageTitle.value,
-            subtitle: item.excerpt || ''
+            subtitle: item.excerpt || '',
+            target_link: `/vesti/${item.slug || item.id}`
           }))
     }
   } catch (error) {
