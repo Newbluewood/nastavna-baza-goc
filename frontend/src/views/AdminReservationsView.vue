@@ -356,6 +356,7 @@ const assignLoyaltyVoucher = async (inquiry) => {
         <a href="#">Странице</a>
         <router-link to="/admin/rezervacije" class="active">Упити/Резервације</router-link>
         <router-link to="/admin/gosti">Гости и CRM</router-link>
+        <router-link to="/admin/mapa-soba">Мапа Соба</router-link>
       </nav>
       <button class="logout-btn" @click="handleLogout">Одјави се</button>
     </aside>

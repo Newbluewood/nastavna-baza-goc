@@ -1,0 +1,16 @@
+{
+  "contacts": [
+    {
+      "naziv": "Nastavna baza Gvozdac",
+      "telefon": "+381 36 123 456",
+      "email": "info@gvozdac.rs",
+      "adresa": "Goč–Gvozdac, Vrnjačka Banja, Srbija"
+    },
+    {
+      "naziv": "Turistička organizacija Vrnjačka Banja",
+      "telefon": "+381 36 789 101",
+      "email": "turizam@vrnjackabanja.rs",
+      "adresa": "Vrnjačka Banja, Srbija"
+    }
+  ]
+}

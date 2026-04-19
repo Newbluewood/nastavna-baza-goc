@@ -1,0 +1,12 @@
+{
+  "faq": [
+    {"question": "Kako da rezervišem smeštaj?", "answer": "Rezervaciju možete izvršiti putem sajta ili pozivom na recepciju."},
+    {"question": "Koji su termini za prijavu i odjavu?", "answer": "Prijava je od 14h, odjava do 10h."},
+    {"question": "Da li je parking besplatan?", "answer": "Da, obezbeđen je besplatan parking za goste."},
+    {"question": "Kako da dođem do Goča?", "answer": "Goč se nalazi 12 km od Vrnjačke Banje i 20 km od Kraljeva. Do njega se dolazi lokalnim putem ili organizovanim prevozom."},
+    {"question": "Da li postoje sadržaji za decu?", "answer": "Da, dostupni su edukativni programi, sportski tereni i radionice u Nastavnoj bazi Gvozdac."},
+    {"question": "Koje su najpopularnije aktivnosti?","answer": "Skijanje, planinarenje, posete vidikovcima i degustacija lokalne hrane."},
+    {"question": "Da li je moguć smeštaj?", "answer": "Da, u Nastavnoj bazi Gvozdac i okolnim planinskim kućama postoji mogućnost smeštaja."
+    }
+  ]
+}

@@ -6,17 +6,21 @@ class ApiService {
   }
 
   async request(endpoint, options = {}) {
+    const { authMode = 'any', ...requestOptions } = options;
     const url = `${this.baseURL}${endpoint}`;
     const config = {
       headers: {
         'Content-Type': 'application/json',
-        ...options.headers
+        ...requestOptions.headers
       },
-      ...options
+      ...requestOptions
     };
 
-    // Add auth token if available
-    const token = this.getAuthToken();
+    // Add auth token based on endpoint auth mode
+    const token = authMode === 'guest'
+      ? this.getGuestToken()
+      : (authMode === 'none' ? null : this.getAuthToken());
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -36,7 +40,20 @@ class ApiService {
 
   getAuthToken() {
     // Check both admin and guest tokens
-    return localStorage.getItem('admin_token') || localStorage.getItem('guest_token');
+    return this.normalizeToken(localStorage.getItem('admin_token'))
+      || this.normalizeToken(localStorage.getItem('guest_token'));
+  }
+
+  getGuestToken() {
+    return this.normalizeToken(localStorage.getItem('guest_token'));
+  }
+
+  normalizeToken(token) {
+    const value = String(token || '').trim();
+    if (!value || value === 'undefined' || value === 'null') {
+      return null;
+    }
+    return value;
   }
 
   // Public endpoints
@@ -62,6 +79,7 @@ class ApiService {
   async submitInquiry(data) {
     return this.request('/api/inquiries', {
       method: 'POST',
+      authMode: 'guest',
       body: JSON.stringify(data)
     });
   }
@@ -72,6 +90,68 @@ class ApiService {
 
   async getNewsItem(id, lang = 'sr') {
     return this.request(`/api/news/${id}?lang=${lang}`);
+  }
+
+  async getAIStatus() {
+    return this.request('/api/ai/ping');
+  }
+
+  async aiProofread(text, lang = 'sr') {
+    return this.request('/api/ai/proofread', {
+      method: 'POST',
+      body: JSON.stringify({ text, lang })
+    });
+  }
+
+  async aiRewrite(text, lang = 'sr', tone = 'professional') {
+    return this.request('/api/ai/rewrite', {
+      method: 'POST',
+      body: JSON.stringify({ text, lang, tone })
+    });
+  }
+
+  async chatPlanStay(payload) {
+    const url = `${this.baseURL}/api/chat/plan-stay`;
+    const token = this.getAuthToken();
+    const config = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload || {})
+    };
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+
+    const response = await fetch(url, config);
+    const rateWarning = response.headers.get('X-Chat-Rate-Warning') || null;
+    const rateRemaining = response.headers.get('X-Chat-Rate-Remaining');
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+      const error = new Error(errorData.error || `HTTP ${response.status}`);
+      error.status = response.status;
+      error.data = errorData;
+      error.retryAfter = response.headers.get('Retry-After');
+      throw error;
+    }
+
+    const data = await response.json();
+    data._rateWarning = rateWarning;
+    data._rateRemaining = rateRemaining ? Number(rateRemaining) : null;
+    return data;
+  }
+
+  async chatSuggestVisit(payload) {
+    return this.request('/api/chat/suggest-visit', {
+      method: 'POST',
+      body: JSON.stringify(payload || {})
+    });
+  }
+
+  async chatReserveStay(payload) {
+    return this.request('/api/chat/reserve-stay', {
+      method: 'POST',
+      authMode: 'guest',
+      body: JSON.stringify(payload || {})
+    });
   }
 
   async likeNews(id) {

@@ -15,6 +15,8 @@ const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const guestRoutes = require('./routes/guest');
 const cancelRoutes = require('./routes/cancel');
+const aiRoutes = require('./routes/ai');
+const chatRoutes = require('./routes/chat');
 
 const app = express();
 
@@ -93,6 +95,8 @@ app.use('/api/admin', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/guests', guestRoutes);
 app.use('/api/cancel', cancelRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

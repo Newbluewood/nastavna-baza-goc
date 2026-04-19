@@ -1,4 +1,6 @@
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 const {
   EXECUTE_FLAG,
   hasExecuteFlag,
@@ -11,11 +13,50 @@ const {
 
 const placeholder = '/placeholder.jpg';
 
+function readJsonFile(filePath, fallbackValue) {
+  try {
+    const raw = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return fallbackValue;
+  }
+}
+
+function mapAttractionCategoryToType(category) {
+  const value = String(category || '').toLowerCase();
+  if (value.includes('sport') || value.includes('ski')) return 'ski';
+  if (value.includes('vidikovac')) return 'viewpoint';
+  if (value.includes('eduk')) return 'education';
+  if (value.includes('rekre')) return 'trail';
+  if (value.includes('priroda')) return 'trail';
+  return 'activity';
+}
+
+function inferDistanceByType(type) {
+  if (type === 'trail') return { km: 1.2, minutes: 2 };
+  if (type === 'ski') return { km: 2.6, minutes: 6 };
+  if (type === 'viewpoint') return { km: 1.0, minutes: 3 };
+  if (type === 'education') return { km: 0.7, minutes: 2 };
+  return { km: 1.5, minutes: 4 };
+}
+
+function inferWeatherTags(type) {
+  if (type === 'ski') return ['snow', 'cold', 'clear'];
+  if (type === 'education') return ['sunny', 'cloudy', 'rainy'];
+  if (type === 'viewpoint') return ['sunny', 'cloudy'];
+  return ['sunny', 'cloudy'];
+}
+
+function inferSeasonTags(type) {
+  if (type === 'ski') return ['winter'];
+  return ['spring', 'summer', 'autumn'];
+}
+
 async function seedFacilitiesAndRooms(connection, shouldExecute) {
   const facilities = [
-    ['smestaj', 'Хотел Пирамида', 'Репрезентативан хотелски објекат за индивидуалне и групне посете.', '24 лежаја', 43.559095, 20.75393, placeholder, '["Централни објекат","Ресторан"]'],
-    ['smestaj', 'Нови Студенац', 'Највећи објекат за рекреативну наставу и презентације.', '56 лежајева', 43.559095, 20.75393, placeholder, '["Конференцијска сала","Брз интернет"]'],
-    ['smestaj', 'Вила Власта', 'Мирнији смештај за мање групе и породични боравак.', '16 лежајева', 43.558636, 20.750094, placeholder, '["Мирна локација","Башта"]']
+    ['smestaj', 'Хотел Пирамида', 'Репрезентативан хотелски објекат за индивидуалне и групне посете.', '24 лежаја', 12, 24, 43.559095, 20.75393, placeholder, '["Централни објекат","Ресторан"]', '["group","restaurant","central"]'],
+    ['smestaj', 'Нови Студенац', 'Највећи објекат за рекреативну наставу и презентације.', '56 лежајева', 20, 56, 43.559095, 20.75393, placeholder, '["Конференцијска сала","Брз интернет"]', '["group","conference","ski"]'],
+    ['smestaj', 'Вила Власта', 'Мирнији смештај за мање групе и породични боравак.', '16 лежајева', 4, 16, 43.558636, 20.750094, placeholder, '["Мирна локација","Башта"]', '["family","quiet","garden"]']
   ];
 
   // Presentation seed intentionally excludes non-accommodation objects (e.g. sawmill).
@@ -24,17 +65,17 @@ async function seedFacilitiesAndRooms(connection, shouldExecute) {
   }
 
   const rooms = [
-    [1, 'Двокреветна соба', 'Комфорна соба са два лежаја.', '2 особе', placeholder, '["wifi","tv","parking"]'],
-    [1, 'Трокреветна соба', 'Пространа соба за мању групу.', '3 особе', placeholder, '["wifi","parking"]'],
-    [2, 'Конференцијска соба', 'Соба погодна за наставнике и гостујуће предаваче.', '2 особе', placeholder, '["wifi","radni sto"]'],
-    [2, 'Студентска соба', 'Основни, уредан смештај за студенте.', '4 особе', placeholder, '["wifi"]'],
-    [3, 'Породична соба', 'Тиха соба са додатним простором.', '4 особе', placeholder, '["wifi","kuhinja"]']
+    [1, 'Двокреветна соба', 'Комфорна соба са два лежаја.', '2 особе', 2, 2, placeholder, '["wifi","tv","parking"]', '["couple","quiet"]'],
+    [1, 'Трокреветна соба', 'Пространа соба за мању групу.', '3 особе', 3, 3, placeholder, '["wifi","parking"]', '["small-group"]'],
+    [2, 'Конференцијска соба', 'Соба погодна за наставнике и гостујуће предаваче.', '2 особе', 2, 2, placeholder, '["wifi","radni sto"]', '["business","quiet"]'],
+    [2, 'Студентска соба', 'Основни, уредан смештај за студенте.', '4 особе', 3, 4, placeholder, '["wifi"]', '["group","budget"]'],
+    [3, 'Породична соба', 'Тиха соба са додатним простором.', '4 особе', 3, 4, placeholder, '["wifi","kuhinja"]', '["family","quiet","garden"]']
   ];
 
   for (const facility of facilities) {
     await executeOrPrint(
       connection,
-      'INSERT INTO facilities (type, name, description, capacity, latitude, longitude, cover_image, location_badges) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO facilities (type, name, description, capacity, capacity_min, capacity_max, latitude, longitude, cover_image, location_badges, stay_tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       facility,
       `seed facility ${facility[1]}`,
       shouldExecute
@@ -44,9 +85,121 @@ async function seedFacilitiesAndRooms(connection, shouldExecute) {
   for (const room of rooms) {
     await executeOrPrint(
       connection,
-      'INSERT INTO rooms (facility_id, name, description, capacity, cover_image, amenities) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO rooms (facility_id, name, description, capacity, capacity_min, capacity_max, cover_image, amenities, stay_tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       room,
       `seed room ${room[1]}`,
+      shouldExecute
+    );
+  }
+}
+
+async function seedAttractionsAndMenus(connection, shouldExecute) {
+  const docsDir = path.join(__dirname, '..', 'docs');
+  const attractionsDoc = readJsonFile(path.join(docsDir, 'goc-gvozdac-okolina.json'), { atrakcije: [] });
+  const menuDoc = readJsonFile(path.join(docsDir, 'piramida-meni.json'), { meni: {} });
+
+  // Restaurant is seeded first so menu items can reliably reference attraction_id = 1 after TRUNCATE reset.
+  const attractions = [
+    ['restaurant', 'Павиљон Печењара', 'Restoranska ponuda za ručak i porodična okupljanja.', 0.4, 1, true, JSON.stringify(['sunny', 'cloudy', 'rainy', 'cold']), JSON.stringify(['all']), JSON.stringify(['family', 'food']), JSON.stringify(['Ресторан', 'Домаћа кухиња']), placeholder]
+  ];
+
+  const docAttractions = Array.isArray(attractionsDoc.atrakcije) ? attractionsDoc.atrakcije : [];
+  for (const item of docAttractions) {
+    const type = mapAttractionCategoryToType(item.kategorija);
+    const distance = inferDistanceByType(type);
+    attractions.push([
+      type,
+      String(item.ime || 'Atrakcija').trim(),
+      String(item.opis || '').trim(),
+      distance.km,
+      distance.minutes,
+      true,
+      JSON.stringify(inferWeatherTags(type)),
+      JSON.stringify(inferSeasonTags(type)),
+      JSON.stringify(['family', 'walk']),
+      JSON.stringify([String(item.kategorija || 'Sadržaj')]),
+      placeholder
+    ]);
+  }
+
+  if (attractions.length === 1) {
+    attractions.push(
+      ['trail', 'Шумска стаза 10 км', 'Обележена пешачка стаза погодна за породични полудневни излет.', 1.2, 2, true, JSON.stringify(['sunny', 'cloudy']), JSON.stringify(['spring', 'summer', 'autumn']), JSON.stringify(['family', 'walk']), JSON.stringify(['Природа', 'Лагана тура']), placeholder],
+      ['ski', 'Жичара и ски стаза', 'Главни зимски садржај за активни боравак на Гочу.', 2.8, 6, true, JSON.stringify(['snow', 'cold', 'clear']), JSON.stringify(['winter']), JSON.stringify(['family', 'active']), JSON.stringify(['Ски', 'Активности']), placeholder]
+    );
+  }
+
+  for (const attraction of attractions) {
+    await executeOrPrint(
+      connection,
+      'INSERT INTO attractions (type, name, description, distance_km, distance_minutes, family_friendly, weather_tags, season_tags, suitable_for, location_badges, cover_image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      attraction,
+      `seed attraction ${attraction[1]}`,
+      shouldExecute
+    );
+  }
+
+  const attractionTranslations = [
+    [1, 'en', 'Pavilion Grill Restaurant', 'Restaurant offer for lunch and family gatherings.']
+  ];
+
+  for (const translation of attractionTranslations) {
+    await executeOrPrint(
+      connection,
+      'INSERT INTO attraction_translations (entity_id, lang, name, description) VALUES (?, ?, ?, ?)',
+      translation,
+      `seed attraction_translation en #${translation[0]}`,
+      shouldExecute
+    );
+  }
+
+  const menuCategoryMap = {
+    predjela: 'predjelo',
+    supe_i_corbe: 'supa/corba',
+    glavna_jela: 'glavno jelo',
+    prilozi: 'prilog',
+    salate: 'salata',
+    poslastice: 'poslastica',
+    pica: 'piće',
+    kafe: 'kafa',
+    sokovi: 'sok'
+  };
+
+  const menuItems = [];
+  const menuRoot = menuDoc && menuDoc.meni && typeof menuDoc.meni === 'object' ? menuDoc.meni : {};
+
+  for (const [rawCategory, dishes] of Object.entries(menuRoot)) {
+    if (!Array.isArray(dishes)) continue;
+    const categoryLabel = menuCategoryMap[rawCategory] || rawCategory;
+
+    dishes.forEach((dish, index) => {
+      const ingredients = Array.isArray(dish.namernice) ? dish.namernice.join(', ') : '';
+      menuItems.push([
+        1,
+        'sr',
+        categoryLabel,
+        String(dish.ime || 'Jelo').trim(),
+        ingredients ? `Sastav: ${ingredients}.` : '',
+        Number(dish.cena) || null,
+        index + 1
+      ]);
+    });
+  }
+
+  if (!menuItems.length) {
+    menuItems.push(
+      [1, 'sr', 'glavno jelo', 'Домаћа телетина испод сача', 'Tradicionalno glavno jelo za deljenje.', 1890, 1],
+      [1, 'sr', 'dečiji meni', 'Пилећи штапићи са помфритом', 'Jednostavan izbor za mlađe goste.', 790, 2],
+      [1, 'sr', 'dezert', 'Пита од боровнице', 'Lokalni desert uz kafu ili čaj.', 420, 3]
+    );
+  }
+
+  for (const item of menuItems) {
+    await executeOrPrint(
+      connection,
+      'INSERT INTO restaurant_menu_items (attraction_id, lang, category, name, description, price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      item,
+      `seed restaurant menu ${item[3]}`,
       shouldExecute
     );
   }
@@ -200,6 +353,7 @@ async function run() {
     await seedSlides(connection, shouldExecute);
     await seedTranslations(connection, shouldExecute);
     await seedGallery(connection, shouldExecute);
+    await seedAttractionsAndMenus(connection, shouldExecute);
 
     console.log('presentationDBmockData finished.');
     console.log(`Admin credentials for presentation: ${admin.username} / ${admin.password}`);

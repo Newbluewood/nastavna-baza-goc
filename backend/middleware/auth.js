@@ -32,6 +32,26 @@ const guestAuthMiddleware = createAuthMiddleware(
   }
 );
 
+const optionalGuestAuthMiddleware = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) {
+    return next();
+  }
+
+  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return next();
+  }
+
+  jwt.verify(token, process.env.GUEST_JWT_SECRET || 'guest_secret_change_in_production', (err, user) => {
+    if (err) {
+      return next();
+    }
+    req.user = user;
+    next();
+  });
+};
+
 const signGuestToken = (guest) => {
   return jwt.sign(
     { id: guest.id, email: guest.email, name: guest.name },
@@ -43,5 +63,6 @@ const signGuestToken = (guest) => {
 module.exports = {
   adminAuthMiddleware,
   guestAuthMiddleware,
+  optionalGuestAuthMiddleware,
   signGuestToken
 };

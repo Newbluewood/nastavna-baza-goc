@@ -118,6 +118,7 @@ watch(() => langStore.currentLang, () => {
             @click="openLightbox(idx)"
           >
             <img :src="img.image_url" :alt="img.caption || 'Foto'" />
+            <div v-if="img.caption" class="gallery-caption">{{ img.caption }}</div>
           </div>
         </div>
       </div>
@@ -233,6 +234,7 @@ watch(() => langStore.currentLang, () => {
   margin-top: 20px;
 }
 .gallery-item {
+  position: relative;
   height: 150px;
   cursor: pointer;
   overflow: hidden;
@@ -247,6 +249,18 @@ watch(() => langStore.currentLang, () => {
 }
 .gallery-item:hover img {
   transform: scale(1.05);
+}
+
+.gallery-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.42);
+  color: #fff;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  padding: 6px 9px;
 }
 
 @media (max-width: 768px) {

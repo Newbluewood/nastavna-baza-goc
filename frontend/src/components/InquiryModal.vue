@@ -51,6 +51,11 @@
         </div>
         
         <form @submit.prevent="submitForm" class="inquiry-form">
+          <p v-if="isGuestLoggedIn" class="login-note">Ulogovani ste. Ime i email su automatski popunjeni.</p>
+          <div v-if="isGuestLoggedIn" class="guest-summary-box">
+            <p><strong>Ime:</strong> {{ form.sender_name || '-' }}</p>
+            <p><strong>Email:</strong> {{ form.email || '-' }}</p>
+          </div>
           <!-- Novi Kalendar -->
           <div class="form-group">
             <label>{{ langStore.t('inquiry.selectDates') }} *</label>
@@ -66,18 +71,18 @@
             />
           </div>
 
-          <div class="form-group">
+          <div v-if="!isGuestLoggedIn" class="form-group">
             <label>{{ langStore.t('inquiry.fullName') }} *</label>
-            <input type="text" v-model="form.sender_name" required />
+            <input type="text" v-model="form.sender_name" :required="!isGuestLoggedIn" :readonly="isGuestLoggedIn" />
           </div>
           
           <div class="form-group-row">
-            <div class="form-group half">
+            <div v-if="!isGuestLoggedIn" class="form-group half">
               <label>{{ langStore.t('inquiry.email') }} <span style="color:red">*</span></label>
-              <input type="email" v-model="form.email" required :class="{ 'input-error': emailError }" />
+              <input type="email" v-model="form.email" :required="!isGuestLoggedIn" :readonly="isGuestLoggedIn" :class="{ 'input-error': emailError }" />
               <span v-if="emailError" class="field-error">{{ emailError }}</span>
             </div>
-            <div class="form-group half">
+            <div class="form-group" :class="!isGuestLoggedIn ? 'half' : ''">
               <label>{{ langStore.t('inquiry.phone') }}</label>
               <input type="text" v-model="form.phone" />
             </div>
@@ -101,8 +106,9 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useLangStore } from '../stores/lang'
+import { useGuestStore } from '../stores/guest'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import api from '../services/api.js'
@@ -111,11 +117,21 @@ const props = defineProps({
   isOpen: Boolean,
   roomId: Number,
   roomName: String,
-  buildingName: String
+  buildingName: String,
+  initialCheckIn: {
+    type: String,
+    default: ''
+  },
+  initialCheckOut: {
+    type: String,
+    default: ''
+  }
 })
 
 const emit = defineEmits(['update:isOpen'])
 const langStore = useLangStore()
+const guestStore = useGuestStore()
+const isGuestLoggedIn = computed(() => guestStore.isLoggedIn)
 
 const dateRange = ref(null)
 const disabledDates = ref([])
@@ -135,10 +151,35 @@ const newAccount = ref(false)
 // Email validacija
 const emailError = ref('')
 const validateEmail = (email) => {
-  if (!email) return langStore.t('common.error') + ': ' + (langStore.currentLang === 'sr' ? 'Е-пошта је обавезна.' : 'Email is required.')
+  if (!email && !isGuestLoggedIn.value) return langStore.t('common.error') + ': ' + (langStore.currentLang === 'sr' ? 'Е-пошта је обавезна.' : 'Email is required.')
+  if (!email && isGuestLoggedIn.value) return ''
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
   if (!re.test(email)) return langStore.t('common.error') + ': ' + (langStore.currentLang === 'sr' ? 'Унесите исправну е-пошту (нпр. ime@gmail.com)' : 'Enter a valid email (e.g. name@gmail.com)')
   return ''
+}
+
+const prefillFromGuestProfile = async () => {
+  if (!isGuestLoggedIn.value) return
+
+  if (!guestStore.guest) {
+    await guestStore.fetchMe()
+  }
+
+  const guest = guestStore.guest || {}
+  form.value = {
+    ...form.value,
+    sender_name: form.value.sender_name || String(guest.name || ''),
+    email: form.value.email || String(guest.email || ''),
+    phone: form.value.phone || String(guest.phone || '')
+  }
+}
+
+const parseDateOnly = (value) => {
+  if (!value) return null
+  const normalized = String(value).trim().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return null
+  const parsed = new Date(`${normalized}T12:00:00`)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
 const fetchAvailability = async () => {
@@ -174,10 +215,17 @@ const fetchAvailability = async () => {
 }
 
 // Reset form kada se otvori and fetch availability
-watch(() => props.isOpen, (newVal) => {
+watch(() => props.isOpen, async (newVal) => {
   if (newVal) {
     form.value = { sender_name: '', email: '', phone: '', message: '' }
-    dateRange.value = null
+    await prefillFromGuestProfile()
+    const checkInDate = parseDateOnly(props.initialCheckIn)
+    const checkOutDate = parseDateOnly(props.initialCheckOut)
+    if (checkInDate && checkOutDate && checkOutDate >= checkInDate) {
+      dateRange.value = [checkInDate, checkOutDate]
+    } else {
+      dateRange.value = null
+    }
     error.value = ''
     success.value = ''
     fetchAvailability()
@@ -302,6 +350,32 @@ const submitForm = async () => {
   display: flex;
   flex-direction: column;
   gap: 15px;
+}
+
+.login-note {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #c8d6cc;
+  background: #f2f8f3;
+  color: #2f5e3b;
+  font-size: 0.85rem;
+}
+
+.guest-summary-box {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #d7e2db;
+  background: #f9fcfa;
+  color: #2a4734;
+  font-size: 0.84rem;
+}
+
+.guest-summary-box p {
+  margin: 0;
+}
+
+.guest-summary-box p + p {
+  margin-top: 4px;
 }
 
 .form-group {

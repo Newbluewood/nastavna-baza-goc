@@ -1,7 +1,4 @@
-const bcrypt = require('bcryptjs');
-const { formatDate, isAfterDays } = require('../utils/dateUtils');
-const { INQUIRY_STATUS } = require('../config/constants');
-const emailService = require('../services/emailService');
+const { createInquiryWithGuest } = require('../services/inquiryService');
 const { sendError } = require('../utils/response');
 
 const BADGE_TRANSLATIONS = {
@@ -256,67 +253,23 @@ async function getRoomAvailability(req, res) {
 
 async function submitInquiry(req, res) {
   const db = req.app.locals.db;
-  const connection = await db.getConnection();
-
   try {
-    await connection.beginTransaction();
-
-    const { sender_name, email, phone, message, target_room_id, check_in, check_out } = req.validated;
-
-    // Check for overlapping confirmed reservations before creating the inquiry
-    const [conflicts] = await connection.query(`
-      SELECT id FROM reservations
-      WHERE room_id = ? AND status IN ('pending', 'confirmed')
-      AND (
-        (start_date < ? AND end_date > ?) OR
-        (start_date < ? AND end_date > ?) OR
-        (start_date >= ? AND end_date <= ?)
-      )
-      LIMIT 1
-    `, [target_room_id, check_out, check_in, check_out, check_in, check_in, check_out]);
-
-    if (conflicts.length > 0) {
-      return sendError(res, 409, 'Room is not available for the selected dates');
-    }
-
-    let [guests] = await connection.query('SELECT * FROM guests WHERE email = ?', [email]);
-    let guest;
-
-    if (guests.length === 0) {
-      const tempPassword = Math.random().toString(36).slice(-8);
-      const hashedPassword = await bcrypt.hash(tempPassword, 10);
-
-      const [result] = await connection.query(
-        'INSERT INTO guests (name, email, password_hash, created_at) VALUES (?, ?, ?, NOW())',
-        [sender_name, email, hashedPassword]
-      );
-
-      guest = { id: result.insertId, name: sender_name, email, password: tempPassword };
-      await emailService.sendGuestCreated(email, guest);
-    } else {
-      guest = guests[0];
-      await emailService.sendGuestExists(email, { name: guest.name });
-    }
-
-    const [inquiryResult] = await connection.query(`
-      INSERT INTO inquiries (sender_name, email, phone, message, check_in, check_out, target_room_id, status, created_at, guest_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
-    `, [sender_name, email, phone || null, message || null, check_in, check_out, target_room_id, INQUIRY_STATUS.NEW, guest.id]);
-
-    await connection.commit();
-
-    await emailService.sendInquiryReceived(email, { name: guest.name });
+    const result = await createInquiryWithGuest(db, {
+      ...req.validated,
+      guestId: req.user?.id || null,
+      allowExistingGuestByEmail: true
+    });
 
     res.json({
       message: 'Inquiry submitted successfully',
-      inquiryId: inquiryResult.insertId,
-      newAccount: guests.length === 0
+      inquiryId: result.inquiryId,
+      newAccount: result.newAccount
     });
-  } catch (err) {
-    await connection.rollback();
-    throw err;
-  } finally {
-    connection.release();
+  } catch (error) {
+    if (error.code === 'ROOM_UNAVAILABLE') {
+      return sendError(res, 409, error.message);
+    }
+    throw error;
   }
 }
 

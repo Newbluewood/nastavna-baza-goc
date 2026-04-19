@@ -167,7 +167,7 @@ onUnmounted(() => {
         <a v-for="(item, index) in galleryItems" :key="index" href="#" @click.prevent="openLightbox(index)" class="gallery-item-link" style="text-decoration:none; color:inherit; display: block; overflow: hidden; border-radius: 0;">
           <div v-if="item.url" style="width: 100%; height: 150px; position: relative; cursor: pointer;">
             <img :src="item.url" style="width: 100%; height: 100%; object-fit: cover;" />
-            <div v-if="item.name" style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.6); color: #fff; padding: 5px 10px; font-size: 0.8rem;">
+            <div v-if="item.name" style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.42); color: #fff; padding: 5px 10px; font-size: 0.8rem;">
               {{ item.name }}
             </div>
           </div>
@@ -191,7 +191,7 @@ onUnmounted(() => {
   position: absolute;
   bottom: 40px;
   left: 40px;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.66);
   padding: 15px 30px;
   border-radius: 0;
   max-width: calc(100% - 80px);

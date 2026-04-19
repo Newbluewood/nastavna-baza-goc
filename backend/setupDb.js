@@ -72,9 +72,12 @@ async function setup() {
         latitude DECIMAL(10, 8),
         longitude DECIMAL(11, 8),
         capacity VARCHAR(100),
+        capacity_min INT NULL,
+        capacity_max INT NULL,
         cover_image VARCHAR(255),
         floor_plan_image VARCHAR(255),
-        location_badges JSON
+        location_badges JSON,
+        stay_tags JSON
       )
     `);
 
@@ -86,9 +89,12 @@ async function setup() {
         name VARCHAR(255) NOT NULL,
         description TEXT,
         capacity VARCHAR(100),
+        capacity_min INT NULL,
+        capacity_max INT NULL,
         cover_image VARCHAR(255),
         floor_plan_image VARCHAR(255),
         amenities JSON,
+        stay_tags JSON,
         FOREIGN KEY (facility_id) REFERENCES facilities(id) ON DELETE CASCADE
       )
     `);
@@ -213,6 +219,53 @@ async function setup() {
         image_url VARCHAR(255) NOT NULL,
         caption VARCHAR(255),
         sort_order INT DEFAULT 0
+      )
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS attractions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        type VARCHAR(50) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        distance_km DECIMAL(6,2) NULL,
+        distance_minutes INT NULL,
+        family_friendly BOOLEAN DEFAULT TRUE,
+        weather_tags JSON NULL,
+        season_tags JSON NULL,
+        suitable_for JSON NULL,
+        location_badges JSON NULL,
+        cover_image VARCHAR(255),
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS attraction_translations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        entity_id INT NOT NULL,
+        lang VARCHAR(10) NOT NULL,
+        name VARCHAR(255),
+        description TEXT,
+        UNIQUE KEY lang_entity (entity_id, lang),
+        FOREIGN KEY (entity_id) REFERENCES attractions(id) ON DELETE CASCADE
+      )
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS restaurant_menu_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        attraction_id INT NOT NULL,
+        lang VARCHAR(10) NOT NULL DEFAULT 'sr',
+        category VARCHAR(100),
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        price DECIMAL(10,2) NULL,
+        is_available BOOLEAN DEFAULT TRUE,
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (attraction_id) REFERENCES attractions(id) ON DELETE CASCADE
       )
     `);
 

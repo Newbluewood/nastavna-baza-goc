@@ -1,6 +1,37 @@
 const { INQUIRY_STATUS } = require('../config/constants');
 const emailService = require('../services/emailService');
+const chatMetricsService = require('../services/chatMetricsService');
 const { sendError } = require('../utils/response');
+
+function sanitizeGalleryItems(items) {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items
+    .map((item, index) => ({
+      image_url: String(item?.image_url || '').trim(),
+      caption: String(item?.caption || '').trim(),
+      sort_order: Number.isFinite(Number(item?.sort_order)) ? Number(item.sort_order) : index + 1
+    }))
+    .filter((item) => item.image_url)
+    .slice(0, 20);
+}
+
+async function replaceNewsGallery(connection, newsId, galleryItems) {
+  await connection.query(
+    "DELETE FROM media_gallery WHERE entity_type = 'news' AND entity_id = ?",
+    [newsId]
+  );
+
+  const sanitized = sanitizeGalleryItems(galleryItems);
+  for (const item of sanitized) {
+    await connection.query(
+      'INSERT INTO media_gallery (entity_type, entity_id, image_url, caption, sort_order) VALUES (?, ?, ?, ?, ?)',
+      ['news', newsId, item.image_url, item.caption || null, item.sort_order]
+    );
+  }
+}
 
 async function getInquiries(req, res) {
   const db = req.app.locals.db;
@@ -277,7 +308,7 @@ async function createNews(req, res) {
   try {
     await connection.beginTransaction();
 
-    const { title, excerpt, content, cover_image, title_en, excerpt_en, content_en } = req.body;
+    const { title, excerpt, content, cover_image, title_en, excerpt_en, content_en, gallery } = req.body;
 
     const baseSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     let slug = baseSlug;
@@ -304,6 +335,8 @@ async function createNews(req, res) {
         VALUES (?, 'en', ?, ?, ?)
       `, [result.insertId, title_en || null, excerpt_en || null, content_en || null]);
     }
+
+    await replaceNewsGallery(connection, result.insertId, gallery);
 
     await connection.commit();
 
@@ -367,7 +400,18 @@ async function getAdminNewsById(req, res) {
     return sendError(res, 404, 'News not found');
   }
 
-  res.json(rows[0]);
+  const [gallery] = await db.query(
+    `SELECT id, image_url, caption, sort_order
+     FROM media_gallery
+     WHERE entity_type = 'news' AND entity_id = ?
+     ORDER BY sort_order ASC, id ASC`,
+    [newsId]
+  );
+
+  res.json({
+    ...rows[0],
+    gallery
+  });
 }
 
 async function updateNews(req, res) {
@@ -378,7 +422,7 @@ async function updateNews(req, res) {
     await connection.beginTransaction();
 
     const newsId = req.params.id;
-    const { title, excerpt, content, cover_image, title_en, excerpt_en, content_en } = req.body;
+    const { title, excerpt, content, cover_image, title_en, excerpt_en, content_en, gallery } = req.body;
 
     const [exists] = await connection.query('SELECT id FROM news WHERE id = ?', [newsId]);
     if (exists.length === 0) {
@@ -406,6 +450,8 @@ async function updateNews(req, res) {
         [newsId]
       );
     }
+
+    await replaceNewsGallery(connection, newsId, gallery);
 
     await connection.commit();
 
@@ -502,6 +548,78 @@ async function addVoucher(req, res) {
   res.json({ message: 'Voucher created successfully', voucherId });
 }
 
+function inferCapacityType(capacityStr, capacityMax) {
+  if (capacityMax) {
+    if (capacityMax <= 1) return 'single';
+    if (capacityMax <= 2) return 'double';
+    if (capacityMax <= 3) return 'triple';
+    return 'multi';
+  }
+  if (!capacityStr) return 'multi';
+  const s = capacityStr.toLowerCase();
+  // Handle Cyrillic and Latin
+  if (/\b1\b/.test(s) && (s.includes('особ') || s.includes('os') || s.includes('jednokrevet') || s.includes('jednokreветн'))) return 'single';
+  if (/\b2\b/.test(s)) return 'double';
+  if (/\b3\b/.test(s)) return 'triple';
+  if (/jednokrevetna|jednokrevet|1 особ/i.test(s)) return 'single';
+  if (/dvokrevetna|dvokrevet|2 особ/i.test(s)) return 'double';
+  if (/trokrevetna|trokrevet|3 особ/i.test(s)) return 'triple';
+  return 'multi';
+}
+
+async function getRoomMap(req, res) {
+  const db = req.app.locals.db;
+  const date = req.query.date || new Date().toISOString().split('T')[0];
+
+  const [facilities] = await db.query(`
+    SELECT id, name FROM facilities WHERE type = 'smestaj' ORDER BY id
+  `);
+
+  const [rooms] = await db.query(`
+    SELECT r.id, r.facility_id, r.name, r.capacity, r.capacity_max,
+           res.id AS res_id, res.start_date, res.end_date,
+           COALESCE(i.sender_name, g.name, res.guest_name) AS guest_display_name,
+           COALESCE(i.email, g.email) AS guest_email
+    FROM rooms r
+    LEFT JOIN reservations res
+      ON res.room_id = r.id
+      AND res.status != 'cancelled'
+      AND res.start_date <= ? AND res.end_date > ?
+    LEFT JOIN inquiries i ON i.id = res.inquiry_id
+    LEFT JOIN guests g ON g.id = i.guest_id
+    ORDER BY r.facility_id, r.id
+  `, [date, date]);
+
+  const facilityMap = {};
+  for (const f of facilities) {
+    facilityMap[f.id] = { id: f.id, name: f.name, rooms: [] };
+  }
+
+  for (const room of rooms) {
+    if (!facilityMap[room.facility_id]) continue;
+    facilityMap[room.facility_id].rooms.push({
+      id: room.id,
+      name: room.name,
+      capacity: room.capacity,
+      capacity_type: inferCapacityType(room.capacity, room.capacity_max),
+      is_occupied: !!room.res_id,
+      reservation: room.res_id ? {
+        check_in: room.start_date,
+        check_out: room.end_date,
+        guest_name: room.guest_display_name || '—',
+        guest_email: room.guest_email || null
+      } : null
+    });
+  }
+
+  res.json({ date, facilities: Object.values(facilityMap) });
+}
+
+async function getChatMetrics(req, res) {
+  const snapshot = chatMetricsService.getSnapshot();
+  return res.json(snapshot);
+}
+
 module.exports = {
   getInquiries,
   getInquiryActivity,
@@ -512,5 +630,7 @@ module.exports = {
   updateNews,
   deleteNews,
   getGuests,
-  addVoucher
+  addVoucher,
+  getRoomMap,
+  getChatMetrics
 };
