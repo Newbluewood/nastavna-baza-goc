@@ -494,11 +494,11 @@ function extractPreferences(message, context) {
 
 function buildFollowUpQuestion(criteria) {
   if (!criteria.adults && !criteria.children) {
-    return 'Koliko dolazi odraslih i koliko dece?';
+    return 'Колико долази одраслих и колико деце?';
   }
   if (!criteria.check_in) {
     if (criteria.arrival_hint === 'next_week') {
-      return 'Koji vam tačno datum dolaska sledeće nedelje odgovara? Pošaljite datum u formatu YYYY-MM-DD.';
+      return 'Који вам тачно датум доласка следеће недеље одговара? Пошаљите датум у формату YYYY-MM-DD.';
     }
     if (criteria.arrival_hint?.startsWith('month_')) {
       const monthLabel = criteria.arrival_hint.replace('month_', '');
@@ -509,14 +509,14 @@ function buildFollowUpQuestion(criteria) {
       };
       const year = new Date().getFullYear();
       const example = `${year}-${MONTH_EXAMPLE[monthLabel] || '08-15'}`;
-      return `Važi, ${monthLabel}! Koji tačan datum u tom mesecu planirate dolazak? (npr. ${example})`;
+      return `Важи, ${monthLabel}! Који тачан датум у том месецу планирате долазак? (нпр. ${example})`;
     }
-    return 'Koji vam je tačan datum dolaska? Pošaljite datum u formatu YYYY-MM-DD.';
+    return 'Који вам је тачан датум доласка? Пошаљите датум у формату YYYY-MM-DD.';
   }
   if (!criteria.stay_length_days) {
-    return 'Koliko dana želite da ostanete?';
+    return 'Колико дана желите да останете?';
   }
-  return 'Recite mi još samo broj gostiju i termin pa mogu da predložim konkretan smeštaj.';
+  return 'Реците ми још само број гостију и термин па могу да предложим конкретан смештај.';
 }
 
 function getPendingSlot(criteria) {
@@ -549,19 +549,19 @@ function roomFitsGuestCount(room, totalGuests) {
 function buildRationale(item, criteria) {
   const reasons = [];
   if (criteria.preferences.family && item.familyFriendly) {
-    reasons.push('pogodno za porodični boravak');
+    reasons.push('погодно за породични боравак');
   }
   if (criteria.preferences.quiet && item.quietFriendly) {
-    reasons.push('mirnija lokacija');
+    reasons.push('мирнија локација');
   }
   if (criteria.preferences.nearRestaurant && item.restaurantNearby) {
-    reasons.push('blizina restoranske ponude');
+    reasons.push('близина ресторанске понуде');
   }
   if (criteria.preferences.ski && item.skiNearby) {
-    reasons.push('pristup ski sadržajima');
+    reasons.push('приступ ски садржајима');
   }
   if (!reasons.length) {
-    reasons.push('kapacitet odgovara traženom sastavu gostiju');
+    reasons.push('капацитет одговара траженом саставу гостију');
   }
   return reasons;
 }
@@ -784,8 +784,8 @@ async function planStay(db, payload) {
       rationale: item.rationale
     })),
     next_actions: [
-      'Zelite li da vam posle pregleda smestaja dam i predloge obilaska prema vremenu?',
-      'Ako vam neki od predloga odgovara, mogu da pokrenem rezervaciju za tu sobu.'
+      'Желите ли да вам после прегледа смештаја дам и предлоге обиласка према времену?',
+      'Ако вам неки од предлога одговара, могу да покренем резервацију за ту собу.'
     ]
   };
 }

@@ -67,10 +67,10 @@ function getReminderByStrikes(strikes) {
   if (strikes < config.warnThreshold) return null;
 
   if (strikes < config.reminderThreshold) {
-    return 'Mogu da pomognem oko boravka u Nastavnoj bazi Goc: smestaj, aktivnosti, restoran i dolazak.';
+    return 'Могу да помогнем око боравка у Наставној бази Гоч: смештај, активности, ресторан и долазак.';
   }
 
-  return 'Tu sam za pitanja vezana za Nastavnu bazu Goc — smestaj, rezervacije, obilazak i restoran.';
+  return 'Ту сам за питања везана за Наставну базу Гоч — смештај, резервације, обилазак и ресторан.';
 }
 
 /**

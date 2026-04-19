@@ -27,7 +27,7 @@ async function planStayChat(req, res) {
 
     return res.json({
       status: 'blocked',
-      assistant_message: 'Ne mogu da pomognem sa tim zahtevom. Pitajte me o smeštaju, aktivnostima ili restoranu na Goču.',
+      assistant_message: 'Не могу да помогнем са тим захтевом. Питајте ме о смештају, активностима или ресторану на Гочу.',
       assistant_provider_mode: 'guard',
       criteria: payload?.context || {},
       suggestions: [],

@@ -272,26 +272,26 @@ function buildSystemPrompt(lang = 'sr') {
   const isSr = lang !== 'en';
   return isSr
     ? [
-      'Ti si prijateljski asistent za Nastavnu bazu Goč — planinsku bazu za odmor, edukaciju i rekreaciju na planini Goč kod Vrnjačke Banje.',
+      'Ти си пријатељски асистент за Наставну базу Гоч — планинску базу за одмор, едукацију и рекреацију на планини Гоч код Врњачке Бање.',
       '',
-      'PRAVILA:',
-      '- Imaš pristup ŽIVIM podacima o slobodnim sobama i cenama. Koristi ih!',
-      '- Ako korisnik traži smeštaj, a nedostaju mu podaci (broj osoba, datum, dužina boravka) — pitaj ga prirodno za podatak koji nedostaje. NE šalji ga na telefon ili mejl.',
-      '- Ako su u kontekstu navedene slobodne sobe — obavezno ih pomeni i ponudi opcije.',
-      '- Ako korisnik pita o cenama, daj konkretne cifre iz konteksta (cene noćenja, hrane, aktivnosti).',
-      '- Ako korisnik pita o hrani/meniju, prikaži konkretna jela i cene iz konteksta.',
-      '- Ako korisnik pita o aktivnostima, opisuj atrakcije iz konteksta.',
-      '- Budi prirodan, prijateljski i sažet (do 80 reči).',
-      '- Ako nemaš podatke za pitanje, reci iskreno.',
-      '- Piši na srpskom latiničnom pismu.',
-      '- Odgovaraj kao čovek, ne kao robot.',
-      '- NIKAD ne reci korisniku da "nemaš real-time informacije" — ti ih IMAŠ u kontekstu.',
+      'ПРАВИЛА:',
+      '- Имаш приступ ЖИВИМ подацима о слободним собама и ценама. Користи их!',
+      '- Ако корисник тражи смештај, а недостају му подаци (број особа, датум, дужина боравка) — питај га природно за податак који недостаје. НЕ шаљи га на телефон или мејл.',
+      '- Ако су у контексту наведене слободне собе — обавезно их помени и понуди опције.',
+      '- Ако корисник пита о ценама, дај конкретне цифре из контекста (цене ноћења, хране, активности).',
+      '- Ако корисник пита о храни/менију, прикажи конкретна јела и цене из контекста.',
+      '- Ако корисник пита о активностима, описуј атракције из контекста.',
+      '- Буди природан, пријатељски и сажет (до 80 речи).',
+      '- Ако немаш податке за питање, реци искрено.',
+      '- Пиши на српском ћириличном писму.',
+      '- Одговарај као човек, не као робот.',
+      '- НИКАД не реци кориснику да "немаш real-time информације" — ти их ИМАШ у контексту.',
       '',
-      'REZERVACIJA:',
-      '- Kad korisnik ima sve podatke (osobe, datum, noći), sistem automatski prikazuje kartice sa sobama i dugmetom "Rezerviši". NE traži kontakt podatke — to radi forma automatski.',
-      '- NIKAD ne pitaj za ime, email, telefon — to popunjava rezervacioni formular.',
-      '- Ako korisnik kaže "rezerviši" ili "želim da rezervišem", reci mu da klikne dugme "Rezerviši" na kartici sobe koja mu odgovara.',
-      '- Tvoja uloga je da pomogneš u izboru sobe, NE da prikupljaš podatke za rezervaciju.'
+      'РЕЗЕРВАЦИЈА:',
+      '- Кад корисник има све податке (особе, датум, ноћи), систем аутоматски приказује картице са собама и дугметом "Резервиши". НЕ тражи контакт податке — то ради форма аутоматски.',
+      '- НИКАД не питај за име, email, телефон — то попуњава резервациони формулар.',
+      '- Ако корисник каже "резервиши" или "желим да резервишем", реци му да кликне дугме "Резервиши" на картици собе која му одговара.',
+      '- Твоја улога је да помогнеш у избору собе, НЕ да прикупљаш податке за резервацију.'
     ].join('\n')
     : [
       'You are a friendly assistant for Nastavna Baza Goč — a mountain lodge for rest, education and recreation on Goč mountain near Vrnjačka Banja, Serbia.',
@@ -328,44 +328,44 @@ function buildUserPrompt(message, facts, roomResults, context, history) {
     const factsStr = facts
       .map((f, i) => `${i + 1}. ${formatFactForPrompt(f)}`)
       .join('\n');
-    parts.push(`Podaci iz baze:\n${factsStr}`);
+    parts.push(`Подаци из базе:\n${factsStr}`);
   }
 
   if (roomResults?.suggestions?.length > 0) {
     const rooms = roomResults.suggestions.map(s =>
-      `- ${s.facility_name} / ${s.room_name} (kapacitet: ${s.room_capacity_min || '?'}–${s.room_capacity_max || '?'}, ${s.is_recommended ? 'PREPORUČENO' : 'dostupno'})`
+      `- ${s.facility_name} / ${s.room_name} (\u043a\u0430\u043f\u0430\u0446\u0438\u0442\u0435\u0442: ${s.room_capacity_min || '?'}\u2013${s.room_capacity_max || '?'}, ${s.is_recommended ? '\u041f\u0420\u0415\u041f\u041e\u0420\u0423\u0427\u0415\u041d\u041e' : '\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e'})`
     ).join('\n');
-    parts.push(`SLOBODNE SOBE za traženi termin (ŽIVI podaci iz baze):\n${rooms}\nOve sobe su stvarno slobodne — pomeni ih korisniku. Sistem automatski prikazuje kartice sa dugmetom "Rezerviši" — NE traži kontakt podatke.`);
+    parts.push(`СЛОБОДНЕ СОБЕ за тражени термин (ЖИВИ подаци из базе):\n${rooms}\nОве собе су стварно слободне — помени их кориснику. Систем аутоматски приказује картице са дугметом "Резервиши" — НЕ тражи контакт податке.`);
   } else if (roomResults?.status === 'needs_input' && roomResults?.missing) {
     const missingLabels = {
-      guest_breakdown: 'broj osoba (odrasli i deca)',
-      check_in: 'datum dolaska',
-      stay_length_days: 'koliko dana/noći žele da ostanu'
+      guest_breakdown: 'број особа (одрасли и деца)',
+      check_in: 'датум доласка',
+      stay_length_days: 'колико дана/ноћи желе да остану'
     };
     const missingList = Object.entries(roomResults.missing)
       .filter(([, v]) => v)
       .map(([k]) => missingLabels[k] || k)
       .join(', ');
     if (missingList) {
-      parts.push(`NEDOSTAJE za pretragu slobodnih soba: ${missingList}.\nPitaj korisnika prirodno za ono što nedostaje. NE šalji ga na telefon.`);
+      parts.push(`НЕДОСТАЈЕ за претрагу слободних соба: ${missingList}.\nПитај корисника природно за оно што недостаје. НЕ шаљи га на телефон.`);
     }
   }
 
   if (context && (context.adults || context.check_in || context.stay_length_days)) {
     const known = {};
-    if (context.adults) known.odrasli = context.adults;
-    if (context.children) known.deca = context.children;
-    if (context.check_in) known.dolazak = context.check_in;
-    if (context.stay_length_days) known.broj_dana = context.stay_length_days;
-    parts.push(`Poznati podaci o gostu: ${JSON.stringify(known)}`);
+    if (context.adults) known.одрасли = context.adults;
+    if (context.children) known.деца = context.children;
+    if (context.check_in) known.долазак = context.check_in;
+    if (context.stay_length_days) known.број_дана = context.stay_length_days;
+    parts.push(`Познати подаци о госту: ${JSON.stringify(known)}`);
   }
 
   if (Array.isArray(history) && history.length > 0) {
     const historyStr = history.slice(-3).map(h => `${h.role}: ${h.text}`).join('\n');
-    parts.push(`Prethodne poruke:\n${historyStr}`);
+    parts.push(`Претходне поруке:\n${historyStr}`);
   }
 
-  parts.push(`Korisnikova poruka: ${message}`);
+  parts.push(`Корисникова порука: ${message}`);
 
   return parts.join('\n\n');
 }
@@ -376,7 +376,7 @@ function getLocalChatFallback(message, facts, roomResults) {
   if (roomResults?.suggestions?.length > 0) {
     const roomNames = roomResults.suggestions.slice(0, 3)
       .map(s => `${s.facility_name} / ${s.room_name}`).join(', ');
-    return `Pronašao sam slobodne sobe: ${roomNames}. Kliknite "Rezerviši" na kartici koja vam odgovara.`;
+    return `Пронашао сам слободне собе: ${roomNames}. Кликните "Резервиши" на картици која вам одговара.`;
   }
 
   if (facts.length > 0) {
@@ -384,17 +384,17 @@ function getLocalChatFallback(message, facts, roomResults) {
       .map(f => f.name || f.ime || f.question || f.type || f.item)
       .filter(Boolean);
     if (names.length > 0) {
-      return `Evo šta imam iz naše ponude: ${names.join(', ')}. Pitajte me za detalje.`;
+      return `Ево шта имам из наше понуде: ${names.join(', ')}. Питајте ме за детаље.`;
     }
   }
 
   if (roomResults?.status === 'needs_input' && roomResults?.missing) {
-    if (roomResults.missing.guest_breakdown) return 'Koliko vas dolazi? (broj odraslih i dece)';
-    if (roomResults.missing.check_in) return 'Koji datum dolaska planirate?';
-    if (roomResults.missing.stay_length_days) return 'Koliko dana/noći želite da ostanete?';
+    if (roomResults.missing.guest_breakdown) return 'Колико вас долази? (број одраслих и деце)';
+    if (roomResults.missing.check_in) return 'Који датум доласка планирате?';
+    if (roomResults.missing.stay_length_days) return 'Колико дана/ноћи желите да останете?';
   }
 
-  return 'Mogu da pomognem oko smeštaja, aktivnosti, restorana i svega vezanog za Nastavnu bazu Goč. Pitajte slobodno!';
+  return 'Могу да помогнем око смештаја, активности, ресторана и свега везаног за Наставну базу Гоч. Питајте слободно!';
 }
 
 // ─── AIService Class ───

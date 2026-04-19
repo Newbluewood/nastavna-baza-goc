@@ -33,7 +33,7 @@ const messages = ref([
   {
     role: 'assistant',
     type: 'text',
-    text: 'Zdravo! Pomazem oko smestaja na Gocu. Napisite broj osoba, termin i koliko dana zelite da ostanete.'
+    text: 'Здраво! Помажем око смештаја на Гочу. Напишите број особа, термин и колико дана желите да останете.'
   }
 ])
 
@@ -104,11 +104,11 @@ function pushAssistantText(text) {
 
 function summarizeSuggestions(items) {
   if (!Array.isArray(items) || !items.length) {
-    return 'Nemam raspolozive predloge za trazeni period, ali mogu da ponudim alternativu datuma.'
+    return 'Немам расположиве предлоге за тражени период, али могу да понудим алтернативу датума.'
   }
 
   const names = items.map((item) => `${item.facility_name} / ${item.room_name}`).join('; ')
-  return `Predlazem: ${names}. Ako zelite, mogu da suzim izbor po vasim prioritetima.`
+  return `Предлажем: ${names}. Ако желите, могу да сузим избор по вашим приоритетима.`
 }
 
 function pickAssistantMessage(result) {
@@ -177,7 +177,7 @@ function buildInquiryTargetRoute(item, payload) {
 
 function navigateToInquiry(targetRoute) {
   if (!targetRoute) {
-    pushAssistantText('Ne mogu da otvorim formu za ovaj predlog. Posaljite novi upit pa pokusajte ponovo.')
+    pushAssistantText('Не могу да отворим форму за овај предлог. Пошаљите нови упит па покушајте поново.')
     return
   }
 
@@ -216,7 +216,7 @@ async function sendMessage() {
     const aiMessage = pickAssistantMessage(result)
 
     if (result?.status === 'blocked') {
-      pushAssistantText(aiMessage || 'Ovde sam za pitanja o smestaju i rezervaciji Nastavne baze Goc.')
+      pushAssistantText(aiMessage || 'Овде сам за питања о смештају и резервацији Наставне базе Гоч.')
       return
     }
 
@@ -235,13 +235,13 @@ async function sendMessage() {
     } else if (aiMessage) {
       pushAssistantText(aiMessage)
     } else {
-      pushAssistantText('Pitajte me o smestaju, aktivnostima, restoranu ili bilo cemu vezanom za Goc.')
+      pushAssistantText('Питајте ме о смештају, активностима, ресторану или било чему везаном за Гоч.')
     }
   } catch (error) {
     if (error.status === 429 && error.retryAfter) {
-      pushAssistantText(`Previše poruka u kratkom roku. Možete nastaviti za ${error.retryAfter} sekundi.`)
+      pushAssistantText(`Превише порука у кратком року. Можете наставити за ${error.retryAfter} секунди.`)
     } else {
-      pushAssistantText(error?.data?.error || error.message || 'Chat servis trenutno nije dostupan.')
+      pushAssistantText(error?.data?.error || error.message || 'Chat сервис тренутно није доступан.')
     }
   } finally {
     busy.value = false
@@ -250,7 +250,7 @@ async function sendMessage() {
 
 function askForReservation(item, criteria = null) {
   if (!item || !item.room_id) {
-    pushAssistantText('Ne mogu da pokrenem rezervaciju za ovaj predlog. Posaljite novi upit pa pokusavamo ponovo.')
+    pushAssistantText('Не могу да покренем резервацију за овај предлог. Пошаљите нови упит па покушавамо поново.')
     return
   }
 
@@ -264,7 +264,7 @@ function askForReservation(item, criteria = null) {
   }
 
   if (!payload.check_in || !payload.check_out) {
-    pushAssistantText('Nedostaje termin za rezervaciju. Napisite ponovo datum dolaska i broj dana pa cu odmah pokrenuti rezervaciju.')
+    pushAssistantText('Недостаје термин за резервацију. Напишите поново датум доласка и број дана па ћу одмах покренути резервацију.')
     return
   }
 
@@ -316,7 +316,7 @@ function clearChat() {
     {
       role: 'assistant',
       type: 'text',
-      text: 'Zdravo! Pomazem oko smestaja na Gocu. Napisite broj osoba, termin i koliko dana zelite da ostanete.'
+      text: 'Здраво! Помажем око смештаја на Гочу. Напишите број особа, термин и колико дана желите да останете.'
     }
   ]
   context.value = {
@@ -337,12 +337,12 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
   const cardKey = `${facilityId}-${roomId}`
 
   if (!facilityId) {
-    pushAssistantText('Za ovaj predlog nedostaju podaci o objektu. Posaljite novi upit za osvezene predloge.')
+    pushAssistantText('За овај предлог недостају подаци о објекту. Пошаљите нови упит за освежене предлоге.')
     return
   }
 
   if (busy.value) {
-    pushAssistantText('Sacekajte da zavrsim prethodni zahtev pa odmah dajem predloge obilaska.')
+    pushAssistantText('Сачекајте да завршим претходни захтев па одмах дајем предлоге обиласка.')
     return
   }
 
@@ -351,7 +351,7 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
 
   const effectiveCheckIn = checkIn || context.value.check_in
   if (!effectiveCheckIn) {
-    pushAssistantText('Nedostaje datum dolaska za predlog obilaska. Napisite datum pa nastavljamo.')
+    pushAssistantText('Недостаје датум доласка за предлог обиласка. Напишите датум па настављамо.')
     return
   }
 
@@ -374,7 +374,7 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
       [cardKey]: result.suggestions || []
     }
   } catch (error) {
-    pushAssistantText(error?.data?.error || error?.message || 'Predlozi obilaska trenutno nisu dostupni.')
+    pushAssistantText(error?.data?.error || error?.message || 'Предлози обиласка тренутно нису доступни.')
   } finally {
     busy.value = false
   }
@@ -387,14 +387,14 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
       class="stay-assistant-toggle"
       :class="{ 'is-open': isOpen }"
       @click="isOpen = !isOpen"
-      :aria-label="isOpen ? 'Zatvori asistenta' : 'Otvori asistenta za smestaj'"
-      :title="isOpen ? 'Zatvori asistenta' : 'Asistent za smestaj'"
+      :aria-label="isOpen ? 'Затвори асистента' : 'Отвори асистента за смештај'"
+      :title="isOpen ? 'Затвори асистента' : 'Асистент за смештај'"
     >
       <template v-if="!isOpen">
         <img src="/buble-chat.png" alt="Chat" class="chat-bubble-icon" />
       </template>
       <template v-else>
-        Zatvori asistenta
+        Затвори асистента
       </template>
     </button>
 
@@ -402,17 +402,17 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
       <div class="stay-assistant-head">
         <div class="stay-assistant-head-top">
           <div>
-            <strong>Asistent za smestaj</strong>
-            <small>Nastavna baza Goc</small>
+            <strong>Асистент за смештај</strong>
+            <small>Наставна база Гоч</small>
           </div>
           <button
             type="button"
             class="stay-clear-btn"
             @click="clearChat"
-            title="Očisti razgovor i počni ispočetka"
-            aria-label="Očisti chat"
+            title="Очисти разговор и почни испочетка"
+            aria-label="Очисти чат"
           >
-            Novi chat
+            Нови чат
           </button>
         </div>
       </div>
@@ -431,14 +431,14 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
               :key="`${item.facility_id}-${item.room_id}`"
               :class="['stay-card', { 'is-recommended': item.is_recommended }]"
             >
-              <span v-if="item.is_recommended" class="recommend-badge">Preporuka za Vas</span>
+              <span v-if="item.is_recommended" class="recommend-badge">Препорука за Вас</span>
               <strong>{{ item.facility_name }}</strong>
               <span>{{ item.room_name }}</span>
               <small>{{ item.rationale?.join(', ') }}</small>
 
               <div class="stay-card-actions">
-                <button type="button" @click="loadVisitSuggestions(item.facility_id, item.room_id, msg.criteria?.check_in)">Predlozi obilazak</button>
-                <button type="button" class="reserve-btn" @click="askForReservation(item, msg.criteria)">Rezervisi</button>
+                <button type="button" @click="loadVisitSuggestions(item.facility_id, item.room_id, msg.criteria?.check_in)">Предложи обилазак</button>
+                <button type="button" class="reserve-btn" @click="askForReservation(item, msg.criteria)">Резервиши</button>
               </div>
 
               <ul v-if="visitsByCard[`${item.facility_id}-${item.room_id}`]?.length" class="visit-list">
@@ -457,22 +457,22 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
           ref="inputEl"
           v-model="inputText"
           type="text"
-          placeholder="Npr. Dolazimo sledece nedelje, 2 odraslih i 2 dece na 3 dana"
+          placeholder="Нпр. Долазимо следеће недеље, 2 одраслих и 2 деце на 3 дана"
           @keyup.enter="sendMessage"
         />
-        <button type="button" @click="sendMessage" :disabled="!canSend">Posalji</button>
+        <button type="button" @click="sendMessage" :disabled="!canSend">Пошаљи</button>
       </div>
     </div>
 
     <Teleport to="body">
       <div v-if="pendingReserve && !hasGuestToken()" class="reserve-modal-overlay" @click.self="closeReservationModal">
         <div class="reserve-modal" role="dialog" aria-modal="true" aria-label="Izbor toka za rezervaciju">
-          <button type="button" class="reserve-modal-close" @click="closeReservationModal" aria-label="Zatvori">✕</button>
-          <strong>Nastavak rezervacije</strong>
-          <small>Za nastavak koristimo standardnu formu za rezervaciju. Da li imate nalog?</small>
+          <button type="button" class="reserve-modal-close" @click="closeReservationModal" aria-label="Затвори">✕</button>
+          <strong>Наставак резервације</strong>
+          <small>За наставак користимо стандардну форму за резервацију. Да ли имате налог?</small>
           <div class="reserve-form-actions">
-            <button type="button" @click="goToLogin">Imam nalog</button>
-            <button type="button" class="ghost-btn" @click="continueWithoutAccount">Nemam nalog</button>
+            <button type="button" @click="goToLogin">Имам налог</button>
+            <button type="button" class="ghost-btn" @click="continueWithoutAccount">Немам налог</button>
           </div>
         </div>
       </div>
