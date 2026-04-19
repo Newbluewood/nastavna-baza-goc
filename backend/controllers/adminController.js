@@ -601,6 +601,7 @@ async function getRoomMap(req, res) {
       id: room.id,
       name: room.name,
       capacity: room.capacity,
+      capacity_max: room.capacity_max || 1,
       capacity_type: inferCapacityType(room.capacity, room.capacity_max),
       is_occupied: !!room.res_id,
       reservation: room.res_id ? {

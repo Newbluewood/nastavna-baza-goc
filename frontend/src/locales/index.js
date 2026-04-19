@@ -9,12 +9,14 @@ export default {
       contact: 'КОНТАКТ'
     },
     footer: {
-      faculty: 'Шумарски факултет',
-      university: 'Универзитета у Београду',
-      address: 'Кнеза Вишеслава 1',
-      city: '11 000 Београд, Србија',
+      faculty: 'Наставна база Гоч–Гвоздац',
+      university: 'Шумарски факултет, Универзитет у Београду',
+      address: 'Гоч–Гвоздац, Врњачка Бања',
+      city: 'Србија',
       phone: 'Телефон',
       email: 'Е-маил',
+      contact_email: 'info@gvozdac.rs',
+      contact_phone: '+381 36 123 456',
       credits: 'сајт | Небојша Симовић<br>мултимедија | Јован Митровић'
     },
     common: {
@@ -63,12 +65,14 @@ export default {
       contact: 'CONTACT'
     },
     footer: {
-      faculty: 'Faculty of Forestry',
-      university: 'University of Belgrade',
-      address: 'Kneza Višeslava 1',
-      city: '11 000 Belgrade, Serbia',
+      faculty: 'Teaching Base Goč–Gvozdac',
+      university: 'Faculty of Forestry, University of Belgrade',
+      address: 'Goč–Gvozdac, Vrnjačka Banja',
+      city: 'Serbia',
       phone: 'Phone',
       email: 'Email',
+      contact_email: 'info@gvozdac.rs',
+      contact_phone: '+381 36 123 456',
       credits: 'website | Nebojša Simović<br>multimedia | Jovan Mitrović'
     },
     common: {

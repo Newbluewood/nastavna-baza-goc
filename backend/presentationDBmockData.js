@@ -250,9 +250,13 @@ async function seedAttractionsAndMenus(connection, shouldExecute) {
 
 async function seedNews(connection, shouldExecute) {
   const newsItems = [
-    ['Нова презентација базе', 'Освежен први утисак за клијентску демонстрацију.', 'Ово је демонстрациони садржај вести за први пролаз кроз систем.', placeholder, 'nova-prezentacija-baze'],
-    ['Смештајни капацитети спремни', 'Демо објекти и собе су попуњени placeholder садржајем.', 'Садржај служи искључиво за презентацију UI и основних токова.', placeholder, 'smestajni-kapaciteti-spremni'],
-    ['Радни ток резервација', 'Клијенту може да се покаже од почетног упита до административне обраде.', 'Текст је пример и треба га заменити стварним садржајем пре производне употребе.', placeholder, 'radni-tok-rezervacija']
+    ['Посета студената из иностранства', 'Група од 25 студената шумарства из Аустрије и Немачке провела је недељу дана на Гочу.', 'У оквиру програма међународне размене, студенти су учествовали у теренској настави, обишли истраживачке парцеле и упознали се са биодиверзитетом Гоча. Посета је организована у сарадњи са BOKU универзитетом из Беча и укључивала је радионице о одрживом управљању шумама.', placeholder, 'poseta-studenata-iz-inostranstva'],
+    ['Пећењара поново ради', 'Обновљен павиљон пећењаре — спреман за нову сезону.', 'Након темељне реконструкције, павиљон пећењара је поново отворен за госте и посетиоце. Нови ростиљ и проширен простор за седење омогућавају пријем већих група. Домаћа телетина испод сача остаје наша специјалност.', placeholder, 'pecenjara-ponovo-radi'],
+    ['Пројекат изградње надстрешница', 'Завршена прва фаза изградње надстрешница на стазама око базе.', 'Нове дрвене надстрешнице постављене су на три кључне тачке планинарских стаза — код видиковца Крст, на Великој пољани и код улаза у резерват. Пројекат финансира Шумарски факултет у сарадњи са општином Врњачка Бања.', placeholder, 'projekat-nadstresnica'],
+    ['Покренут нови веб-сајт базе', 'Наставна база Гоч–Гвоздац добила је нови веб-сајт са системом за резервације.', 'Нови сајт омогућава преглед смештајних капацитета, онлајн упите за резервацију, праћење статуса и AI асистента за помоћ гостима. Сајт је развијен у сарадњи са Шумарским факултетом.', placeholder, 'pokrenut-novi-sajt'],
+    ['Зимска сезона скијања отворена', 'Ски стазе на Гочу спремне — почиње сезона 2025/26.', 'Две ски стазе дужине 1200 метара и 800 метара су уређене и спремне за скијаше свих нивоа. Ноћно скијање доступно петком и суботом. Ски опрема се може изнајмити на лицу места.', placeholder, 'zimska-sezona-skijanja'],
+    ['Едукативни камп за децу', 'Једнонедељни камп за децу узраста 10–14 година одржан на Гочу.', 'Деца су учила о шумским екосистемима, прављењу хербаријума и оријентацији у природи. Камп је организован у сарадњи са основним школама из Врњачке Бање и Краљева. Следећи камп планиран је за јул.', placeholder, 'edukativni-kamp-za-decu'],
+    ['Смештајни капацитети спремни', 'Демо објекти и собе су попуњени placeholder садржајем.', 'Садржај служи искључиво за презентацију UI и основних токова.', placeholder, 'smestajni-kapaciteti-spremni']
   ];
 
   for (const item of newsItems) {
@@ -349,9 +353,13 @@ async function seedTranslations(connection, shouldExecute) {
   }
 
   const newsTranslations = [
-    [1, 'en', 'New Base Presentation', 'Refreshed first impression for client demonstration.', 'This is demonstration news content for the first walkthrough of the system.'],
-    [2, 'en', 'Accommodation Capacities Ready', 'Demo facilities and rooms populated with placeholder content.', 'Content is exclusively for UI presentation and basic flow demonstration.'],
-    [3, 'en', 'Reservation Workflow', 'Client can see the flow from initial inquiry to admin processing.', 'This text is an example and should be replaced with real content before production use.']
+    [1, 'en', 'International Student Visit', 'A group of 25 forestry students from Austria and Germany spent a week at Goč.', 'As part of an international exchange program, students participated in field teaching, visited research plots and explored the biodiversity of Goč. The visit was organized in cooperation with BOKU University in Vienna.'],
+    [2, 'en', 'Grill Pavilion Reopened', 'The renovated grill pavilion is ready for the new season.', 'After thorough reconstruction, the grill pavilion has reopened for guests and visitors. A new grill and expanded seating area allow for larger groups. Home-style veal under the bell remains our specialty.'],
+    [3, 'en', 'Trail Shelter Construction Project', 'First phase of trail shelter construction around the base completed.', 'New wooden shelters have been placed at three key points along the hiking trails — at the Krst viewpoint, Grand Meadow, and the reserve entrance. The project is funded by the Faculty of Forestry in cooperation with the municipality of Vrnjačka Banja.'],
+    [4, 'en', 'New Website Launched', 'Teaching Base Goč–Gvozdac gets a new website with a reservation system.', 'The new site enables browsing accommodation, online reservation inquiries, status tracking, and an AI assistant for guest support. Developed in cooperation with the Faculty of Forestry.'],
+    [5, 'en', 'Winter Ski Season Open', 'Ski slopes at Goč are ready — the 2025/26 season begins.', 'Two ski slopes of 1200m and 800m are prepared for skiers of all levels. Night skiing available on Fridays and Saturdays. Ski equipment can be rented on site.'],
+    [6, 'en', 'Educational Camp for Children', 'A one-week camp for children ages 10–14 held at Goč.', 'Children learned about forest ecosystems, herbarium creation, and nature orientation. The camp was organized in cooperation with elementary schools from Vrnjačka Banja and Kraljevo. Next camp planned for July.'],
+    [7, 'en', 'Accommodation Capacities Ready', 'Demo facilities and rooms populated with placeholder content.', 'Content is exclusively for UI presentation and basic flow demonstration.']
   ];
 
   for (const nt of newsTranslations) {

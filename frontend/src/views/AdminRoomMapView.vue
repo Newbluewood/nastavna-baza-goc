@@ -25,6 +25,18 @@ const capacityFullLabels = {
   multi: 'Вишекреветна'
 }
 
+const capShort = {
+  single: 'јед',
+  double: 'дво',
+  triple: 'тро',
+  multi: 'вше'
+}
+
+function roomCapLabel(room) {
+  const max = room.capacity_max || 1
+  return `${max}.${capShort[room.capacity_type] || 'вше'}`
+}
+
 async function fetchRoomMap() {
   isLoading.value = true
   tooltip.value = null
@@ -85,8 +97,6 @@ onMounted(() => fetchRoomMap())
       <h2>CMS Panel</h2>
       <nav>
         <router-link to="/admin/vesti">Вести</router-link>
-        <a href="#">Смештај</a>
-        <a href="#">Странице</a>
         <router-link to="/admin/rezervacije">Упити/Резервације</router-link>
         <router-link to="/admin/gosti">Гости и CRM</router-link>
         <router-link to="/admin/mapa-soba" class="active">Мапа Соба</router-link>
@@ -147,7 +157,7 @@ onMounted(() => fetchRoomMap())
           <div v-if="facility.rooms.length === 0" class="no-rooms">Нема регистрованих соба.</div>
           <div class="rooms-grid">
             <div
-              v-for="room in facility.rooms"
+              v-for="(room, roomIndex) in facility.rooms"
               :key="room.id"
               class="room-tile"
               :class="[`type-${room.capacity_type}`, { 'is-occupied': room.is_occupied }]"
@@ -155,8 +165,8 @@ onMounted(() => fetchRoomMap())
               @mouseleave="hideTooltip"
               @click.stop="room.is_occupied && showTooltip($event, room)"
             >
-              <span class="room-number">{{ room.id }}</span>
-              <span class="room-type-label">{{ capacityLabels[room.capacity_type] }}</span>
+              <span class="room-number">{{ roomIndex + 1 }}</span>
+              <span class="room-type-label">{{ roomCapLabel(room) }}</span>
               <span v-if="room.is_occupied" class="occupied-icon">●</span>
             </div>
           </div>
@@ -190,7 +200,7 @@ onMounted(() => fetchRoomMap())
   display: flex;
   min-height: 100vh;
   background: #f5f3f0;
-  font-family: 'Georgia', serif;
+  font-family: var(--font-base), sans-serif;
 }
 
 /* SIDEBAR */
@@ -372,11 +382,12 @@ onMounted(() => fetchRoomMap())
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 2px solid rgba(0,0,0,0.12);
+  border: 3px solid rgba(0,0,0,0.12);
   cursor: default;
   position: relative;
   transition: transform 0.1s, box-shadow 0.1s;
   user-select: none;
+  gap: 0;
 }
 .room-tile:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
@@ -388,7 +399,7 @@ onMounted(() => fetchRoomMap())
 
 /* OCCUPIED STATE */
 .room-tile.is-occupied {
-  border: 3px solid #c0392b;
+  border: 4px solid #c0392b;
   cursor: pointer;
 }
 .room-tile.is-occupied .occupied-icon {
@@ -399,8 +410,8 @@ onMounted(() => fetchRoomMap())
   color: #c0392b;
 }
 
-.room-number { font-size: 1.1rem; font-weight: 700; line-height: 1; }
-.room-type-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.75; }
+.room-number { font-size: 1.1rem; font-weight: 700; line-height: 1; flex: 1; display: flex; align-items: center; }
+.room-type-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.75; border-top: 1px solid rgba(0,0,0,0.15); width: 100%; text-align: center; padding-top: 3px; padding-bottom: 2px; }
 
 /* TOOLTIP */
 .room-tooltip {
@@ -410,7 +421,7 @@ onMounted(() => fetchRoomMap())
   color: #f5e9df;
   padding: 10px 14px;
   font-size: 0.8rem;
-  font-family: 'Georgia', serif;
+  font-family: var(--font-base), sans-serif;
   pointer-events: none;
   z-index: 9999;
   min-width: 180px;

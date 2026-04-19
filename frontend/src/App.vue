@@ -93,8 +93,8 @@ const handleGuestNav = () => {
         {{ langStore.t('footer.city') }}</p>
       </div>
       <div class="footer-col">
-        <p><a href="mailto:projektovanje@sfb.bg.ac.rs">projektovanje@sfb.bg.ac.rs</a><br>
-        <a href="http://www.sfb.bg.ac.rs" target="_blank">www.sfb.bg.ac.rs</a></p>
+        <p>{{ langStore.t('footer.phone') }}: <a href="tel:+38136123456">{{ langStore.t('footer.contact_phone') }}</a><br>
+        {{ langStore.t('footer.email') }}: <a href="mailto:info@gvozdac.rs">{{ langStore.t('footer.contact_email') }}</a></p>
       </div>
       <div class="footer-col footer-credits">
         <p v-html="langStore.t('footer.credits')"></p>
