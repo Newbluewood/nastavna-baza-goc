@@ -288,22 +288,70 @@ function parseDayRange(message) {
     { day: 6, words: ['subota', 'subote', 'subotom'] }
   ];
 
+  const MONTH_NAMES = {
+    januar: 1, januara: 1,
+    februar: 2, februara: 2,
+    mart: 3, marta: 3,
+    april: 4, aprila: 4,
+    maj: 5, maja: 5,
+    jun: 6, juna: 6, juni: 6,
+    jul: 7, jula: 7, juli: 7,
+    avgust: 8, avgusta: 8,
+    septembar: 9, septembra: 9,
+    oktobar: 10, oktobra: 10,
+    novembar: 11, novembra: 11,
+    decembar: 12, decembra: 12
+  };
+
+  // Try "od [day] [month] do [day] [month]" (e.g. "od 22 juna do 27 juna")
+  const dateRangeMatch = source.match(/od\s+(\d{1,2})\.?\s*([a-z]+)\s+do\s+(\d{1,2})\.?\s*([a-z]+)/);
+  if (dateRangeMatch) {
+    const startDay = Number(dateRangeMatch[1]);
+    const startMonth = MONTH_NAMES[dateRangeMatch[2]];
+    const endDay = Number(dateRangeMatch[3]);
+    const endMonth = MONTH_NAMES[dateRangeMatch[4]];
+
+    if (startMonth && endMonth && startDay > 0 && startDay <= 31 && endDay > 0 && endDay <= 31) {
+      const year = new Date().getFullYear();
+      const startDate = new Date(year, startMonth - 1, startDay, 12, 0, 0);
+      const endDate = new Date(year, endMonth - 1, endDay, 12, 0, 0);
+
+      // If dates are in the past, use next year
+      const now = new Date();
+      if (startDate < now) {
+        startDate.setFullYear(year + 1);
+        endDate.setFullYear(year + 1);
+      }
+
+      const diffMs = endDate - startDate;
+      const stayDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      if (stayDays > 0 && stayDays <= 60) {
+        return {
+          checkIn: formatIsoDate(startDate),
+          stayLengthDays: stayDays
+        };
+      }
+    }
+  }
+
+  // Try "od [dayname] do [dayname]" (e.g. "od srede do petka")
   const rangeMatch = source.match(/od\s+(\S+)\s+do\s+(\S+)/);
   if (!rangeMatch) return null;
 
-  let startDay = null;
-  let endDay = null;
+  let startDayOfWeek = null;
+  let endDayOfWeek = null;
   for (const opt of dayWordsList) {
-    if (opt.words.some(w => rangeMatch[1].includes(w))) startDay = opt.day;
-    if (opt.words.some(w => rangeMatch[2].includes(w))) endDay = opt.day;
+    if (opt.words.some(w => rangeMatch[1].includes(w))) startDayOfWeek = opt.day;
+    if (opt.words.some(w => rangeMatch[2].includes(w))) endDayOfWeek = opt.day;
   }
 
-  if (startDay === null || endDay === null) return null;
+  if (startDayOfWeek === null || endDayOfWeek === null) return null;
 
-  let diff = (endDay - startDay + 7) % 7;
+  let diff = (endDayOfWeek - startDayOfWeek + 7) % 7;
   if (diff === 0) diff = 7;
 
-  return { startDay, endDay, stayLengthDays: diff };
+  return { startDay: startDayOfWeek, endDay: endDayOfWeek, stayLengthDays: diff };
 }
 
 function parseArrivalHints(message, context) {
@@ -556,17 +604,24 @@ async function planStay(db, payload) {
     pending_slot: null
   };
 
-  // Infer stay length from "od [day] do [day]" pattern
-  if (!criteria.stay_length_days) {
+  // Infer stay length from "od [day] do [day]" or "od [date] [month] do [date] [month]"
+  if (!criteria.stay_length_days || !criteria.check_in) {
     const dayRange = parseDayRange(message);
     if (dayRange) {
-      criteria.stay_length_days = dayRange.stayLengthDays;
-      // Also resolve check_in from range start if missing
+      if (!criteria.stay_length_days) {
+        criteria.stay_length_days = dayRange.stayLengthDays;
+      }
       if (!criteria.check_in) {
-        const forceNext = /\b(sledec|sledeci|iduce|iduci|next)\b/.test(normalizeText(message));
-        const now = new Date();
-        now.setHours(12, 0, 0, 0);
-        criteria.check_in = nextWeekdayDate(now, dayRange.startDay, forceNext);
+        if (dayRange.checkIn) {
+          // Exact date from "od 22 juna do 27 juna"
+          criteria.check_in = dayRange.checkIn;
+        } else if (dayRange.startDay !== undefined) {
+          // Day-of-week from "od srede do petka"
+          const forceNext = /\b(sledec|sledeci|iduce|iduci|next)\b/.test(normalizeText(message));
+          const now = new Date();
+          now.setHours(12, 0, 0, 0);
+          criteria.check_in = nextWeekdayDate(now, dayRange.startDay, forceNext);
+        }
       }
     }
   }
