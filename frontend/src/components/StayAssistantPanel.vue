@@ -91,6 +91,14 @@ onMounted(() => {
   restoreGuestChatState()
 })
 
+// When language changes, reset chat so greeting + UI match the new language
+watch(
+  () => langStore.currentLang,
+  () => {
+    clearChat()
+  }
+)
+
 watch(
   [messages, context, visitsByCard],
   () => {
