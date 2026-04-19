@@ -115,10 +115,15 @@ onMounted(() => fetchRoomMap())
           <h1>Мапа Соба</h1>
           <p class="subtitle">Преглед попуњености смештајних капацитета по датуму.</p>
         </div>
-        <div class="header-controls">
+      </div>
+
+      <!-- DATE PICKER — PROMINENT -->
+      <div class="date-picker-section">
+        <label class="date-picker-label">Провери стање за одређени датум:</label>
+        <div class="date-picker-row">
           <input type="date" v-model="selectedDate" @change="fetchRoomMap" class="date-picker" />
           <button class="refresh-btn" @click="fetchRoomMap" :disabled="isLoading">
-            {{ isLoading ? 'Учитавам...' : 'Освежи' }}
+            {{ isLoading ? 'Учитавам...' : 'Прикажи' }}
           </button>
         </div>
       </div>
@@ -251,6 +256,9 @@ onMounted(() => fetchRoomMap())
   }
   .main-content { padding: 20px 16px !important; }
   .page-header { flex-direction: column; gap: 12px; }
+  .date-picker-section { padding: 16px; }
+  .date-picker-row { flex-direction: column; gap: 10px; }
+  .date-picker { min-width: 0; width: 100%; }
 }
 
 @media (min-width: 769px) {
@@ -285,18 +293,40 @@ onMounted(() => fetchRoomMap())
 .page-header h1 { margin: 0 0 5px 0; font-size: 1.8rem; color: #332317; }
 .subtitle { color: #888; margin: 0; font-size: 0.95rem; }
 
-.header-controls {
+/* DATE PICKER SECTION */
+.date-picker-section {
+  background: #fdfaf7;
+  border: 2px solid #cdac91;
+  padding: 20px 24px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+.date-picker-label {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #332317;
+  margin-bottom: 12px;
+}
+.date-picker-row {
   display: flex;
-  gap: 10px;
+  justify-content: center;
   align-items: center;
+  gap: 12px;
 }
 .date-picker {
-  border: 1px solid #cdac91;
+  border: 2px solid #cdac91;
   background: #fff;
-  padding: 7px 12px;
-  font-size: 0.9rem;
+  padding: 10px 18px;
+  font-size: 1.1rem;
   color: #332317;
   cursor: pointer;
+  min-width: 200px;
+  text-align: center;
+}
+.date-picker:focus {
+  outline: none;
+  border-color: #332317;
 }
 .refresh-btn {
   background: #332317;
