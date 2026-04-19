@@ -111,10 +111,32 @@ class ApiService {
   }
 
   async chatPlanStay(payload) {
-    return this.request('/api/chat/plan-stay', {
+    const url = `${this.baseURL}/api/chat/plan-stay`;
+    const token = this.getAuthToken();
+    const config = {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload || {})
-    });
+    };
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+
+    const response = await fetch(url, config);
+    const rateWarning = response.headers.get('X-Chat-Rate-Warning') || null;
+    const rateRemaining = response.headers.get('X-Chat-Rate-Remaining');
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+      const error = new Error(errorData.error || `HTTP ${response.status}`);
+      error.status = response.status;
+      error.data = errorData;
+      error.retryAfter = response.headers.get('Retry-After');
+      throw error;
+    }
+
+    const data = await response.json();
+    data._rateWarning = rateWarning;
+    data._rateRemaining = rateRemaining ? Number(rateRemaining) : null;
+    return data;
   }
 
   async chatSuggestVisit(payload) {

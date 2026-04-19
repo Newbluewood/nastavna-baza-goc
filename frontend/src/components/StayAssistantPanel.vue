@@ -1,33 +1,10 @@
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import api from '../services/api'
 
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function renderMessageText(text) {
-  if (!text) return ''
-  // Escape HTML first
-  let safe = escapeHtml(text)
-  // Regex for URLs
-  const urlRegex = /(https?:\/\/[\w\-\.\/?#&=;%+~:@!$'*(),]+|www\.[\w\-\.\/?#&=;%+~:@!$'*(),]+)/gi
-  safe = safe.replace(urlRegex, (url) => {
-    let href = url
-    if (!href.startsWith('http')) href = 'http://' + href
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>`
-  })
-  return safe
-}
-// ...existing code...
-
 const router = useRouter()
+const route = useRoute()
 const GUEST_CHAT_STORAGE_KEY = 'stay_assistant_guest_chat_v1'
 
 const isOpen = ref(false)
@@ -35,8 +12,6 @@ const busy = ref(false)
 const inputText = ref('')
 const inputEl = ref(null)
 const pendingReserve = ref(null)
-const guestName = ref('')
-const guestEmail = ref('')
 const visitsByCard = ref({})
 
 watch(isOpen, async (open) => {
@@ -133,7 +108,12 @@ function summarizeSuggestions(items) {
   }
 
   const names = items.map((item) => `${item.facility_name} / ${item.room_name}`).join('; ')
-  return `Predlazem: ${names}. Ako zelite, mogu i da pokrenem rezervaciju.`
+  return `Predlazem: ${names}. Ako zelite, mogu da suzim izbor po vasim prioritetima.`
+}
+
+function pickAssistantMessage(result) {
+  const msg = String(result?.assistant_message || '').trim()
+  return msg || null
 }
 
 function rememberContext(criteria) {
@@ -162,6 +142,50 @@ function deriveCheckOut(checkIn, stayLengthDays) {
   return date.toISOString().slice(0, 10)
 }
 
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+function renderMessageText(raw) {
+  const escaped = escapeHtml(raw)
+  return escaped
+    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\n/g, '<br>')
+}
+
+function buildInquiryTargetRoute(item, payload) {
+  if (!item?.facility_id || !payload?.target_room_id || !payload?.check_in || !payload?.check_out) {
+    return null
+  }
+
+  return {
+    name: 'smestaj-single',
+    params: { id: String(item.facility_id) },
+    query: {
+      openInquiry: '1',
+      roomId: String(payload.target_room_id),
+      checkIn: String(payload.check_in),
+      checkOut: String(payload.check_out)
+    }
+  }
+}
+
+function navigateToInquiry(targetRoute) {
+  if (!targetRoute) {
+    pushAssistantText('Ne mogu da otvorim formu za ovaj predlog. Posaljite novi upit pa pokusajte ponovo.')
+    return
+  }
+
+  pendingReserve.value = null
+  isOpen.value = false
+  router.push(targetRoute)
+}
+
 async function sendMessage() {
   if (!canSend.value) return
 
@@ -169,40 +193,56 @@ async function sendMessage() {
   messages.value.push({ role: 'user', type: 'text', text })
   inputText.value = ''
 
+  // Dismiss pending reservation if user continues chatting
+  if (pendingReserve.value) {
+    pendingReserve.value = null
+  }
+
   busy.value = true
   try {
-    const result = await api.chatPlanStay({ message: text, context: context.value })
+    const history = messages.value
+      .filter(m => m.type === 'text')
+      .slice(-6)
+      .map(m => ({ role: m.role, text: m.text }))
+
+    const result = await api.chatPlanStay({ message: text, context: context.value, history })
     rememberContext(result.criteria)
 
-    // Prikazi AI poruku korisniku ako postoji
-    if (result.assistant_message) {
-      pushAssistantText(result.assistant_message)
+    // Show rate limit warning if approaching limit
+    if (result._rateWarning) {
+      pushAssistantText(`⚠️ ${result._rateWarning}`)
     }
 
-    // Ako je potrebna dodatna informacija, prikazi follow_up_question
-    if (result.status === 'needs_input' && result.follow_up_question) {
-      pushAssistantText(result.follow_up_question)
+    const aiMessage = pickAssistantMessage(result)
+
+    if (result?.status === 'blocked') {
+      pushAssistantText(aiMessage || 'Ovde sam za pitanja o smestaju i rezervaciji Nastavne baze Goc.')
       return
     }
 
-    // Prikazi prvu next_action ako postoji
-    if (Array.isArray(result.next_actions) && result.next_actions.length) {
-      pushAssistantText(result.next_actions[0])
-    }
+    const hasSuggestions = Array.isArray(result.suggestions) && result.suggestions.length > 0
+    const hasAlternatives = Array.isArray(result.alternatives) && result.alternatives.length > 0
 
-    // Prikazi predloge ako postoje
-    if (Array.isArray(result.suggestions) && result.suggestions.length) {
+    if (hasSuggestions || hasAlternatives) {
       messages.value.push({
         role: 'assistant',
         type: 'suggestions',
-        text: summarizeSuggestions(result.suggestions),
+        text: aiMessage || summarizeSuggestions(result.suggestions),
         criteria: result.criteria,
         suggestions: result.suggestions || [],
         alternatives: result.alternatives || []
       })
+    } else if (aiMessage) {
+      pushAssistantText(aiMessage)
+    } else {
+      pushAssistantText('Pitajte me o smestaju, aktivnostima, restoranu ili bilo cemu vezanom za Goc.')
     }
   } catch (error) {
-    pushAssistantText(error?.data?.error || error.message || 'Chat servis trenutno nije dostupan.')
+    if (error.status === 429 && error.retryAfter) {
+      pushAssistantText(`Previše poruka u kratkom roku. Možete nastaviti za ${error.retryAfter} sekundi.`)
+    } else {
+      pushAssistantText(error?.data?.error || error.message || 'Chat servis trenutno nije dostupan.')
+    }
   } finally {
     busy.value = false
   }
@@ -230,84 +270,68 @@ function askForReservation(item, criteria = null) {
 
   pendingReserve.value = {
     ...item,
-    reservation_payload: payload
+    reservation_payload: payload,
+    inquiry_target: buildInquiryTargetRoute(item, payload)
   }
 
-  const hasGuestToken = Boolean(localStorage.getItem('guest_token'))
-  if (hasGuestToken) {
-    createReservation()
+  const hasToken = Boolean(localStorage.getItem('guest_token'))
+  if (hasToken) {
+    navigateToInquiry(pendingReserve.value.inquiry_target)
     return
   }
 
-  pushAssistantText('Za rezervaciju mi trebaju ime i prezime i email. Ako vec imate nalog, prijavite se pa nastavljamo odmah.')
+  // Modal appears via Teleport when pendingReserve is set and no guest token
 }
 
-async function createReservation() {
-  if (busy.value) return
-  if (!pendingReserve.value) return
+function closeReservationModal() {
+  pendingReserve.value = null
+}
 
-  const hasGuestToken = Boolean(localStorage.getItem('guest_token'))
-  if (!hasGuestToken && (!guestName.value.trim() || !guestEmail.value.trim())) {
-    pushAssistantText('Unesite ime i prezime i email da nastavim rezervaciju.')
-    return
-  }
+function goToLogin() {
+  const targetRoute = pendingReserve.value?.inquiry_target
+  const redirectTarget = targetRoute ? router.resolve(targetRoute).fullPath : '/smestaj'
 
-  busy.value = true
-  try {
-    const payload = {
-      ...pendingReserve.value.reservation_payload,
-      message: 'Rezervacija pokrenuta iz chat panela.',
-      sender_name: hasGuestToken ? undefined : guestName.value.trim(),
-      email: hasGuestToken ? undefined : guestEmail.value.trim()
-    }
+  pendingReserve.value = null
+  isOpen.value = false
+  router.push({
+    path: '/prijava',
+    query: { redirect: redirectTarget }
+  })
+}
 
-    const result = await api.chatReserveStay(payload)
-    pushAssistantText(result.message || 'Rezervacija je pokrenuta. Potvrda ce stici na email.')
+function continueWithoutAccount() {
+  const targetRoute = pendingReserve.value?.inquiry_target
+  navigateToInquiry(targetRoute)
+}
+
+watch(
+  () => route.fullPath,
+  () => {
     pendingReserve.value = null
-    guestName.value = ''
-    guestEmail.value = ''
-  } catch (error) {
-    if (error?.status === 401 || error?.status === 403) {
-      localStorage.removeItem('guest_token')
-      pushAssistantText('Sesija je istekla. Unesite ime i email pa cu nastaviti rezervaciju, ili se prijavite ponovo.')
-      return
-    }
-
-    if (error?.status === 400 && String(error?.data?.error || '').includes('sender_name and email are required')) {
-      localStorage.removeItem('guest_token')
-      pushAssistantText('Sesija vise nije vazeca. Unesite ime i email pa cu odmah nastaviti rezervaciju.')
-      return
-    }
-
-    if (error?.status === 409 && error?.data?.status === 'unavailable') {
-      pushAssistantText('Naiskrenije se izvinjavamo — zbog internih reorganizacija, ponudjeni smestaj trenutno nije dostupan. Mozete potraziti drugi termin ili nas kontaktirati za vise informacija. Hvala na razumevanju.')
-      pendingReserve.value = null
-      return
-    }
-
-    if (error?.data?.status === 'login_required') {
-      pushAssistantText('Vec postoji nalog za taj email. Prijavite se da nastavim rezervaciju.')
-      return
-    }
-
-    const backendError = String(error?.data?.error || error?.data?.message || error?.message || '')
-    if (backendError.includes('target_room_id, check_in and check_out are required')) {
-      pushAssistantText('Nedostaju podaci o terminu ili sobi. Posaljite novi upit pa pokusajte ponovo.')
-      return
-    }
-
-    if (backendError.includes('sender_name and email are required')) {
-      pushAssistantText('Unesite ime i email pa kliknite ponovo na slanje rezervacije.')
-      return
-    }
-
-    pushAssistantText('Rezervacija trenutno nije uspela. Pokusajte ponovo za nekoliko sekundi.')
-  } finally {
-    busy.value = false
   }
+)
+
+function clearChat() {
+  messages.value = [
+    {
+      role: 'assistant',
+      type: 'text',
+      text: 'Zdravo! Pomazem oko smestaja na Gocu. Napisite broj osoba, termin i koliko dana zelite da ostanete.'
+    }
+  ]
+  context.value = {
+    adults: null,
+    children: null,
+    check_in: null,
+    stay_length_days: null,
+    pending_slot: null,
+    preferences: []
+  }
+  visitsByCard.value = {}
+  pendingReserve.value = null
+  inputText.value = ''
+  localStorage.removeItem(GUEST_CHAT_STORAGE_KEY)
 }
-
-
 
 async function loadVisitSuggestions(facilityId, roomId, checkIn) {
   const cardKey = `${facilityId}-${roomId}`
@@ -355,18 +379,8 @@ async function loadVisitSuggestions(facilityId, roomId, checkIn) {
     busy.value = false
   }
 }
-
-function closeReservationModal() {
-  if (busy.value) return
-  pendingReserve.value = null
-}
-
-function goToLogin() {
-  router.push('/prijava')
-}
-
-// ...
 </script>
+
 <template>
   <div class="stay-assistant-wrapper">
     <button
@@ -386,8 +400,21 @@ function goToLogin() {
 
     <div v-if="isOpen" class="stay-assistant-panel">
       <div class="stay-assistant-head">
-        <strong>Asistent za smestaj</strong>
-        <small>Nastavna baza Goc</small>
+        <div class="stay-assistant-head-top">
+          <div>
+            <strong>Asistent za smestaj</strong>
+            <small>Nastavna baza Goc</small>
+          </div>
+          <button
+            type="button"
+            class="stay-clear-btn"
+            @click="clearChat"
+            title="Očisti razgovor i počni ispočetka"
+            aria-label="Očisti chat"
+          >
+            Novi chat
+          </button>
+        </div>
       </div>
 
       <div class="stay-assistant-body">
@@ -437,86 +464,30 @@ function goToLogin() {
       </div>
     </div>
 
-    <div v-if="pendingReserve && !hasGuestToken()" class="reserve-modal-overlay" @click.self="closeReservationModal">
-      <div class="reserve-modal" role="dialog" aria-modal="true" aria-label="Unos podataka za rezervaciju">
-        <button type="button" class="reserve-modal-close" @click="closeReservationModal" aria-label="Zatvori">✕</button>
-        <strong>Podaci za rezervaciju</strong>
-        <small>Unesite ime i email da zavrsim rezervaciju.</small>
-        <input v-model="guestName" type="text" placeholder="Ime i prezime" />
-        <input v-model="guestEmail" type="email" placeholder="Email" />
-        <div class="reserve-form-actions">
-          <button type="button" @click="createReservation" :disabled="busy">Posalji rezervaciju</button>
-          <button type="button" class="ghost-btn" @click="goToLogin" :disabled="busy">Imam nalog, prijava</button>
+    <Teleport to="body">
+      <div v-if="pendingReserve && !hasGuestToken()" class="reserve-modal-overlay" @click.self="closeReservationModal">
+        <div class="reserve-modal" role="dialog" aria-modal="true" aria-label="Izbor toka za rezervaciju">
+          <button type="button" class="reserve-modal-close" @click="closeReservationModal" aria-label="Zatvori">✕</button>
+          <strong>Nastavak rezervacije</strong>
+          <small>Za nastavak koristimo standardnu formu za rezervaciju. Da li imate nalog?</small>
+          <div class="reserve-form-actions">
+            <button type="button" @click="goToLogin">Imam nalog</button>
+            <button type="button" class="ghost-btn" @click="continueWithoutAccount">Nemam nalog</button>
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
- </template>
+</template>
+
 <style scoped>
-/* Stilovi za rezervacioni modal i dugmad */
 .stay-assistant-wrapper {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
+  right: 8px;
+  bottom: 18px;
   z-index: 1200;
-  width: 360px;
-  max-width: calc(100vw - 32px);
-  transform: none;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-}
-.stay-card-actions .reserve-btn {
-  background: #2e7d32;
-  color: #fff;
-  border-radius: 4px;
-  padding: 4px 12px;
-  margin-left: 8px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-}
-.reserve-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0,0,0,0.35);
-  z-index: 1300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.reserve-modal {
-  background: #fff;
-  border-radius: 8px;
-  padding: 32px 24px 24px 24px;
-  min-width: 320px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-.reserve-modal-close {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  background: none;
-  border: none;
-  font-size: 22px;
-  cursor: pointer;
-}
-.reserve-form-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 18px;
-}
-.ghost-btn {
-  background: #eee;
-  color: #333;
-  border-radius: 4px;
-  border: none;
-  padding: 4px 12px;
-  cursor: pointer;
+  width: min(360px, calc(100vw - 24px));
+  transform: scale(1.2);
   transform-origin: bottom right;
 }
 
@@ -545,6 +516,23 @@ function goToLogin() {
   color: #fff;
 }
 
+.stay-clear-btn {
+  background: #e8d5c4;
+  color: #67462e;
+  border: 1px solid #c8b3a4;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.stay-clear-btn:hover {
+  background: #dcc4b3;
+  border-color: #b8a39a;
+}
+
 .chat-bubble-icon {
   width: 34px;
   height: 34px;
@@ -558,15 +546,25 @@ function goToLogin() {
   display: flex;
   flex-direction: column;
   max-height: 70vh;
-  min-height: 320px;
-  min-width: 320px;
-  box-sizing: border-box;
 }
 
 .stay-assistant-head {
   padding: 10px 12px;
   border-bottom: 1px solid #e3c4ad;
   background: #fff7f0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stay-assistant-head-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.stay-assistant-head-top div {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -679,77 +677,6 @@ function goToLogin() {
   font-size: 0.76rem;
 }
 
-.reserve-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(40, 27, 17, 0.42);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1500;
-}
-
-.reserve-modal {
-  position: relative;
-  width: min(360px, calc(100vw - 24px));
-  background: #fffaf5;
-  border: 2px solid var(--c-braon-6);
-  box-shadow: 0 12px 32px rgba(34, 22, 14, 0.24);
-  padding: 28px 12px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.reserve-modal-close {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  color: #67462e;
-  cursor: pointer;
-  line-height: 1;
-  padding: 2px 6px;
-}
-.reserve-modal-close:hover {
-  color: #332317;
-}
-
-.reserve-modal strong {
-  color: #332317;
-}
-
-.reserve-modal small {
-  color: #67462e;
-}
-
-.reserve-modal input {
-  border: 1px solid #c8b3a4;
-  padding: 8px;
-  font-size: 0.8rem;
-}
-
-.reserve-form-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.reserve-form-actions button {
-  flex: 1;
-  border: 1px solid #67462e;
-  background: #cdac91;
-  color: #332317;
-  cursor: pointer;
-  font-size: 0.76rem;
-  padding: 7px 8px;
-}
-
-.reserve-form-actions .ghost-btn {
-  background: #fff;
-}
-
 .stay-assistant-input {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -800,5 +727,84 @@ function goToLogin() {
     width: 100%;
     height: auto;
   }
+}
+</style>
+
+<style>
+/* Reservation modal — teleported to body, cannot be scoped */
+.reserve-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 27, 17, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+}
+
+.reserve-modal {
+  position: relative;
+  width: min(400px, calc(100vw - 32px));
+  background: #fffaf5;
+  border: 2px solid #67462e;
+  box-shadow: 0 16px 48px rgba(34, 22, 14, 0.32);
+  padding: 32px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: 'Georgia', serif;
+}
+
+.reserve-modal strong {
+  font-size: 1.1rem;
+  color: #332317;
+}
+
+.reserve-modal small {
+  color: #67462e;
+  font-size: 0.85rem;
+}
+
+.reserve-modal input {
+  border: 1px solid #c8b3a4;
+  padding: 10px;
+  font-size: 0.9rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.reserve-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #67462e;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+}
+.reserve-modal-close:hover { color: #332317; }
+
+.reserve-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.reserve-form-actions button {
+  flex: 1;
+  border: 1px solid #67462e;
+  background: #cdac91;
+  color: #332317;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 9px 10px;
+  font-family: 'Georgia', serif;
+}
+
+.reserve-form-actions .ghost-btn {
+  background: #fff;
 }
 </style>

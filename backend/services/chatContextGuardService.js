@@ -5,11 +5,9 @@ function toPositiveInt(value, fallback) {
 
 const config = {
   enabled: String(process.env.AI_CHAT_CONTEXT_GUARD_ENABLED || 'true').toLowerCase() === 'true',
-  warnThreshold: toPositiveInt(process.env.AI_CHAT_OOD_WARN_THRESHOLD, 3),
-  strictThreshold: toPositiveInt(process.env.AI_CHAT_OOD_STRICT_THRESHOLD, 5),
-  lockThreshold: toPositiveInt(process.env.AI_CHAT_OOD_LOCK_THRESHOLD, 8),
-  lockMs: toPositiveInt(process.env.AI_CHAT_OOD_LOCK_MS, 7_200_000),
-  decayMs: toPositiveInt(process.env.AI_CHAT_OOD_DECAY_MS, 21_600_000),
+  warnThreshold: toPositiveInt(process.env.AI_CHAT_OOD_WARN_THRESHOLD, 5),
+  reminderThreshold: toPositiveInt(process.env.AI_CHAT_OOD_REMINDER_THRESHOLD, 10),
+  decayMs: toPositiveInt(process.env.AI_CHAT_OOD_DECAY_MS, 1_800_000),
   maxEntries: toPositiveInt(process.env.AI_CHAT_CONTEXT_GUARD_MAX_ENTRIES, 3000)
 };
 
@@ -38,7 +36,6 @@ function getOrCreateEntry(userKey, now) {
 
   const created = {
     strikes: 0,
-    lockedUntil: null,
     lastOutOfDomainAt: null,
     lastSeenAt: now
   };
@@ -47,9 +44,7 @@ function getOrCreateEntry(userKey, now) {
 }
 
 function cleanup(now) {
-  if (state.entries.size <= config.maxEntries) {
-    return;
-  }
+  if (state.entries.size <= config.maxEntries) return;
 
   const items = Array.from(state.entries.entries())
     .sort((a, b) => Number(a[1]?.lastSeenAt || 0) - Number(b[1]?.lastSeenAt || 0));
@@ -58,19 +53,10 @@ function cleanup(now) {
   for (let i = 0; i < removable; i += 1) {
     state.entries.delete(items[i][0]);
   }
-
-  for (const [key, value] of state.entries.entries()) {
-    if (value.lockedUntil && now > value.lockedUntil + config.decayMs) {
-      state.entries.delete(key);
-    }
-  }
 }
 
 function decayStrikes(entry, now) {
-  if (!entry.lastOutOfDomainAt) {
-    return;
-  }
-
+  if (!entry.lastOutOfDomainAt) return;
   if (now - entry.lastOutOfDomainAt >= config.decayMs) {
     entry.strikes = 0;
     entry.lastOutOfDomainAt = null;
@@ -78,27 +64,23 @@ function decayStrikes(entry, now) {
 }
 
 function getReminderByStrikes(strikes) {
-  if (strikes < config.warnThreshold) {
-    return 'Mogu da pomognem oko boravka u Nastavnoj bazi Goc: smestaj, rezervacije, aktivnosti i dolazak.';
+  if (strikes < config.warnThreshold) return null;
+
+  if (strikes < config.reminderThreshold) {
+    return 'Mogu da pomognem oko boravka u Nastavnoj bazi Goc: smestaj, aktivnosti, restoran i dolazak.';
   }
 
-  if (strikes < config.strictThreshold) {
-    return 'Molim Vas, tu sam da pomognem oko boravka u Nastavnoj bazi Goc. Pitajte slobodno nesto vezano za smestaj, rezervaciju ili obilazak.';
-  }
-
-  return 'I dalje sam tu za pitanja vezana za Nastavnu bazu Goc. Ako zelite, mogu odmah da pomognem oko rezervacije smestaja ili predloga obilaska.';
+  return 'Tu sam za pitanja vezana za Nastavnu bazu Goc — smestaj, rezervacije, obilazak i restoran.';
 }
 
-function getLockMessage(until) {
-  const untilDate = new Date(until);
-  const hh = String(untilDate.getHours()).padStart(2, '0');
-  const mm = String(untilDate.getMinutes()).padStart(2, '0');
-  return `Chat je privremeno pauziran do ${hh}:${mm} zbog vise uzastopnih poruka van teme. Posle toga rado nastavljamo oko boravka u Nastavnoj bazi Goc.`;
-}
-
-function checkLock(req) {
+/**
+ * Unified guard check — called by chatController.
+ * Tracks OOD strikes for metrics, returns optional reminder.
+ * NO lockout — user is never blocked for OOD messages.
+ */
+function check(req, safetyClass) {
   if (!config.enabled) {
-    return { locked: false };
+    return { reminder: null, strikes: 0 };
   }
 
   const now = Date.now();
@@ -108,79 +90,19 @@ function checkLock(req) {
   const entry = getOrCreateEntry(userKey, now);
   decayStrikes(entry, now);
 
-  if (entry.lockedUntil && now < entry.lockedUntil) {
-    return {
-      locked: true,
-      lockUntil: entry.lockedUntil,
-      message: getLockMessage(entry.lockedUntil),
-      strikes: entry.strikes
-    };
-  }
-
-  if (entry.lockedUntil && now >= entry.lockedUntil) {
-    entry.lockedUntil = null;
-    entry.strikes = Math.max(0, entry.strikes - 2);
+  if (safetyClass === 'out_of_domain') {
+    entry.strikes += 1;
+    entry.lastOutOfDomainAt = now;
+  } else if (safetyClass === 'in_domain' && entry.strikes > 0) {
+    entry.strikes = Math.max(0, entry.strikes - 1);
   }
 
   return {
-    locked: false,
+    reminder: getReminderByStrikes(entry.strikes),
     strikes: entry.strikes
   };
 }
 
-function registerOutOfDomain(req) {
-  if (!config.enabled) {
-    return {
-      locked: false,
-      strikes: 0,
-      message: getReminderByStrikes(0)
-    };
-  }
-
-  const now = Date.now();
-  cleanup(now);
-
-  const userKey = getUserKey(req);
-  const entry = getOrCreateEntry(userKey, now);
-  decayStrikes(entry, now);
-
-  entry.strikes += 1;
-  entry.lastOutOfDomainAt = now;
-
-  if (entry.strikes >= config.lockThreshold) {
-    entry.lockedUntil = now + config.lockMs;
-    return {
-      locked: true,
-      strikes: entry.strikes,
-      lockUntil: entry.lockedUntil,
-      message: getLockMessage(entry.lockedUntil)
-    };
-  }
-
-  return {
-    locked: false,
-    strikes: entry.strikes,
-    message: getReminderByStrikes(entry.strikes)
-  };
-}
-
-function registerInDomain(req) {
-  if (!config.enabled) {
-    return;
-  }
-
-  const now = Date.now();
-  const userKey = getUserKey(req);
-  const entry = getOrCreateEntry(userKey, now);
-  decayStrikes(entry, now);
-
-  if (entry.strikes > 0) {
-    entry.strikes = Math.max(0, entry.strikes - 1);
-  }
-}
-
 module.exports = {
-  checkLock,
-  registerOutOfDomain,
-  registerInDomain
+  check
 };
