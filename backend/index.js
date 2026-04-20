@@ -8,7 +8,6 @@ console.log('Starting server...');
 
 // Static for staff photos
 const path = require('path');
-app.use('/uploads/staff', express.static(path.join(__dirname, 'uploads', 'staff')));
 
 // Routes
 const publicRoutes = require('./routes/public');
@@ -23,6 +22,8 @@ const aiRoutes = require('./routes/ai');
 const chatRoutes = require('./routes/chat');
 
 const app = express();
+// Static for staff photos (MOVED HERE)
+app.use('/uploads/staff', express.static(path.join(__dirname, 'uploads', 'staff')));
 
 console.log('Express app created');
 
