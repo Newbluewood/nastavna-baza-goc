@@ -1,6 +1,6 @@
 # Arhitektura projekta — Nastavna baza Goč
 
-**Poslednje ažuriranje:** April 2026  
+**Poslednje ažuriranje:** 23. April 2026  
 **Grana:** `development`
 
 ---
@@ -138,15 +138,46 @@ Ovo je dugoročni refaktor — planiran kao zasebna grana kada `asistant-feature
 
 ---
 
+## Resetovanje sajta (`resetSite.js`)
+
+Orchestrator koji u jednom koraku dovodi sajt na prezentaciono stanje:
+
+| Komanda | Šta radi |
+|---|---|
+| `npm run restart-site` | **DRY RUN** — prikazuje šta bi uradio, ne menja ništa |
+| `npm run restart-site:run` | **Izvršava** reset baze + seed + sanity check |
+| `npm run restart-site:full` | Kao `:run`, plus smoke testovi (server mora biti upaljen) |
+| `node resetSite.js --verbose` | DRY RUN sa punim SQL outputom (za debug) |
+| `node resetSite.js --execute --verbose` | Execute + pun output |
+
+**Redosled koraka:**
+1. `createDefaultDb` — kreira bazu ako ne postoji
+2. `setupDb` — kreira sve tabele
+3. `migrateDb` — dodaje kolone/izmene *(sažeto: X izmena, Y preskočeno)*
+4. `presentationDBmockData` — seed *(sažeto: N operacija, tipovi × broj)*
+5. `dbSanityCheck` — verifikuje stanje baze
+6. `smokeTestRoutes` — testira API rute *(samo uz `--smoke`)*
+7. `smokeTestWriteFlow` — testira write flow *(samo uz `--smoke`)*
+
+> **Output:** Koraci 3 i 4 prikazuju kompaktan sažetak. Dodaj `--verbose` za pun SQL dump.
+
+---
+
 ## Korisne komande
 
 ```bash
-# Backend
+# Resetovanje sajta
 cd backend
+npm run restart-site              # dry run (šta bi uradilo)
+npm run restart-site:run          # stvarni reset
+npm run restart-site:full         # reset + smoke testovi
+node resetSite.js --verbose       # dry run, pun SQL output
+
+# Backend
 npm run dev          # razvoj
 npm test             # Jest testovi
-npm run migrate:run  # migracije
-npm run db:seed:presentation:run  # seed data
+npm run migrate:run  # samo migracije
+npm run db:seed:presentation:run  # samo seed data
 
 # Frontend
 cd frontend
