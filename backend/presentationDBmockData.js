@@ -221,9 +221,13 @@ async function seedAttractionsAndMenus(connection, shouldExecute) {
 
 async function seedNews(connection, shouldExecute) {
   const newsItems = [
-    ['Нова презентација базе', 'Освежен први утисак за клијентску демонстрацију.', 'Ово је демонстрациони садржај вести за први пролаз кроз систем.', placeholder, 'nova-prezentacija-baze'],
-    ['Смештајни капацитети спремни', 'Демо објекти и собе су попуњени placeholder садржајем.', 'Садржај служи искључиво за презентацију UI и основних токова.', placeholder, 'smestajni-kapaciteti-spremni'],
-    ['Радни ток резервација', 'Клијенту може да се покаже од почетног упита до административне обраде.', 'Текст је пример и треба га заменити стварним садржајем пре производне употребе.', placeholder, 'radni-tok-rezervacija']
+    ['Посета студената из иностранства', 'Група од 25 студената шумарства из Аустрије и Немачке провела је недељу дана на Гочу.', 'У оквиру програма међународне размене, студенти су учествовали у теренској настави, обишли истраживачке парцеле и упознали се са биодиверзитетом Гоча. Посета је организована у сарадњи са BOKU универзитетом из Беча и укључивала је радионице о одрживом управљању шумама.', placeholder, 'poseta-studenata-iz-inostranstva'],
+    ['Пећењара поново ради', 'Обновљен павиљон пећењаре — спреман за нову сезону.', 'Након темељне реконструкције, павиљон пећењаре је поново отворен за госте и посетиоце. Нови роштиљ и проширен простор за седење омогућавају пријем већих група. Домаћа телетина испод сача остаје наша специјалност.', placeholder, 'pecenjara-ponovo-radi'],
+    ['Мастер рад — нови објекат уз пећењару', 'Студенткиња Шумарског факултета израђује пројекат новог објекта уз постојећу пећењару.', 'Пројекат је у фази разраде и обухвата техничке цртеже, планове извођења и студију уклапања у постојећи амбијент базе. Нови објекат планирано је да буде изграђен непосредно уз пећењару и служиће за додатне смештајно-услужне капацитете. Рад ће бити одбрањен у јунском одбрамбеном року.', placeholder, 'master-rad-novi-objekat'],
+    ['Покренут нови веб-сајт базе', 'Наставна база Гоч–Гвоздац добила је нови веб-сајт са системом за резервације.', 'Нови сајт омогућава преглед смештајних капацитета, онлајн упите за резервацију, праћење статуса и AI асистента за помоћ гостима. Сајт је развијен у сарадњи са Шумарским факултетом.', placeholder, 'pokrenut-novi-sajt'],
+    ['Зимска сезона скијања отворена', 'Ски стазе на Гочу спремне — почиње сезона 2025/26.', 'Две ски стазе дужине 1200 метара и 800 метара су уређене и спремне за скијаше свих нивоа. Ноћно скијање доступно петком и суботом. Ски опрема се може изнајмити на лицу места.', placeholder, 'zimska-sezona-skijanja'],
+    ['Едукативни камп за децу', 'Једнонедељни камп за децу узраста 10–14 година одржан на Гочу.', 'Деца су учила о шумским екосистемима, прављењу хербаријума и оријентацији у природи. Камп је организован у сарадњи са основним школама из Врњачке Бање и Краљева. Следећи камп планиран је за јул.', placeholder, 'edukativni-kamp-za-decu'],
+    ['Смештајни капацитети спремни', 'Демо објекти и собе су попуњени садржајем за потребе презентације.', 'Садржај служи искључиво за приказ корисничког интерфејса и основних токова. Пре производне употребе неопходно је заменити демо податке стварним информацијама.', placeholder, 'smestajni-kapaciteti-spremni']
   ];
 
   for (const item of newsItems) {
@@ -287,9 +291,13 @@ async function seedTranslations(connection, shouldExecute) {
   }
 
   const newsTranslations = [
-    [1, 'en', 'New Base Presentation', 'Refreshed first impression for client demonstration.', 'This is demonstration news content for the first walkthrough of the system.'],
-    [2, 'en', 'Accommodation Capacities Ready', 'Demo facilities and rooms populated with placeholder content.', 'Content is exclusively for UI presentation and basic flow demonstration.'],
-    [3, 'en', 'Reservation Workflow', 'Client can see the flow from initial inquiry to admin processing.', 'This text is an example and should be replaced with real content before production use.']
+    [1, 'en', 'International Student Visit', 'A group of 25 forestry students from Austria and Germany spent a week at Goč.', 'As part of an international exchange program, students participated in field teaching, visited research plots and explored the biodiversity of Goč. The visit was organized in cooperation with BOKU University in Vienna.'],
+    [2, 'en', 'Grill Pavilion Reopened', 'Renovated grill pavilion — ready for the new season.', 'After thorough reconstruction, the grill pavilion has reopened for guests and visitors. A new grill and expanded seating area allow for larger groups. Home-style veal under the bell remains our specialty.'],
+    [3, 'en', 'Master Thesis — New Building Next to the Grill Pavilion', 'A female student from the Faculty of Forestry is designing a new structure next to the existing grill pavilion.', 'The project is in the elaboration phase, covering technical drawings, construction plans and a study of integration into the existing base environment. The new building is planned to be constructed directly next to the grill pavilion.'],
+    [4, 'en', 'New Website Launched', 'Teaching Base Goč–Gvozdac gets a new website with a reservation system.', 'The new site enables browsing accommodation, online reservation inquiries, status tracking, and an AI assistant for guest support. Developed in cooperation with the Faculty of Forestry.'],
+    [5, 'en', 'Winter Ski Season Open', 'Ski slopes at Goč are ready — the 2025/26 season begins.', 'Two ski slopes of 1200m and 800m are prepared for skiers of all levels. Night skiing available on Fridays and Saturdays. Ski equipment can be rented on site.'],
+    [6, 'en', 'Educational Camp for Children', 'A one-week camp for children ages 10–14 held at Goč.', 'Children learned about forest ecosystems, herbarium creation, and nature orientation. The camp was organized in cooperation with elementary schools from Vrnjačka Banja and Kraljevo. Next camp planned for July.'],
+    [7, 'en', 'Accommodation Capacities Ready', 'Demo facilities and rooms populated with content for presentation purposes.', 'Content is exclusively for UI and basic flow demonstration. Replace with real data before production use.']
   ];
 
   for (const nt of newsTranslations) {
