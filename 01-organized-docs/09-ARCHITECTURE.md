@@ -188,7 +188,9 @@ npm run restart-site:full         # reset + smoke testovi
 node resetSite.js --verbose       # dry run, pun SQL output
 
 # Backend
-npm run dev          # razvoj
+npm run server       # start backend server (server.js, port 3000)
+npm start            # isto kao iznad (alias na npm run server)
+node server.js       # direktno pokretanje bez npm skripte
 npm test             # Jest testovi
 npm run migrate:run  # samo migracije
 npm run db:seed:presentation:run  # samo seed data
