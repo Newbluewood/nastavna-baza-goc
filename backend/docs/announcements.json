@@ -1,0 +1,16 @@
+{
+  "announcements": [
+    {
+      "id": 1,
+      "title": "Obaveštenje o radovima na putu",
+      "content": "Zbog radova na putu, prilaz Goču iz pravca Vrnjačke Banje biće zatvoren od 25. do 28. aprila.",
+      "date": "2026-04-21"
+    },
+    {
+      "id": 2,
+      "title": "Novo radno vreme recepcije",
+      "content": "Recepcija radi od 8 do 20 časova svakog dana.",
+      "date": "2026-04-18"
+    }
+  ]
+}

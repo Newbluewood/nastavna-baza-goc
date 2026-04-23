@@ -289,7 +289,6 @@ async function updateInquiryStatus(req, res) {
         await emailTask();
       } catch (emailErr) {
         console.warn('Email delivery failed after inquiry status update:', emailErr.message);
-        return res.json({ message: 'Status updated successfully', emailWarning: `Email nije poslat: ${emailErr.message}` });
       }
     }
 
@@ -602,7 +601,6 @@ async function getRoomMap(req, res) {
       id: room.id,
       name: room.name,
       capacity: room.capacity,
-      capacity_max: room.capacity_max || 1,
       capacity_type: inferCapacityType(room.capacity, room.capacity_max),
       is_occupied: !!room.res_id,
       reservation: room.res_id ? {
@@ -622,136 +620,6 @@ async function getChatMetrics(req, res) {
   return res.json(snapshot);
 }
 
-// ─── PROJECTS CRUD ────────────────────────────────────────────
-
-async function getProjects(req, res) {
-  const db = req.app.locals.db;
-  const [rows] = await db.query('SELECT * FROM projects ORDER BY id DESC');
-  res.json(rows);
-}
-
-async function createProject(req, res) {
-  const db = req.app.locals.db;
-  const { title, description, status, start_date } = req.body;
-  if (!title) return sendError(res, 400, 'Title is required');
-
-  const [result] = await db.query(
-    'INSERT INTO projects (title, description, status, start_date) VALUES (?, ?, ?, ?)',
-    [title, description || null, status || 'активан', start_date || null]
-  );
-  res.json({ message: 'Project created', projectId: result.insertId });
-}
-
-async function updateProject(req, res) {
-  const db = req.app.locals.db;
-  const { title, description, status, start_date } = req.body;
-  if (!title) return sendError(res, 400, 'Title is required');
-
-  const [result] = await db.query(
-    'UPDATE projects SET title = ?, description = ?, status = ?, start_date = ? WHERE id = ?',
-    [title, description || null, status || 'активан', start_date || null, req.params.id]
-  );
-  if (result.affectedRows === 0) return sendError(res, 404, 'Project not found');
-  res.json({ message: 'Project updated' });
-}
-
-async function deleteProject(req, res) {
-  const db = req.app.locals.db;
-  const [result] = await db.query('DELETE FROM projects WHERE id = ?', [req.params.id]);
-  if (result.affectedRows === 0) return sendError(res, 404, 'Project not found');
-  res.json({ message: 'Project deleted' });
-}
-
-// ─── STAFF CRUD ───────────────────────────────────────────────
-
-async function getStaff(req, res) {
-  const db = req.app.locals.db;
-  const [rows] = await db.query('SELECT * FROM staff ORDER BY id ASC');
-  res.json(rows);
-}
-
-async function createStaffMember(req, res) {
-  const db = req.app.locals.db;
-  const { full_name, role, contact_email, photo_url } = req.body;
-  if (!full_name) return sendError(res, 400, 'Full name is required');
-
-  const [result] = await db.query(
-    'INSERT INTO staff (full_name, role, contact_email, photo_url) VALUES (?, ?, ?, ?)',
-    [full_name, role || null, contact_email || null, photo_url || null]
-  );
-  res.json({ message: 'Staff member created', staffId: result.insertId });
-}
-
-async function updateStaffMember(req, res) {
-  const db = req.app.locals.db;
-  const { full_name, role, contact_email, photo_url } = req.body;
-  if (!full_name) return sendError(res, 400, 'Full name is required');
-
-  const [result] = await db.query(
-    'UPDATE staff SET full_name = ?, role = ?, contact_email = ?, photo_url = ? WHERE id = ?',
-    [full_name, role || null, contact_email || null, photo_url || null, req.params.id]
-  );
-  if (result.affectedRows === 0) return sendError(res, 404, 'Staff member not found');
-  res.json({ message: 'Staff member updated' });
-}
-
-async function deleteStaffMember(req, res) {
-  const db = req.app.locals.db;
-  const [result] = await db.query('DELETE FROM staff WHERE id = ?', [req.params.id]);
-  if (result.affectedRows === 0) return sendError(res, 404, 'Staff member not found');
-  res.json({ message: 'Staff member deleted' });
-}
-
-// ─── PAGES CRUD ───────────────────────────────────────────────
-
-async function getPages(req, res) {
-  const db = req.app.locals.db;
-  const [rows] = await db.query('SELECT * FROM pages ORDER BY id ASC');
-  res.json(rows);
-}
-
-async function getPageById(req, res) {
-  const db = req.app.locals.db;
-  const [rows] = await db.query('SELECT * FROM pages WHERE id = ?', [req.params.id]);
-  if (!rows.length) return sendError(res, 404, 'Page not found');
-  res.json(rows[0]);
-}
-
-async function createPage(req, res) {
-  const db = req.app.locals.db;
-  const { slug, title, content } = req.body;
-  if (!slug || !title) return sendError(res, 400, 'Slug and title are required');
-
-  const [existing] = await db.query('SELECT id FROM pages WHERE slug = ?', [slug]);
-  if (existing.length) return sendError(res, 409, 'Page with this slug already exists');
-
-  const [result] = await db.query(
-    'INSERT INTO pages (slug, title, content) VALUES (?, ?, ?)',
-    [slug, title, content || null]
-  );
-  res.json({ message: 'Page created', pageId: result.insertId });
-}
-
-async function updatePage(req, res) {
-  const db = req.app.locals.db;
-  const { title, content } = req.body;
-  if (!title) return sendError(res, 400, 'Title is required');
-
-  const [result] = await db.query(
-    'UPDATE pages SET title = ?, content = ? WHERE id = ?',
-    [title, content || null, req.params.id]
-  );
-  if (result.affectedRows === 0) return sendError(res, 404, 'Page not found');
-  res.json({ message: 'Page updated' });
-}
-
-async function deletePage(req, res) {
-  const db = req.app.locals.db;
-  const [result] = await db.query('DELETE FROM pages WHERE id = ?', [req.params.id]);
-  if (result.affectedRows === 0) return sendError(res, 404, 'Page not found');
-  res.json({ message: 'Page deleted' });
-}
-
 module.exports = {
   getInquiries,
   getInquiryActivity,
@@ -764,18 +632,5 @@ module.exports = {
   getGuests,
   addVoucher,
   getRoomMap,
-  getChatMetrics,
-  getProjects,
-  createProject,
-  updateProject,
-  deleteProject,
-  getStaff,
-  createStaffMember,
-  updateStaffMember,
-  deleteStaffMember,
-  getPages,
-  getPageById,
-  createPage,
-  updatePage,
-  deletePage
+  getChatMetrics
 };

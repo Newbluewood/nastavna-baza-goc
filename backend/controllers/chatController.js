@@ -1,96 +1,113 @@
-const { sendError } = require('../utils/response');
-const { planStay, suggestVisit } = require('../services/chatStayService');
-const { createInquiryWithGuest } = require('../services/inquiryService');
+// Novi, čisti AI-first chat controller
 const aiService = require('../services/aiService');
-const chatMetricsService = require('../services/chatMetricsService');
 const chatContextGuardService = require('../services/chatContextGuardService');
+const chatMetricsService = require('../services/chatMetricsService');
 
+// Sva pitanja idu kroz AI pipeline
 async function planStayChat(req, res) {
   const payload = req.body || {};
-  const userMessage = String(payload?.message || '').trim();
-  const lang = ['en', 'sr'].includes(payload?.lang) ? payload.lang : 'sr';
-
-  if (!userMessage) {
-    return sendError(res, 400, 'Message is required');
-  }
-
-  // 1. Safety check (heuristic — no tokens spent)
-  const safety = aiService.checkMessageSafety(userMessage);
-  if (safety.class === 'unsafe') {
-    chatMetricsService.recordPlanStayTurn({
-      guardClass: 'unsafe',
-      intentName: 'unknown',
-      actionName: 'none',
-      decisionSource: 'guard',
-      assistantProviderMode: 'guard',
-      assistantText: ''
-    });
-
-    return res.json({
-      status: 'blocked',
-      assistant_message: lang === 'en'
-        ? 'I cannot help with that request. Ask me about accommodation, activities or the restaurant at Goč.'
-        : 'Не могу да помогнем са тим захтевом. Питајте ме о смештају, активностима или ресторану на Гочу.',
-      assistant_provider_mode: 'guard',
-      criteria: payload?.context || {},
-      suggestions: [],
-      alternatives: []
-    });
-  }
-
-  // 2. Soft guard tracking (no lockout, just metrics)
-  const guardState = chatContextGuardService.check(req, safety.class, lang);
-
-  // 3. Get room/booking data — planStay handles entity parsing internally
-  //    This is cheap when booking context is incomplete (just parsing, no DB query)
-  let roomResults = null;
+  const userMessage = payload?.message || '';
+  const provider = process.env.AI_PROVIDER || 'mock';
+  const model = process.env.AI_MODEL || 'claude-sonnet-4-6';
+  const apiKey = process.env.AI_API_KEY;
+  let aiText = '';
+  const axios = require('axios');
+  let analysis = '';
+  // Pass userId to AI context for logging separation
+  const aiContext = { ...payload.context, userId: req.user && req.user.id };
   try {
-    roomResults = await planStay(req.app.locals.db, payload);
-  } catch {
-    // DB unavailable — continue without room data
+    let facts = [];
+    try {
+      facts = aiService.extractRelevantFactsFromAnalysis(analysis);
+    } catch (e) {
+      facts = [];
+    }
+    let contextBlock = '';
+    let smestajBlock = '';
+    try {
+      const path = require('path');
+      const fs = require('fs');
+      const pricesPath = path.join(__dirname, '../docs/prices.json');
+      if (fs.existsSync(pricesPath)) {
+        const prices = JSON.parse(fs.readFileSync(pricesPath, 'utf8'));
+        if (prices.prices && Array.isArray(prices.prices.smestaj)) {
+          smestajBlock = '\nSmeštajna ponuda:\n' + prices.prices.smestaj.map(s => `- ${s.tip}: ${s.cena_po_noci} RSD/noć`).join('\n');
+        }
+      }
+    } catch (e) { /* skip */ }
+    if (facts.length > 0) {
+      contextBlock = `Faktovi:\n${JSON.stringify(facts, null, 2)}`;
+    } else {
+      const path = require('path');
+      const fs = require('fs');
+      const docsDir = path.join(__dirname, '../docs');
+      const allFiles = fs.readdirSync(docsDir).filter(f => f.endsWith('.json'));
+      let sketch = {};
+      for (const file of allFiles) {
+        try {
+          const raw = fs.readFileSync(path.join(docsDir, file), 'utf8');
+          const data = JSON.parse(raw);
+          for (const key of Object.keys(data)) {
+            const val = data[key];
+            if (Array.isArray(val) && val.length > 0) {
+              sketch[`${file.replace('.json','')}.${key}`] = val[0];
+            } else if (typeof val === 'object') {
+              sketch[`${file.replace('.json','')}.${key}`] = val;
+            }
+          }
+        } catch (e) { /* skip */ }
+      }
+      contextBlock = `Skica baze (primeri):\n${JSON.stringify(sketch, null, 2)}`;
+    }
+    const prompt = [
+      'SISTEMSKE INSTRUKCIJE: Pretpostavi da korisnik pita nešto u vezi Goča, njegove ponude, smeštaja, atrakcija, događaja ili restorana iz naše baze. Odgovaraj ISKLJUČIVO na osnovu sledećih činjenica iz baze/skice. Ako korisnik pita za smeštaj, uvek prikaži sve dostupne objekte iz baze i cene. Ako korisnik želi rezervaciju, objasni da može rezervisati putem sajta ili kontakt podataka i navedi /reserve-stay endpoint ili kontakt podatke iz baze. Ako nema ni u skici, reci da nema podataka za Goč.',
+      smestajBlock,
+      contextBlock,
+      `Korisničko pitanje: ${userMessage}`
+    ].filter(Boolean).join('\n\n');
+    const response = await axios.post(
+      'https://api.anthropic.com/v1/messages',
+      {
+        model,
+        max_tokens: 512,
+        messages: [
+          { role: 'user', content: prompt }
+        ]
+      },
+      {
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json'
+        }
+      }
+    );
+    aiText = response.data.content?.[0]?.text || '';
+    return res.json({
+      status: 'ai_rag',
+      assistant_message: aiText,
+      provider: 'anthropic',
+      model,
+      facts,
+      analysis
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: 'Greška pri generisanju AI odgovora.',
+      error: error.message
+    });
   }
-
-  // 4. AI response with RAG context (facts from docs + room results)
-  const aiResult = await aiService.composeChatReply({
-    message: userMessage,
-    context: payload?.context || {},
-    roomResults,
-    history: payload?.history || [],
-    lang
-  });
-
-  // 5. Append gentle OOD reminder if needed
-  let assistantMessage = aiResult.text;
-  if (safety.class === 'out_of_domain' && guardState.reminder) {
-    assistantMessage += `\n\n${guardState.reminder}`;
-  }
-
-  // 6. Record metrics
-  chatMetricsService.recordPlanStayTurn({
-    guardClass: safety.class,
-    intentName: 'chat',
-    actionName: roomResults?.suggestions?.length ? 'search_rooms' : 'none',
-    decisionSource: aiResult.provider_mode,
-    assistantProviderMode: aiResult.provider_mode,
-    assistantText: assistantMessage
-  });
-
-  // 7. Response
-  const status = roomResults?.suggestions?.length
-    ? 'suggestions'
-    : roomResults?.status === 'needs_input'
-      ? 'needs_input'
-      : 'ai_response';
-
-  return res.json({
-    status,
-    assistant_message: assistantMessage,
-    assistant_provider_mode: aiResult.provider_mode,
-    criteria: roomResults?.criteria || payload?.context || {},
-    suggestions: roomResults?.suggestions || [],
-    alternatives: roomResults?.alternatives || []
-  });
 }
+
+module.exports = {
+  planStayChat,
+  suggestVisitChat,
+  reserveStayChat
+};
+
+// Ostatak starog koda je obrisan u AI-first refaktoru
+
 
 async function suggestVisitChat(req, res) {
   const result = await suggestVisit(req.app.locals.db, req.body || {});

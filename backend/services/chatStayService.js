@@ -133,24 +133,6 @@ function parseGuestBreakdown(message, context, pendingSlot = null) {
     };
   }
 
-  // "za dvoje/troje/cetvoro/petoro" etc. — group count as adults
-  const groupWordMatch = normalizedSource.match(/\bza\s+([a-z]+)\b/);
-  if (!adultsValue && !childrenValue && groupWordMatch && NUMBER_WORDS[groupWordMatch[1]]) {
-    return {
-      adults: NUMBER_WORDS[groupWordMatch[1]],
-      children: 0
-    };
-  }
-
-  // Also match standalone "nas je [N]" or "dolazi nas [N]"
-  const groupDigitMatch = normalizedSource.match(/\b(za|nas|dolazi\s+nas)\s+(\d{1,2})\b/);
-  if (!adultsValue && !childrenValue && groupDigitMatch) {
-    return {
-      adults: Number(groupDigitMatch[2]),
-      children: 0
-    };
-  }
-
   // Check for solo/alone patterns: explicit "sam", "solo", "alone", or "samo ja/mene"
   const soloPatterns = /\b(sam|solo|alone|samo\s+ja|samo\s+mene|samo\s+i|dosao\s+sam|dosla\s+sam|dolazim\s+sam|dolazim\s+sama)\b/i;
   
@@ -293,85 +275,6 @@ function resolveNaturalDate(message) {
   return null;
 }
 
-function parseDayRange(message) {
-  const source = normalizeText(message);
-
-  const dayWordsList = [
-    { day: 0, words: ['nedelja', 'nedelje', 'nedeljom'] },
-    { day: 1, words: ['ponedeljak', 'ponedeljka', 'ponedeljkom'] },
-    { day: 2, words: ['utorak', 'utorka', 'utorkom'] },
-    { day: 3, words: ['sreda', 'sredu', 'srede', 'sredom'] },
-    { day: 4, words: ['cetvrtak', 'cetvrtka', 'cetvrtkom'] },
-    { day: 5, words: ['petak', 'petka', 'petkom'] },
-    { day: 6, words: ['subota', 'subote', 'subotom'] }
-  ];
-
-  const MONTH_NAMES = {
-    januar: 1, januara: 1,
-    februar: 2, februara: 2,
-    mart: 3, marta: 3,
-    april: 4, aprila: 4,
-    maj: 5, maja: 5,
-    jun: 6, juna: 6, juni: 6,
-    jul: 7, jula: 7, juli: 7,
-    avgust: 8, avgusta: 8,
-    septembar: 9, septembra: 9,
-    oktobar: 10, oktobra: 10,
-    novembar: 11, novembra: 11,
-    decembar: 12, decembra: 12
-  };
-
-  // Try "od [day] [month] do [day] [month]" (e.g. "od 22 juna do 27 juna")
-  const dateRangeMatch = source.match(/od\s+(\d{1,2})\.?\s*([a-z]+)\s+do\s+(\d{1,2})\.?\s*([a-z]+)/);
-  if (dateRangeMatch) {
-    const startDay = Number(dateRangeMatch[1]);
-    const startMonth = MONTH_NAMES[dateRangeMatch[2]];
-    const endDay = Number(dateRangeMatch[3]);
-    const endMonth = MONTH_NAMES[dateRangeMatch[4]];
-
-    if (startMonth && endMonth && startDay > 0 && startDay <= 31 && endDay > 0 && endDay <= 31) {
-      const year = new Date().getFullYear();
-      const startDate = new Date(year, startMonth - 1, startDay, 12, 0, 0);
-      const endDate = new Date(year, endMonth - 1, endDay, 12, 0, 0);
-
-      // If dates are in the past, use next year
-      const now = new Date();
-      if (startDate < now) {
-        startDate.setFullYear(year + 1);
-        endDate.setFullYear(year + 1);
-      }
-
-      const diffMs = endDate - startDate;
-      const stayDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-
-      if (stayDays > 0 && stayDays <= 60) {
-        return {
-          checkIn: formatIsoDate(startDate),
-          stayLengthDays: stayDays
-        };
-      }
-    }
-  }
-
-  // Try "od [dayname] do [dayname]" (e.g. "od srede do petka")
-  const rangeMatch = source.match(/od\s+(\S+)\s+do\s+(\S+)/);
-  if (!rangeMatch) return null;
-
-  let startDayOfWeek = null;
-  let endDayOfWeek = null;
-  for (const opt of dayWordsList) {
-    if (opt.words.some(w => rangeMatch[1].includes(w))) startDayOfWeek = opt.day;
-    if (opt.words.some(w => rangeMatch[2].includes(w))) endDayOfWeek = opt.day;
-  }
-
-  if (startDayOfWeek === null || endDayOfWeek === null) return null;
-
-  let diff = (endDayOfWeek - startDayOfWeek + 7) % 7;
-  if (diff === 0) diff = 7;
-
-  return { startDay: startDayOfWeek, endDay: endDayOfWeek, stayLengthDays: diff };
-}
-
 function parseArrivalHints(message, context) {
   const explicitDate = String(context.check_in || '').trim();
   const source = String(message || '').toLowerCase();
@@ -399,42 +302,6 @@ function parseArrivalHints(message, context) {
     };
   }
 
-  // Exact day+month: "26 aprila", "26. aprila", "15 juna", "3 maja" etc.
-  const DAY_MONTH_NAMES = {
-    januar: 1, januara: 1,
-    februar: 2, februara: 2,
-    mart: 3, marta: 3,
-    april: 4, aprila: 4,
-    maj: 5, maja: 5,
-    jun: 6, juna: 6, juni: 6,
-    jul: 7, jula: 7, juli: 7,
-    avgust: 8, avgusta: 8,
-    septembar: 9, septembra: 9,
-    oktobar: 10, oktobra: 10,
-    novembar: 11, novembra: 11,
-    decembar: 12, decembra: 12
-  };
-
-  const monthNamePattern = Object.keys(DAY_MONTH_NAMES).join('|');
-  const dayMonthRegex = new RegExp(`\\b(\\d{1,2})\\.?\\s*(${monthNamePattern})\\b`);
-  const normalized = normalizeText(source);
-  const dayMonthMatch = normalized.match(dayMonthRegex);
-  if (dayMonthMatch) {
-    const day = Number(dayMonthMatch[1]);
-    const monthNum = DAY_MONTH_NAMES[dayMonthMatch[2]];
-    if (monthNum && day > 0 && day <= 31) {
-      const year = new Date().getFullYear();
-      const date = new Date(year, monthNum - 1, day, 12, 0, 0);
-      if (date < new Date()) {
-        date.setFullYear(year + 1);
-      }
-      return {
-        check_in: formatIsoDate(date),
-        arrival_hint: null
-      };
-    }
-  }
-
   if (source.includes('sledece nedelje') || source.includes('sljedece nedelje') || source.includes('next week')) {
     return {
       check_in: null,
@@ -447,32 +314,6 @@ function parseArrivalHints(message, context) {
       check_in: null,
       arrival_hint: 'weekend'
     };
-  }
-
-  // Month-only references: "u avgustu", "avgusta", "u junu", "juna" etc.
-  // Only match when NO day number precedes the month name
-  const MONTH_HINT_PATTERNS = [
-    { month: 1, label: 'januar', regex: /(?<!\d\s*)\b(u\s+)?januar[ua]?\b/ },
-    { month: 2, label: 'februar', regex: /(?<!\d\s*)\b(u\s+)?februar[ua]?\b/ },
-    { month: 3, label: 'mart', regex: /(?<!\d\s*)\b(u\s+)?mart[ua]?\b/ },
-    { month: 4, label: 'april', regex: /(?<!\d\s*)\b(u\s+)?april[ua]?\b/ },
-    { month: 5, label: 'maj', regex: /(?<!\d\s*)\b(u\s+)?maj[ua]?\b/ },
-    { month: 6, label: 'jun', regex: /(?<!\d\s*)\b(u\s+)?jun[uia]?\b/ },
-    { month: 7, label: 'jul', regex: /(?<!\d\s*)\b(u\s+)?jul[uia]?\b/ },
-    { month: 8, label: 'avgust', regex: /(?<!\d\s*)\b(u\s+)?avgust[ua]?\b/ },
-    { month: 9, label: 'septembar', regex: /(?<!\d\s*)\b(u\s+)?septemb(ar|ra)\b/ },
-    { month: 10, label: 'oktobar', regex: /(?<!\d\s*)\b(u\s+)?oktob(ar|ra)\b/ },
-    { month: 11, label: 'novembar', regex: /(?<!\d\s*)\b(u\s+)?novemb(ar|ra)\b/ },
-    { month: 12, label: 'decembar', regex: /(?<!\d\s*)\b(u\s+)?decemb(ar|ra)\b/ }
-  ];
-
-  for (const mp of MONTH_HINT_PATTERNS) {
-    if (mp.regex.test(normalized)) {
-      return {
-        check_in: null,
-        arrival_hint: `month_${mp.label}`
-      };
-    }
   }
 
   return {
@@ -494,29 +335,18 @@ function extractPreferences(message, context) {
 
 function buildFollowUpQuestion(criteria) {
   if (!criteria.adults && !criteria.children) {
-    return 'Колико долази одраслих и колико деце?';
+    return 'Koliko dolazi odraslih i koliko dece?';
   }
   if (!criteria.check_in) {
     if (criteria.arrival_hint === 'next_week') {
-      return 'Који вам тачно датум доласка следеће недеље одговара? Пошаљите датум у формату YYYY-MM-DD.';
+      return 'Koji vam tačno datum dolaska sledeće nedelje odgovara? Pošaljite datum u formatu YYYY-MM-DD.';
     }
-    if (criteria.arrival_hint?.startsWith('month_')) {
-      const monthLabel = criteria.arrival_hint.replace('month_', '');
-      const MONTH_EXAMPLE = {
-        januar: '01-15', februar: '02-15', mart: '03-15', april: '04-15',
-        maj: '05-15', jun: '06-15', jul: '07-15', avgust: '08-15',
-        septembar: '09-15', oktobar: '10-15', novembar: '11-15', decembar: '12-15'
-      };
-      const year = new Date().getFullYear();
-      const example = `${year}-${MONTH_EXAMPLE[monthLabel] || '08-15'}`;
-      return `Важи, ${monthLabel}! Који тачан датум у том месецу планирате долазак? (нпр. ${example})`;
-    }
-    return 'Који вам је тачан датум доласка? Пошаљите датум у формату YYYY-MM-DD.';
+    return 'Koji vam je tačan datum dolaska? Pošaljite datum u formatu YYYY-MM-DD.';
   }
   if (!criteria.stay_length_days) {
-    return 'Колико дана желите да останете?';
+    return 'Koliko dana želite da ostanete?';
   }
-  return 'Реците ми још само број гостију и термин па могу да предложим конкретан смештај.';
+  return 'Recite mi još samo broj gostiju i termin pa mogu da predložim konkretan smeštaj.';
 }
 
 function getPendingSlot(criteria) {
@@ -549,19 +379,19 @@ function roomFitsGuestCount(room, totalGuests) {
 function buildRationale(item, criteria) {
   const reasons = [];
   if (criteria.preferences.family && item.familyFriendly) {
-    reasons.push('погодно за породични боравак');
+    reasons.push('pogodno za porodični boravak');
   }
   if (criteria.preferences.quiet && item.quietFriendly) {
-    reasons.push('мирнија локација');
+    reasons.push('mirnija lokacija');
   }
   if (criteria.preferences.nearRestaurant && item.restaurantNearby) {
-    reasons.push('близина ресторанске понуде');
+    reasons.push('blizina restoranske ponude');
   }
   if (criteria.preferences.ski && item.skiNearby) {
-    reasons.push('приступ ски садржајима');
+    reasons.push('pristup ski sadržajima');
   }
   if (!reasons.length) {
-    reasons.push('капацитет одговара траженом саставу гостију');
+    reasons.push('kapacitet odgovara traženom sastavu gostiju');
   }
   return reasons;
 }
@@ -695,28 +525,6 @@ async function planStay(db, payload) {
     pending_slot: null
   };
 
-  // Infer stay length from "od [day] do [day]" or "od [date] [month] do [date] [month]"
-  if (!criteria.stay_length_days || !criteria.check_in) {
-    const dayRange = parseDayRange(message);
-    if (dayRange) {
-      if (!criteria.stay_length_days) {
-        criteria.stay_length_days = dayRange.stayLengthDays;
-      }
-      if (!criteria.check_in) {
-        if (dayRange.checkIn) {
-          // Exact date from "od 22 juna do 27 juna"
-          criteria.check_in = dayRange.checkIn;
-        } else if (dayRange.startDay !== undefined) {
-          // Day-of-week from "od srede do petka"
-          const forceNext = /\b(sledec|sledeci|iduce|iduci|next)\b/.test(normalizeText(message));
-          const now = new Date();
-          now.setHours(12, 0, 0, 0);
-          criteria.check_in = nextWeekdayDate(now, dayRange.startDay, forceNext);
-        }
-      }
-    }
-  }
-
   criteria.pending_slot = getPendingSlot(criteria);
 
   if (!criteria.total_guests || !criteria.check_in || !criteria.stay_length_days) {
@@ -784,8 +592,8 @@ async function planStay(db, payload) {
       rationale: item.rationale
     })),
     next_actions: [
-      'Желите ли да вам после прегледа смештаја дам и предлоге обиласка према времену?',
-      'Ако вам неки од предлога одговара, могу да покренем резервацију за ту собу.'
+      'Zelite li da vam posle pregleda smestaja dam i predloge obilaska prema vremenu?',
+      'Ako vam neki od predloga odgovara, mogu da pokrenem rezervaciju za tu sobu.'
     ]
   };
 }

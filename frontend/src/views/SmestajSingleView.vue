@@ -174,7 +174,7 @@ watch(
 
             <!-- Dugme za upit za SOBU -->
             <button @click="openInquiry(room)" class="inquiry-btn">
-              {{ langStore.currentLang === 'sr' ? 'Пошаљи упит' : 'Send Inquiry' }}
+              ✉ {{ langStore.currentLang === 'sr' ? 'Пошаљи упит' : 'Send Inquiry' }}
             </button>
           </div>
 
@@ -333,25 +333,21 @@ watch(
 }
 
 .inquiry-btn {
-  background: none;
-  color: var(--color-nav);
+  background: var(--color-nav);
+  color: #fff;
   border: none;
-  border-bottom: 2px solid #cdac91;
-  padding: 0 0 2px 0;
+  padding: 12px 20px;
   font-size: 1rem;
   font-weight: bold;
-  text-transform: none;
+  text-transform: uppercase;
   cursor: pointer;
-  border-radius: 0;
-  transition: border-color 0.2s, color 0.2s;
-  text-decoration: none;
-  box-shadow: none;
+  transition: background 0.3s;
   align-self: flex-start; /* Klasicno ravnanje sa levom ivicom teksta je najpredvidljivije */
   margin-top: auto; 
+  border-radius: 0;
 }
 .inquiry-btn:hover {
-  border-bottom: 2px solid #a67c52;
-  color: #a67c52;
+  background: var(--color-btn-hover);
 }
 
 .facility-plan {

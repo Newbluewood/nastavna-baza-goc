@@ -100,10 +100,10 @@ const canModifyDates = (row) => {
 
 // Datum krajnjeg roka za otkazivanje (checkin - 7 dana)
 const cancelDeadline = (dateStr) => {
-  const d = normalizeDate(dateStr)
-  if (!d) return null
+  if (!dateStr) return null
+  const d = new Date(dateStr + 'T12:00:00')
   d.setDate(d.getDate() - 7)
-  return fmt(d)
+  return fmt(d.toISOString().split('T')[0])
 }
 
 const cancelDeadlinePassed = (dateStr) => {
@@ -117,15 +117,15 @@ onMounted(async () => {
     return
   }
   await guestStore.fetchMe()
-  if (!guestStore.isLoggedIn) { router.push('/prijava'); return }
   try {
     const res = await fetch(`${BASE}/api/guests/reservations`, {
       headers: guestStore.authHeaders()
     })
-    if (res.status === 401 || res.status === 403) { guestStore.logout(); router.push('/prijava'); return }
-    if (res.ok) reservations.value = await res.json()
-  } catch { /* network error – stay on page */ }
-  isLoading.value = false
+    if (!res.ok) { guestStore.logout(); router.push('/prijava'); return }
+    reservations.value = await res.json()
+  } finally {
+    isLoading.value = false
+  }
 })
 
 const cancelReservation = async (row) => {

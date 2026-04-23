@@ -1,0 +1,14 @@
+{
+  "labs": [
+    {
+      "id": 1,
+      "name": "Laboratorija za šumsku ekologiju",
+      "description": "Laboratorija opremljena za istraživanja iz oblasti šumske ekologije i biodiverziteta."
+    },
+    {
+      "id": 2,
+      "name": "Laboratorija za preradu drveta",
+      "description": "Savremena laboratorija za testiranje i razvoj novih tehnologija u preradi drveta."
+    }
+  ]
+}

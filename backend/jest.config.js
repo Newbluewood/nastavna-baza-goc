@@ -1,5 +1,8 @@
 module.exports = {
   testEnvironment: 'node',
-  testMatch: ['**/aiService.test.js'],
+  testMatch: [
+    '**/tests/jest/**/*.test.js',
+    '**/utils/__tests__/**/*.test.js'
+  ],
   rootDir: '.',
 };

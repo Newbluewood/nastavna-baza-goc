@@ -1,0 +1,18 @@
+{
+  "news": [
+    {
+      "id": 1,
+      "title": "Otvoren novi restoran na Goču!",
+      "excerpt": "Na Goču je otvoren novi restoran sa domaćom hranom.",
+      "content": "Na planini Goč otvoren je novi restoran koji nudi specijalitete domaće kuhinje i prelep pogled na okolinu.",
+      "date": "2026-04-20"
+    },
+    {
+      "id": 2,
+      "title": "Letnji kamp za studente šumarstva",
+      "excerpt": "Počinje letnji kamp za studente Šumarskog fakulteta.",
+      "content": "Studenti Šumarskog fakulteta Univerziteta u Beogradu započinju letnji kamp na Goču, sa radionicama i terenskim radom.",
+      "date": "2026-04-15"
+    }
+  ]
+}

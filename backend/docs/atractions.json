@@ -3,32 +3,32 @@
     {
       "ime": "Rezervat prirode Goč–Gvozdac",
       "opis": "Nastavno-naučni centar sa preko 650 biljnih vrsta, uključujući endemične i retke vrste. Posebno se ističu planinski javor i varijetet crnog bora, kao i očuvane zajednice bukovo-jelovih šuma.",
-      "kategorija": "Priroda"
+      "kategorija": ["Priroda", "Prirodni rezervat", "biljke"]
     },
     {
       "ime": "Ski staze Goča",
       "opis": "Staze pogodne za početnike i iskusne skijaše, uključujući mogućnost noćnog skijanja. Atraktivne tokom zimskih meseci.",
-      "kategorija": "Sport"
+      "kategorija": ["Sport", "Ski", "Zima"]
     },
     {
       "ime": "Pešačke staze",
       "opis": "Obeležene staze različite dužine i težine: Žuta staza (5 km, lagana), Plava staza (12 km, srednje zahtevna), Crvena staza (18,5 km, najzahtevnija). Vode kroz jezera, livade i rečne doline.",
-      "kategorija": "Rekreacija"
+      "kategorija": ["Rekreacija", "Staze", "Pešačenje"]
     },
     {
       "ime": "Vidikovac Krst",
       "opis": "Panoramski pogled na Kopaonik, Rtanj, Gledićke planine i Rudnik. Idealno mesto za fotografisanje i uživanje u prirodi.",
-      "kategorija": "Vidikovac"
+      "kategorija": ["Vidikovac", "Pogled", "Fotografija"]
     },
     {
       "ime": "Velika livada",
       "opis": "Prostrano područje za odmor i piknik, dostupno pešačkim stazama. Popularno za porodične izlete.",
-      "kategorija": "Priroda"
+      "kategorija": ["Priroda", "Livada", "Porodica"]
     },
     {
       "ime": "Nastavna baza Gvozdac",
       "opis": "Centar za edukaciju studenata Šumarskog fakulteta, istraživanja i praktične obuke u prirodi. Pruža sadržaje za decu i omladinu.",
-      "kategorija": "Edukacija"
+      "kategorija": ["Edukacija", "Studenti", "Obuka"]
     }
   ]
 }

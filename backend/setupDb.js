@@ -8,7 +8,7 @@ async function setup() {
       host: process.env.DB_HOST || 'localhost',
       user: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || '@NewSQL1',
-      database: process.env.DB_NAME || 'baza_goc',
+      database: process.env.DB_NAME || 'defaultdb',
       port: process.env.DB_PORT || 3306,
       ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
     });

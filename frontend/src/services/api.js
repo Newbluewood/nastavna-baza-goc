@@ -92,14 +92,6 @@ class ApiService {
     return this.request(`/api/news/${id}?lang=${lang}`);
   }
 
-  async getContactPage() {
-    return this.request('/api/kontakt');
-  }
-
-  async getPageBySlug(slug, lang = 'sr') {
-    return this.request(`/api/pages/${slug}?lang=${lang}`);
-  }
-
   async getAIStatus() {
     return this.request('/api/ai/ping');
   }
@@ -119,32 +111,10 @@ class ApiService {
   }
 
   async chatPlanStay(payload) {
-    const url = `${this.baseURL}/api/chat/plan-stay`;
-    const token = this.getAuthToken();
-    const config = {
+    return this.request('/api/chat/plan-stay', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload || {})
-    };
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-
-    const response = await fetch(url, config);
-    const rateWarning = response.headers.get('X-Chat-Rate-Warning') || null;
-    const rateRemaining = response.headers.get('X-Chat-Rate-Remaining');
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
-      const error = new Error(errorData.error || `HTTP ${response.status}`);
-      error.status = response.status;
-      error.data = errorData;
-      error.retryAfter = response.headers.get('Retry-After');
-      throw error;
-    }
-
-    const data = await response.json();
-    data._rateWarning = rateWarning;
-    data._rateRemaining = rateRemaining ? Number(rateRemaining) : null;
-    return data;
+    });
   }
 
   async chatSuggestVisit(payload) {
@@ -165,6 +135,25 @@ class ApiService {
   async likeNews(id) {
     return this.request(`/api/news/${id}/like`, {
       method: 'POST'
+    });
+  }
+
+  async getChatHistory(session_id = null, limit = 100) {
+    const params = [];
+    if (session_id) params.push(`session_id=${encodeURIComponent(session_id)}`);
+    if (limit) params.push(`limit=${limit}`);
+    const query = params.length ? `?${params.join('&')}` : '';
+    return this.request(`/api/chat/history${query}`, {
+      method: 'GET',
+      authMode: 'guest'
+    });
+  }
+
+  async saveChatMessage({ role, message, session_id = null, meta = null }) {
+    return this.request('/api/chat/history', {
+      method: 'POST',
+      authMode: 'guest',
+      body: JSON.stringify({ role, message, session_id, meta })
     });
   }
 

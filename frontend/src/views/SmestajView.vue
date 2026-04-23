@@ -187,7 +187,7 @@ watch(() => langStore.currentLang, () => {
             <div class="actions-row">
               <!-- Dugme za pregled soba -->
               <button @click="viewRooms(facility)" class="inquiry-btn">
-                {{ langStore.currentLang === 'sr' ? 'Погледај Собе' : 'View Rooms' }}
+                🏠 {{ langStore.currentLang === 'sr' ? 'Погледај Собе' : 'View Rooms' }}
               </button>
 
               <!-- Link ka mapi -->
@@ -195,7 +195,7 @@ watch(() => langStore.currentLang, () => {
                  :href="'https://www.google.com/maps/search/?api=1&query=' + facility.latitude + ',' + facility.longitude" 
                  target="_blank" 
                  class="map-btn">
-                {{ langStore.currentLang === 'sr' ? 'Отвори Мапу' : 'Open Map' }}
+                📍 {{ langStore.currentLang === 'sr' ? 'Отвори Мапу' : 'Open Map' }}
               </a>
             </div>
           </div>
@@ -353,39 +353,11 @@ watch(() => langStore.currentLang, () => {
   font-weight: bold;
   text-transform: uppercase;
   cursor: pointer;
+  transition: background 0.3s;
   border-radius: 0;
-  transition: background 0.3s, color 0.2s;
 }
 .inquiry-btn:hover {
   background: var(--color-btn-hover);
-  color: #fff;
-}
-
-.description {
-  flex: 1;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  margin-bottom: 20px;
-  color: var(--color-text);
-}
-
-.inquiry-btn {
-  background: var(--color-nav);
-  color: #fff;
-  border: none;
-  padding: 12px 20px;
-  font-size: 1rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  cursor: pointer;
-  border-radius: 0;
-  transition: background 0.3s, color 0.2s;
-  text-decoration: none;
-  box-shadow: none;
-}
-.inquiry-btn:hover {
-  background: var(--color-btn-hover);
-  color: #fff;
 }
 
 .facility-plan {

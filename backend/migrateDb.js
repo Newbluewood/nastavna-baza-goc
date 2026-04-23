@@ -131,14 +131,17 @@ async function ensureForeignKey(conn, tableName, fkName, sql) {
 }
 
 async function run() {
-  const conn = await mysql.createConnection({
+
+  const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'baza_goc',
+    database: process.env.DB_NAME || 'defaultdb',
     port: process.env.DB_PORT || 3306,
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
-  });
+  };
+  console.log('DB CONFIG:', dbConfig);
+  const conn = await mysql.createConnection(dbConfig);
 
   try {
     console.log('Connected to database.');
@@ -291,6 +294,23 @@ async function run() {
       'reservations',
       'fk_reservations_inquiry_id',
       `ALTER TABLE ${q('reservations')} ADD CONSTRAINT ${q('fk_reservations_inquiry_id')} FOREIGN KEY (${q('inquiry_id')}) REFERENCES ${q('inquiries')} (${q('id')}) ON DELETE SET NULL`
+    );
+
+    await ensureTable(
+      conn,
+      'chat_messages',
+      `
+      CREATE TABLE ${q('chat_messages')} (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        guest_id INT NULL,
+        role ENUM('user', 'assistant') NOT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        session_id VARCHAR(64) NULL,
+        meta JSON NULL,
+        CONSTRAINT fk_chat_messages_guest_id FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE SET NULL
+      )
+      `
     );
 
     console.log('Migration plan finished successfully.');

@@ -14,35 +14,10 @@ const {
 	getGuests,
 	addVoucher,
 	getRoomMap,
-	getChatMetrics,
-	getProjects,
-	createProject,
-	updateProject,
-	deleteProject,
-	getStaff,
-	createStaffMember,
-	updateStaffMember,
-	deleteStaffMember,
-	getPages,
-	getPageById,
-	createPage,
-	updatePage,
-	deletePage
+	getChatMetrics
 } = require('../controllers/adminController');
 
-
-const { staffPhotoUpload } = require('../uploadMiddleware');
-const path = require('path');
-const fs = require('fs');
-
 const router = express.Router();
-// Staff photo upload
-router.post('/upload/staff-photo', adminAuthMiddleware, staffPhotoUpload.single('photo'), (req, res) => {
-	if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-	// Return relative URL for frontend
-	const relPath = path.join('uploads', 'staff', req.file.filename).replace(/\\/g, '/');
-	res.json({ url: '/' + relPath });
-});
 
 router.get('/inquiries',           adminAuthMiddleware,                                      asyncHandler(getInquiries));
 router.get('/inquiries/:id/activity', adminAuthMiddleware,                                   asyncHandler(getInquiryActivity));
@@ -56,24 +31,5 @@ router.get('/guests',              adminAuthMiddleware,                         
 router.post('/guests/:id/vouchers', adminAuthMiddleware,                                     asyncHandler(addVoucher));
 router.get('/room-map',            adminAuthMiddleware,                                      asyncHandler(getRoomMap));
 router.get('/chat-metrics',        adminAuthMiddleware,                                      asyncHandler(getChatMetrics));
-
-// Projects CRUD
-router.get('/projects',            adminAuthMiddleware,                                      asyncHandler(getProjects));
-router.post('/projects',           adminAuthMiddleware,                                      asyncHandler(createProject));
-router.put('/projects/:id',        adminAuthMiddleware,                                      asyncHandler(updateProject));
-router.delete('/projects/:id',     adminAuthMiddleware,                                      asyncHandler(deleteProject));
-
-// Staff CRUD
-router.get('/staff',               adminAuthMiddleware,                                      asyncHandler(getStaff));
-router.post('/staff',              adminAuthMiddleware,                                      asyncHandler(createStaffMember));
-router.put('/staff/:id',           adminAuthMiddleware,                                      asyncHandler(updateStaffMember));
-router.delete('/staff/:id',        adminAuthMiddleware,                                      asyncHandler(deleteStaffMember));
-
-// Pages CRUD
-router.get('/pages',               adminAuthMiddleware,                                      asyncHandler(getPages));
-router.get('/pages/:id',           adminAuthMiddleware,                                      asyncHandler(getPageById));
-router.post('/pages',              adminAuthMiddleware,                                      asyncHandler(createPage));
-router.put('/pages/:id',           adminAuthMiddleware,                                      asyncHandler(updatePage));
-router.delete('/pages/:id',        adminAuthMiddleware,                                      asyncHandler(deletePage));
 
 module.exports = router;

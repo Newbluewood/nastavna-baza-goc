@@ -50,12 +50,12 @@ const sendEmail = async (to, template) => {
         return { ok: true, messageId: data.messageId };
       } else {
         const err = await response.json();
-        console.error(`[EMAIL] Brevo API greška (${response.status}):`, JSON.stringify(err));
-        throw new Error(`Brevo ${response.status}: ${JSON.stringify(err)}`);
+        console.error(`[EMAIL] Brevo API greška:`, err);
+        return { ok: false, error: JSON.stringify(err) };
       }
     } catch (err) {
-      console.error(`[EMAIL] Greška pri slanju na ${to}:`, err.message);
-      throw err;
+      console.error(`[EMAIL] Greška:`, err.message);
+      return { ok: false, error: err.message };
     }
   }
 

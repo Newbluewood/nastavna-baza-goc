@@ -1,601 +1,397 @@
-const fs = require('fs');
-const path = require('path');
-
-// ─── Text Utility Functions (admin proofread / rewrite) ───
-
-function normalizeWhitespace(text) {
-  return String(text || '')
-    .replace(/\s+/g, ' ')
-    .replace(/\s+([,.!?;:])/g, '$1')
-    .trim();
-}
-
-function sentenceCase(text) {
-  if (!text) return '';
-  const t = normalizeWhitespace(text);
-  return t.charAt(0).toUpperCase() + t.slice(1);
-}
-
-function improveTone(text, lang) {
-  const base = sentenceCase(text);
-  if (!base) return '';
-
-  if (lang === 'en') {
-    return base
-      .replace(/\bvery\s+very\b/gi, 'very')
-      .replace(/\bnice\b/gi, 'comfortable')
-      .replace(/\bgood\b/gi, 'well-suited');
+/**
+ * Na osnovu AI analize (tema, entiteti, namera) izdvaja relevantne činjenice iz svih JSON fajlova u docs folderu.
+ * @param {string} analysisJson - JSON string sa poljima tema, entiteti, namera
+ * @returns {Array} Lista relevantnih činjenica
+ */
+function extractRelevantFactsFromAnalysis(analysisJson) {
+  let analysis;
+  try {
+    analysis = typeof analysisJson === 'string' ? JSON.parse(analysisJson) : analysisJson;
+  } catch (e) {
+    return [];
   }
-
-  return base
-    .replace(/\bbas\b/gi, 'dobro')
-    .replace(/\blep\b/gi, 'prijatan')
-    .replace(/\bok\b/gi, 'odgovarajuci');
-}
-
-function createProofreadSuggestions(original, suggested) {
-  const suggestions = [];
-  if (normalizeWhitespace(original) !== original) {
-    suggestions.push('Whitespace normalized');
-  }
-  if (suggested.length && suggested[0] !== original[0]) {
-    suggestions.push('Capitalized sentence start');
-  }
-  if (!/[.!?]$/.test(suggested)) {
-    suggestions.push('Missing terminal punctuation (optional)');
-  }
-  return suggestions;
-}
-
-function createRewriteSuggestions(original, suggested, tone) {
-  const suggestions = [];
-  if (normalizeWhitespace(original) !== normalizeWhitespace(suggested)) {
-    suggestions.push(`Adjusted text for ${tone} tone`);
-  }
-  return suggestions;
-}
-
-function getSupportedProvider(provider) {
-  return ['mock', 'anthropic'].includes(provider);
-}
-
-function truncateToWords(text, maxWords) {
-  const words = String(text || '').trim().split(/\s+/).filter(Boolean);
-  if (words.length <= maxWords) {
-    return String(text || '').trim();
-  }
-  return `${words.slice(0, maxWords).join(' ')}...`;
-}
-
-function truncateToChars(text, maxChars) {
-  const source = String(text || '').trim();
-  if (!source || !Number.isFinite(Number(maxChars)) || Number(maxChars) <= 0) return source;
-  if (source.length <= Number(maxChars)) return source;
-  return `${source.slice(0, Math.max(0, Number(maxChars) - 3)).trim()}...`;
-}
-
-function getLocalProofread(text) {
-  const source = String(text || '');
-  const suggested = sentenceCase(source);
-  const maxOutputWords = Number.parseInt(process.env.AI_MAX_OUTPUT_WORDS || '80', 10);
-  return {
-    suggested_text: truncateToWords(suggested, maxOutputWords),
-    notes: createProofreadSuggestions(source, suggested),
-    provider_mode: 'local-fallback'
-  };
-}
-
-function getLocalRewrite(text, { lang = 'sr', tone = 'professional' } = {}) {
-  const source = String(text || '');
-  const maxOutputWords = Number.parseInt(process.env.AI_MAX_OUTPUT_WORDS || '80', 10);
-
-  let rewritten = source;
-  if (tone === 'professional') {
-    rewritten = improveTone(source, lang);
-  } else if (tone === 'concise') {
-    rewritten = sentenceCase(source).replace(/\b(zaista|really|very)\b/gi, '').replace(/\s+/g, ' ').trim();
-  } else {
-    rewritten = sentenceCase(source);
-  }
-
-  return {
-    suggested_text: truncateToWords(rewritten, maxOutputWords),
-    tone,
-    notes: createRewriteSuggestions(source, rewritten, tone),
-    provider_mode: 'local-fallback'
-  };
-}
-
-// ─── Chat Configuration ───
-
-function getChatMaxTokens() {
-  return Number.parseInt(process.env.AI_CHAT_MAX_OUTPUT_TOKENS || '200', 10);
-}
-
-function getChatCacheTtlMs() {
-  return Number.parseInt(process.env.AI_CHAT_CACHE_TTL_MS || '300000', 10);
-}
-
-function getChatCacheMaxEntries() {
-  return Number.parseInt(process.env.AI_CHAT_CACHE_MAX_ENTRIES || '300', 10);
-}
-
-// ─── Docs Cache (RAG Knowledge Base) ───
-
-let cachedFacts = null;
-
-function loadDocsCache() {
-  if (cachedFacts) return cachedFacts;
-
+  const keywords = [];
+  if (analysis.tema) keywords.push(analysis.tema);
+  if (Array.isArray(analysis.entiteti)) keywords.push(...analysis.entiteti);
+  if (analysis.namera) keywords.push(analysis.namera);
+  // Učitaj sve podatke iz docs
+  const path = require('path');
+  const fs = require('fs');
   const docsDir = path.join(__dirname, '../docs');
-  if (!fs.existsSync(docsDir)) {
-    cachedFacts = [];
-    return cachedFacts;
-  }
-
-  const facts = [];
-  const files = fs.readdirSync(docsDir).filter(f => f.endsWith('.json'));
-
-  for (const file of files) {
+  const allFiles = fs.readdirSync(docsDir).filter(f => f.endsWith('.json'));
+  let allFacts = [];
+  for (const file of allFiles) {
     try {
-      const data = JSON.parse(fs.readFileSync(path.join(docsDir, file), 'utf8'));
-      const topic = file.replace('.json', '');
-
-      for (const [key, val] of Object.entries(data)) {
+      const raw = fs.readFileSync(path.join(docsDir, file), 'utf8');
+      const data = JSON.parse(raw);
+      // Heuristika: koristi sve nizove i objekte iz root-a
+      for (const key of Object.keys(data)) {
+        const val = data[key];
         if (Array.isArray(val)) {
-          for (const item of val) {
-            if (item && typeof item === 'object') {
-              facts.push({ ...item, _topic: topic, _section: key });
-            }
-          }
-        } else if (val && typeof val === 'object') {
-          // Handle nested structures (e.g. meni with subcategories)
-          const hasNestedArrays = Object.values(val).some(v => Array.isArray(v));
-          if (hasNestedArrays) {
-            for (const [subKey, subVal] of Object.entries(val)) {
-              if (Array.isArray(subVal)) {
-                for (const item of subVal) {
-                  if (item && typeof item === 'object') {
-                    facts.push({ ...item, _topic: topic, _section: `${key}.${subKey}` });
-                  }
-                }
-              }
-            }
-          } else {
-            facts.push({ ...val, _topic: topic, _section: key });
-          }
+          allFacts.push(...val);
+        } else if (typeof val === 'object') {
+          allFacts.push(val);
         }
       }
-    } catch { /* skip broken files */ }
+    } catch (e) { /* skip */ }
   }
-
-  cachedFacts = facts;
-  return cachedFacts;
+  // Filtriraj činjenice po ključnim rečima iz analize
+  const lowerKeywords = keywords.map(k => String(k).toLowerCase());
+  const relevant = allFacts.filter(fact => {
+    const text = JSON.stringify(fact).toLowerCase();
+    return lowerKeywords.some(k => text.includes(k));
+  });
+  return relevant;
 }
 
-// ─── Topic Filtering ───
 
-const TOPIC_PATTERNS = [
-  { topic: 'piramida-meni', regex: /hran|jelo|meni|restoran|kafan|rucak|vecer|dorucak|obrok|pic[ea]|desert|predjel|sup[ae]|corb|specijalitet|kaf[aeu]|sok|pivo|vino|rakij|klop/i },
-  { topic: 'atractions', regex: /atrakcij|obilazak|izlet|setn|planinar|staz|vidikovac|livad|sport|rekreacij|prirod|ski|edukacij|aktivnost|tura|bicikl/i },
-  { topic: 'events', regex: /dogadjaj|manifestacij|desavanj|kamp|skol|takmicenj|festival|maraton|program/i },
-  { topic: 'faq', regex: /pravil|pitanj|odgovor|faq|registracij|otkazivanj|placanj|parking|wifi|kucni\s*red|check.?in|check.?out/i },
-  { topic: 'prices', regex: /cen[ae]|cenovnik|kost|placanj|dinar|rsd|nocenj|tarif/i },
-  { topic: 'contacts', regex: /kontakt|telefon|mejl|email|adres|lokacij|kako.*doc|gde.*nalaz|broj/i }
-];
-
-function filterFactsByRelevance(message, allFacts, maxFacts = 15) {
-  const msg = String(message || '').toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-  const matchedTopics = new Set();
-  for (const { topic, regex } of TOPIC_PATTERNS) {
-    if (regex.test(msg)) matchedTopics.add(topic);
-  }
-
-  // No specific topic → return overview (first 2 from each topic)
-  if (matchedTopics.size === 0) {
-    const byTopic = {};
-    for (const fact of allFacts) {
-      const t = fact._topic || 'other';
-      if (!byTopic[t]) byTopic[t] = [];
-      if (byTopic[t].length < 2) byTopic[t].push(fact);
+// --- Prompt builder za AI ---
+/**
+ * Robustno učitava JSON fajl iz backend direktorijuma.
+ * @param {string} filename - Ime fajla (npr. 'faq.json')
+ * @returns {object|null} Parsirani JSON objekat ili null ako ne postoji ili je neispravan
+ */
+function readJsonDoc(filename) {
+  const fs = require('fs');
+  const path = require('path');
+  try {
+    // Traži u ../docs/ i fallback na ./ ako ne postoji
+    const docsPath = path.join(__dirname, '../docs', filename);
+    const localPath = path.join(__dirname, filename);
+    let filePath = fs.existsSync(docsPath) ? docsPath : localPath;
+    if (!fs.existsSync(filePath)) return null;
+    const raw = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(raw);
+  } catch (e) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('readJsonDoc error:', filename, e.message);
     }
-    return Object.values(byTopic).flat().slice(0, maxFacts);
-  }
-
-  // Filter facts by matched topics
-  const relevant = allFacts.filter(f => matchedTopics.has(f._topic));
-  if (relevant.length > 0) return relevant.slice(0, maxFacts);
-
-  // Fallback: keyword match in fact content
-  const words = msg.split(/\s+/).filter(w => w.length > 3);
-  const byKeyword = allFacts.filter(f => {
-    const text = JSON.stringify(f).toLowerCase();
-    return words.some(w => text.includes(w));
-  });
-  return byKeyword.slice(0, maxFacts);
-}
-
-// ─── Safety Check (Heuristic) ───
-
-function checkMessageSafety(message) {
-  const src = String(message || '').toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-  if (/ignore|zaobidji|prompt|internal|system\s*prompt|token|api\s*key|lozink|password|hack|exploit|sql|drop\s*table|injection|virus|malware|trojan|botnet|phish|keylog|ransomware|ddos/.test(src)) {
-    return { safe: false, class: 'unsafe', reason: 'policy_violation' };
-  }
-
-  if (/\b(python|javascript|react|node\.|c\+\+|java\s+kod|napisi\s+kod|write\s+code|debug|algoritam|bitcoin|politika|predsednik|trading|fudbal|kosarka|recept|kuvanje|homework|zadatak\s+iz)\b/.test(src)) {
-    return { safe: true, class: 'out_of_domain', reason: 'outside_scope' };
-  }
-
-  return { safe: true, class: 'in_domain', reason: 'ok' };
-}
-
-// ─── Response Cache ───
-
-const chatReplyCache = new Map();
-
-function getCacheKey(message, context) {
-  return JSON.stringify({
-    msg: String(message || '').trim().toLowerCase().slice(0, 200),
-    adults: context?.adults || null,
-    children: context?.children || null,
-    check_in: context?.check_in || null,
-    stay_length_days: context?.stay_length_days || null
-  });
-}
-
-function getCachedReply(key) {
-  const entry = chatReplyCache.get(key);
-  if (!entry) return null;
-  if (Date.now() - entry.createdAt > getChatCacheTtlMs()) {
-    chatReplyCache.delete(key);
     return null;
   }
-  return entry.value;
 }
 
-function cacheReply(key, value) {
-  chatReplyCache.set(key, { value, createdAt: Date.now() });
-  if (chatReplyCache.size > getChatCacheMaxEntries()) {
-    const firstKey = chatReplyCache.keys().next().value;
-    if (firstKey) chatReplyCache.delete(firstKey);
-  }
-}
+// --- Prompt builder za AI ---
 
-// ─── Prompt Builder ───
-
-function buildSystemPrompt(lang = 'sr') {
-  const isSr = lang !== 'en';
-  return isSr
-    ? [
-      'Ти си пријатељски асистент за Наставну базу Гоч — планинску базу за одмор, едукацију и рекреацију на планини Гоч код Врњачке Бање.',
-      '',
-      'ПРАВИЛА:',
-      '- Имаш приступ ЖИВИМ подацима о слободним собама и ценама. Користи их!',
-      '- Ако корисник тражи смештај, а недостају му подаци (број особа, датум, дужина боравка) — питај га природно за податак који недостаје. НЕ шаљи га на телефон или мејл.',
-      '- Ако су у контексту наведене слободне собе — обавезно их помени и понуди опције.',
-      '- Ако корисник пита о ценама, дај конкретне цифре из контекста (цене ноћења, хране, активности).',
-      '- Ако корисник пита о храни/менију, прикажи конкретна јела и цене из контекста.',
-      '- Ако корисник пита о активностима, описуј атракције из контекста.',
-      '- Буди природан, пријатељски и сажет (до 80 речи).',
-      '- Ако немаш податке за питање, реци искрено.',
-      '- Пиши на српском ћириличном писму.',
-      '- Одговарај као човек, не као робот.',
-      '- НИКАД не реци кориснику да "немаш real-time информације" — ти их ИМАШ у контексту.',
-      '',
-      'РЕЗЕРВАЦИЈА:',
-      '- Кад корисник има све податке (особе, датум, ноћи), систем аутоматски приказује картице са собама и дугметом "Резервиши". НЕ тражи контакт податке — то ради форма аутоматски.',
-      '- НИКАД не питај за име, email, телефон — то попуњава резервациони формулар.',
-      '- Ако корисник каже "резервиши" или "желим да резервишем", реци му да кликне дугме "Резервиши" на картици собе која му одговара.',
-      '- Твоја улога је да помогнеш у избору собе, НЕ да прикупљаш податке за резервацију.'
-    ].join('\n')
-    : [
-      'You are a friendly assistant for Nastavna Baza Goč — a mountain lodge for rest, education and recreation on Goč mountain near Vrnjačka Banja, Serbia.',
-      '',
-      'RULES:',
-      '- You have access to LIVE room availability and pricing data. Use it!',
-      '- If the user asks about accommodation but is missing info (guest count, dates, stay length) — ask naturally for what is missing. Do NOT send them to phone or email.',
-      '- If available rooms are in the context — mention them and offer options.',
-      '- If the user asks about prices, give concrete numbers from the context.',
-      '- Be natural, friendly and concise (under 80 words).',
-      '- If you lack data for a question, say so honestly.',
-      '- Write in English.',
-      '- Sound human, not robotic.',
-      '- NEVER tell the user you lack real-time info — you DO have it in the context.',
-      '',
-      'RESERVATION:',
-      '- When all data is present, the system automatically shows room cards with a "Reserve" button. Do NOT ask for contact details — the form handles that.',
-      '- NEVER ask for name, email, or phone — the reservation form collects those.',
-      '- If the user says "reserve", tell them to click the "Reserve" button on their preferred room card.'
-    ].join('\n');
-}
-
-function formatFactForPrompt(fact) {
-  const clean = { ...fact };
-  delete clean._topic;
-  delete clean._section;
-  return JSON.stringify(clean);
-}
-
-function buildUserPrompt(message, facts, roomResults, context, history) {
-  const parts = [];
-
-  if (facts.length > 0) {
-    const factsStr = facts
-      .map((f, i) => `${i + 1}. ${formatFactForPrompt(f)}`)
-      .join('\n');
-    parts.push(`Подаци из базе:\n${factsStr}`);
-  }
-
-  if (roomResults?.suggestions?.length > 0) {
-    const rooms = roomResults.suggestions.map(s =>
-      `- ${s.facility_name} / ${s.room_name} (\u043a\u0430\u043f\u0430\u0446\u0438\u0442\u0435\u0442: ${s.room_capacity_min || '?'}\u2013${s.room_capacity_max || '?'}, ${s.is_recommended ? '\u041f\u0420\u0415\u041f\u041e\u0420\u0423\u0427\u0415\u041d\u041e' : '\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e'})`
-    ).join('\n');
-    parts.push(`СЛОБОДНЕ СОБЕ за тражени термин (ЖИВИ подаци из базе):\n${rooms}\nОве собе су стварно слободне — помени их кориснику. Систем аутоматски приказује картице са дугметом "Резервиши" — НЕ тражи контакт податке.`);
-  } else if (roomResults?.status === 'needs_input' && roomResults?.missing) {
-    const missingLabels = {
-      guest_breakdown: 'број особа (одрасли и деца)',
-      check_in: 'датум доласка',
-      stay_length_days: 'колико дана/ноћи желе да остану'
-    };
-    const missingList = Object.entries(roomResults.missing)
-      .filter(([, v]) => v)
-      .map(([k]) => missingLabels[k] || k)
-      .join(', ');
-    if (missingList) {
-      parts.push(`НЕДОСТАЈЕ за претрагу слободних соба: ${missingList}.\nПитај корисника природно за оно што недостаје. НЕ шаљи га на телефон.`);
-    }
-  }
-
-  if (context && (context.adults || context.check_in || context.stay_length_days)) {
-    const known = {};
-    if (context.adults) known.одрасли = context.adults;
-    if (context.children) known.деца = context.children;
-    if (context.check_in) known.долазак = context.check_in;
-    if (context.stay_length_days) known.број_дана = context.stay_length_days;
-    parts.push(`Познати подаци о госту: ${JSON.stringify(known)}`);
-  }
-
-  if (Array.isArray(history) && history.length > 0) {
-    const historyStr = history.slice(-3).map(h => `${h.role}: ${h.text}`).join('\n');
-    parts.push(`Претходне поруке:\n${historyStr}`);
-  }
-
-  parts.push(`Корисникова порука: ${message}`);
-
-  return parts.join('\n\n');
-}
-
-// ─── Local Fallback ───
-
-function getLocalChatFallback(message, facts, roomResults, lang = 'sr') {
-  const isEn = lang === 'en';
-
-  if (roomResults?.suggestions?.length > 0) {
-    const roomNames = roomResults.suggestions.slice(0, 3)
-      .map(s => `${s.facility_name} / ${s.room_name}`).join(', ');
-    return isEn
-      ? `I found available rooms: ${roomNames}. Click "Reserve" on the card you prefer.`
-      : `Пронашао сам слободне собе: ${roomNames}. Кликните "Резервиши" на картици која вам одговара.`;
-  }
-
-  if (facts.length > 0) {
-    const names = facts.slice(0, 5)
-      .map(f => f.name || f.ime || f.question || f.type || f.item)
-      .filter(Boolean);
-    if (names.length > 0) {
-      return isEn
-        ? `Here's what I have from our offer: ${names.join(', ')}. Ask me for details.`
-        : `Ево шта имам из наше понуде: ${names.join(', ')}. Питајте ме за детаље.`;
-    }
-  }
-
-  if (roomResults?.status === 'needs_input' && roomResults?.missing) {
-    if (roomResults.missing.guest_breakdown) return isEn ? 'How many guests are coming? (adults and children)' : 'Колико вас долази? (број одраслих и деце)';
-    if (roomResults.missing.check_in) return isEn ? 'What arrival date are you planning?' : 'Који датум доласка планирате?';
-    if (roomResults.missing.stay_length_days) return isEn ? 'How many days/nights do you want to stay?' : 'Колико дана/ноћи желите да останете?';
-  }
-
-  return isEn
-    ? 'I can help with accommodation, activities, restaurant and everything related to Nastavna Baza Goč. Ask away!'
-    : 'Могу да помогнем око смештаја, активности, ресторана и свега везаног за Наставну базу Гоч. Питајте слободно!';
-}
-
-// ─── AIService Class ───
-
-class AIService {
-  getStatus() {
-    const enabledFlag = String(process.env.AI_ENABLED || 'false').toLowerCase() === 'true';
-    const provider = (process.env.AI_PROVIDER || 'mock').toLowerCase();
-    const apiKey = process.env.AI_API_KEY || '';
-
-    if (!enabledFlag) {
-      return { enabled: false, mode: 'disabled', provider: 'none', reason: 'AI feature flag is disabled' };
-    }
-    if (!getSupportedProvider(provider)) {
-      return { enabled: false, mode: 'misconfigured', provider, reason: 'Unsupported AI_PROVIDER' };
-    }
-    if (provider === 'mock') {
-      return { enabled: true, mode: 'demo', provider, reason: 'Demo provider active (no external billing)' };
-    }
-    if (!apiKey) {
-      return { enabled: false, mode: 'misconfigured', provider, reason: 'Missing AI_API_KEY' };
-    }
-    return { enabled: true, mode: 'live', provider, reason: 'External provider configured' };
-  }
-
-  isEnabled() {
-    return this.getStatus().enabled;
-  }
-
-  getModel() {
-    return process.env.AI_MODEL || 'claude-sonnet-4-6';
-  }
-
-  getMaxOutputWords() {
-    return Number.parseInt(process.env.AI_MAX_OUTPUT_WORDS || '80', 10);
-  }
-
-  getMaxOutputTokens() {
-    return Number.parseInt(process.env.AI_MAX_OUTPUT_TOKENS || '180', 10);
-  }
-
-  isChatEnabled() {
-    const flag = String(process.env.AI_CHAT_ASSISTANT_ENABLED || 'true').toLowerCase() === 'true';
-    return flag && this.isEnabled();
-  }
-
-  async callAnthropic(systemPrompt, userText, options = {}) {
-    const apiKey = process.env.AI_API_KEY;
-    const maxTokens = Number.isFinite(Number(options.maxTokens))
-      ? Number(options.maxTokens)
-      : this.getMaxOutputTokens();
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: this.getModel(),
-        max_tokens: maxTokens,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userText }]
-      })
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data?.error?.message || 'Anthropic request failed');
-    }
-
-    const text = Array.isArray(data?.content)
-      ? data.content.filter(item => item?.type === 'text').map(item => item.text).join('\n').trim()
-      : '';
-
-    if (!text) {
-      throw new Error('Anthropic returned empty text');
-    }
-
-    return text;
-  }
-
-  // ─── Admin: Proofread ───
-
-  async proofread(text, lang = 'sr') {
-    const status = this.getStatus();
-    const source = String(text || '');
-
-    if (status.mode !== 'live' || status.provider !== 'anthropic') {
-      return getLocalProofread(source);
-    }
-
+// --- AI-FIRST PIPELINE: Svi podaci iz baze, AI bira ---
+// (Pomereno ispod svih utility funkcija zbog scope-a)
+async function processAssistantMessageV2(userMessage, context = {}, history = []) {
+  // Semantic search config
+  const USE_VECTOR_SEARCH = process.env.USE_VECTOR_SEARCH === 'true';
+  let facts = [];
+  let prompt = '';
+  if (USE_VECTOR_SEARCH) {
+    // Use Qdrant vector search for relevant facts
     try {
-      const suggested = await this.callAnthropic(
-        `You are a careful editorial assistant for a CMS. Language: ${lang}. Improve spelling, grammar, punctuation, and readability. Preserve the meaning, structure, and approximate length. Return only the revised text with no explanation or markdown. Keep the answer short and under ${this.getMaxOutputWords()} words.`,
-        source
-      );
-
-      return {
-        suggested_text: truncateToWords(suggested, this.getMaxOutputWords()),
-        notes: createProofreadSuggestions(source, suggested),
-        provider_mode: 'live'
-      };
-    } catch (error) {
-      const fallback = getLocalProofread(source);
-      return {
-        ...fallback,
-        notes: [...fallback.notes, `Live AI unavailable: ${error.message}`]
-      };
+      const { searchFacts } = require('./vectorSearchService');
+      facts = await searchFacts(userMessage, 7);
+    } catch (e) {
+      // fallback to keyword pipeline if vector search fails
+      facts = [];
     }
   }
-
-  // ─── Admin: Rewrite ───
-
-  async rewrite(text, { lang = 'sr', tone = 'professional' } = {}) {
-    const status = this.getStatus();
-    const source = String(text || '');
-
-    if (status.mode !== 'live' || status.provider !== 'anthropic') {
-      return getLocalRewrite(source, { lang, tone });
+  if (!USE_VECTOR_SEARCH || facts.length === 0) {
+    // Fallback: current keyword/heuristic pipeline
+    const menuDoc = readJsonDoc('piramida-meni.json');
+    const atrDoc = readJsonDoc('goc-gvozdac-okolina.json');
+    const faqDoc = readJsonDoc('faq.json');
+    const evDoc = readJsonDoc('events.json');
+    const cDoc = readJsonDoc('contacts.json');
+    const pDoc = readJsonDoc('prices.json');
+    if (menuDoc && menuDoc.meni) {
+      facts = facts.concat(Object.values(menuDoc.meni).flat().map(item => ({
+        name: item.ime,
+        ingredients: item.namernice,
+        price: item.cena,
+        _topic: 'restaurant_menu'
+      })));
     }
-
-    try {
-      const rewritten = await this.callAnthropic(
-        `You are a content editor for a public-facing website. Language: ${lang}. Rewrite the provided text in a ${tone} tone. Keep the original meaning, avoid exaggeration, and return only the rewritten text with no markdown or explanation. Keep the answer short and under ${this.getMaxOutputWords()} words.`,
-        source
-      );
-
-      return {
-        suggested_text: truncateToWords(rewritten, this.getMaxOutputWords()),
-        tone,
-        notes: createRewriteSuggestions(source, rewritten, tone),
-        provider_mode: 'live'
-      };
-    } catch (error) {
-      const fallback = getLocalRewrite(source, { lang, tone });
-      return {
-        ...fallback,
-        notes: [...(fallback.notes || []), `Live AI unavailable: ${error.message}`]
-      };
-    }
-  }
-
-  // ─── Chat: AI-first RAG Reply ───
-
-  async composeChatReply({ message, context, roomResults, history, lang = 'sr' } = {}) {
-    const allFacts = loadDocsCache();
-    const relevantFacts = filterFactsByRelevance(message, allFacts);
-
-    // Check cache
-    const cacheKey = getCacheKey(message, context);
-    const cached = getCachedReply(cacheKey);
-    if (cached) {
-      return { ...cached, provider_mode: `${cached.provider_mode || 'unknown'}-cache` };
-    }
-
-    // Try live AI
-    if (this.isChatEnabled()) {
-      const status = this.getStatus();
-      if (status.mode === 'live' && status.provider === 'anthropic') {
-        try {
-          const systemPrompt = buildSystemPrompt(lang);
-          const userPrompt = buildUserPrompt(message, relevantFacts, roomResults, context, history);
-          const aiText = await this.callAnthropic(systemPrompt, userPrompt, {
-            maxTokens: getChatMaxTokens()
-          });
-
-          if (aiText) {
-            const result = { text: aiText, provider_mode: 'live' };
-            cacheReply(cacheKey, result);
-            return result;
-          }
-        } catch (err) {
-          console.error('[aiService] Live AI failed, falling back:', err.message);
+    // DEBUG: Log atrDoc before mapping
+    // eslint-disable-next-line no-console
+    console.log('DEBUG aiService.js: atrDoc:', JSON.stringify(atrDoc, null, 2));
+    if (atrDoc && Array.isArray(atrDoc.atrakcije)) {
+      // DEBUG: Log loaded attractions and mapped facts
+      // eslint-disable-next-line no-console
+      console.log('DEBUG aiService.js: atrDoc.atrakcije:', JSON.stringify(atrDoc.atrakcije, null, 2));
+      const mappedAttractions = atrDoc.atrakcije.map(item => {
+        let tags = [];
+        if (Array.isArray(item.category_tags)) {
+          tags = item.category_tags;
+        } else if (Array.isArray(item.kategorija)) {
+          tags = item.kategorija;
+        } else if (item.kategorija) {
+          tags = [item.kategorija];
         }
+        return {
+          name: item.ime,
+          description: item.opis,
+          category_tags: tags,
+          category: tags[0] || '',
+          _topic: 'attraction'
+        };
+      });
+      // eslint-disable-next-line no-console
+      console.log('DEBUG aiService.js: mappedAttractions:', JSON.stringify(mappedAttractions, null, 2));
+      facts = facts.concat(mappedAttractions);
+    }
+    if (faqDoc && Array.isArray(faqDoc.faq)) {
+      facts = facts.concat(faqDoc.faq.map(item => ({
+        question: item.pitanje || item.question,
+        answer: item.odgovor || item.answer,
+        _topic: 'faq'
+      })));
+    }
+    if (evDoc && Array.isArray(evDoc.events)) {
+      facts = facts.concat(evDoc.events.map(item => ({
+        name: item.naziv || item.name,
+        date: item.datum || item.date,
+        description: item.opis || item.description,
+        _topic: 'event'
+      })));
+    }
+    if (cDoc && Array.isArray(cDoc.contacts)) {
+      facts = facts.concat(cDoc.contacts.map(item => ({
+        type: item.naziv || item.type,
+        phone: item.telefon || item.phone,
+        email: item.email,
+        address: item.adresa || item.address,
+        _topic: 'contact'
+      })));
+    }
+    if (pDoc && pDoc.prices) {
+      if (Array.isArray(pDoc.prices.smestaj)) {
+        facts = facts.concat(pDoc.prices.smestaj.map(item => ({
+          type: item.tip || item.type,
+          price: item.cena_po_noci || item.price,
+          _topic: 'price_accommodation'
+        })));
+      }
+      if (Array.isArray(pDoc.prices.aktivnosti)) {
+        facts = facts.concat(pDoc.prices.aktivnosti.map(item => ({
+          name: item.aktivnost || item.name,
+          price: item.cena || item.price,
+          _topic: 'price_activity'
+        })));
+      }
+      if (Array.isArray(pDoc.prices.hrana)) {
+        facts = facts.concat(pDoc.prices.hrana.map(item => ({
+          item: item.stavka || item.item,
+          price: item.cena || item.price,
+          _topic: 'price_food'
+        })));
       }
     }
-
-    // Local fallback
-    const fallbackText = getLocalChatFallback(message, relevantFacts, roomResults, lang);
-    const result = { text: fallbackText, provider_mode: 'local-fallback' };
-    cacheReply(cacheKey, result);
-    return result;
+    // --- NEW JSONs ---
+    const newsDoc = readJsonDoc('news.json');
+    if (newsDoc && Array.isArray(newsDoc.news)) {
+      facts = facts.concat(newsDoc.news.map(item => ({ ...item, _topic: 'news' })));
+    }
+    const annDoc = readJsonDoc('announcements.json');
+    if (annDoc && Array.isArray(annDoc.announcements)) {
+      facts = facts.concat(annDoc.announcements.map(item => ({ ...item, _topic: 'announcements' })));
+    }
+    const labsDoc = readJsonDoc('labs.json');
+    if (labsDoc && Array.isArray(labsDoc.labs)) {
+      facts = facts.concat(labsDoc.labs.map(item => ({ ...item, _topic: 'labs' })));
+    }
+    const wdDoc = readJsonDoc('wooddryer.json');
+    if (wdDoc && Array.isArray(wdDoc.wooddryer)) {
+      facts = facts.concat(wdDoc.wooddryer.map(item => ({ ...item, _topic: 'wooddryer' })));
+    }
+    const sawDoc = readJsonDoc('sawmill.json');
+    if (sawDoc && Array.isArray(sawDoc.sawmill)) {
+      facts = facts.concat(sawDoc.sawmill.map(item => ({ ...item, _topic: 'sawmill' })));
+    }
+    const campusDoc = readJsonDoc('campus.json');
+    if (campusDoc && Array.isArray(campusDoc.campus)) {
+      facts = facts.concat(campusDoc.campus.map(item => ({ ...item, _topic: 'campus' })));
+    }
   }
+  // Priprema history (poslednje 2 korisničke poruke i poslednji AI odgovor)
+  const lastUserMessages = history.filter(h => h.role === 'user').slice(-2).map(h => h.content);
+  const lastAssistant = history.filter(h => h.role === 'assistant').slice(-1).map(h => h.content);
+  // Precizne instrukcije za AI (teme su sada ravnopravne, bez fokusa na rezervacije)
+  let instructions = `Odgovaraj prijateljski, jasno i sažeto.
+Svi tematski upiti su ravnopravni – koristi podatke iz baze i odgovaraj na pitanja o:
+- ekosistemu rezervata na Goču
+- životinjama (animals)
+- gljivama (fungies)
+- istoriji (kako je Univerzitet u Beogradu dobio Goč od kraljice, a zatim dao Šumarskom fakultetu)
+- pejzažu (landscape)
+- planinarenju (hiking)
+- šumskim putevima i stazama (wood roadmaps, walking)
+- mestima za posete i zanimljivostima (visits, interesting places)
+- lovu (hunting)
+- skijaškim stazama (ski tracks)
+- studentima, kampusu i projektima (students, campus, projects)
+- laboratorijama (laboratories)
+- pilani (sawmill)
+- sušari za drvo (wooddryer)
+- restoranu (restaurant)
+- sobama i smeštaju (rooms)
+Ako korisnik pita za cene, koristi podatke iz baze cena.
+Ako pita za događaje, koristi podatke iz baze događaja.
+Ako pita za kontakt, koristi podatke iz baze kontakata.
+Ako pita za pravila, najčešća pitanja, koristi podatke iz baze FAQ.
+Ako ne možeš da mapiraš, reci iskreno da nema podatka.
+Kombinuj činjenice iz baze sa opštim znanjem, ali ne izmišljaj. Odgovor neka bude do 250 reči.`;
+  // Priprema prompta za AI
+  prompt = buildAIPromptV2({
+    message: userMessage,
+    facts,
+    context,
+    instructions,
+    history: { user: lastUserMessages, assistant: lastAssistant }
+  });
+  return { prompt, facts };
 }
 
-// ─── Exports ───
+function buildAIPromptV2({ message, facts, context, instructions, history }) {
+  const factsPreview = Array.isArray(facts)
+    ? facts.slice(0, 10).map((f, i) => `${i + 1}. ${JSON.stringify(f)}`).join('\n')
+    : '';
+  // Detekcija top tema iz korisničkog pitanja
+  let topTeme = [];
+  const temaMap = [
+    { key: 'ekosistem', label: 'Ekosistem' },
+    { key: 'rezervat', label: 'Ekosistem' },
+    { key: 'životinja', label: 'Životinje' },
+    { key: 'životinje', label: 'Životinje' },
+    { key: 'animal', label: 'Životinje' },
+    { key: 'gljiva', label: 'Gljive' },
+    { key: 'fungi', label: 'Gljive' },
+    { key: 'istorija', label: 'Istorija' },
+    { key: 'kraljica', label: 'Istorija' },
+    { key: 'univerzitet', label: 'Istorija' },
+    { key: 'šumarski fakultet', label: 'Istorija' },
+    { key: 'pejzaž', label: 'Pejzaž' },
+    { key: 'landscape', label: 'Pejzaž' },
+    { key: 'planinarenje', label: 'Planinarenje' },
+    { key: 'hiking', label: 'Planinarenje' },
+    { key: 'šumski put', label: 'Šumski putevi' },
+    { key: 'staza', label: 'Šumski putevi' },
+    { key: 'wood road', label: 'Šumski putevi' },
+    { key: 'šetnja', label: 'Šumski putevi' },
+    { key: 'poseta', label: 'Mesta za posete' },
+    { key: 'zanimljivost', label: 'Mesta za posete' },
+    { key: 'hunting', label: 'Lov' },
+    { key: 'lov', label: 'Lov' },
+    { key: 'skijanje', label: 'Skijaške staze' },
+    { key: 'ski', label: 'Skijaške staze' },
+    { key: 'staza', label: 'Skijaške staze' },
+    { key: 'student', label: 'Studenti' },
+    { key: 'kampus', label: 'Kampus' },
+    { key: 'projekat', label: 'Projekti' },
+    { key: 'laboratorija', label: 'Laboratorije' },
+    { key: 'sawmill', label: 'Pilana' },
+    { key: 'pilana', label: 'Pilana' },
+    { key: 'wooddryer', label: 'Sušara' },
+    { key: 'sušara', label: 'Sušara' },
+    { key: 'restoran', label: 'Restoran' },
+    { key: 'meni', label: 'Restoran' },
+    { key: 'hrana', label: 'Restoran' },
+    { key: 'jelo', label: 'Restoran' },
+    { key: 'soba', label: 'Sobe' },
+    { key: 'smeštaj', label: 'Sobe' },
+    { key: 'room', label: 'Sobe' },
+    { key: 'accommodation', label: 'Sobe' },
+    { key: 'cena', label: 'Cene' },
+    { key: 'cenovnik', label: 'Cene' },
+    { key: 'plaćanje', label: 'Cene' },
+    { key: 'događaj', label: 'Događaji' },
+    { key: 'manifestacija', label: 'Događaji' },
+    { key: 'dešavanje', label: 'Događaji' },
+    { key: 'kontakt', label: 'Kontakt' },
+    { key: 'telefon', label: 'Kontakt' },
+    { key: 'mejl', label: 'Kontakt' },
+    { key: 'email', label: 'Kontakt' },
+    { key: 'pravila', label: 'Pravila/FAQ' },
+    { key: 'faq', label: 'Pravila/FAQ' },
+    { key: 'pitanje', label: 'Pravila/FAQ' },
+    { key: 'odgovor', label: 'Pravila/FAQ' }
+  ];
+  const msgNorm = (message || '').toLocaleLowerCase('sr-RS');
+  for (const tema of temaMap) {
+    if (msgNorm.includes(tema.key) && !topTeme.includes(tema.label)) {
+      topTeme.push(tema.label);
+    }
+  }
+  let topTemeSection = '';
+  if (topTeme.length > 1) {
+    topTemeSection = '\nTop teme: ' + topTeme.slice(0, 3).join(', ');
+  }
+  return [
+    instructions || '',
+    '\nKorisnička poruka:',
+    message,
+    topTemeSection,
+    '\nFaktovi iz baze:',
+    factsPreview,
+    facts && facts.length > 10 ? `... (${facts.length - 10} još)` : '',
+    history && history.user ? `\nIstorija korisnika: ${JSON.stringify(history.user)}` : '',
+    history && history.assistant ? `\nIstorija asistenta: ${JSON.stringify(history.assistant)}` : '',
+    context ? `\nKontekst: ${JSON.stringify(context)}` : ''
+  ].filter(Boolean).join('\n');
+}
 
-const aiServiceInstance = new AIService();
+/**
+ * AI-first chat turn decision (minimal RAG/AI pipeline)
+ * @param {object} param0 { message, context, lang }
+ * @returns {Promise<object>} AI contract: { reply: { text }, guard: { class } }
+ */
+async function decideChatTurn({ message, context, lang }) {
+  // Pokreni pipeline
+  const { prompt, facts } = await processAssistantMessageV2(message, context || {}, []);
 
-module.exports = aiServiceInstance;
-module.exports.getLocalProofread = getLocalProofread;
-module.exports.getLocalRewrite = getLocalRewrite;
-module.exports.checkMessageSafety = checkMessageSafety;
-module.exports.loadDocsCache = loadDocsCache;
+  // Detekcija domene: ako ima bar jednu relevantnu činjenicu, in_domain, inače out_of_domain
+  let inDomain = Array.isArray(facts) && facts.length > 0 && typeof facts[0] !== 'string';
+  let guardClass = inDomain ? 'in_domain' : 'out_of_domain';
+  const replyText = inDomain
+    ? `Evo šta mogu da preporučim:\n${facts.map(f => f.name || f.item || f.question || f.type || '').toString()}`
+    : 'Nema relevantnih podataka u bazi za ovo pitanje.';
+  // Q&A logging: personal if userId present, else global
+  const userId = context && context.userId;
+  const logPayload = {
+    user_message: message,
+    ai_reply: replyText,
+    facts,
+    guard: guardClass,
+    timestamp: new Date().toISOString()
+  };
+  if (userId) {
+    getUserQaLogger(userId).info(logPayload);
+  } else {
+    qaLogger.info(logPayload);
+  }
+  return {
+    reply: {
+      text: replyText
+    },
+    facts,
+    prompt,
+    guard: {
+      class: guardClass
+    }
+  };
+}
+
+/**
+ * Minimalni AI-first reply za chat, koristi pipeline i vraća tekst za asistenta
+ */
+async function composeChatReply({ mode, lang, userMessage, followUpQuestion, missing, criteria, suggestions }) {
+  // Koristi pipeline za ekstrakciju činjenica
+  const { facts } = await processAssistantMessageV2(userMessage, criteria || {}, []);
+  if (Array.isArray(facts) && facts.length > 0 && typeof facts[0] !== 'string') {
+    // Prikaži do 3 najrelevantnije činjenice
+    const preview = facts.slice(0, 3).map(f => f.name || f.item || f.question || f.type || '').filter(Boolean).join(', ');
+    return { text: preview ? `Evo šta mogu da preporučim: ${preview}` : 'Imam podatke, ali nisu detaljni.' };
+  }
+  // Ako nema podataka, AI daje kvalitetan opšti odgovor
+  return { text: 'Na osnovu dostupnih informacija, nemam konkretan podatak iz baze, ali mogu pomoći opštim savetom ili informacijom.' };
+}
+
+module.exports = {
+  processAssistantMessageV2,
+  decideChatTurn,
+  composeChatReply,
+  extractRelevantFactsFromAnalysis
+};
