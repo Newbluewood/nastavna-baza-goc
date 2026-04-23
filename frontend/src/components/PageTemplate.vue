@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import ImageLightbox from './ImageLightbox.vue'
 import { useLangStore } from '../stores/lang'
 
@@ -40,10 +40,22 @@ const prevSlide = () => {
   }
 }
 
-onMounted(() => {
+const startInterval = () => {
+  if (slideInterval) clearInterval(slideInterval)
   if (props.slides && props.slides.length > 1) {
     slideInterval = setInterval(nextSlide, 5000)
   }
+}
+
+watch(() => props.slides?.length, (len, oldLen) => {
+  if (currentSlide.value >= (len || 0)) {
+    currentSlide.value = 0
+  }
+  startInterval()
+})
+
+onMounted(() => {
+  startInterval()
 })
 
 onUnmounted(() => {
