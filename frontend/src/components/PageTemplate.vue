@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import ImageLightbox from './ImageLightbox.vue'
 import { useLangStore } from '../stores/lang'
 
@@ -15,8 +15,7 @@ const props = defineProps({
 
 const langStore = useLangStore()
 const currentSlide = ref(0)
-let slideTimer = null
-const SLIDE_DELAY_MS = 5000
+let slideInterval = null
 
 const lightboxOpen = ref(false)
 const lbIndex = ref(0)
@@ -41,46 +40,14 @@ const prevSlide = () => {
   }
 }
 
-const stopAutoSlide = () => {
-  if (slideTimer) {
-    clearTimeout(slideTimer)
-    slideTimer = null
-  }
-}
-
-const scheduleNextSlide = () => {
-  stopAutoSlide()
-  if (!props.slides || props.slides.length <= 1) return
-
-  slideTimer = setTimeout(() => {
-    nextSlide()
-    scheduleNextSlide()
-  }, SLIDE_DELAY_MS)
-}
-
-const handleVisibilityChange = () => {
-  if (document.hidden) {
-    stopAutoSlide()
-  } else {
-    scheduleNextSlide()
-  }
-}
-
-// Pokreni slider čim slides stignu (sa API-ja ili odmah)
-watch(() => props.slides, (newSlides) => {
-  if (currentSlide.value >= (newSlides?.length || 0)) {
-    currentSlide.value = 0
-  }
-  scheduleNextSlide()
-}, { immediate: true })
-
 onMounted(() => {
-  document.addEventListener('visibilitychange', handleVisibilityChange)
+  if (props.slides && props.slides.length > 1) {
+    slideInterval = setInterval(nextSlide, 5000)
+  }
 })
 
 onUnmounted(() => {
-  stopAutoSlide()
-  document.removeEventListener('visibilitychange', handleVisibilityChange)
+  if (slideInterval) clearInterval(slideInterval)
 })
 </script>
 
