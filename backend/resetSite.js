@@ -4,19 +4,23 @@
  * Orchestrator: postavlja sajt na nulu i sidi ga prezentacionim podacima.
  *
  * Redosled:
- *   1. createDefaultDb   — kreira bazu ako ne postoji
- *   2. setupDb           — kreira sve tabele (DROP + CREATE za smeštaj tabele)
- *   3. migrateDb         — dodaje kolone/izmene na postojeće tabele
+ *   1. createDefaultDb        — kreira bazu ako ne postoji
+ *   2. setupDb                — kreira sve tabele (DROP + CREATE za smeštaj tabele)
+ *   3. migrateDb              — dodaje kolone/izmene na postojeće tabele
  *   4. presentationDBmockData — seed: admin, smeštaj, vesti, hero, atrakcije...
- *   5. dbSanityCheck     — verifikuje da je sve ok, izlazi sa greškom ako fali
+ *   5. dbSanityCheck          — verifikuje da je sve ok
+ *   6. smokeTestRoutes        — testira API rute (zahteva živi server na PORT)
+ *   7. smokeTestWriteFlow     — testira ceo write flow (zahteva živi server na PORT)
  *
  * Upotreba:
- *   node resetSite.js           — DRY RUN (samo prikazuje šta bi uradio)
- *   node resetSite.js --execute — IZVRŠAVA sve korake
+ *   node resetSite.js                    — DRY RUN (samo prikazuje šta bi uradio)
+ *   node resetSite.js --execute          — reset baze + sanity check
+ *   node resetSite.js --execute --smoke  — reset baze + sanity + smoke testovi
  *
  * npm alias:
  *   npm run restart-site        — dry run
- *   npm run restart-site:run    — stvarno izvršavanje
+ *   npm run restart-site:run    — reset + sanity (bez smoke)
+ *   npm run restart-site:full   — reset + sanity + smoke (server mora biti upaljen)
  */
 
 require('dotenv').config();
@@ -24,15 +28,17 @@ const { execSync } = require('child_process');
 const path = require('path');
 
 const DRY = !process.argv.includes('--execute');
+const SMOKE = process.argv.includes('--smoke');
 const FLAG = DRY ? '' : '--execute';
 
 const steps = [
-  { label: '1. Kreiranje baze (createDefaultDb)',      cmd: 'node createDefaultDb.js' },
-  { label: '2. Kreiranje tabela (setupDb)',             cmd: `node setupDb.js ${FLAG}` },
-  { label: '3. Migracije (migrateDb)',                  cmd: `node migrateDb.js ${FLAG}` },
-  { label: '4. Seed podaci (presentationDBmockData)',   cmd: `node presentationDBmockData.js ${FLAG}` },
-  // Sanity check: u dry-run samo reportuje, u execute validira
-  { label: '5. Sanity check (dbSanityCheck)',           cmd: `node dbSanityCheck.js --mode=${DRY ? 'report' : 'presentation'}` },
+  { label: '1. Kreiranje baze (createDefaultDb)',      cmd: 'node createDefaultDb.js',                                         smoke: false },
+  { label: '2. Kreiranje tabela (setupDb)',             cmd: `node setupDb.js ${FLAG}`,                                         smoke: false },
+  { label: '3. Migracije (migrateDb)',                  cmd: `node migrateDb.js ${FLAG}`,                                       smoke: false },
+  { label: '4. Seed podaci (presentationDBmockData)',   cmd: `node presentationDBmockData.js ${FLAG}`,                          smoke: false },
+  { label: '5. Sanity check (dbSanityCheck)',           cmd: `node dbSanityCheck.js --mode=${DRY ? 'report' : 'presentation'}`, smoke: false },
+  { label: '6. Smoke: API rute (smokeTestRoutes)',      cmd: 'node smokeTestRoutes.js',                                         smoke: true  },
+  { label: '7. Smoke: Write flow (smokeTestWriteFlow)', cmd: 'node smokeTestWriteFlow.js',                                      smoke: true  },
 ];
 
 function separator(label) {
@@ -50,11 +56,21 @@ async function run() {
   if (DRY) {
     console.log('\n  Dodaj --execute da stvarno pokreneš:\n  node resetSite.js --execute\n  (ili: npm run restart-site:run)\n');
   }
+  if (SMOKE && DRY) {
+    console.log('  NAPOMENA: --smoke bez --execute samo prikazuje korake, ne izvršava.');
+  }
+  if (SMOKE && !DRY) {
+    console.log('  SMOKE testovi: server mora biti upaljen na portu', process.env.PORT || 3000, 'pre pokretanja!');
+    console.log('  Pokreni server u drugom terminalu: npm run start\n');
+  }
 
   const dir = path.join(__dirname);
   let failed = false;
 
   for (const step of steps) {
+    // Preskoči smoke korake ako --smoke nije prosleđen
+    if (step.smoke && !SMOKE) continue;
+
     separator(step.label);
     try {
       execSync(step.cmd, {
@@ -77,9 +93,17 @@ async function run() {
     process.exit(1);
   }
 
-  console.log('\n╔═════════════════════════════════════════╗');
-  console.log(`║  ${DRY ? 'DRY RUN ZAVRŠEN — nema izmena u bazi' : 'SAJT JE RESETOVAN I SPREMAN!         '}  ║`);
-  console.log('╚═════════════════════════════════════════╝\n');
+  console.log('\n╔═════════════════════════════════════════════════════════╗');
+  if (DRY) {
+    console.log('║  DRY RUN ZAVRŠEN — nema izmena u bazi                  ║');
+  } else if (SMOKE) {
+    console.log('║  SAJT JE RESETOVAN, ZASIDAN I VERIFIKOVAN! ✔           ║');
+    console.log('║  Svi smoke testovi su prošli.                          ║');
+  } else {
+    console.log('║  SAJT JE RESETOVAN I ZASIDAN!                          ║');
+    console.log('║  Sledeći korak: pokreni server pa npm run smoke:all    ║');
+  }
+  console.log('╚═════════════════════════════════════════════════════════╝\n');
 }
 
 run();
