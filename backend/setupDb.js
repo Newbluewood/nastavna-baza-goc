@@ -413,7 +413,7 @@ async function setup() {
 
     // Test Reservations (zauzeti datumi za sobu 1 - Piramida Dvokrevetna)
     await connection.query(`
-      INSERT INTO reservations (room_id, start_date, end_date, guest_name) VALUES
+      INSERT IGNORE INTO reservations (room_id, start_date, end_date, guest_name) VALUES
       (1, CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL 3 DAY), 'Test Gost 1'),
       (1, DATE_ADD(CURRENT_DATE, INTERVAL 10 DAY), DATE_ADD(CURRENT_DATE, INTERVAL 15 DAY), 'Test Gost 2')
     `);

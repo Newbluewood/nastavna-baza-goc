@@ -17,7 +17,9 @@
     "smoke:routes": "node smokeTestRoutes.js",
     "smoke:write-flow": "node smokeTestWriteFlow.js",
     "smoke:all": "npm.cmd run smoke:routes && npm.cmd run smoke:write-flow",
-    "test": "jest"
+    "test": "jest",
+    "restart-site": "node resetSite.js",
+    "restart-site:run": "node resetSite.js --execute"
   },
   "keywords": [],
   "author": "",
