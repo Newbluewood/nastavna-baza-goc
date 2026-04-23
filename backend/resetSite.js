@@ -13,9 +13,11 @@
  *   7. smokeTestWriteFlow     — testira ceo write flow (zahteva živi server na PORT)
  *
  * Upotreba:
- *   node resetSite.js                    — DRY RUN (samo prikazuje šta bi uradio)
- *   node resetSite.js --execute          — reset baze + sanity check
- *   node resetSite.js --execute --smoke  — reset baze + sanity + smoke testovi
+ *   node resetSite.js                             — DRY RUN (samo prikazuje šta bi uradio)
+ *   node resetSite.js --execute                   — reset baze + sanity check
+ *   node resetSite.js --execute --smoke            — reset baze + sanity + smoke testovi
+ *   node resetSite.js --verbose                   — DRY RUN, pun SQL output (za debug)
+ *   node resetSite.js --execute --verbose          — execute + pun output
  *
  * npm alias:
  *   npm run restart-site        — dry run
@@ -27,9 +29,10 @@ require('dotenv').config();
 const { execSync } = require('child_process');
 const path = require('path');
 
-const DRY = !process.argv.includes('--execute');
-const SMOKE = process.argv.includes('--smoke');
-const FLAG = DRY ? '' : '--execute';
+const DRY     = !process.argv.includes('--execute');
+const SMOKE   = process.argv.includes('--smoke');
+const VERBOSE = process.argv.includes('--verbose');
+const FLAG    = DRY ? '' : '--execute';
 
 const steps = [
   { label: '1. Kreiranje baze (createDefaultDb)',      cmd: 'node createDefaultDb.js',                                         smoke: false, quiet: false },
@@ -118,7 +121,7 @@ async function run() {
 
     separator(step.label);
     try {
-      if (step.quiet) {
+      if (step.quiet && !VERBOSE) {
         const out = execSync(step.cmd, { cwd: dir, env: process.env }).toString();
         summarizeOutput(out, step.label);
       } else {
