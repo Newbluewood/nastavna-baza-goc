@@ -18,4 +18,14 @@ Document all significant changes here. Use date, author, and a short description
 - 2026-04-23 (user): Logging system (requestLogger, qaLogger) integrated and documented.
 - 2026-04-23 (user): All info/context docs now systematically organized for all collaborators.
 
+## Git Grane i Arhitektura — 2026-04-23 (Copilot session)
+
+- 2026-04-23: Kreirana grana `development` iz `main` — nova integracijska grana.
+- 2026-04-23: Ceo BCKUP sadržaj (nova arhitektura) importovan na `development` — 110 fajlova, 8402 insertions.
+- 2026-04-23: Grana `asistant-features` rebasovana iznad `development` (čista istorija).
+- 2026-04-23: Stari `dev` obrisan lokalno i na remote-u.
+- 2026-04-23: Nova arhitektura uključuje: `server.js`/`app.js` split, `chatService.js`, `embeddingService.js`, `vectorSearchService.js`, `logger.js` (Winston), reorganizovani testovi (`tests/jest/`, `tests/standalone/`), prošireni `backend/docs/`.
+- 2026-04-23: Tok grana: `main` ← `development` ← `asistant-features` (i buduće feature grane).
+- Vidi: 09-ARCHITECTURE.md za detaljan opis nove arhitekture.
+
 ---
