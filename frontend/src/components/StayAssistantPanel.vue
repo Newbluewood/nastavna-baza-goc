@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
@@ -62,6 +62,35 @@ const messages = ref([
     text: 'Zdravo! Pomazem oko smestaja na Gocu. Napisite broj osoba, termin i koliko dana zelite da ostanete.'
   }
 ])
+
+function clearChat() {
+  messages.value = [
+    {
+      role: 'assistant',
+      type: 'text',
+      text: 'Zdravo! Pomazem oko smestaja na Gocu. Napisite broj osoba, termin i koliko dana zelite da ostanete.'
+    }
+  ]
+  context.value = {
+    adults: null,
+    children: null,
+    check_in: null,
+    stay_length_days: null,
+    pending_slot: null,
+    preferences: []
+  }
+  visitsByCard.value = {}
+  pendingReserve.value = null
+  inputText.value = ''
+  guestName.value = ''
+  guestEmail.value = ''
+  localStorage.removeItem(GUEST_CHAT_STORAGE_KEY)
+
+  // For logged-in guests, start a fresh chat thread after reset.
+  if (isLoggedIn.value) {
+    sessionId.value = `session-${Date.now()}`
+  }
+}
 
 function hasGuestToken() {
   return Boolean(localStorage.getItem('guest_token'))
@@ -418,8 +447,21 @@ function goToLogin() {
 
     <div v-if="isOpen" class="stay-assistant-panel">
       <div class="stay-assistant-head">
-        <strong>Asistent za smestaj</strong>
-        <small>Nastavna baza Goc</small>
+        <div class="stay-assistant-head-top">
+          <div>
+            <strong>Asistent za smestaj</strong>
+            <small>Nastavna baza Goc</small>
+          </div>
+          <button
+            type="button"
+            class="stay-clear-btn"
+            @click="clearChat"
+            title="Novi chat"
+            aria-label="Pokreni novi chat"
+          >
+            Novi chat
+          </button>
+        </div>
       </div>
 
       <div class="stay-assistant-body">
@@ -602,6 +644,36 @@ function goToLogin() {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.stay-assistant-head-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.stay-assistant-head-top div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stay-clear-btn {
+  background: #e8d5c4;
+  color: #67462e;
+  border: 1px solid #c8b3a4;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.stay-clear-btn:hover {
+  background: #dcc4b3;
+  border-color: #b8a39a;
 }
 
 .stay-assistant-head small {
@@ -818,19 +890,36 @@ function goToLogin() {
 
 @media (max-width: 640px) {
   .stay-assistant-wrapper {
-    right: 4px;
-    bottom: 10px;
-    width: calc(100vw - 20px);
+    right: 0;
+    bottom: 0;
+    width: 100vw;
   }
 
   .stay-assistant-toggle {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
   }
 
   .stay-assistant-toggle.is-open {
+    position: static;
     width: 100%;
     height: auto;
+  }
+
+  .stay-assistant-panel {
+    max-height: 80vh;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    min-width: 0;
+  }
+
+  .chat-bubble-icon {
+    width: 28px;
+    height: 28px;
   }
 }
 </style>
