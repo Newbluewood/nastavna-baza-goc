@@ -32,14 +32,59 @@ const SMOKE = process.argv.includes('--smoke');
 const FLAG = DRY ? '' : '--execute';
 
 const steps = [
-  { label: '1. Kreiranje baze (createDefaultDb)',      cmd: 'node createDefaultDb.js',                                         smoke: false },
-  { label: '2. Kreiranje tabela (setupDb)',             cmd: `node setupDb.js ${FLAG}`,                                         smoke: false },
-  { label: '3. Migracije (migrateDb)',                  cmd: `node migrateDb.js ${FLAG}`,                                       smoke: false },
-  { label: '4. Seed podaci (presentationDBmockData)',   cmd: `node presentationDBmockData.js ${FLAG}`,                          smoke: false },
-  { label: '5. Sanity check (dbSanityCheck)',           cmd: `node dbSanityCheck.js --mode=${DRY ? 'report' : 'presentation'}`, smoke: false },
-  { label: '6. Smoke: API rute (smokeTestRoutes)',      cmd: 'node smokeTestRoutes.js',                                         smoke: true  },
-  { label: '7. Smoke: Write flow (smokeTestWriteFlow)', cmd: 'node smokeTestWriteFlow.js',                                      smoke: true  },
+  { label: '1. Kreiranje baze (createDefaultDb)',      cmd: 'node createDefaultDb.js',                                         smoke: false, quiet: false },
+  { label: '2. Kreiranje tabela (setupDb)',             cmd: `node setupDb.js ${FLAG}`,                                         smoke: false, quiet: false },
+  { label: '3. Migracije (migrateDb)',                  cmd: `node migrateDb.js ${FLAG}`,                                       smoke: false, quiet: true  },
+  { label: '4. Seed podaci (presentationDBmockData)',   cmd: `node presentationDBmockData.js ${FLAG}`,                          smoke: false, quiet: true  },
+  { label: '5. Sanity check (dbSanityCheck)',           cmd: `node dbSanityCheck.js --mode=${DRY ? 'report' : 'presentation'}`, smoke: false, quiet: false },
+  { label: '6. Smoke: API rute (smokeTestRoutes)',      cmd: 'node smokeTestRoutes.js',                                         smoke: true,  quiet: false },
+  { label: '7. Smoke: Write flow (smokeTestWriteFlow)', cmd: 'node smokeTestWriteFlow.js',                                      smoke: true,  quiet: false },
 ];
+
+function summarizeOutput(output, stepLabel) {
+  const lines = output.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // Greške uvek prikaži
+  const errors = lines.filter(l => /error|greška|failed|✖/i.test(l));
+  if (errors.length) {
+    errors.forEach(l => console.log('  ' + l));
+    return;
+  }
+
+  if (stepLabel.includes('Migracije')) {
+    const executed = lines.filter(l => l.startsWith('EXECUTED:')).length;
+    const skipped  = lines.filter(l => l.startsWith('SKIP:')).length;
+    const dryRun   = lines.filter(l => l.startsWith('DRY-RUN:')).length;
+    if (DRY) {
+      console.log(`  → ${dryRun} izmena planirana, ${skipped} već postoji`);
+    } else {
+      console.log(`  → ${executed} izmena izvršeno, ${skipped} preskočeno`);
+    }
+  } else if (stepLabel.includes('Seed')) {
+    const dryLines  = lines.filter(l => l.startsWith('DRY-RUN: seed'));
+    const execLines = lines.filter(l => l.startsWith('EXECUTED: seed') || l.startsWith('Inserted'));
+    const counts = {};
+    const srcLines = DRY ? dryLines : execLines;
+    srcLines.forEach(l => {
+      const m = l.match(/seed (\w+)/i);
+      if (m) counts[m[1]] = (counts[m[1]] || 0) + 1;
+    });
+    const summary = Object.entries(counts).map(([k, v]) => `${k}×${v}`).join(', ');
+    const adminLine = lines.find(l => l.includes('Admin credentials'));
+    if (DRY) {
+      console.log(`  → DRY RUN: ${srcLines.length} operacija planirana`);
+    } else {
+      console.log(`  → Zasidano: ${srcLines.length} redova`);
+    }
+    if (summary) console.log(`  → Tipovi: ${summary}`);
+    if (adminLine) console.log(`  → ${adminLine}`);
+  } else {
+    // Ostali quiet koraci — prikaži linije koje nisu SQL/PARAMS
+    lines
+      .filter(l => !l.startsWith('SQL:') && !l.startsWith('PARAMS:') && !l.startsWith('DRY-RUN:') && !l.startsWith('SKIP:'))
+      .forEach(l => console.log('  ' + l));
+  }
+}
 
 function separator(label) {
   const line = '─'.repeat(60);
@@ -73,11 +118,12 @@ async function run() {
 
     separator(step.label);
     try {
-      execSync(step.cmd, {
-        cwd: dir,
-        stdio: 'inherit',
-        env: process.env,
-      });
+      if (step.quiet) {
+        const out = execSync(step.cmd, { cwd: dir, env: process.env }).toString();
+        summarizeOutput(out, step.label);
+      } else {
+        execSync(step.cmd, { cwd: dir, stdio: 'inherit', env: process.env });
+      }
     } catch (err) {
       console.error(`\n  ✖ Korak nije prošao: ${step.label}`);
       console.error(`    ${err.message}`);
