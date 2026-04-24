@@ -1,0 +1,128 @@
+{
+  "routes": [
+    {
+      "path": "/",
+      "id": "home",
+      "sr": "Насловна страна Наставне базе Гоч. Приказује хеpo галерију, кратак опис базе, најновије вести и преглед смештајних објеката. Одатле корисник полази ка смештају, вестима или контакту.",
+      "en": "Homepage of Goč Teaching Base. Shows a hero slider, a short introduction to the base, the latest news items, and a preview of accommodation facilities. From here users typically continue to accommodation, news, or contact.",
+      "keywords": ["почетна", "насловна", "pocetna", "naslovna", "home", "start", "index", "glavna"],
+      "related": ["/smestaj", "/vesti", "/kontakt"],
+      "ctas": [
+        { "label": { "sr": "Смештај", "en": "Accommodation" }, "route": "/smestaj", "type": "navigate" },
+        { "label": { "sr": "Вести", "en": "News" }, "route": "/vesti", "type": "navigate" },
+        { "label": { "sr": "Контакт", "en": "Contact" }, "route": "/kontakt", "type": "navigate" }
+      ]
+    },
+    {
+      "path": "/smestaj",
+      "id": "accommodation-list",
+      "sr": "Преглед свих смештајних објеката у бази (капацитет, опис, галерија слика и локација на мапи). Кликом на објекат корисник прелази на страницу са листом соба и опцијом за слање упита.",
+      "en": "Listing of all accommodation facilities in the base, showing capacity, description, photo gallery, and map location. Clicking a facility opens its detail page where rooms and the inquiry option are available.",
+      "keywords": ["смештај", "смештаји", "smestaj", "accommodation", "lodging", "rooms", "objekti", "vile", "kuce", "kuće"],
+      "related": ["/smestaj/:id", "/moj-nalog", "/kontakt"],
+      "ctas": [
+        { "label": { "sr": "Погледај собе", "en": "View rooms" }, "route": "/smestaj/:id", "type": "navigate" },
+        { "label": { "sr": "Моје резервације", "en": "My reservations" }, "route": "/moj-nalog", "type": "navigate" }
+      ]
+    },
+    {
+      "path": "/smestaj/:id",
+      "id": "accommodation-detail",
+      "sr": "Детаљи појединачног смештајног објекта: листа соба, галерија, описи и дугме „Пошаљи упит“ које отвара форму за избор датума и слање упита. Заузети датуми су унапред онемогућени у календару.",
+      "en": "Detail page for a single accommodation facility: room list, gallery, descriptions, and a \"Send inquiry\" button that opens a date-range form. Dates already taken are disabled in the calendar.",
+      "keywords": ["собе", "соба", "sobe", "room", "detalji smestaja", "rezervacija sobe", "upit", "inquiry"],
+      "related": ["/smestaj", "/prijava", "/moj-nalog"],
+      "ctas": [
+        { "label": { "sr": "Пошаљи упит", "en": "Send inquiry" }, "route": "/smestaj/:id", "type": "action" },
+        { "label": { "sr": "Назад на смештај", "en": "Back to accommodation" }, "route": "/smestaj", "type": "navigate" },
+        { "label": { "sr": "Моје резервације", "en": "My reservations" }, "route": "/moj-nalog", "type": "navigate" }
+      ]
+    },
+    {
+      "path": "/vesti",
+      "id": "news-list",
+      "sr": "Страница са свим актуелним вестима и најавама из Наставне базе Гоч. Сваки унос има насловну слику и кратак сажетак; кликом се отвара цео текст вести.",
+      "en": "Page with all current news and announcements from the Goč Teaching Base. Each item has a cover image and short excerpt; clicking opens the full article.",
+      "keywords": ["вести", "vesti", "news", "novosti", "najave", "announcements", "обавештења"],
+      "related": ["/vesti/:id", "/"],
+      "ctas": [
+        { "label": { "sr": "Отвори вест", "en": "Open article" }, "route": "/vesti/:id", "type": "navigate" },
+        { "label": { "sr": "Насловна", "en": "Home" }, "route": "/", "type": "navigate" }
+      ]
+    },
+    {
+      "path": "/vesti/:id",
+      "id": "news-detail",
+      "sr": "Приказ појединачне вести — пун текст чланка, слика и датум објаве. Корисник се одавде обично враћа на листу вести или на насловну страну.",
+      "en": "Single news article view with full text, image, and publication date. Users typically return from here to the news list or the homepage.",
+      "keywords": ["вест", "чланак", "članak", "article", "pojedina vest", "news item"],
+      "related": ["/vesti", "/"],
+      "ctas": [
+        { "label": { "sr": "Све вести", "en": "All news" }, "route": "/vesti", "type": "navigate" },
+        { "label": { "sr": "Насловна", "en": "Home" }, "route": "/", "type": "navigate" }
+      ]
+    },
+    {
+      "path": "/kontakt",
+      "id": "contact",
+      "sr": "Контакт секција Наставне базе Гоч–Гвоздац (Шумарски факултет, Универзитет у Београду). Тренутно је у изградњи и приказује се страница „у припреми“; адреса, телефон и е-пошта доступни су у подножју сајта.",
+      "en": "Contact section for the Goč–Gvozdac Teaching Base (Faculty of Forestry, University of Belgrade). Currently under construction and shows an \"under preparation\" placeholder; address, phone and email are available in the site footer.",
+      "keywords": ["контакт", "kontakt", "contact", "адреса", "адреса", "telefon", "email", "e-mail"],
+      "related": ["/", "/smestaj"],
+      "ctas": [
+        { "label": { "sr": "Насловна", "en": "Home" }, "route": "/", "type": "navigate" },
+        { "label": { "sr": "Смештај", "en": "Accommodation" }, "route": "/smestaj", "type": "navigate" }
+      ]
+    },
+    {
+      "path": "/prijava",
+      "id": "guest-login",
+      "sr": "Пријава госта у лични налог е-поштом и лозинком. Овде се може и затражити ресет лозинке уношењем е-поште и телефона из регистрације. Налог се аутоматски креира приликом првог упита за резервацију.",
+      "en": "Guest login page — sign in to your personal account with email and password. A password reset can be requested here by entering the email and phone used at registration. An account is created automatically on your first inquiry.",
+      "keywords": ["пријава", "prijava", "login", "sign in", "log in", "nalog", "korisnicki nalog", "password reset", "reset lozinke"],
+      "related": ["/moj-nalog", "/reset-lozinka/:token"],
+      "ctas": [
+        { "label": { "sr": "Пријави се", "en": "Log in" }, "route": "/prijava", "type": "action" },
+        { "label": { "sr": "Заборавио сам лозинку", "en": "Forgot password" }, "route": "/prijava", "type": "action" },
+        { "label": { "sr": "Моје резервације", "en": "My reservations" }, "route": "/moj-nalog", "type": "navigate" }
+      ]
+    },
+    {
+      "path": "/moj-nalog",
+      "id": "guest-dashboard",
+      "sr": "Гост-портал „Мој налог“ са три картице: резервације (статуси, промена датума, отказивање у року), ваучери (активни и искоришћени, самостално активирање) и промена лозинке. Захтева пријаву.",
+      "en": "Guest dashboard \"My account\" with three tabs: reservations (statuses, date changes, in-time cancellation), vouchers (active and redeemed, self-activation), and password change. Login required.",
+      "keywords": ["мој налог", "moj nalog", "dashboard", "my account", "profil", "rezervacije", "reservations", "vauceri", "vaučeri", "promena lozinke"],
+      "related": ["/prijava", "/smestaj", "/cancel/:token"],
+      "ctas": [
+        { "label": { "sr": "Моје резервације", "en": "My reservations" }, "route": "/moj-nalog", "type": "action" },
+        { "label": { "sr": "Моји ваучери", "en": "My vouchers" }, "route": "/moj-nalog", "type": "action" },
+        { "label": { "sr": "Промени лозинку", "en": "Change password" }, "route": "/moj-nalog", "type": "action" },
+        { "label": { "sr": "Погледај смештај", "en": "Browse accommodation" }, "route": "/smestaj", "type": "navigate" }
+      ]
+    },
+    {
+      "path": "/reset-lozinka/:token",
+      "id": "reset-password",
+      "sr": "Страна за постављање нове лозинке на основу токена добијеног е-поштом након захтева за ресет. Након успешне измене корисник се пријављује на /prijava.",
+      "en": "Page where the user sets a new password using a token received by email after a reset request. After a successful change, the user signs in at /prijava.",
+      "keywords": ["ресет лозинке", "reset lozinke", "reset-lozinka", "nova lozinka", "new password", "reset password", "token", "forgot password"],
+      "related": ["/prijava", "/moj-nalog"],
+      "ctas": [
+        { "label": { "sr": "Пријава", "en": "Login" }, "route": "/prijava", "type": "navigate" }
+      ]
+    },
+    {
+      "path": "/cancel/:token",
+      "id": "cancel-reservation",
+      "sr": "Страна за отказивање резервације помоћу једнократног токена из потврдне е-поште. Отказивање је могуће само ако је до доласка преостало најмање 7 дана; пролонгирано одбија сервер.",
+      "en": "Page for cancelling a reservation via a one-time token from the confirmation email. Cancellation is only allowed when there are at least 7 days left until check-in; otherwise the server refuses it.",
+      "keywords": ["откажи", "otkazi", "otkazivanje", "cancel", "cancellation", "token", "cancel reservation"],
+      "related": ["/moj-nalog", "/smestaj"],
+      "ctas": [
+        { "label": { "sr": "Моје резервације", "en": "My reservations" }, "route": "/moj-nalog", "type": "navigate" },
+        { "label": { "sr": "Погледај смештај", "en": "Browse accommodation" }, "route": "/smestaj", "type": "navigate" }
+      ]
+    }
+  ]
+}
