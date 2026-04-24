@@ -1,8 +1,11 @@
 ﻿<script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
 import { useGuestStore } from '../stores/guest'
+import { useLangStore } from '../stores/lang'
+
+const emit = defineEmits(['chip-action'])
 
 function escapeHtml(text) {
   return text
@@ -40,11 +43,173 @@ const guestName = ref('')
 const guestEmail = ref('')
 const visitsByCard = ref({})
 
+// --- Guide mode state (site-guide agent) ---------------------------------
+const langStore = useLangStore()
+const t = (key) => langStore.t(key)
+
+const currentMode = ref('booking')
+const guideMessages = ref([])
+const guideInputText = ref('')
+const guideInputEl = ref(null)
+const guideBodyEl = ref(null)
+const guideLoading = ref(false)
+
+const panelRoot = ref(null)
+const panelHeaderEl = ref(null)
+const previouslyFocused = ref(null)
+
+const canSendGuide = computed(
+  () => guideInputText.value.trim().length > 0 && !guideLoading.value
+)
+
 watch(isOpen, async (open) => {
-  if (!open) return
-  await nextTick()
-  inputEl.value?.focus()
+  if (open) {
+    // Remember opener so we can restore focus on close.
+    previouslyFocused.value = document.activeElement
+    await nextTick()
+    if (currentMode.value === 'guide') {
+      guideInputEl.value?.focus()
+    } else {
+      inputEl.value?.focus()
+    }
+  } else {
+    const prev = previouslyFocused.value
+    previouslyFocused.value = null
+    if (prev && typeof prev.focus === 'function') {
+      try { prev.focus() } catch { /* noop */ }
+    }
+  }
 })
+
+async function setMode(mode) {
+  if (mode !== 'booking' && mode !== 'guide') return
+  if (currentMode.value === mode) return
+  currentMode.value = mode
+  await nextTick()
+  if (mode === 'guide') {
+    guideInputEl.value?.focus()
+    scrollGuideToBottom()
+  } else {
+    inputEl.value?.focus()
+  }
+}
+
+function scrollGuideToBottom() {
+  const el = guideBodyEl.value
+  if (!el) return
+  requestAnimationFrame(() => {
+    el.scrollTop = el.scrollHeight
+  })
+}
+
+async function sendGuideMessage() {
+  if (!canSendGuide.value) return
+  const text = guideInputText.value.trim()
+  guideMessages.value.push({
+    role: 'user',
+    text,
+    ts: Date.now()
+  })
+  guideInputText.value = ''
+  guideLoading.value = true
+  scrollGuideToBottom()
+  try {
+    const result = await api.chatSiteGuideTurn({
+      message: text,
+      lang: langStore.currentLang
+    })
+    guideMessages.value.push({
+      role: 'assistant',
+      text: result?.answer || t('assistant.guideError'),
+      suggestions: Array.isArray(result?.suggestions) ? result.suggestions : [],
+      ts: Date.now()
+    })
+  } catch (_err) {
+    guideMessages.value.push({
+      role: 'assistant',
+      text: t('assistant.guideError'),
+      suggestions: [],
+      ts: Date.now()
+    })
+  } finally {
+    guideLoading.value = false
+    await nextTick()
+    scrollGuideToBottom()
+  }
+}
+
+function handleChipClick(suggestion) {
+  if (!suggestion || !suggestion.type || !suggestion.route) return
+  if (suggestion.type === 'navigate') {
+    router.push(suggestion.route)
+    isOpen.value = false
+  } else if (suggestion.type === 'external') {
+    window.open(suggestion.route, '_blank', 'noopener,noreferrer')
+  } else if (suggestion.type === 'action') {
+    emit('chip-action', { action: suggestion.route, label: suggestion.label })
+  }
+}
+
+// --- Panel keyboard handling (Esc + focus trap) ---------------------------
+function getFocusableElements() {
+  const root = panelRoot.value
+  if (!root) return []
+  const selector = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])'
+  ].join(',')
+  const nodes = Array.from(root.querySelectorAll(selector))
+  return nodes.filter((el) => !el.hasAttribute('disabled') && !el.hidden && el.offsetParent !== null)
+}
+
+function handlePanelKeydown(e) {
+  if (!isOpen.value) return
+  if (e.key === 'Escape') {
+    e.stopPropagation()
+    isOpen.value = false
+    return
+  }
+  if (e.key === 'Tab') {
+    const items = getFocusableElements()
+    if (items.length === 0) return
+    const first = items[0]
+    const last = items[items.length - 1]
+    const active = document.activeElement
+    if (e.shiftKey && (active === first || !panelRoot.value?.contains(active))) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }
+}
+
+// --- Mobile: visual viewport + swipe-down dismiss ------------------------
+function handleViewportResize() {
+  if (!isOpen.value) return
+  if (currentMode.value === 'guide') {
+    scrollGuideToBottom()
+  }
+}
+
+let touchStartY = 0
+let touchTracking = false
+function onHeaderTouchStart(e) {
+  if (!e.touches || !e.touches.length) return
+  touchStartY = e.touches[0].clientY
+  touchTracking = true
+}
+function onHeaderTouchEnd(e) {
+  if (!touchTracking) return
+  touchTracking = false
+  const endY = e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientY : touchStartY
+  if (endY - touchStartY > 50) isOpen.value = false
+}
 
 const context = ref({
   adults: null,
@@ -165,6 +330,15 @@ onMounted(async () => {
     await loadUserChatHistory()
   } else {
     restoreGuestChatState()
+  }
+  if (typeof window !== 'undefined' && window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleViewportResize)
+  }
+})
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined' && window.visualViewport) {
+    window.visualViewport.removeEventListener('resize', handleViewportResize)
   }
 })
 
@@ -434,25 +608,40 @@ function goToLogin() {
       class="stay-assistant-toggle"
       :class="{ 'is-open': isOpen }"
       @click="isOpen = !isOpen"
-      :aria-label="isOpen ? 'Zatvori asistenta' : 'Otvori asistenta za smestaj'"
-      :title="isOpen ? 'Zatvori asistenta' : 'Asistent za smestaj'"
+      :aria-label="isOpen ? t('assistant.closeAssistant') : t('assistant.openAssistant')"
+      :aria-expanded="isOpen ? 'true' : 'false'"
+      :title="isOpen ? t('assistant.closeAssistant') : t('assistant.openAssistant')"
     >
       <template v-if="!isOpen">
         <img src="/buble-chat.png" alt="Chat" class="chat-bubble-icon" />
       </template>
       <template v-else>
-        Zatvori asistenta
+        {{ t('assistant.closeAssistant') }}
       </template>
     </button>
 
-    <div v-if="isOpen" class="stay-assistant-panel">
-      <div class="stay-assistant-head">
+    <div
+      v-if="isOpen"
+      ref="panelRoot"
+      class="stay-assistant-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="stay-assistant-title"
+      @keydown="handlePanelKeydown"
+    >
+      <div
+        ref="panelHeaderEl"
+        class="stay-assistant-head"
+        @touchstart.passive="onHeaderTouchStart"
+        @touchend.passive="onHeaderTouchEnd"
+      >
         <div class="stay-assistant-head-top">
           <div>
-            <strong>Asistent za smestaj</strong>
+            <strong id="stay-assistant-title">Asistent za smestaj</strong>
             <small>Nastavna baza Goc</small>
           </div>
           <button
+            v-if="currentMode === 'booking'"
             type="button"
             class="stay-clear-btn"
             @click="clearChat"
@@ -462,52 +651,154 @@ function goToLogin() {
             Novi chat
           </button>
         </div>
-      </div>
 
-      <div class="stay-assistant-body">
-        <div
-          v-for="(msg, index) in messages"
-          :key="index"
-          :class="['stay-bubble', msg.role === 'user' ? 'is-user' : 'is-assistant']"
-        >
-          <p v-html="renderMessageText(msg.text)"></p>
-
-          <div v-if="msg.type === 'suggestions' && msg.suggestions?.length" class="stay-suggestions">
-            <div
-              v-for="item in msg.suggestions"
-              :key="`${item.facility_id}-${item.room_id}`"
-              :class="['stay-card', { 'is-recommended': item.is_recommended }]"
-            >
-              <span v-if="item.is_recommended" class="recommend-badge">Preporuka za Vas</span>
-              <strong>{{ item.facility_name }}</strong>
-              <span>{{ item.room_name }}</span>
-              <small>{{ item.rationale?.join(', ') }}</small>
-
-              <div class="stay-card-actions">
-                <button type="button" @click="loadVisitSuggestions(item.facility_id, item.room_id, msg.criteria?.check_in)">Predlozi obilazak</button>
-                <button type="button" class="reserve-btn" @click="askForReservation(item, msg.criteria)">Rezervisi</button>
-              </div>
-
-              <ul v-if="visitsByCard[`${item.facility_id}-${item.room_id}`]?.length" class="visit-list">
-                <li v-for="visit in visitsByCard[`${item.facility_id}-${item.room_id}`]" :key="visit.id">
-                  {{ visit.name }}
-                  <span v-if="visit.distance_minutes"> ({{ visit.distance_minutes }} min)</span>
-                </li>
-              </ul>
-            </div>
-          </div>
+        <div class="assistant-mode-switcher" role="tablist" :aria-label="t('assistant.modeBooking') + ' / ' + t('assistant.modeGuide')">
+          <button
+            type="button"
+            id="tab-booking"
+            class="assistant-mode-btn"
+            :class="{ 'is-active': currentMode === 'booking' }"
+            role="tab"
+            :aria-selected="currentMode === 'booking' ? 'true' : 'false'"
+            :tabindex="currentMode === 'booking' ? 0 : -1"
+            aria-controls="panel-booking"
+            @click="setMode('booking')"
+          >
+            {{ t('assistant.modeBooking') }}
+          </button>
+          <button
+            type="button"
+            id="tab-guide"
+            class="assistant-mode-btn"
+            :class="{ 'is-active': currentMode === 'guide' }"
+            role="tab"
+            :aria-selected="currentMode === 'guide' ? 'true' : 'false'"
+            :tabindex="currentMode === 'guide' ? 0 : -1"
+            aria-controls="panel-guide"
+            @click="setMode('guide')"
+          >
+            {{ t('assistant.modeGuide') }}
+          </button>
         </div>
       </div>
 
-      <div class="stay-assistant-input">
-        <input
-          ref="inputEl"
-          v-model="inputText"
-          type="text"
-          placeholder="Npr. Dolazimo sledece nedelje, 2 odraslih i 2 dece na 3 dana"
-          @keyup.enter="sendMessage"
-        />
-        <button type="button" @click="sendMessage" :disabled="!canSend">Posalji</button>
+      <div
+        v-show="currentMode === 'booking'"
+        id="panel-booking"
+        role="tabpanel"
+        aria-labelledby="tab-booking"
+        class="stay-assistant-tabpanel"
+      >
+        <div class="stay-assistant-body" aria-live="polite">
+          <div
+            v-for="(msg, index) in messages"
+            :key="index"
+            :class="['stay-bubble', msg.role === 'user' ? 'is-user' : 'is-assistant']"
+          >
+            <p v-html="renderMessageText(msg.text)"></p>
+
+            <div v-if="msg.type === 'suggestions' && msg.suggestions?.length" class="stay-suggestions">
+              <div
+                v-for="item in msg.suggestions"
+                :key="`${item.facility_id}-${item.room_id}`"
+                :class="['stay-card', { 'is-recommended': item.is_recommended }]"
+              >
+                <span v-if="item.is_recommended" class="recommend-badge">Preporuka za Vas</span>
+                <strong>{{ item.facility_name }}</strong>
+                <span>{{ item.room_name }}</span>
+                <small>{{ item.rationale?.join(', ') }}</small>
+
+                <div class="stay-card-actions">
+                  <button type="button" @click="loadVisitSuggestions(item.facility_id, item.room_id, msg.criteria?.check_in)">Predlozi obilazak</button>
+                  <button type="button" class="reserve-btn" @click="askForReservation(item, msg.criteria)">Rezervisi</button>
+                </div>
+
+                <ul v-if="visitsByCard[`${item.facility_id}-${item.room_id}`]?.length" class="visit-list">
+                  <li v-for="visit in visitsByCard[`${item.facility_id}-${item.room_id}`]" :key="visit.id">
+                    {{ visit.name }}
+                    <span v-if="visit.distance_minutes"> ({{ visit.distance_minutes }} min)</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stay-assistant-input">
+          <input
+            ref="inputEl"
+            v-model="inputText"
+            type="text"
+            placeholder="Npr. Dolazimo sledece nedelje, 2 odraslih i 2 dece na 3 dana"
+            @keyup.enter="sendMessage"
+          />
+          <button type="button" @click="sendMessage" :disabled="!canSend">Posalji</button>
+        </div>
+      </div>
+
+      <div
+        v-show="currentMode === 'guide'"
+        id="panel-guide"
+        role="tabpanel"
+        aria-labelledby="tab-guide"
+        class="stay-assistant-tabpanel assistant-guide"
+      >
+        <p class="assistant-guide-intro">{{ t('assistant.guideIntro') }}</p>
+
+        <div
+          ref="guideBodyEl"
+          class="assistant-guide-body"
+          aria-live="polite"
+        >
+          <p v-if="!guideMessages.length && !guideLoading" class="assistant-guide-empty">
+            {{ t('assistant.guideEmpty') }}
+          </p>
+
+          <div
+            v-for="(msg, index) in guideMessages"
+            :key="`g-${index}`"
+            :class="['assistant-guide-bubble', msg.role === 'user' ? 'is-user' : 'is-assistant']"
+          >
+            <p class="assistant-guide-text">{{ msg.text }}</p>
+
+            <div
+              v-if="msg.role === 'assistant' && msg.suggestions && msg.suggestions.length"
+              class="assistant-chip-row"
+            >
+              <button
+                v-for="(sug, sIdx) in msg.suggestions"
+                :key="`s-${index}-${sIdx}`"
+                type="button"
+                class="assistant-chip"
+                :aria-label="sug.label"
+                @click="handleChipClick(sug)"
+              >
+                {{ sug.label }}
+              </button>
+            </div>
+          </div>
+
+          <p v-if="guideLoading" class="assistant-guide-loading" aria-live="polite">…</p>
+        </div>
+
+        <div class="stay-assistant-input assistant-guide-input-row">
+          <input
+            ref="guideInputEl"
+            v-model="guideInputText"
+            type="text"
+            :placeholder="t('assistant.guidePlaceholder')"
+            :aria-label="t('assistant.guidePlaceholder')"
+            @keyup.enter="sendGuideMessage"
+          />
+          <button
+            type="button"
+            class="assistant-send"
+            @click="sendGuideMessage"
+            :disabled="!canSendGuide"
+          >
+            {{ t('assistant.send') }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -920,6 +1211,226 @@ function goToLogin() {
   .chat-bubble-icon {
     width: 28px;
     height: 28px;
+  }
+}
+
+/* =========================================================================
+ * Site-guide mode: mode switcher, guide panel, chips.
+ * Additive only — does not override existing booking styles.
+ * ========================================================================= */
+.stay-assistant-tabpanel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.assistant-mode-switcher {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.assistant-mode-btn {
+  border: 1px solid #67462e;
+  background: #fff;
+  color: #332317;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 2px;
+  min-height: 34px;
+}
+
+.assistant-mode-btn:hover {
+  background: #f3e2d4;
+}
+
+.assistant-mode-btn.is-active {
+  background: #332317;
+  color: #fff;
+  border-color: #332317;
+}
+
+.assistant-guide {
+  background: #fff;
+}
+
+.assistant-guide-intro {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  color: #4d3a2b;
+  background: #fdf9f5;
+  border-bottom: 1px solid #e3c4ad;
+}
+
+.assistant-guide-body {
+  padding: 10px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assistant-guide-empty {
+  margin: 0;
+  color: #67462e;
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+.assistant-guide-bubble {
+  padding: 8px;
+  border: 1px solid #e3c4ad;
+  border-radius: 2px;
+  max-width: 100%;
+}
+
+.assistant-guide-bubble.is-user {
+  align-self: flex-end;
+  background: #fff1e6;
+  max-width: 95%;
+}
+
+.assistant-guide-bubble.is-assistant {
+  align-self: flex-start;
+  background: #fdf9f5;
+}
+
+.assistant-guide-text {
+  margin: 0;
+  text-align: left;
+  font-size: 0.84rem;
+  color: #332317;
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+.assistant-guide-loading {
+  margin: 0;
+  color: #67462e;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.assistant-chip-row {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.assistant-chip {
+  border: 1px solid #332317;
+  background: #cdac91;
+  color: #332317;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 2px;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.assistant-chip:hover {
+  background: #b9946f;
+}
+
+.assistant-send {
+  border: 1px solid #67462e;
+  background: #67462e;
+  color: #fff;
+  cursor: pointer;
+  padding: 0 12px;
+  font-size: 0.78rem;
+  border-radius: 2px;
+}
+
+.assistant-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.assistant-guide-input-row input {
+  border: 1px solid var(--c-braon-6, #67462e);
+  background: transparent;
+  padding: 9px;
+  font-size: 0.8rem;
+}
+
+/* ---- Focus-visible: every interactive element gets a clear outline ---- */
+.assistant-mode-btn:focus-visible,
+.assistant-chip:focus-visible,
+.assistant-send:focus-visible,
+.assistant-guide-input-row input:focus-visible,
+.stay-assistant-input input:focus-visible,
+.stay-assistant-input button:focus-visible,
+.stay-clear-btn:focus-visible,
+.stay-assistant-toggle:focus-visible,
+.reserve-modal input:focus-visible,
+.reserve-form-actions button:focus-visible,
+.reserve-modal-close:focus-visible,
+.stay-card-actions button:focus-visible {
+  outline: 2px solid #332317;
+  outline-offset: 2px;
+}
+
+/* Reduced-motion: suppress transitions/animations inside the panel. */
+@media (prefers-reduced-motion: reduce) {
+  .stay-assistant-panel,
+  .stay-assistant-panel *,
+  .reserve-modal,
+  .reserve-modal * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ---- Mobile rules for the assistant dialog as a whole ---- */
+@media (max-width: 640px) {
+  .stay-assistant-panel {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    box-sizing: border-box;
+  }
+
+  .assistant-chip,
+  .assistant-mode-btn,
+  .assistant-send,
+  .stay-assistant-input button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .stay-assistant-input,
+  .assistant-guide-input-row {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    z-index: 2;
+  }
+
+  .stay-assistant-body,
+  .assistant-guide-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
   }
 }
 </style>
