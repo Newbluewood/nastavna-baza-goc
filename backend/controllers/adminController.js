@@ -620,6 +620,34 @@ async function getChatMetrics(req, res) {
   return res.json(snapshot);
 }
 
+/**
+ * GET /api/admin/ai/usage
+ * Admin-only. Returns combined AI budget snapshot + metrics snapshot.
+ */
+async function getAiUsage(req, res) {
+  const { getUsageSnapshot } = require('../services/aiBudgetService');
+  let budget = null;
+  let budgetError = null;
+  try {
+    budget = await getUsageSnapshot();
+  } catch (err) {
+    budgetError = { message: err.message };
+  }
+  const metrics = chatMetricsService.getSnapshot();
+  return res.status(200).json({
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    budget,
+    budgetError,
+    metrics: {
+      startedAt: metrics.startedAt,
+      totals: metrics.totals,
+      tokenEstimates: metrics.token_estimates,
+      recent: metrics.recent
+    }
+  });
+}
+
 module.exports = {
   getInquiries,
   getInquiryActivity,
@@ -632,5 +660,6 @@ module.exports = {
   getGuests,
   addVoucher,
   getRoomMap,
-  getChatMetrics
+  getChatMetrics,
+  getAiUsage
 };

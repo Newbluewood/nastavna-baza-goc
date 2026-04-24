@@ -28,6 +28,7 @@ defineExpose({ sidebarOpen })
     <h2>CMS Panel</h2>
     <nav>
       <router-link to="/admin/vesti">📰 Вести</router-link>
+      <router-link to="/admin/ai">🤖 AI потрошња</router-link>
 
       <!-- Смештај група -->
       <button class="nav-group-toggle" :class="{ 'group-active': isSmestajActive() }" @click="smestajOpen = !smestajOpen">
