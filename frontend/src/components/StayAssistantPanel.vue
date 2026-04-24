@@ -29,7 +29,6 @@ function renderMessageText(text) {
   })
   return safe
 }
-// ...existing code...
 
 const router = useRouter()
 const GUEST_CHAT_STORAGE_KEY = 'stay_assistant_guest_chat_v1'
@@ -53,6 +52,24 @@ const guideInputText = ref('')
 const guideInputEl = ref(null)
 const guideBodyEl = ref(null)
 const guideLoading = ref(false)
+
+/** Vite dev only: show how site-guide was produced (RAG vs keyword fallback). */
+const showGuideDevHud = import.meta.env.DEV
+
+function buildGuideDevHud(meta) {
+  if (!meta || typeof meta !== 'object') return null
+  if (meta.fallback === 'keyword' || meta.fallback === 'generic') {
+    const r = meta.reason ? ` · ${meta.reason}` : ''
+    return `dev · fallback=${meta.fallback}${r}`
+  }
+  const bits = ['dev · RAG']
+  if (meta.model) bits.push(String(meta.model))
+  if (meta.hits != null) bits.push(`${meta.hits} vec hits`)
+  if (meta.tokensIn != null || meta.tokensOut != null) {
+    bits.push(`tokens ${meta.tokensIn ?? '?'}/${meta.tokensOut ?? '?'}`)
+  }
+  return bits.join(' · ')
+}
 
 const panelRoot = ref(null)
 const panelHeaderEl = ref(null)
@@ -122,6 +139,7 @@ async function sendGuideMessage() {
       role: 'assistant',
       text: result?.answer || t('assistant.guideError'),
       suggestions: Array.isArray(result?.suggestions) ? result.suggestions : [],
+      guideDevHud: showGuideDevHud ? buildGuideDevHud(result?.meta) : null,
       ts: Date.now()
     })
   } catch (_err) {
@@ -129,6 +147,7 @@ async function sendGuideMessage() {
       role: 'assistant',
       text: t('assistant.guideError'),
       suggestions: [],
+      guideDevHud: showGuideDevHud ? 'dev · request failed (network or HTTP)' : null,
       ts: Date.now()
     })
   } finally {
@@ -760,6 +779,10 @@ function goToLogin() {
             :class="['assistant-guide-bubble', msg.role === 'user' ? 'is-user' : 'is-assistant']"
           >
             <p class="assistant-guide-text">{{ msg.text }}</p>
+            <p
+              v-if="showGuideDevHud && msg.role === 'assistant' && msg.guideDevHud"
+              class="assistant-guide-dev-hud"
+            >{{ msg.guideDevHud }}</p>
 
             <div
               v-if="msg.role === 'assistant' && msg.suggestions && msg.suggestions.length"
