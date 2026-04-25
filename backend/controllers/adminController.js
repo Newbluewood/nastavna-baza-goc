@@ -648,6 +648,20 @@ async function getAiUsage(req, res) {
   });
 }
 
+/**
+ * POST /api/admin/ai/seed-site-kb
+ * Admin-only. Triggers site_kb seed without shell access.
+ */
+async function seedSiteKbNow(req, res) {
+  const { seedSiteKb } = require('../scripts/seed-site-kb');
+  const result = await seedSiteKb();
+  return res.status(200).json({
+    ok: true,
+    message: 'site_kb seed completed',
+    result
+  });
+}
+
 module.exports = {
   getInquiries,
   getInquiryActivity,
@@ -661,5 +675,6 @@ module.exports = {
   addVoucher,
   getRoomMap,
   getChatMetrics,
-  getAiUsage
+  getAiUsage,
+  seedSiteKbNow
 };

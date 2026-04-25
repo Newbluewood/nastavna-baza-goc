@@ -15,7 +15,8 @@ const {
 	addVoucher,
 	getRoomMap,
 	getChatMetrics,
-	getAiUsage
+	getAiUsage,
+	seedSiteKbNow
 } = require('../controllers/adminController');
 
 const router = express.Router();
@@ -33,5 +34,6 @@ router.post('/guests/:id/vouchers', adminAuthMiddleware,                        
 router.get('/room-map',            adminAuthMiddleware,                                      asyncHandler(getRoomMap));
 router.get('/chat-metrics',        adminAuthMiddleware,                                      asyncHandler(getChatMetrics));
 router.get('/ai/usage',            adminAuthMiddleware,                                      asyncHandler(getAiUsage));
+router.post('/ai/seed-site-kb',    adminAuthMiddleware,                                      asyncHandler(seedSiteKbNow));
 
 module.exports = router;

@@ -89,7 +89,7 @@ async function seedFeatures() {
   return count;
 }
 
-async function main() {
+async function seedSiteKb() {
   console.log(`[seed:site-kb] Ensuring Qdrant collection "${COLLECTION}" exists (384-dim, Cosine)...`);
   await ensureCollection(COLLECTION, { size: 384, distance: 'Cosine' });
 
@@ -100,10 +100,17 @@ async function main() {
   const nFeatures = await seedFeatures();
 
   console.log(`[seed:site-kb] Seeded ${nRoutes} routes and ${nFeatures} features into ${COLLECTION}`);
+  return { collection: COLLECTION, routes: nRoutes, features: nFeatures };
 }
 
-main().catch(err => {
-  console.error('[seed:site-kb] FAILED:', err);
-  if (err && err.stack) console.error(err.stack);
-  process.exit(1);
-});
+module.exports = {
+  seedSiteKb
+};
+
+if (require.main === module) {
+  seedSiteKb().catch(err => {
+    console.error('[seed:site-kb] FAILED:', err);
+    if (err && err.stack) console.error(err.stack);
+    process.exit(1);
+  });
+}
