@@ -70,6 +70,31 @@ function makeTodaysDateTurnIfAsked(message, lang) {
   });
 }
 
+function makeQuickGuideTurnIfAsked(message, lang) {
+  const m = String(message || '').toLowerCase();
+  const isSr = lang !== 'en';
+  const asksInteresting =
+    /sta\s+ima\s+zanimljivo|šta\s+ima\s+zanimljivo|zanimljivo|preporuci|preporuči|sta\s+preporucujes|šta\s+preporučuješ/.test(m);
+  if (asksInteresting) {
+    const answer = isSr
+      ? 'Evo 3 brza predloga:\n• Pogledajte novosti i aktuelnosti.\n• Otvorite smeštaj i pregledajte sobe.\n• Ako želite, mogu odmah da vas usmerim na kontakt i rezervaciju.'
+      : 'Here are 3 quick suggestions:\n• Check the latest news and updates.\n• Open accommodation and browse rooms.\n• If you want, I can take you directly to contact and booking.';
+    return makeAssistantTurn({
+      answer,
+      intent: 'site_guide',
+      confidence: 0.9,
+      suggestions: [
+        { label: isSr ? 'Vesti' : 'News', route: '/vesti', type: 'navigate' },
+        { label: isSr ? 'Smeštaj' : 'Accommodation', route: '/smestaj', type: 'navigate' },
+        { label: isSr ? 'Kontakt' : 'Contact', route: '/kontakt', type: 'navigate' },
+      ],
+      sources: [],
+      meta: { source: 'quick_intent', mode: 'stable' },
+    });
+  }
+  return null;
+}
+
 function clamp01(n) {
   const v = Number(n);
   if (!Number.isFinite(v)) return 0;
@@ -397,6 +422,8 @@ async function composeSiteGuideTurn({
 
   const dateTurn = makeTodaysDateTurnIfAsked(safeMessage, safeLang);
   if (dateTurn) return dateTurn;
+  const quickTurn = makeQuickGuideTurnIfAsked(safeMessage, safeLang);
+  if (quickTurn) return quickTurn;
 
   // Production-safe mode: deterministic guide without vector/LLM dependency.
   // Can be overridden by setting SITE_GUIDE_FORCE_AI=true.
