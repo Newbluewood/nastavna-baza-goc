@@ -188,6 +188,32 @@ describe('composeSiteGuideTurn - DB facts routing', () => {
     expect(searchInCollection).not.toHaveBeenCalled();
   });
 
+  it('returns event facts with content when user asks what news says', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+    setupDbMock({
+      news: [
+        { id: 10, title: 'Terenska nastava', excerpt: 'Studenti su danas imali terensku nastavu na stazi.', content: '', created_at: '2026-04-10' },
+      ],
+    });
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'ali ne znas sta pise u tim vestima',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('db_news_facts');
+    expect(result.answer).toMatch(/Terenska nastava/i);
+    expect(result.answer).toMatch(/Studenti su danas imali terensku nastavu/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
   it('returns humanized offer facts (no raw tags) for offer question', async () => {
     process.env.AI_PROVIDER = 'anthropic';
     process.env.AI_ENABLED = 'true';

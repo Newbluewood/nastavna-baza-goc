@@ -125,6 +125,12 @@ function looksLikeOfferQuestion(message) {
 function looksLikeEventQuestion(message) {
   const m = String(message || '').toLowerCase();
   return (
+    m.includes('vest') ||
+    m.includes('vijest') ||
+    m.includes('sta pise') ||
+    m.includes('šta piše') ||
+    m.includes('sta pise u vestima') ||
+    m.includes('šta piše u vestima') ||
     m.includes('event') ||
     m.includes('dogadjaj') ||
     m.includes('događaj') ||
@@ -135,6 +141,12 @@ function looksLikeEventQuestion(message) {
     m.includes('sta ima novo') ||
     m.includes('šta ima novo')
   );
+}
+
+function shortNewsText(v, max = 120) {
+  const s = String(v || '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 }
 
 function looksLikeHikingQuestion(message) {
@@ -230,7 +242,7 @@ async function makeEventsFactsTurnIfAsked(message, lang) {
   try {
     const db = require('../db');
     const [rows] = await db.query(
-      `SELECT id, title, created_at
+      `SELECT id, title, excerpt, content, created_at
          FROM news
         ORDER BY created_at DESC
         LIMIT 3`
@@ -239,7 +251,10 @@ async function makeEventsFactsTurnIfAsked(message, lang) {
     if (news.length === 0) return null;
 
     if (lang === 'en') {
-      const lines = news.map((n) => `• ${n.title || `News #${n.id}`}`).join('\n');
+      const lines = news.map((n) => {
+        const details = shortNewsText(n.excerpt || n.content);
+        return `• ${n.title || `News #${n.id}`}${details ? ` — ${details}` : ''}`;
+      }).join('\n');
       const answer =
         `Current updates on the site:\n${lines}\nOpen News for full details and dates.`;
       return makeAssistantTurn({
@@ -255,7 +270,10 @@ async function makeEventsFactsTurnIfAsked(message, lang) {
       });
     }
 
-    const lines = news.map((n) => `• ${n.title || `Вест #${n.id}`}`).join('\n');
+    const lines = news.map((n) => {
+      const details = shortNewsText(n.excerpt || n.content);
+      return `• ${n.title || `Вест #${n.id}`}${details ? ` — ${details}` : ''}`;
+    }).join('\n');
     const answer =
       `Тренутно најактуелније на сајту:\n${lines}\nОтворите Вести за цео текст и више детаља.`;
     return makeAssistantTurn({
