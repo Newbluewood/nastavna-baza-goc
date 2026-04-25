@@ -70,6 +70,113 @@ function makeTodaysDateTurnIfAsked(message, lang) {
   });
 }
 
+function parseJsonArray(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== 'string' || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function looksLikeOfferQuestion(message) {
+  const m = String(message || '').toLowerCase();
+  return (
+    m.includes('ponud') ||
+    m.includes('sadrzaj') ||
+    m.includes('sadržaj') ||
+    m.includes('smestaj') ||
+    m.includes('smeštaj') ||
+    m.includes('kapacitet') ||
+    m.includes('sta ima') ||
+    m.includes('šta ima') ||
+    m.includes('cene') ||
+    m.includes('cena') ||
+    m.includes('cene smestaja') ||
+    m.includes('cene smeštaja')
+  );
+}
+
+async function makeOfferFactsTurnIfAsked(message, lang) {
+  if (!looksLikeOfferQuestion(message)) return null;
+  try {
+    // Lazy import to keep unit tests lightweight and avoid DB coupling.
+    const db = require('../db');
+    const [facilityRows] = await db.query(
+      `SELECT id, name, capacity, capacity_min, capacity_max, stay_tags
+         FROM facilities
+        WHERE type = 'smestaj'
+        ORDER BY id ASC
+        LIMIT 12`
+    );
+    const [roomAggRows] = await db.query(
+      `SELECT COUNT(*) AS rooms,
+              MIN(COALESCE(capacity_min, capacity, 0)) AS min_cap,
+              MAX(COALESCE(capacity_max, capacity, capacity_min, 0)) AS max_cap
+         FROM rooms`
+    );
+    const facilities = Array.isArray(facilityRows) ? facilityRows : [];
+    if (facilities.length === 0) return null;
+
+    const roomAgg = roomAggRows && roomAggRows[0] ? roomAggRows[0] : {};
+    const rooms = Number(roomAgg.rooms || 0);
+    const minCap = Number(roomAgg.min_cap || 0);
+    const maxCap = Number(roomAgg.max_cap || 0);
+
+    const tags = new Set();
+    for (const f of facilities) {
+      for (const t of parseJsonArray(f.stay_tags)) {
+        const s = String(t || '').trim();
+        if (s) tags.add(s);
+      }
+    }
+    const tagList = Array.from(tags).slice(0, 5);
+
+    if (lang === 'en') {
+      const answer =
+        `Current offer: ${facilities.length} accommodation facilities and ${rooms} rooms.` +
+        (maxCap > 0 ? ` Typical room capacity is about ${Math.max(1, minCap)}-${maxCap} guests.` : '') +
+        (tagList.length ? ` Main amenities: ${tagList.join(', ')}.` : '') +
+        ' Open Accommodation for details and booking options.';
+      return makeAssistantTurn({
+        answer: answer.slice(0, 4000),
+        intent: 'site_guide',
+        confidence: 0.95,
+        suggestions: [
+          { label: 'Accommodation', route: '/smestaj', type: 'navigate' },
+          { label: 'Open rooms', route: '/smestaj', type: 'action' },
+          { label: 'Contact', route: '/kontakt', type: 'navigate' },
+        ],
+        sources: [],
+        meta: { source: 'db_offer_facts' },
+      });
+    }
+
+    const answer =
+      `U ponudi je ${facilities.length} smeštajnih objekata i ukupno ${rooms} soba.` +
+      (maxCap > 0 ? ` Tipičan kapacitet soba je oko ${Math.max(1, minCap)}-${maxCap} osoba.` : '') +
+      (tagList.length ? ` Najčešći sadržaji: ${tagList.join(', ')}.` : '') +
+      ' Otvorite Smeštaj za detalje i slanje upita.';
+    return makeAssistantTurn({
+      answer: answer.slice(0, 4000),
+      intent: 'site_guide',
+      confidence: 0.95,
+      suggestions: [
+        { label: 'Smeštaj', route: '/smestaj', type: 'navigate' },
+        { label: 'Pogledaj sobe', route: '/smestaj', type: 'action' },
+        { label: 'Kontakt', route: '/kontakt', type: 'navigate' },
+      ],
+      sources: [],
+      meta: { source: 'db_offer_facts' },
+    });
+  } catch (err) {
+    console.error('[siteGuide] offer facts query failed:', err.message);
+    return null;
+  }
+}
+
 function clamp01(n) {
   const v = Number(n);
   if (!Number.isFinite(v)) return 0;
@@ -455,6 +562,8 @@ async function composeSiteGuideTurn({
 
   const dateTurn = makeTodaysDateTurnIfAsked(safeMessage, safeLang);
   if (dateTurn) return dateTurn;
+  const offerFactsTurn = await makeOfferFactsTurnIfAsked(safeMessage, safeLang);
+  if (offerFactsTurn) return offerFactsTurn;
 
   // 1. Short-circuit when AI is disabled or in mock mode.
   const provider = process.env.AI_PROVIDER || 'mock';
