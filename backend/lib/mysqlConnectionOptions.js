@@ -27,14 +27,16 @@ function getMysqlConnectionOptions(opts = {}) {
 
   if (rawUrl) {
     if (!rawUrl.startsWith('mysql://')) {
-      throw new Error('DATABASE_URL must start with mysql://')
-    }
+      console.warn('[mysqlConnectionOptions] Ignoring invalid DATABASE_URL (must start with mysql://); using DB_* vars.')
+    } else {
     let u
     try {
       u = new URL(rawUrl)
     } catch (e) {
-      throw new Error(`Invalid DATABASE_URL: ${e.message}`)
+      console.warn(`[mysqlConnectionOptions] Ignoring invalid DATABASE_URL (${e.message}); using DB_* vars.`)
+      u = null
     }
+    if (u) {
 
     const host = u.hostname
     const user = decodeURIComponent(u.username || '')
@@ -66,6 +68,8 @@ function getMysqlConnectionOptions(opts = {}) {
       out.database = databaseFromPath || process.env.DB_NAME || 'defaultdb'
     }
     return out
+  }
+    }
   }
 
   const host = process.env.DB_HOST || 'localhost'

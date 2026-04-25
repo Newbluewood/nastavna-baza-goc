@@ -1,9 +1,12 @@
 // embeddingService.test.js
-// Jest test for local Python embedding service using fetch
+// Integration test for local embedding service.
+// Opt-in only: requires local service at EMBEDDING_SERVICE_URL.
 
 const EMBED_URL = process.env.EMBEDDING_SERVICE_URL || 'http://127.0.0.1:8000/embed';
 
-describe('Local Embedding Service', () => {
+const RUN_INTEGRATION = String(process.env.RUN_INTEGRATION_TESTS || 'false') === 'true';
+
+(RUN_INTEGRATION ? describe : describe.skip)('Local Embedding Service', () => {
   it('returns a valid embedding vector for a test sentence', async () => {
     const response = await fetch(EMBED_URL, {
       method: 'POST',

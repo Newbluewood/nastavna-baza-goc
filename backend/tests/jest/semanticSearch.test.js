@@ -1,5 +1,6 @@
 // semanticSearch.test.js
-// Jest test for semantic search (Qdrant + embedding)
+// Integration test for semantic search (Qdrant + embedding).
+// Opt-in only, because it requires external services/keys.
 
 const { searchFacts, upsertFact } = require('../../services/vectorSearchService');
 const { QdrantClient } = require('@qdrant/js-client-rest');
@@ -10,7 +11,9 @@ function randomId() {
   return 'id-' + Math.random().toString(36).slice(2, 12);
 }
 
-describe('Semantic Search (Qdrant)', () => {
+const RUN_INTEGRATION = String(process.env.RUN_INTEGRATION_TESTS || 'false') === 'true';
+
+(RUN_INTEGRATION ? describe : describe.skip)('Semantic Search (Qdrant)', () => {
   const testFact = {
     text: 'Na Goču se nalazi planinski restoran sa domaćom hranom.',
     payload: { type: 'restaurant', location: 'Goč' }
