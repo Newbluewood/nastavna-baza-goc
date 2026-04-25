@@ -81,6 +81,29 @@ function parseJsonArray(value) {
   }
 }
 
+function humanizeStayTag(tag, lang) {
+  const t = String(tag || '').toLowerCase();
+  const mapSr = {
+    group: 'pogodno za grupe',
+    restaurant: 'restoran u objektu',
+    central: 'centralna lokacija',
+    conference: 'konferencijska sala',
+    ski: 'blizina staza i zimskih aktivnosti',
+    family: 'pogodno za porodice',
+    quiet: 'mirniji ambijent',
+  };
+  const mapEn = {
+    group: 'group-friendly',
+    restaurant: 'restaurant on site',
+    central: 'central location',
+    conference: 'conference hall',
+    ski: 'close to winter/ski activities',
+    family: 'family-friendly',
+    quiet: 'quiet environment',
+  };
+  return (lang === 'en' ? mapEn : mapSr)[t] || String(tag || '');
+}
+
 function looksLikeOfferQuestion(message) {
   const m = String(message || '').toLowerCase();
   return (
@@ -97,6 +120,71 @@ function looksLikeOfferQuestion(message) {
     m.includes('cene smestaja') ||
     m.includes('cene smeštaja')
   );
+}
+
+function looksLikeEventQuestion(message) {
+  const m = String(message || '').toLowerCase();
+  return (
+    m.includes('event') ||
+    m.includes('dogadjaj') ||
+    m.includes('događaj') ||
+    m.includes('desava') ||
+    m.includes('dešava') ||
+    m.includes('najava') ||
+    m.includes('aktuelno') ||
+    m.includes('sta ima novo') ||
+    m.includes('šta ima novo')
+  );
+}
+
+async function makeEventsFactsTurnIfAsked(message, lang) {
+  if (!looksLikeEventQuestion(message)) return null;
+  try {
+    const db = require('../db');
+    const [rows] = await db.query(
+      `SELECT id, title, created_at
+         FROM news
+        ORDER BY created_at DESC
+        LIMIT 3`
+    );
+    const news = Array.isArray(rows) ? rows : [];
+    if (news.length === 0) return null;
+
+    if (lang === 'en') {
+      const lines = news.map((n) => `• ${n.title || `News #${n.id}`}`).join('\n');
+      const answer =
+        `Current updates on the site:\n${lines}\nOpen News for full details and dates.`;
+      return makeAssistantTurn({
+        answer: answer.slice(0, 4000),
+        intent: 'site_guide',
+        confidence: 0.95,
+        suggestions: [
+          { label: 'All news', route: '/vesti', type: 'navigate' },
+          { label: 'Home', route: '/', type: 'navigate' },
+        ],
+        sources: [],
+        meta: { source: 'db_news_facts' },
+      });
+    }
+
+    const lines = news.map((n) => `• ${n.title || `Вест #${n.id}`}`).join('\n');
+    const answer =
+      `Тренутно најактуелније на сајту:\n${lines}\nОтворите Вести за цео текст и више детаља.`;
+    return makeAssistantTurn({
+      answer: answer.slice(0, 4000),
+      intent: 'site_guide',
+      confidence: 0.95,
+      suggestions: [
+        { label: 'Sve vesti', route: '/vesti', type: 'navigate' },
+        { label: 'Naslovna', route: '/', type: 'navigate' },
+      ],
+      sources: [],
+      meta: { source: 'db_news_facts' },
+    });
+  } catch (err) {
+    console.error('[siteGuide] events facts query failed:', err.message);
+    return null;
+  }
 }
 
 async function makeOfferFactsTurnIfAsked(message, lang) {
@@ -132,7 +220,7 @@ async function makeOfferFactsTurnIfAsked(message, lang) {
         if (s) tags.add(s);
       }
     }
-    const tagList = Array.from(tags).slice(0, 5);
+    const tagList = Array.from(tags).slice(0, 5).map((t) => humanizeStayTag(t, lang));
 
     if (lang === 'en') {
       const answer =
@@ -562,6 +650,8 @@ async function composeSiteGuideTurn({
 
   const dateTurn = makeTodaysDateTurnIfAsked(safeMessage, safeLang);
   if (dateTurn) return dateTurn;
+  const eventsFactsTurn = await makeEventsFactsTurnIfAsked(safeMessage, safeLang);
+  if (eventsFactsTurn) return eventsFactsTurn;
   const offerFactsTurn = await makeOfferFactsTurnIfAsked(safeMessage, safeLang);
   if (offerFactsTurn) return offerFactsTurn;
 
