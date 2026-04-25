@@ -26,6 +26,50 @@ const { recordSpend } = require('./aiBudgetService');
 const DOCS_DIR = path.join(__dirname, '../docs');
 const SITE_KB_COLLECTION = 'site_kb';
 
+function normalizeUserQuestion(raw) {
+  return String(raw || '')
+    .normalize('NFC')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .trim();
+}
+
+function isTodaysDateQuestion(raw) {
+  const c = normalizeUserQuestion(raw);
+  const m = c.toLowerCase();
+  if (/\bwhat\s+('?s\s+)?today'?s?\s+(date|day)\b/i.test(m)) return true;
+  if (/\bwhat\s+day\b.*\btoday\b/i.test(m)) return true;
+  if (/koji\s+je\s+danas\s+(dan|datum)\b/i.test(m)) return true;
+  if (/koja\s+je\s+danas\s+(dan|datum)\b/i.test(m)) return true;
+  if (/koji\s+je\s+dan\s+danas\b/i.test(m)) return true;
+  if (/koja\s+je\s+dan\s+danas\b/i.test(m)) return true;
+  if (/који\s+је\s+данас\s+(дан|датум)\b/i.test(c)) return true;
+  if (/која\s+је\s+данас\s+(дан|датум)\b/i.test(c)) return true;
+  return false;
+}
+
+function makeTodaysDateTurnIfAsked(message, lang) {
+  if (!isTodaysDateQuestion(message)) return null;
+  const locale = lang === 'en' ? 'en-GB' : 'sr-Cyrl-RS';
+  const long = new Date().toLocaleDateString(locale, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  const answer =
+    lang === 'en'
+      ? `Today is ${long} (server time).`
+      : `Данас је ${long} (време сервера).`;
+  return makeAssistantTurn({
+    answer,
+    intent: 'unknown',
+    confidence: 1,
+    suggestions: [],
+    sources: [],
+    meta: { source: 'server_clock', note: 'not_site_kb' },
+  });
+}
+
 function clamp01(n) {
   const v = Number(n);
   if (!Number.isFinite(v)) return 0;
@@ -344,7 +388,10 @@ async function composeSiteGuideTurn({
   userKey = 'anon',
 }) {
   const safeLang = lang === 'en' ? 'en' : 'sr';
-  const safeMessage = String(message || '');
+  const safeMessage = normalizeUserQuestion(message);
+
+  const dateTurn = makeTodaysDateTurnIfAsked(safeMessage, safeLang);
+  if (dateTurn) return dateTurn;
 
   // 1. Short-circuit when AI is disabled or in mock mode.
   const provider = process.env.AI_PROVIDER || 'mock';
