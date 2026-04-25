@@ -137,6 +137,94 @@ function looksLikeEventQuestion(message) {
   );
 }
 
+function looksLikeHikingQuestion(message) {
+  const m = String(message || '').toLowerCase();
+  return (
+    m.includes('pesac') ||
+    m.includes('pešac') ||
+    m.includes('setnj') ||
+    m.includes('šetnj') ||
+    m.includes('planinar') ||
+    m.includes('staz') ||
+    m.includes('hiking') ||
+    m.includes('trail') ||
+    m.includes('prirod') ||
+    m.includes('aktivnost') ||
+    m.includes('sta ima tamo za mene') ||
+    m.includes('šta ima tamo za mene')
+  );
+}
+
+async function makeHikingFactsTurnIfAsked(message, lang) {
+  if (!looksLikeHikingQuestion(message)) return null;
+  try {
+    const db = require('../db');
+    const [rows] = await db.query(
+      `SELECT id, name, description, distance_km, distance_minutes
+         FROM attractions
+        WHERE is_active = 1
+        ORDER BY id ASC
+        LIMIT 6`
+    );
+    const attractions = Array.isArray(rows) ? rows : [];
+    if (attractions.length === 0) return null;
+
+    const picks = attractions.slice(0, 3);
+    if (lang === 'en') {
+      const lines = picks.map((a) => {
+        const km = Number(a.distance_km);
+        const mins = Number(a.distance_minutes);
+        const extra = Number.isFinite(km) && km > 0
+          ? ` (${km} km${Number.isFinite(mins) && mins > 0 ? `, about ${mins} min` : ''})`
+          : '';
+        return `• ${a.name}${extra}`;
+      }).join('\n');
+      const answer =
+        `If you enjoy walking, here are suggestions around Goč:\n${lines}\n` +
+        'Open News and Contact for fresh field updates and local guidance.';
+      return makeAssistantTurn({
+        answer: answer.slice(0, 4000),
+        intent: 'site_guide',
+        confidence: 0.92,
+        suggestions: [
+          { label: 'News', route: '/vesti', type: 'navigate' },
+          { label: 'Contact', route: '/kontakt', type: 'navigate' },
+          { label: 'Accommodation', route: '/smestaj', type: 'navigate' },
+        ],
+        sources: [],
+        meta: { source: 'db_hiking_facts' },
+      });
+    }
+
+    const lines = picks.map((a) => {
+      const km = Number(a.distance_km);
+      const mins = Number(a.distance_minutes);
+      const extra = Number.isFinite(km) && km > 0
+        ? ` (${km} km${Number.isFinite(mins) && mins > 0 ? `, oko ${mins} min` : ''})`
+        : '';
+      return `• ${a.name}${extra}`;
+    }).join('\n');
+    const answer =
+      `Ako voliš pešačenje, evo dobrih predloga na Goču:\n${lines}\n` +
+      'Za aktuelne informacije sa terena otvori Vesti ili Kontakt.';
+    return makeAssistantTurn({
+      answer: answer.slice(0, 4000),
+      intent: 'site_guide',
+      confidence: 0.92,
+      suggestions: [
+        { label: 'Vesti', route: '/vesti', type: 'navigate' },
+        { label: 'Kontakt', route: '/kontakt', type: 'navigate' },
+        { label: 'Smeštaj', route: '/smestaj', type: 'navigate' },
+      ],
+      sources: [],
+      meta: { source: 'db_hiking_facts' },
+    });
+  } catch (err) {
+    console.error('[siteGuide] hiking facts query failed:', err.message);
+    return null;
+  }
+}
+
 async function makeEventsFactsTurnIfAsked(message, lang) {
   if (!looksLikeEventQuestion(message)) return null;
   try {
@@ -650,6 +738,8 @@ async function composeSiteGuideTurn({
 
   const dateTurn = makeTodaysDateTurnIfAsked(safeMessage, safeLang);
   if (dateTurn) return dateTurn;
+  const hikingFactsTurn = await makeHikingFactsTurnIfAsked(safeMessage, safeLang);
+  if (hikingFactsTurn) return hikingFactsTurn;
   const eventsFactsTurn = await makeEventsFactsTurnIfAsked(safeMessage, safeLang);
   if (eventsFactsTurn) return eventsFactsTurn;
   const offerFactsTurn = await makeOfferFactsTurnIfAsked(safeMessage, safeLang);

@@ -81,6 +81,36 @@ function setupMocks({ fetchMock, searchMock, recordSpendMock } = {}) {
 }
 
 describe('composeSiteGuideTurn - disabled / mock paths', () => {
+  it('returns hiking DB facts for walking-style question before RAG path', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+    const dbQuery = jest.fn(async (sql) => {
+      if (sql.includes('FROM attractions')) {
+        return [[
+          { id: 1, name: 'Vidikovac Krst', description: 'Staza kroz šumu', distance_km: 2.5, distance_minutes: 40 },
+          { id: 2, name: 'Šumska staza Studenac', description: 'Lagana šetnja', distance_km: 1.8, distance_minutes: 30 },
+        ]];
+      }
+      return [[]];
+    });
+    jest.doMock('../../db', () => ({ query: dbQuery }));
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'volim da pesacim, sta ima tamo za mene',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('db_hiking_facts');
+    expect(result.answer).toMatch(/pešačenje|pesacenje|pešačenje/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
   it('returns a keyword fallback with reason="ai_disabled_or_mock" when AI_PROVIDER=mock', async () => {
     process.env.AI_PROVIDER = 'mock';
     const { fetchFn, searchInCollection } = setupMocks();
