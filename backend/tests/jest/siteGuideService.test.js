@@ -111,6 +111,26 @@ function setupDbMock({
 }
 
 describe('composeSiteGuideTurn - disabled / mock paths', () => {
+  it('returns greeting turn for "zdravo" and does not hit search/LLM', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'zdravo',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('greeting_turn');
+    expect(result.answer).toMatch(/Zdravo!/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
   it('returns hiking DB facts for walking-style question before RAG path', async () => {
     process.env.AI_PROVIDER = 'anthropic';
     process.env.AI_ENABLED = 'true';

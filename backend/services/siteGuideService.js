@@ -47,6 +47,37 @@ function isTodaysDateQuestion(raw) {
   return false;
 }
 
+function isGreetingQuestion(raw) {
+  const m = normalizeUserQuestion(raw).toLowerCase();
+  return (
+    m === 'zdravo' ||
+    m === 'cao' ||
+    m === 'ćao' ||
+    m === 'dobar dan' ||
+    m === 'dobro jutro' ||
+    m === 'dobro vece' ||
+    m === 'dobro veče' ||
+    m === 'hej' ||
+    m === 'hello' ||
+    m === 'hi'
+  );
+}
+
+function makeGreetingTurnIfAsked(message, lang) {
+  if (!isGreetingQuestion(message)) return null;
+  const answer = lang === 'en'
+    ? 'Hi! I can help you with accommodation, news, contact, site navigation, and current availability. Ask me anything about the site.'
+    : 'Zdravo! Mogu da pomognem oko smeštaja, vesti, kontakta, navigacije kroz sajt i trenutne dostupnosti. Pitaj šta god te zanima o sajtu.';
+  return makeAssistantTurn({
+    answer,
+    intent: 'site_guide',
+    confidence: 1,
+    suggestions: defaultNavigateSuggestions(lang),
+    sources: [],
+    meta: { source: 'greeting_turn' },
+  });
+}
+
 function makeTodaysDateTurnIfAsked(message, lang) {
   if (!isTodaysDateQuestion(message)) return null;
   const locale = lang === 'en' ? 'en-GB' : 'sr-Cyrl-RS';
@@ -1234,6 +1265,8 @@ async function composeSiteGuideTurn({
   const safeLang = lang === 'en' ? 'en' : 'sr';
   const safeMessage = normalizeUserQuestion(message);
 
+  const greetingTurn = makeGreetingTurnIfAsked(safeMessage, safeLang);
+  if (greetingTurn) return greetingTurn;
   const dateTurn = makeTodaysDateTurnIfAsked(safeMessage, safeLang);
   if (dateTurn) return dateTurn;
   const allKnowledgeTurn = await makeAllKnowledgeTurnIfAsked(safeMessage, safeLang);
