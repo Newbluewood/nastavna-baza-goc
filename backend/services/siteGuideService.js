@@ -70,31 +70,6 @@ function makeTodaysDateTurnIfAsked(message, lang) {
   });
 }
 
-function makeQuickGuideTurnIfAsked(message, lang) {
-  const m = String(message || '').toLowerCase();
-  const isSr = lang !== 'en';
-  const asksInteresting =
-    /sta\s+ima\s+zanimljivo|šta\s+ima\s+zanimljivo|zanimljivo|preporuci|preporuči|sta\s+preporucujes|šta\s+preporučuješ/.test(m);
-  if (asksInteresting) {
-    const answer = isSr
-      ? 'Evo 3 brza predloga:\n• Pogledajte novosti i aktuelnosti.\n• Otvorite smeštaj i pregledajte sobe.\n• Ako želite, mogu odmah da vas usmerim na kontakt i rezervaciju.'
-      : 'Here are 3 quick suggestions:\n• Check the latest news and updates.\n• Open accommodation and browse rooms.\n• If you want, I can take you directly to contact and booking.';
-    return makeAssistantTurn({
-      answer,
-      intent: 'site_guide',
-      confidence: 0.9,
-      suggestions: [
-        { label: isSr ? 'Vesti' : 'News', route: '/vesti', type: 'navigate' },
-        { label: isSr ? 'Smeštaj' : 'Accommodation', route: '/smestaj', type: 'navigate' },
-        { label: isSr ? 'Kontakt' : 'Contact', route: '/kontakt', type: 'navigate' },
-      ],
-      sources: [],
-      meta: { source: 'quick_intent', mode: 'stable' },
-    });
-  }
-  return null;
-}
-
 function clamp01(n) {
   const v = Number(n);
   if (!Number.isFinite(v)) return 0;
@@ -325,6 +300,64 @@ async function makeKeywordFallbackTurn(message, lang, reason) {
   });
 }
 
+function buildStaticHitsFromDocs(message, limit = 5) {
+  let structure = { routes: [] };
+  let features = { features: [] };
+  try {
+    structure = JSON.parse(
+      fs.readFileSync(path.join(DOCS_DIR, 'site-structure.json'), 'utf8')
+    );
+  } catch (_) { /* structure stays empty */ }
+  try {
+    features = JSON.parse(
+      fs.readFileSync(path.join(DOCS_DIR, 'features.json'), 'utf8')
+    );
+  } catch (_) { /* features stays empty */ }
+
+  const entries = [
+    ...(Array.isArray(structure.routes) ? structure.routes : [])
+      .map((r) => ({ ...r, _kind: 'route' })),
+    ...(Array.isArray(features.features) ? features.features : [])
+      .map((f) => ({ ...f, _kind: 'feature' })),
+  ];
+  const msg = String(message || '').toLowerCase();
+  const tokens = msg.split(/[^\p{L}\p{N}]+/u).filter((t) => t.length >= 3);
+  const ranked = entries
+    .map((e) => {
+      const hay = [
+        safeString(e.sr),
+        safeString(e.en),
+        ...(Array.isArray(e.keywords) ? e.keywords : []),
+        ...(Array.isArray(e.related) ? e.related : []),
+        ...(Array.isArray(e.related_routes) ? e.related_routes : []),
+        safeString(e.path),
+        safeString(e.id),
+      ].join(' ').toLowerCase();
+      let score = 0;
+      for (const token of tokens) {
+        if (hay.includes(token)) score += 1;
+      }
+      return { entry: e, score };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+
+  return ranked
+    .filter((r) => r.score > 0)
+    .map((r) => ({
+      id: `static:${r.entry.id || r.entry.path || 'entry'}`,
+      score: Math.min(1, r.score / 10),
+      payload: {
+        kind: r.entry._kind || 'entry',
+        path: r.entry.path || '/',
+        sr: r.entry.sr || '',
+        en: r.entry.en || '',
+        ctas: Array.isArray(r.entry.ctas) ? r.entry.ctas : []
+      },
+      _static: true
+    }));
+}
+
 /**
  * Claude Sonnet RAG call, scoped to the top site-KB facts. Modelled after
  * the Anthropic Messages API pattern used by `planStayChat`.
@@ -422,21 +455,6 @@ async function composeSiteGuideTurn({
 
   const dateTurn = makeTodaysDateTurnIfAsked(safeMessage, safeLang);
   if (dateTurn) return dateTurn;
-  const quickTurn = makeQuickGuideTurnIfAsked(safeMessage, safeLang);
-  if (quickTurn) return quickTurn;
-
-  // Production-safe mode: deterministic guide without vector/LLM dependency.
-  // Can be overridden by setting SITE_GUIDE_FORCE_AI=true.
-  const stableMode =
-    process.env.SITE_GUIDE_STABLE_MODE === 'true' ||
-    (process.env.NODE_ENV === 'production' && process.env.SITE_GUIDE_FORCE_AI !== 'true');
-  if (stableMode) {
-    const turn = await makeKeywordFallbackTurn(safeMessage, safeLang, 'stable_mode');
-    return makeAssistantTurn({
-      ...turn,
-      meta: { ...(turn.meta || {}), mode: 'stable' }
-    });
-  }
 
   // 1. Short-circuit when AI is disabled or in mock mode.
   const provider = process.env.AI_PROVIDER || 'mock';
@@ -455,16 +473,15 @@ async function composeSiteGuideTurn({
     hits = await searchInCollection(safeMessage, SITE_KB_COLLECTION, 5);
   } catch (err) {
     console.error('[siteGuide] vector search failed:', err.message);
-    return makeKeywordFallbackTurn(
-      safeMessage,
-      safeLang,
-      'vector_search_failed'
-    );
+    hits = buildStaticHitsFromDocs(safeMessage, 5);
   }
 
   // 3. No hits.
   if (!Array.isArray(hits) || hits.length === 0) {
-    return makeKeywordFallbackTurn(safeMessage, safeLang, 'no_vector_hits');
+    hits = buildStaticHitsFromDocs(safeMessage, 5);
+    if (!Array.isArray(hits) || hits.length === 0) {
+      return makeKeywordFallbackTurn(safeMessage, safeLang, 'no_vector_hits');
+    }
   }
 
   // 4. Claude RAG call.

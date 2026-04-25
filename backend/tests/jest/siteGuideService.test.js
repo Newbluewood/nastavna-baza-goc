@@ -120,7 +120,7 @@ describe('composeSiteGuideTurn - disabled / mock paths', () => {
 });
 
 describe('composeSiteGuideTurn - RAG path failures', () => {
-  it('falls back to keyword with reason="vector_search_failed" when searchInCollection rejects', async () => {
+  it('falls back to keyword with reason="no_vector_hits" when searchInCollection rejects and static facts do not match', async () => {
     process.env.AI_PROVIDER = 'anthropic';
     process.env.AI_ENABLED = 'true';
     process.env.AI_API_KEY = 'test-key';
@@ -133,13 +133,13 @@ describe('composeSiteGuideTurn - RAG path failures', () => {
 
     const { composeSiteGuideTurn } = require('../../services/siteGuideService');
     const result = await composeSiteGuideTurn({
-      message: 'test',
+      message: 'zzzxxyyqq',
       lang: 'sr',
       userKey: 'anon',
     });
 
     expect(() => validateAssistantTurn(result)).not.toThrow();
-    expect(result.meta.reason).toBe('vector_search_failed');
+    expect(result.meta.reason).toBe('no_vector_hits');
     expect(fetchFn).not.toHaveBeenCalled();
   });
 
@@ -154,7 +154,7 @@ describe('composeSiteGuideTurn - RAG path failures', () => {
 
     const { composeSiteGuideTurn } = require('../../services/siteGuideService');
     const result = await composeSiteGuideTurn({
-      message: 'test',
+      message: 'zzzxxyyqq',
       lang: 'sr',
       userKey: 'anon',
     });
