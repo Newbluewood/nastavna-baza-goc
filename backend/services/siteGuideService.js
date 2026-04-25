@@ -107,6 +107,11 @@ function makeNoKeywordMatchTurn(lang, reason) {
   const isEn = lang === 'en';
   let answer;
   switch (reason) {
+    case 'stable_mode':
+      answer = isEn
+        ? 'Guide mode is running in stable navigation mode. Ask about a page or choose a shortcut below.'
+        : 'Водич тренутно ради у стабилном навигационом режиму. Питајте за страницу или изаберите пречицу испод.';
+      break;
     case 'ai_disabled_or_mock':
       answer = isEn
         ? 'Live AI is off on the server, so I only match from this short list. Pick a page or ask with a longer phrase (e.g. “accommodation”, “news”).'
@@ -392,6 +397,19 @@ async function composeSiteGuideTurn({
 
   const dateTurn = makeTodaysDateTurnIfAsked(safeMessage, safeLang);
   if (dateTurn) return dateTurn;
+
+  // Production-safe mode: deterministic guide without vector/LLM dependency.
+  // Can be overridden by setting SITE_GUIDE_FORCE_AI=true.
+  const stableMode =
+    process.env.SITE_GUIDE_STABLE_MODE === 'true' ||
+    (process.env.NODE_ENV === 'production' && process.env.SITE_GUIDE_FORCE_AI !== 'true');
+  if (stableMode) {
+    const turn = await makeKeywordFallbackTurn(safeMessage, safeLang, 'stable_mode');
+    return makeAssistantTurn({
+      ...turn,
+      meta: { ...(turn.meta || {}), mode: 'stable' }
+    });
+  }
 
   // 1. Short-circuit when AI is disabled or in mock mode.
   const provider = process.env.AI_PROVIDER || 'mock';
