@@ -80,10 +80,28 @@ function setupMocks({ fetchMock, searchMock, recordSpendMock } = {}) {
   return { fetchFn, searchInCollection, recordSpend };
 }
 
-function setupDbMock({ attractions = [], facilities = [], roomsAgg = [], news = [] } = {}) {
+function setupDbMock({
+  attractions = [],
+  facilities = [],
+  roomsAgg = [],
+  news = [],
+  staff = [],
+  roomTotals = [],
+  occupiedAgg = [],
+} = {}) {
   const dbQuery = jest.fn(async (sql) => {
+    if (sql.includes('COUNT(*) AS n FROM facilities')) return [[{ n: facilities.length }]];
+    if (sql.includes('COUNT(*) AS n FROM rooms')) return [[{ n: roomTotals[0]?.total_rooms ?? roomsAgg[0]?.rooms ?? 0 }]];
+    if (sql.includes('COUNT(*) AS n FROM news')) return [[{ n: news.length }]];
+    if (sql.includes('COUNT(*) AS n FROM attractions')) return [[{ n: attractions.length }]];
+    if (sql.includes('COUNT(*) AS n FROM staff')) return [[{ n: staff.length }]];
+    if (sql.includes('SELECT title') && sql.includes('FROM news')) return [news];
+    if (sql.includes('SELECT name') && sql.includes('FROM attractions')) return [attractions];
     if (sql.includes('FROM attractions')) return [attractions];
+    if (sql.includes('FROM staff')) return [staff];
     if (sql.includes('FROM facilities')) return [facilities];
+    if (sql.includes('COUNT(*) AS total_rooms FROM rooms')) return [roomTotals];
+    if (sql.includes('COUNT(DISTINCT room_id) AS occupied_rooms')) return [occupiedAgg];
     if (sql.includes('FROM rooms')) return [roomsAgg];
     if (sql.includes('FROM news')) return [news];
     return [[]];
@@ -162,6 +180,195 @@ describe('composeSiteGuideTurn - disabled / mock paths', () => {
 });
 
 describe('composeSiteGuideTurn - DB facts routing', () => {
+  it('returns all-knowledge facts for "sta sve znas"', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+    setupDbMock({
+      facilities: [{ id: 1 }, { id: 2 }, { id: 3 }],
+      roomTotals: [{ total_rooms: 6 }],
+      news: [{ title: 'Nova radionica' }, { title: 'Akcija ciscenja' }],
+      attractions: [{ name: 'Vidikovac' }, { name: 'Studenac' }],
+      staff: [{ full_name: 'A' }, { full_name: 'B' }],
+    });
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'sta sve znas o sajtu',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('all_knowledge_facts');
+    expect(result.answer).toMatch(/više slojeva sajta/i);
+    expect(result.answer).toMatch(/3 objekata/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
+  it('returns focused domain details when all-knowledge prompt mentions news and UI', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+    setupDbMock({
+      facilities: [{ id: 1 }],
+      roomTotals: [{ total_rooms: 2 }],
+      news: [{ title: 'Nova radionica' }],
+      attractions: [{ name: 'Vidikovac' }],
+      staff: [{ full_name: 'A' }],
+    });
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'sta sve znas o vestima i ui bojama',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('all_knowledge_facts');
+    expect(result.meta.domains).toEqual(expect.arrayContaining(['news', 'ui']));
+    expect(result.answer).toMatch(/Fokus detalji/i);
+    expect(result.answer).toMatch(/vesti:/i);
+    expect(result.answer).toMatch(/UI\/navigacija:/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
+  it('returns knowledge snapshot facts for "sta ima zanimljivo"', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+    setupDbMock({
+      facilities: [{ id: 1 }, { id: 2 }, { id: 3 }],
+      roomTotals: [{ total_rooms: 6 }],
+      news: [{ title: 'Nova radionica' }, { title: 'Akcija ciscenja' }],
+      attractions: [{ name: 'Vidikovac' }, { name: 'Studenac' }],
+      staff: [{ full_name: 'A' }],
+    });
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'sta ima zanimljivo',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('knowledge_snapshot_facts');
+    expect(result.answer).toMatch(/aktivnih atrakcija/i);
+    expect(result.answer).toMatch(/Nova radionica|Akcija ciscenja/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
+  it('returns site overview facts for broad "what is on site" prompt', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+    setupDbMock({
+      facilities: [{ id: 1 }, { id: 2 }, { id: 3 }],
+      roomTotals: [{ total_rooms: 5 }],
+      news: [{ id: 1 }, { id: 2 }],
+      attractions: [{ id: 1 }],
+      staff: [{ full_name: 'A' }, { full_name: 'B' }],
+    });
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'sta sve ima tamo na gocu',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('db_site_overview_facts');
+    expect(result.answer).toMatch(/3 smeštajnih objekata/i);
+    expect(result.answer).toMatch(/5 soba/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
+  it('returns UI content facts for header/footer/colors question', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+    setupDbMock();
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'sta pise u headeru i koje su boje dugmadi',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('ui_content_facts');
+    expect(result.answer).toMatch(/header=da/i);
+    expect(result.answer).toMatch(/footer=da/i);
+    expect(result.answer).toMatch(/braon paletu/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
+  it('returns availability facts for period question', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+    setupDbMock({
+      roomTotals: [{ total_rooms: 10 }],
+      occupiedAgg: [{ occupied_rooms: 2 }],
+    });
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'koliko je soba slobodno ove nedelje',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('db_availability_facts');
+    expect(result.answer).toMatch(/slobodno je 8 soba/i);
+    expect(result.answer).toMatch(/zauzeto 2/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
+  it('returns staff facts from DB for team question', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+    setupDbMock({
+      staff: [
+        { full_name: 'Ana Markovic', role: 'Recepcija' },
+        { full_name: 'Milan Jovic', role: 'Vodic' },
+      ],
+    });
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'ko su zaposleni',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('db_staff_facts');
+    expect(result.answer).toMatch(/Ana Markovic/i);
+    expect(result.answer).toMatch(/Milan Jovic/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
   it('returns event facts from DB for event-style question', async () => {
     process.env.AI_PROVIDER = 'anthropic';
     process.env.AI_ENABLED = 'true';

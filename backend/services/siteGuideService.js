@@ -104,6 +104,88 @@ function humanizeStayTag(tag, lang) {
   return (lang === 'en' ? mapEn : mapSr)[t] || String(tag || '');
 }
 
+function looksLikeAvailabilityQuestion(message) {
+  const m = String(message || '').toLowerCase();
+  return (
+    m.includes('slobodn') ||
+    m.includes('zauzet') ||
+    m.includes('dostupn') ||
+    m.includes('availability') ||
+    m.includes('ima li mesta') ||
+    m.includes('ima li soba') ||
+    m.includes('da li ima soba')
+  );
+}
+
+function inferWindowDays(message) {
+  const m = String(message || '').toLowerCase();
+  if (m.includes('godin')) return 365;
+  if (m.includes('mesec') || m.includes('mjesec')) return 30;
+  if (m.includes('nedelj') || m.includes('tjed')) return 7;
+  return 1;
+}
+
+async function makeAvailabilityFactsTurnIfAsked(message, lang) {
+  if (!looksLikeAvailabilityQuestion(message)) return null;
+  try {
+    const db = require('../db');
+    const days = inferWindowDays(message);
+    const now = new Date();
+    const end = new Date(now);
+    end.setDate(end.getDate() + days);
+    const startIso = now.toISOString().slice(0, 10);
+    const endIso = end.toISOString().slice(0, 10);
+
+    const [roomRows] = await db.query('SELECT COUNT(*) AS total_rooms FROM rooms');
+    const [occRows] = await db.query(
+      `SELECT COUNT(DISTINCT room_id) AS occupied_rooms
+         FROM reservations
+        WHERE status IN ('pending', 'confirmed')
+          AND start_date < ?
+          AND end_date > ?`,
+      [endIso, startIso]
+    );
+    const total = Number(roomRows?.[0]?.total_rooms || 0);
+    const occupied = Math.max(0, Number(occRows?.[0]?.occupied_rooms || 0));
+    const free = Math.max(0, total - occupied);
+
+    if (lang === 'en') {
+      const scope = days === 1 ? 'today' : `the next ${days} days`;
+      const answer = `Availability for ${scope}: ${free} free rooms, ${occupied} occupied (out of ${total}).`;
+      return makeAssistantTurn({
+        answer: answer.slice(0, 4000),
+        intent: 'site_guide',
+        confidence: 0.97,
+        suggestions: [
+          { label: 'Accommodation', route: '/smestaj', type: 'navigate' },
+          { label: 'Open rooms', route: '/smestaj', type: 'action' },
+          { label: 'Contact', route: '/kontakt', type: 'navigate' },
+        ],
+        sources: [],
+        meta: { source: 'db_availability_facts', days, window: { startIso, endIso } },
+      });
+    }
+
+    const scope = days === 1 ? 'danas' : `u narednih ${days} dana`;
+    const answer = `Dostupnost ${scope}: slobodno je ${free} soba, zauzeto ${occupied} (ukupno ${total}).`;
+    return makeAssistantTurn({
+      answer: answer.slice(0, 4000),
+      intent: 'site_guide',
+      confidence: 0.97,
+      suggestions: [
+        { label: 'Smeštaj', route: '/smestaj', type: 'navigate' },
+        { label: 'Pogledaj sobe', route: '/smestaj', type: 'action' },
+        { label: 'Kontakt', route: '/kontakt', type: 'navigate' },
+      ],
+      sources: [],
+      meta: { source: 'db_availability_facts', days, window: { startIso, endIso } },
+    });
+  } catch (err) {
+    console.error('[siteGuide] availability facts query failed:', err.message);
+    return null;
+  }
+}
+
 function looksLikeOfferQuestion(message) {
   const m = String(message || '').toLowerCase();
   return (
@@ -120,6 +202,404 @@ function looksLikeOfferQuestion(message) {
     m.includes('cene smestaja') ||
     m.includes('cene smeštaja')
   );
+}
+
+function looksLikeStaffQuestion(message) {
+  const m = String(message || '').toLowerCase();
+  return (
+    m.includes('zaposlen') ||
+    m.includes('tim') ||
+    m.includes('ko radi') ||
+    m.includes('staff') ||
+    m.includes('ko su ljudi') ||
+    m.includes('ko je tamo')
+  );
+}
+
+function looksLikeOverviewQuestion(message) {
+  const m = String(message || '').toLowerCase();
+  return (
+    m.includes('sta sve ima') ||
+    m.includes('šta sve ima') ||
+    m.includes('sve o sajtu') ||
+    m.includes('pregled sajta') ||
+    m.includes('sta ima tamo na gocu') ||
+    m.includes('šta ima tamo na goču')
+  );
+}
+
+function looksLikeInterestingQuestion(message) {
+  const m = String(message || '').toLowerCase();
+  return (
+    m.includes('zanimljivo') ||
+    m.includes('preporuci') ||
+    m.includes('preporuči') ||
+    m.includes('sta da vidim') ||
+    m.includes('šta da vidim') ||
+    m.includes('sta predlazes') ||
+    m.includes('šta predlažeš') ||
+    m.includes('sta ima zanimljivo') ||
+    m.includes('šta ima zanimljivo')
+  );
+}
+
+function looksLikeAllKnowledgeQuestion(message) {
+  const m = String(message || '').toLowerCase();
+  return (
+    m.includes('sta sve znas') ||
+    m.includes('šta sve znaš') ||
+    m.includes('sve cinjenice') ||
+    m.includes('sve činjenice') ||
+    m.includes('sve informacije') ||
+    m.includes('sta sve mozes') ||
+    m.includes('šta sve možeš')
+  );
+}
+
+function detectKnowledgeDomains(message) {
+  const m = String(message || '').toLowerCase();
+  const domains = [];
+  if (m.includes('vest') || m.includes('news') || m.includes('event')) domains.push('news');
+  if (m.includes('atrakc') || m.includes('staz') || m.includes('hiking') || m.includes('trail')) domains.push('attractions');
+  if (m.includes('sme') || m.includes('room') || m.includes('rezerv')) domains.push('accommodation');
+  if (m.includes('header') || m.includes('footer') || m.includes('boj') || m.includes('color') || m.includes('ui') || m.includes('meni') || m.includes('navig')) domains.push('ui');
+  if (m.includes('prijav') || m.includes('login') || m.includes('nalog') || m.includes('password') || m.includes('lozink')) domains.push('account');
+  return Array.from(new Set(domains));
+}
+
+function looksLikeUiContentQuestion(message) {
+  const m = String(message || '').toLowerCase();
+  return (
+    m.includes('header') ||
+    m.includes('zaglav') ||
+    m.includes('footer') ||
+    m.includes('podnoz') ||
+    m.includes('podnož') ||
+    m.includes('dugmad') ||
+    m.includes('dugme') ||
+    m.includes('button') ||
+    m.includes('boj') ||
+    m.includes('color') ||
+    m.includes('navigacij') ||
+    m.includes('meni') ||
+    m.includes('menu')
+  );
+}
+
+function readJsonSafe(filePath, fallback) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (_) {
+    return fallback;
+  }
+}
+
+async function buildKnowledgeSnapshot() {
+  const db = require('../db');
+  const [facilityRows] = await db.query("SELECT COUNT(*) AS n FROM facilities WHERE type = 'smestaj'");
+  const [roomRows] = await db.query('SELECT COUNT(*) AS n FROM rooms');
+  const [newsRows] = await db.query('SELECT COUNT(*) AS n FROM news');
+  const [attrRows] = await db.query('SELECT COUNT(*) AS n FROM attractions WHERE is_active = 1');
+  const [staffRows] = await db.query('SELECT COUNT(*) AS n FROM staff');
+  const [recentNewsRows] = await db.query(
+    `SELECT title
+       FROM news
+      ORDER BY created_at DESC
+      LIMIT 3`
+  );
+  const [attractionRows] = await db.query(
+    `SELECT name
+       FROM attractions
+      WHERE is_active = 1
+      ORDER BY id ASC
+      LIMIT 3`
+  );
+
+  const structure = readJsonSafe(path.join(DOCS_DIR, 'site-structure.json'), { routes: [] });
+  const routes = Array.isArray(structure.routes) ? structure.routes : [];
+
+  const appVue = fs.readFileSync(path.join(__dirname, '../../frontend/src/App.vue'), 'utf8');
+  const mainCss = fs.readFileSync(path.join(__dirname, '../../frontend/src/assets/main.css'), 'utf8');
+
+  const navMatches = Array.from(appVue.matchAll(/to="([^"]+)"/g)).map((m) => m[1]).slice(0, 8);
+  const uniqueNavRoutes = Array.from(new Set(navMatches));
+  const colorVars = [];
+  const varRegex = /--(c-braon-[1-6]|color-nav|color-border|color-accent)\s*:\s*([^;]+);/g;
+  let match;
+  while ((match = varRegex.exec(mainCss)) !== null) {
+    colorVars.push(`--${match[1]}=${String(match[2]).trim()}`);
+    if (colorVars.length >= 4) break;
+  }
+
+  return {
+    counts: {
+      facilities: Number(facilityRows?.[0]?.n || 0),
+      rooms: Number(roomRows?.[0]?.n || 0),
+      news: Number(newsRows?.[0]?.n || 0),
+      attractions: Number(attrRows?.[0]?.n || 0),
+      staff: Number(staffRows?.[0]?.n || 0),
+      routes: routes.length,
+    },
+    recentNews: (Array.isArray(recentNewsRows) ? recentNewsRows : []).map((r) => r.title).filter(Boolean),
+    attractionNames: (Array.isArray(attractionRows) ? attractionRows : []).map((r) => r.name).filter(Boolean),
+    navRoutes: uniqueNavRoutes,
+    colors: colorVars,
+  };
+}
+
+async function makeKnowledgeSnapshotTurnIfAsked(message, lang) {
+  if (!looksLikeInterestingQuestion(message)) return null;
+  try {
+    const snap = await buildKnowledgeSnapshot();
+    const topNews = snap.recentNews.length ? snap.recentNews.join(', ') : (lang === 'en' ? 'no recent entries yet' : 'trenutno bez novih unosa');
+    const topAttractions = snap.attractionNames.length ? snap.attractionNames.join(', ') : (lang === 'en' ? 'no active attractions listed' : 'nema aktivnih atrakcija u listi');
+
+    if (lang === 'en') {
+      const answer =
+        `Interesting right now: ${snap.counts.attractions} active attractions (${topAttractions}), ` +
+        `${snap.counts.news} news items (latest: ${topNews}), and ${snap.counts.facilities} accommodation facilities with ${snap.counts.rooms} rooms. ` +
+        `Main navigation routes: ${snap.navRoutes.join(', ')}.`;
+      return makeAssistantTurn({
+        answer: answer.slice(0, 4000),
+        intent: 'site_guide',
+        confidence: 0.95,
+        suggestions: defaultNavigateSuggestions(lang),
+        sources: [],
+        meta: { source: 'knowledge_snapshot_facts' },
+      });
+    }
+
+    const answer =
+      `Trenutno zanimljivo: ${snap.counts.attractions} aktivnih atrakcija (${topAttractions}), ` +
+      `${snap.counts.news} vesti (najnovije: ${topNews}) i ${snap.counts.facilities} smeštajnih objekata sa ${snap.counts.rooms} soba. ` +
+      `Glavne rute u navigaciji: ${snap.navRoutes.join(', ')}.`;
+    return makeAssistantTurn({
+      answer: answer.slice(0, 4000),
+      intent: 'site_guide',
+      confidence: 0.95,
+      suggestions: defaultNavigateSuggestions(lang),
+      sources: [],
+      meta: { source: 'knowledge_snapshot_facts' },
+    });
+  } catch (err) {
+    console.error('[siteGuide] knowledge snapshot failed:', err.message);
+    return null;
+  }
+}
+
+async function makeAllKnowledgeTurnIfAsked(message, lang) {
+  if (!looksLikeAllKnowledgeQuestion(message)) return null;
+  try {
+    const snap = await buildKnowledgeSnapshot();
+    const domains = detectKnowledgeDomains(message);
+    const news = snap.recentNews.length ? snap.recentNews.join(', ') : (lang === 'en' ? 'n/a' : 'n/a');
+    const attrs = snap.attractionNames.length ? snap.attractionNames.join(', ') : (lang === 'en' ? 'n/a' : 'n/a');
+    const colors = snap.colors.length ? snap.colors.join(', ') : (lang === 'en' ? 'n/a' : 'n/a');
+    const nav = snap.navRoutes.length ? snap.navRoutes.join(', ') : (lang === 'en' ? 'n/a' : 'n/a');
+    const domainLinesSr = [];
+    const domainLinesEn = [];
+    if (domains.includes('news')) {
+      domainLinesSr.push(`• vesti: ${snap.counts.news} unosa, najnovije: ${news}`);
+      domainLinesEn.push(`• news: ${snap.counts.news} items, latest: ${news}`);
+    }
+    if (domains.includes('attractions')) {
+      domainLinesSr.push(`• atrakcije: ${snap.counts.attractions} aktivnih, primeri: ${attrs}`);
+      domainLinesEn.push(`• attractions: ${snap.counts.attractions} active, examples: ${attrs}`);
+    }
+    if (domains.includes('accommodation')) {
+      domainLinesSr.push(`• smeštaj: ${snap.counts.facilities} objekata i ${snap.counts.rooms} soba`);
+      domainLinesEn.push(`• accommodation: ${snap.counts.facilities} facilities and ${snap.counts.rooms} rooms`);
+    }
+    if (domains.includes('ui')) {
+      domainLinesSr.push(`• UI/navigacija: rute ${nav}; paleta ${colors}`);
+      domainLinesEn.push(`• UI/navigation: routes ${nav}; palette ${colors}`);
+    }
+    if (domains.includes('account')) {
+      domainLinesSr.push('• nalog/prijava: podržane su prijava, reset lozinke i Moj nalog tokovi');
+      domainLinesEn.push('• account/login: login, password reset, and My Account flows are supported');
+    }
+
+    if (lang === 'en') {
+      const answer =
+        `I can answer from multiple site layers: data (${snap.counts.facilities} facilities, ${snap.counts.rooms} rooms, ` +
+        `${snap.counts.news} news, ${snap.counts.attractions} attractions, ${snap.counts.staff} staff), ` +
+        `content/navigation (${snap.counts.routes} routes, nav: ${nav}), and UI theme facts (${colors}). ` +
+        `Current examples: news=${news}; attractions=${attrs}.` +
+        (domainLinesEn.length ? `\nFocused details:\n${domainLinesEn.join('\n')}` : '');
+      return makeAssistantTurn({
+        answer: answer.slice(0, 4000),
+        intent: 'site_guide',
+        confidence: 0.94,
+        suggestions: defaultNavigateSuggestions(lang),
+        sources: [],
+        meta: { source: 'all_knowledge_facts', domains },
+      });
+    }
+
+    const answer =
+      `Mogu da odgovaram iz više slojeva sajta: podaci (${snap.counts.facilities} objekata, ${snap.counts.rooms} soba, ` +
+      `${snap.counts.news} vesti, ${snap.counts.attractions} atrakcija, ${snap.counts.staff} zaposlenih), ` +
+      `sadržaj/navigacija (${snap.counts.routes} ruta, navigacija: ${nav}) i UI tema (${colors}). ` +
+      `Primeri trenutno: vesti=${news}; atrakcije=${attrs}.` +
+      (domainLinesSr.length ? `\nFokus detalji:\n${domainLinesSr.join('\n')}` : '');
+    return makeAssistantTurn({
+      answer: answer.slice(0, 4000),
+      intent: 'site_guide',
+      confidence: 0.94,
+      suggestions: defaultNavigateSuggestions(lang),
+      sources: [],
+      meta: { source: 'all_knowledge_facts', domains },
+    });
+  } catch (err) {
+    console.error('[siteGuide] all knowledge facts failed:', err.message);
+    return null;
+  }
+}
+
+async function makeOverviewFactsTurnIfAsked(message, lang) {
+  if (!looksLikeOverviewQuestion(message)) return null;
+  try {
+    const db = require('../db');
+    const [facilityRows] = await db.query("SELECT COUNT(*) AS n FROM facilities WHERE type = 'smestaj'");
+    const [roomRows] = await db.query('SELECT COUNT(*) AS n FROM rooms');
+    const [newsRows] = await db.query('SELECT COUNT(*) AS n FROM news');
+    const [attrRows] = await db.query('SELECT COUNT(*) AS n FROM attractions WHERE is_active = 1');
+    const [staffRows] = await db.query('SELECT COUNT(*) AS n FROM staff');
+    const structure = readJsonSafe(path.join(DOCS_DIR, 'site-structure.json'), { routes: [] });
+    const routeCount = Array.isArray(structure.routes) ? structure.routes.length : 0;
+
+    const facts = {
+      facilities: Number(facilityRows?.[0]?.n || 0),
+      rooms: Number(roomRows?.[0]?.n || 0),
+      news: Number(newsRows?.[0]?.n || 0),
+      attractions: Number(attrRows?.[0]?.n || 0),
+      staff: Number(staffRows?.[0]?.n || 0),
+      routes: routeCount,
+    };
+
+    if (lang === 'en') {
+      const answer =
+        `Site overview: ${facts.routes} main routes, ${facts.facilities} accommodation facilities, ${facts.rooms} rooms, ` +
+        `${facts.news} news items, ${facts.attractions} active attractions, and ${facts.staff} staff members listed.`;
+      return makeAssistantTurn({
+        answer: answer.slice(0, 4000),
+        intent: 'site_guide',
+        confidence: 0.96,
+        suggestions: defaultNavigateSuggestions(lang),
+        sources: [],
+        meta: { source: 'db_site_overview_facts' },
+      });
+    }
+    const answer =
+      `Pregled sajta: ${facts.routes} glavnih ruta, ${facts.facilities} smeštajnih objekata, ${facts.rooms} soba, ` +
+      `${facts.news} vesti, ${facts.attractions} aktivnih atrakcija i ${facts.staff} zaposlenih u evidenciji.`;
+    return makeAssistantTurn({
+      answer: answer.slice(0, 4000),
+      intent: 'site_guide',
+      confidence: 0.96,
+      suggestions: defaultNavigateSuggestions(lang),
+      sources: [],
+      meta: { source: 'db_site_overview_facts' },
+    });
+  } catch (err) {
+    console.error('[siteGuide] overview facts query failed:', err.message);
+    return null;
+  }
+}
+
+async function makeUiContentFactsTurnIfAsked(message, lang) {
+  if (!looksLikeUiContentQuestion(message)) return null;
+  try {
+    const appVue = fs.readFileSync(path.join(__dirname, '../../frontend/src/App.vue'), 'utf8');
+    const mainCss = fs.readFileSync(path.join(__dirname, '../../frontend/src/assets/main.css'), 'utf8');
+
+    const hasHeader = appVue.includes('<header class="header">');
+    const hasFooter = appVue.includes('<footer class="footer">');
+    const hasNav = appVue.includes('class="main-nav"');
+    const hasGuestBtn = appVue.includes('class="guest-btn"');
+
+    const colorVars = [];
+    const varRegex = /--(c-braon-[1-6]|color-nav|color-border|color-accent)\s*:\s*([^;]+);/g;
+    let match;
+    while ((match = varRegex.exec(mainCss)) !== null) {
+      colorVars.push(`--${match[1]}=${String(match[2]).trim()}`);
+      if (colorVars.length >= 6) break;
+    }
+
+    if (lang === 'en') {
+      const answer =
+        `UI facts: header=${hasHeader ? 'yes' : 'no'}, footer=${hasFooter ? 'yes' : 'no'}, nav=${hasNav ? 'yes' : 'no'}, ` +
+        `guest button=${hasGuestBtn ? 'yes' : 'no'}. Theme uses brown palette variables (${colorVars.join(', ')}).`;
+      return makeAssistantTurn({
+        answer: answer.slice(0, 4000),
+        intent: 'site_guide',
+        confidence: 0.9,
+        suggestions: [{ label: 'Home', route: '/', type: 'navigate' }],
+        sources: [],
+        meta: { source: 'ui_content_facts' },
+      });
+    }
+    const answer =
+      `UI činjenice: header=${hasHeader ? 'da' : 'ne'}, footer=${hasFooter ? 'da' : 'ne'}, navigacija=${hasNav ? 'da' : 'ne'}, ` +
+      `guest dugme=${hasGuestBtn ? 'da' : 'ne'}. Tema koristi braon paletu (${colorVars.join(', ')}).`;
+    return makeAssistantTurn({
+      answer: answer.slice(0, 4000),
+      intent: 'site_guide',
+      confidence: 0.9,
+      suggestions: [{ label: 'Naslovna', route: '/', type: 'navigate' }],
+      sources: [],
+      meta: { source: 'ui_content_facts' },
+    });
+  } catch (err) {
+    console.error('[siteGuide] ui content facts failed:', err.message);
+    return null;
+  }
+}
+
+async function makeStaffFactsTurnIfAsked(message, lang) {
+  if (!looksLikeStaffQuestion(message)) return null;
+  try {
+    const db = require('../db');
+    const [rows] = await db.query(
+      `SELECT full_name, role
+         FROM staff
+        ORDER BY id ASC
+        LIMIT 5`
+    );
+    const staff = Array.isArray(rows) ? rows.filter((r) => r.full_name) : [];
+    if (staff.length === 0) return null;
+
+    const lines = staff.map((p) => `• ${p.full_name}${p.role ? ` — ${p.role}` : ''}`).join('\n');
+    if (lang === 'en') {
+      const answer = `Team members listed on the site:\n${lines}\nFor direct communication, open Contact.`;
+      return makeAssistantTurn({
+        answer: answer.slice(0, 4000),
+        intent: 'site_guide',
+        confidence: 0.94,
+        suggestions: [
+          { label: 'Contact', route: '/kontakt', type: 'navigate' },
+          { label: 'Home', route: '/', type: 'navigate' },
+        ],
+        sources: [],
+        meta: { source: 'db_staff_facts' },
+      });
+    }
+    const answer = `Ljudi koji su trenutno navedeni na sajtu:\n${lines}\nZa direktan kontakt otvorite Kontakt.`;
+    return makeAssistantTurn({
+      answer: answer.slice(0, 4000),
+      intent: 'site_guide',
+      confidence: 0.94,
+      suggestions: [
+        { label: 'Kontakt', route: '/kontakt', type: 'navigate' },
+        { label: 'Naslovna', route: '/', type: 'navigate' },
+      ],
+      sources: [],
+      meta: { source: 'db_staff_facts' },
+    });
+  } catch (err) {
+    console.error('[siteGuide] staff facts query failed:', err.message);
+    return null;
+  }
 }
 
 function looksLikeEventQuestion(message) {
@@ -756,6 +1236,18 @@ async function composeSiteGuideTurn({
 
   const dateTurn = makeTodaysDateTurnIfAsked(safeMessage, safeLang);
   if (dateTurn) return dateTurn;
+  const allKnowledgeTurn = await makeAllKnowledgeTurnIfAsked(safeMessage, safeLang);
+  if (allKnowledgeTurn) return allKnowledgeTurn;
+  const snapshotFactsTurn = await makeKnowledgeSnapshotTurnIfAsked(safeMessage, safeLang);
+  if (snapshotFactsTurn) return snapshotFactsTurn;
+  const overviewFactsTurn = await makeOverviewFactsTurnIfAsked(safeMessage, safeLang);
+  if (overviewFactsTurn) return overviewFactsTurn;
+  const uiContentFactsTurn = await makeUiContentFactsTurnIfAsked(safeMessage, safeLang);
+  if (uiContentFactsTurn) return uiContentFactsTurn;
+  const availabilityFactsTurn = await makeAvailabilityFactsTurnIfAsked(safeMessage, safeLang);
+  if (availabilityFactsTurn) return availabilityFactsTurn;
+  const staffFactsTurn = await makeStaffFactsTurnIfAsked(safeMessage, safeLang);
+  if (staffFactsTurn) return staffFactsTurn;
   const hikingFactsTurn = await makeHikingFactsTurnIfAsked(safeMessage, safeLang);
   if (hikingFactsTurn) return hikingFactsTurn;
   const eventsFactsTurn = await makeEventsFactsTurnIfAsked(safeMessage, safeLang);

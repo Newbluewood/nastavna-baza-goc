@@ -88,7 +88,8 @@ describe('site-guide retrieval isolation - runtime', () => {
 
     const { composeSiteGuideTurn } = require('../../services/siteGuideService');
     const result = await composeSiteGuideTurn({
-      message: 'kako da otvorim kontakt stranicu?',
+      // Keep this neutral so it does not match any deterministic DB/UI fast-path.
+      message: 'objasni mi ovo ukratko',
       lang: 'sr',
       userKey: 'guest:iso',
     });
