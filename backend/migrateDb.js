@@ -1,5 +1,6 @@
-require('dotenv').config();
-const mysql = require('mysql2/promise');
+require('dotenv').config()
+const mysql = require('mysql2/promise')
+const { getMysqlConnectionOptions, redactedMysqlConfig } = require('./lib/mysqlConnectionOptions')
 
 const SHOULD_EXECUTE = process.argv.includes('--execute');
 
@@ -132,16 +133,9 @@ async function ensureForeignKey(conn, tableName, fkName, sql) {
 
 async function run() {
 
-  const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'defaultdb',
-    port: process.env.DB_PORT || 3306,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
-  };
-  console.log('DB CONFIG:', dbConfig);
-  const conn = await mysql.createConnection(dbConfig);
+  const dbConfig = getMysqlConnectionOptions()
+  console.log('DB CONFIG:', redactedMysqlConfig(dbConfig))
+  const conn = await mysql.createConnection(dbConfig)
 
   try {
     console.log('Connected to database.');

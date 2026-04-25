@@ -1,6 +1,7 @@
-require('dotenv').config();
-const mysql = require('mysql2/promise');
-const bcrypt = require('bcryptjs');
+require('dotenv').config()
+const mysql = require('mysql2/promise')
+const bcrypt = require('bcryptjs')
+const { getMysqlConnectionOptions } = require('./lib/mysqlConnectionOptions')
 
 const EXECUTE_FLAG = '--execute';
 
@@ -9,14 +10,7 @@ function hasExecuteFlag(argv = process.argv) {
 }
 
 function createConnection() {
-  return mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'defaultdb',
-    port: process.env.DB_PORT || 3306,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
-  });
+  return mysql.createConnection(getMysqlConnectionOptions())
 }
 
 async function executeOrPrint(connection, sql, params, description, shouldExecute) {
