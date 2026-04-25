@@ -26,10 +26,10 @@ function renderMessageText(text) {
   })
   return safe
 }
-// ...existing code...
 
 const router = useRouter()
-const GUEST_CHAT_STORAGE_KEY = 'stay_assistant_guest_chat_v1'
+/** Bump when guest offline state shape or default UX should reset for all visitors. */
+const GUEST_CHAT_STORAGE_KEY = 'stay_assistant_guest_chat_v2'
 
 const isOpen = ref(false)
 const busy = ref(false)
