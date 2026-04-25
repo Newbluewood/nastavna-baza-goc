@@ -19,10 +19,7 @@
 const path = require('path');
 const fs = require('fs');
 
-const {
-  makeAssistantTurn,
-  makeFallbackAssistantTurn,
-} = require('./assistantTurnSchema');
+const { makeAssistantTurn } = require('./assistantTurnSchema');
 const { searchInCollection } = require('./vectorSearchService');
 const { recordSpend } = require('./aiBudgetService');
 
@@ -39,6 +36,66 @@ function clamp01(n) {
 
 function safeString(v) {
   return typeof v === 'string' ? v : '';
+}
+
+function defaultNavigateSuggestions(lang) {
+  if (lang === 'en') {
+    return [
+      { label: 'Accommodation', route: '/smestaj', type: 'navigate' },
+      { label: 'News', route: '/vesti', type: 'navigate' },
+      { label: 'Contact', route: '/kontakt', type: 'navigate' }
+    ];
+  }
+  return [
+    { label: 'Smeštaj', route: '/smestaj', type: 'navigate' },
+    { label: 'Vesti', route: '/vesti', type: 'navigate' },
+    { label: 'Kontakt', route: '/kontakt', type: 'navigate' }
+  ];
+}
+
+/**
+ * When static KB keyword scoring finds nothing (e.g. "hi"), explain why in a
+ * calm way instead of implying the database is broken.
+ * @param {'sr'|'en'} lang
+ * @param {string} reason upstream tag from composeSiteGuideTurn
+ */
+function makeNoKeywordMatchTurn(lang, reason) {
+  const isEn = lang === 'en';
+  let answer;
+  switch (reason) {
+    case 'ai_disabled_or_mock':
+      answer = isEn
+        ? 'Live AI is off on the server, so I only match from this short list. Pick a page or ask with a longer phrase (e.g. “accommodation”, “news”).'
+        : 'Живи AI је искључен на серверу, па овде радим само кратко упоређивање са листом испод. Изаберите страницу или пошаљите дуже питање (нпр. „смештај“, „вести“, „контакт“).';
+      break;
+    case 'vector_search_failed':
+      answer = isEn
+        ? 'Knowledge search is temporarily unavailable. Use the links below.'
+        : 'Претрага упутства тренутно није доступна. Користите везе испод.';
+      break;
+    case 'no_vector_hits':
+      answer = isEn
+        ? 'I did not find a close match in the guide. Rephrase or choose a topic below.'
+        : 'Нисам пронашао близак погодак у упутству. Покушајте другачије питање или изаберите тему испод.';
+      break;
+    case 'llm_call_failed':
+      answer = isEn
+        ? 'I pulled relevant pages but could not generate a short answer. Open a suggestion below.'
+        : 'Имам релевантне странице, али кратак текст тренутно не могу да направим. Отворите предлог испод.';
+      break;
+    default:
+      answer = isEn
+        ? 'Please send a slightly longer question (e.g. “accommodation”, “news”, “login”) or tap a page below.'
+        : 'Пошаљите мало дуже питање (нпр. „смештај“, „вести“, „пријава“) или изаберите страницу испод.';
+  }
+  return makeAssistantTurn({
+    answer,
+    intent: 'site_guide',
+    confidence: 0.12,
+    suggestions: defaultNavigateSuggestions(lang),
+    sources: [],
+    meta: { reason, fallback: 'no_keyword_match' }
+  });
 }
 
 /**
@@ -69,8 +126,9 @@ function extractSuggestionsFromHits(hits, lang) {
 
 /**
  * Build a no-LLM "keyword fallback" AssistantTurn from the static KB JSON
- * files. Used whenever the full RAG path is unavailable. Returns a generic
- * fallback (via `makeFallbackAssistantTurn`) if nothing in the KB matches.
+ * files. Used whenever the full RAG path is unavailable. If nothing in the
+ * KB matches (or the message is too short for tokens), returns a contextual
+ * turn with the same quick links — not an outage-style message.
  *
  * @param {string} message  User's raw question.
  * @param {'sr'|'en'} lang
@@ -125,8 +183,7 @@ async function makeKeywordFallbackTurn(message, lang, reason) {
     .slice(0, 3);
 
   if (scored.length === 0) {
-    const generic = makeFallbackAssistantTurn({ lang, reason });
-    return { ...generic, meta: { reason, fallback: 'generic' } };
+    return makeNoKeywordMatchTurn(lang, reason);
   }
 
   const answerLines = [];
