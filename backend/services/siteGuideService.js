@@ -1044,7 +1044,34 @@ async function makeKeywordFallbackTurn(message, lang, reason) {
     .slice(0, 3);
 
   if (scored.length === 0) {
-    return makeNoKeywordMatchTurn(lang, reason);
+    const legacyFacts = buildLegacyDocFacts(message, 3);
+    if (legacyFacts.length === 0) {
+      return makeNoKeywordMatchTurn(lang, reason);
+    }
+    const lines = legacyFacts.map((f) => {
+      const obj = f.item || {};
+      const title =
+        obj.title || obj.name || obj.naziv || obj.ime || obj.question || obj.pitanje || `${f.root}/${f.key}`;
+      const text =
+        obj.excerpt || obj.description || obj.opis || obj.answer || obj.odgovor || '';
+      return `• ${String(title)}${text ? ` — ${shortNewsText(text, 100)}` : ''}`;
+    });
+    const answer =
+      lang === 'en'
+        ? `I found related facts in the site docs:\n${lines.join('\n')}`
+        : `Pronašao sam povezane činjenice u dokumentaciji sajta:\n${lines.join('\n')}`;
+    return makeAssistantTurn({
+      answer: answer.slice(0, 4000),
+      intent: 'site_guide',
+      confidence: 0.28,
+      suggestions: defaultNavigateSuggestions(lang),
+      sources: legacyFacts.map((f) => ({
+        id: `${f.root}:${f.key}`.slice(0, 200),
+        collection: 'legacy_docs_fallback',
+        score: Math.min(1, f.score / 10),
+      })),
+      meta: { reason, fallback: 'legacy_docs' },
+    });
   }
 
   const answerLines = [];
@@ -1168,6 +1195,56 @@ function buildStaticHitsFromDocs(message, limit = 5) {
       },
       _static: true
     }));
+}
+
+function buildLegacyDocEntries(limit = 200) {
+  let files = [];
+  try {
+    files = fs.readdirSync(DOCS_DIR).filter((f) => f.toLowerCase().endsWith('.json'));
+  } catch (_) {
+    return [];
+  }
+
+  const entries = [];
+  for (const file of files) {
+    const doc = readJsonSafe(path.join(DOCS_DIR, file), null);
+    if (!doc || typeof doc !== 'object') continue;
+    const root = path.basename(file, '.json');
+    for (const [key, value] of Object.entries(doc)) {
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (item && typeof item === 'object') {
+            entries.push({ root, key, item });
+            if (entries.length >= limit) return entries;
+          }
+        }
+      } else if (value && typeof value === 'object') {
+        entries.push({ root, key, item: value });
+        if (entries.length >= limit) return entries;
+      }
+    }
+  }
+  return entries;
+}
+
+function buildLegacyDocFacts(message, limit = 3) {
+  const msg = String(message || '').toLowerCase();
+  const tokens = msg.split(/[^\p{L}\p{N}]+/u).filter((t) => t.length >= 3);
+  if (!tokens.length) return [];
+
+  const entries = buildLegacyDocEntries(250);
+  return entries
+    .map((e) => {
+      const hay = JSON.stringify(e.item).toLowerCase();
+      let score = 0;
+      for (const t of tokens) {
+        if (hay.includes(t)) score += 1;
+      }
+      return { ...e, score };
+    })
+    .filter((e) => e.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
 }
 
 /**

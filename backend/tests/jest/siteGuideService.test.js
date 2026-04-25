@@ -179,6 +179,24 @@ describe('composeSiteGuideTurn - disabled / mock paths', () => {
     expect(searchInCollection).not.toHaveBeenCalled();
   });
 
+  it('uses legacy docs fallback when keyword fallback has no site-structure hit', async () => {
+    process.env.AI_PROVIDER = 'mock';
+    const { fetchFn, searchInCollection } = setupMocks();
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'sušara',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.fallback).toBe('legacy_docs');
+    expect(result.answer).toMatch(/dokumentaciji sajta/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
   it('returns a keyword fallback with reason="ai_disabled_or_mock" when AI_ENABLED=false', async () => {
     process.env.AI_PROVIDER = 'anthropic';
     process.env.AI_ENABLED = 'false';
