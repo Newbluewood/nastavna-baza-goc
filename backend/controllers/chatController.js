@@ -189,8 +189,41 @@ async function reserveStayChat(req, res) {
   }
 }
 
+async function siteGuideTurn(req, res) {
+  const { composeSiteGuideTurn } = require('../services/siteGuideService');
+  const { validateAssistantTurn, makeFallbackAssistantTurn } = require('../services/assistantTurnSchema');
+  const body = req.body || {};
+  const message = String(body.message || '').trim();
+  const lang = body.lang === 'en' ? 'en' : 'sr';
+
+  if (!message) {
+    return res.status(400).json({ error: 'message is required' });
+  }
+
+  const userKey = res.locals?.aiBudget?.userKey
+    || (req.user?.id
+      ? `admin:${req.user.id}`
+      : (req.guest?.id
+        ? `guest:${req.guest.id}`
+        : `ip:${req.ip || 'unknown'}`));
+
+  const turn = await composeSiteGuideTurn({ message, lang, userKey });
+
+  try {
+    validateAssistantTurn(turn);
+  } catch (err) {
+    // Defensive: composers above should always return a valid shape; if not,
+    // log and degrade to the static fallback so the UI never sees garbage.
+    console.error('[siteGuideTurn] invalid turn produced:', err.message);
+    return res.status(200).json(makeFallbackAssistantTurn({ lang, reason: 'invalid_turn' }));
+  }
+
+  return res.status(200).json(turn);
+}
+
 module.exports = {
   planStayChat,
   suggestVisitChat,
-  reserveStayChat
+  reserveStayChat,
+  siteGuideTurn
 };

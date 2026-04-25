@@ -1,0 +1,97 @@
+{
+  "features": [
+    {
+      "id": "loyalty-vouchers",
+      "sr": "Ваучери лојалности су промотивни бонуси (нпр. бесплатан оброк или попуст) које администратор додељује госту на његов налог. Гост их види у картици „Моји ваучери“ у личном налогу са статусом „активан“ или „искоришћено“.",
+      "en": "Loyalty vouchers are promotional bonuses (e.g. a free meal or discount) that the administrator assigns to a guest’s account. Guests see them under the \"My vouchers\" tab in their account with status \"active\" or \"redeemed\".",
+      "keywords": ["ваучер", "ваучери", "vaucer", "vaučer", "voucher", "vouchers", "loyalty", "lojalnost", "popust", "poklon", "bonus"],
+      "related_routes": ["/moj-nalog", "/prijava"],
+      "ctas": [
+        { "label": { "sr": "Моји ваучери", "en": "My vouchers" }, "route": "/moj-nalog", "type": "navigate" },
+        { "label": { "sr": "Пријава", "en": "Login" }, "route": "/prijava", "type": "navigate" }
+      ]
+    },
+    {
+      "id": "voucher-self-redeem",
+      "sr": "Гост сам активира ваучер дугметом „Искористи“ у својој картици ваучера — важно је кликнути тек пред особљем ресторана или рецепције, јер се статус тренутно мења у „искоришћено“ и не може се вратити. Активирање је доступно само за ваучере у статусу „активан“.",
+      "en": "The guest redeems a voucher themselves using the \"Redeem\" button on the voucher card — important: click it only in front of restaurant or reception staff, because the status flips to \"redeemed\" immediately and cannot be reverted. Redemption is available only for vouchers in \"active\" status.",
+      "keywords": ["искористи", "iskoristi", "redeem", "aktiviraj vaucer", "активирај ваучер", "potvrda vaucera"],
+      "related_routes": ["/moj-nalog"],
+      "ctas": [
+        { "label": { "sr": "Отвори моје ваучере", "en": "Open my vouchers" }, "route": "/moj-nalog", "type": "navigate" }
+      ]
+    },
+    {
+      "id": "guest-portal",
+      "sr": "„Мој налог“ је централно место за госта: увид у статус свих резервација (у обради / одобрено / одбијено / отказано), промена датума док то услови дозвољавају, отказивање у року од најмање 7 дана пре доласка, преглед и самостално активирање ваучера и промена лозинке.",
+      "en": "\"My account\" is the guest’s hub: overview of every reservation status (in-review / approved / rejected / cancelled), date changes while conditions allow, cancellation at least 7 days before check-in, viewing and self-redeeming vouchers, and changing the password.",
+      "keywords": ["мој налог", "moj nalog", "guest portal", "my account", "dashboard", "profil", "gost", "guest"],
+      "related_routes": ["/moj-nalog", "/prijava"],
+      "ctas": [
+        { "label": { "sr": "Отвори мој налог", "en": "Open my account" }, "route": "/moj-nalog", "type": "navigate" },
+        { "label": { "sr": "Пријави се", "en": "Log in" }, "route": "/prijava", "type": "navigate" }
+      ]
+    },
+    {
+      "id": "cancellation-policy",
+      "sr": "Бесплатно отказивање резервације могуће је најкасније 7 дана пре датума доласка. Исти рок важи и за отказивање из „Мог налога“ и за отказивање преко линка у потврдној е-пошти; након истека рока систем одбија захтев за отказивање.",
+      "en": "Free cancellation is allowed up to 7 days before the check-in date. The same 7-day limit applies both from \"My account\" and via the cancellation link in the confirmation email; after the deadline the system refuses the cancellation request.",
+      "keywords": ["otkazivanje", "откажи", "otkazi", "cancellation", "cancel", "7 dana", "7 days", "policy", "rok", "politika otkazivanja"],
+      "related_routes": ["/moj-nalog", "/cancel/:token"],
+      "ctas": [
+        { "label": { "sr": "Моје резервације", "en": "My reservations" }, "route": "/moj-nalog", "type": "navigate" }
+      ]
+    },
+    {
+      "id": "inquiry-to-reservation",
+      "sr": "Корисник шаље упит са странице собе (датуми, име, е-пошта, телефон). Упит се креира у статусу „ново“, администратор га прегледа и или потврђује (статус „обрађено“, креира се резервација и шаље е-пошта са линком за отказивање) или одбија с разлогом. Ако налог не постоји, аутоматски се креира приликом првог упита.",
+      "en": "The user submits an inquiry from a room page (dates, name, email, phone). The inquiry is created with status \"new\"; the administrator reviews it and either approves (status \"processed\", a reservation is created and a confirmation email with a cancel link is sent) or rejects it with a reason. If there is no account yet, one is created automatically on the first inquiry.",
+      "keywords": ["upit", "упит", "inquiry", "rezervacija", "резервација", "booking", "potvrda", "confirmation", "flow", "tok rezervacije"],
+      "related_routes": ["/smestaj/:id", "/moj-nalog", "/prijava"],
+      "ctas": [
+        { "label": { "sr": "Погледај смештај", "en": "Browse accommodation" }, "route": "/smestaj", "type": "navigate" },
+        { "label": { "sr": "Моје резервације", "en": "My reservations" }, "route": "/moj-nalog", "type": "navigate" }
+      ]
+    },
+    {
+      "id": "chat-assistant",
+      "sr": "Лебдећи чат-асистент у доњем углу помаже при планирању боравка: прихвата број особа, термин и број ноћи, предлаже одговарајуће собе, даје савете за обилазак и може директно да покрене резервацију. За пријављене госте чува историју разговора, а за непријављене користи локално чување у претраживачу.",
+      "en": "The floating chat assistant in the bottom corner helps plan a stay: it takes number of people, dates, and nights, suggests matching rooms, offers visit tips, and can even start a reservation directly. For logged-in guests it stores chat history on the server; for anonymous users it persists locally in the browser.",
+      "keywords": ["chat", "asistent", "асистент", "chatbot", "stay assistant", "chat panel", "ai pomocnik", "ai помоћник", "pomoc", "help"],
+      "related_routes": ["/smestaj", "/prijava", "/moj-nalog"],
+      "ctas": [
+        { "label": { "sr": "Погледај смештај", "en": "Browse accommodation" }, "route": "/smestaj", "type": "navigate" },
+        { "label": { "sr": "Пријава", "en": "Login" }, "route": "/prijava", "type": "navigate" }
+      ]
+    },
+    {
+      "id": "admin-panel-overview",
+      "sr": "Администраторски панел постоји на путањи /admin и намењен је искључиво особљу базе (управљање вестима, упитима, резервацијама, гостима и мапом соба); гости му не приступају.",
+      "en": "An administrator panel exists at /admin and is intended only for base staff (managing news, inquiries, reservations, guests and the room map); guests do not use it.",
+      "keywords": ["admin", "admin panel", "administracija", "administration", "staff", "backoffice"],
+      "related_routes": [],
+      "ctas": []
+    },
+    {
+      "id": "news-and-announcements",
+      "sr": "Вести и најаве Наставне базе Гоч објављују се на страници /vesti — едукативни програми, догађаји и обавештења, са насловном сликом и кратким сажетком. Најновије вести приказују се и на насловној страни.",
+      "en": "News and announcements from the Goč Teaching Base are published on /vesti — educational programs, events and notices, each with a cover image and short excerpt. The latest items are also shown on the homepage.",
+      "keywords": ["vesti", "вести", "novosti", "news", "announcements", "najave", "događaji", "events"],
+      "related_routes": ["/vesti", "/vesti/:id", "/"],
+      "ctas": [
+        { "label": { "sr": "Све вести", "en": "All news" }, "route": "/vesti", "type": "navigate" },
+        { "label": { "sr": "Насловна", "en": "Home" }, "route": "/", "type": "navigate" }
+      ]
+    },
+    {
+      "id": "weather-info",
+      "sr": "Сајт интегрише временску прогнозу за локацију Гоч (сервис Open-Meteo) — чат-асистент је користи при предлозима обилазака како би сугерисао активности у складу са прогнозом (сунчано, облачно, киша, снег).",
+      "en": "The site integrates weather forecasts for the Goč location (Open-Meteo service) — the chat assistant uses this when suggesting visit plans, tailoring activities to the forecast (sunny, cloudy, rainy, snowy).",
+      "keywords": ["vreme", "време", "prognoza", "прогноза", "weather", "forecast", "open-meteo", "climate"],
+      "related_routes": [],
+      "ctas": [
+        { "label": { "sr": "Отвори чат-асистента", "en": "Open chat assistant" }, "route": "/", "type": "action" }
+      ]
+    }
+  ]
+}

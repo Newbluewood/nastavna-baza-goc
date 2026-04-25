@@ -307,6 +307,32 @@ async function run() {
       `
     );
 
+    await ensureTable(
+      conn,
+      'ai_budget_monthly',
+      `
+      CREATE TABLE ${q('ai_budget_monthly')} (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        month_key CHAR(7) NOT NULL,
+        user_key VARCHAR(64) NOT NULL,
+        feature VARCHAR(32) NOT NULL,
+        tokens_input BIGINT NOT NULL DEFAULT 0,
+        tokens_output BIGINT NOT NULL DEFAULT 0,
+        eur_spent DECIMAL(12,6) NOT NULL DEFAULT 0,
+        request_count INT NOT NULL DEFAULT 0,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_month_user_feature (month_key, user_key, feature)
+      )
+      `
+    );
+
+    await ensureIndex(
+      conn,
+      'ai_budget_monthly',
+      'idx_ai_budget_month_feature',
+      `CREATE INDEX ${q('idx_ai_budget_month_feature')} ON ${q('ai_budget_monthly')} (${q('month_key')}, ${q('feature')})`
+    );
+
     console.log('Migration plan finished successfully.');
   } finally {
     await conn.end();

@@ -21,7 +21,8 @@
     "test": "jest",
     "restart-site": "node resetSite.js",
     "restart-site:run": "node resetSite.js --execute",
-    "restart-site:full": "node resetSite.js --execute --smoke"
+    "restart-site:full": "node resetSite.js --execute --smoke",
+    "seed:site-kb": "node scripts/seed-site-kb.js"
   },
   "keywords": [],
   "author": "",
