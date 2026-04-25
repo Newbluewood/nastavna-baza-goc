@@ -80,6 +80,18 @@ function setupMocks({ fetchMock, searchMock, recordSpendMock } = {}) {
   return { fetchFn, searchInCollection, recordSpend };
 }
 
+function setupDbMock({ attractions = [], facilities = [], roomsAgg = [], news = [] } = {}) {
+  const dbQuery = jest.fn(async (sql) => {
+    if (sql.includes('FROM attractions')) return [attractions];
+    if (sql.includes('FROM facilities')) return [facilities];
+    if (sql.includes('FROM rooms')) return [roomsAgg];
+    if (sql.includes('FROM news')) return [news];
+    return [[]];
+  });
+  jest.doMock('../../db', () => ({ query: dbQuery }));
+  return { dbQuery };
+}
+
 describe('composeSiteGuideTurn - disabled / mock paths', () => {
   it('returns hiking DB facts for walking-style question before RAG path', async () => {
     process.env.AI_PROVIDER = 'anthropic';
@@ -149,6 +161,87 @@ describe('composeSiteGuideTurn - disabled / mock paths', () => {
   });
 });
 
+describe('composeSiteGuideTurn - DB facts routing', () => {
+  it('returns event facts from DB for event-style question', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+    setupDbMock({
+      news: [
+        { id: 1, title: 'Akcija ciscenja staza', created_at: '2026-04-01' },
+        { id: 2, title: 'Radionica u bazi', created_at: '2026-03-30' },
+      ],
+    });
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'ima li neki event skoro',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('db_news_facts');
+    expect(result.answer).toMatch(/Akcija ciscenja staza|Radionica u bazi/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
+  it('returns humanized offer facts (no raw tags) for offer question', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+    setupDbMock({
+      facilities: [
+        { id: 1, name: 'Hotel', capacity: 0, capacity_min: 2, capacity_max: 4, stay_tags: '["group","restaurant","conference"]' },
+      ],
+      roomsAgg: [{ rooms: 5, min_cap: 2, max_cap: 4 }],
+    });
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'sta je u ponudi smestaja',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('db_offer_facts');
+    expect(result.answer).toMatch(/pogodno za grupe/i);
+    expect(result.answer).toMatch(/restoran u objektu/i);
+    expect(result.answer).not.toMatch(/\bgroup\b/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
+  it('keeps date intent highest-priority over other intents', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    const { fetchFn, searchInCollection } = setupMocks();
+    setupDbMock({
+      attractions: [{ id: 1, name: 'Staza', distance_km: 2, distance_minutes: 30 }],
+      facilities: [{ id: 1, stay_tags: '["group"]' }],
+      roomsAgg: [{ rooms: 3, min_cap: 2, max_cap: 4 }],
+      news: [{ id: 1, title: 'Vest' }],
+    });
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'koji je danas dan i sta ima za pesacenje',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('server_clock');
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+});
+
 describe('composeSiteGuideTurn - RAG path failures', () => {
   it('falls back to keyword with reason="no_vector_hits" when searchInCollection rejects and static facts do not match', async () => {
     process.env.AI_PROVIDER = 'anthropic';
@@ -171,6 +264,40 @@ describe('composeSiteGuideTurn - RAG path failures', () => {
     expect(() => validateAssistantTurn(result)).not.toThrow();
     expect(result.meta.reason).toBe('no_vector_hits');
     expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('uses static hits + Claude when vector search fails but static match exists', async () => {
+    process.env.AI_PROVIDER = 'anthropic';
+    process.env.AI_ENABLED = 'true';
+    process.env.AI_API_KEY = 'test-key';
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: async () => ({
+        content: [{ text: 'Odgovor iz statickih cinjenica.' }],
+        usage: { input_tokens: 20, output_tokens: 10 },
+      }),
+      text: async () => '',
+    });
+    const { searchInCollection } = setupMocks({
+      fetchMock,
+      searchMock: jest.fn().mockRejectedValue(new Error('qdrant down')),
+    });
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'kontakt',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.answer).toBe('Odgovor iz statickih cinjenica.');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(searchInCollection).toHaveBeenCalledTimes(1);
   });
 
   it('falls back to keyword with reason="no_vector_hits" when search returns []', async () => {
