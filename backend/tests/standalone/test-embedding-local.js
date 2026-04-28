@@ -4,9 +4,11 @@
 
 const axios = require('axios');
 
+const EMBED_URL = process.env.EMBEDDING_SERVICE_URL || 'http://127.0.0.1:8000/embed';
+
 async function getLocalEmbedding(text) {
   try {
-    const response = await axios.post('http://127.0.0.1:8000/embed', { text });
+    const response = await axios.post(EMBED_URL, { text });
     const embedding = response.data.embedding;
     console.log('Embedding vector length:', embedding.length);
     console.log('First 5 values:', embedding.slice(0, 5));

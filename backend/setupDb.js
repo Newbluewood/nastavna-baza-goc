@@ -1,19 +1,14 @@
-require('dotenv').config();
-const mysql = require('mysql2/promise');
-const bcrypt = require('bcryptjs');
+require('dotenv').config()
+const mysql = require('mysql2/promise')
+const bcrypt = require('bcryptjs')
+const { getMysqlConnectionOptions } = require('./lib/mysqlConnectionOptions')
 
 async function setup() {
   try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '@NewSQL1',
-      database: process.env.DB_NAME || 'defaultdb',
-      port: process.env.DB_PORT || 3306,
-      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
-    });
+    const dbOpts = getMysqlConnectionOptions()
+    const connection = await mysql.createConnection(dbOpts)
 
-    console.log("Konektovano na MySQL bazu na:", process.env.DB_HOST || 'localhost');
+    console.log('Konektovano na MySQL bazu na:', dbOpts.host)
 
     // Reset samo tabela vezanih za smeštaj da bi izbegli konflikte pri promeni arhitekture
     await connection.query('SET FOREIGN_KEY_CHECKS = 0');

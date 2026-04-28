@@ -145,7 +145,7 @@ onUnmounted(() => {
       </div>
 
       <!-- CAROUSEL -->
-      <div v-else class="news-carousel" style="display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 20px; scroll-snap-type: x mandatory; scrollbar-width: thin;">
+      <div v-else class="news-carousel">
         <div v-for="item in news" :key="item.id" class="news-card carousel-item" style="flex: 0 0 calc(33.333% - 1rem); min-width: 250px; scroll-snap-align: start; border: 1px solid var(--color-border); border-radius: 0; overflow: hidden; background: #fff; display: flex; flex-direction: column;">
           <img v-if="item.cover_image" :src="item.cover_image" style="width: 100%; height: 180px; object-fit: cover;" />
           <div style="padding: 15px; flex: 1; display: flex; flex-direction: column;">
@@ -215,5 +215,33 @@ onUnmounted(() => {
     display: inline-block;
     margin-top: 8px;
   }
+}
+
+/* News Section — constrain so carousel can overflow-x */
+.news-section {
+  max-width: 100%;
+  overflow: hidden;          /* keeps section from growing wider than viewport */
+}
+
+/* News Carousel */
+.news-carousel {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: scroll;        /* always show scrollbar track */
+  overflow-y: hidden;
+  padding-bottom: 16px;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #cdac91 #f5f0eb;
+  -webkit-overflow-scrolling: touch;
+}
+.news-carousel::-webkit-scrollbar { height: 6px; }
+.news-carousel::-webkit-scrollbar-track { background: transparent; }
+.news-carousel::-webkit-scrollbar-thumb { background: #cdac91; border-radius: 3px; }
+.news-carousel::-webkit-scrollbar-thumb:hover { background: #9a714e; }
+
+@media (max-width: 640px) {
+  .news-carousel .carousel-item { flex: 0 0 80vw !important; min-width: 0 !important; }
 }
 </style>

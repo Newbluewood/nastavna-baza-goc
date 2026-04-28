@@ -210,7 +210,9 @@ async function processAssistantMessageV2(userMessage, context = {}, history = []
   const lastUserMessages = history.filter(h => h.role === 'user').slice(-2).map(h => h.content);
   const lastAssistant = history.filter(h => h.role === 'assistant').slice(-1).map(h => h.content);
   // Precizne instrukcije za AI (teme su sada ravnopravne, bez fokusa na rezervacije)
-  let instructions = `Odgovaraj prijateljski, jasno i sažeto.
+  const todayStr = new Date().toLocaleDateString('sr-Latn-RS', { day: 'numeric', month: 'long', year: 'numeric' });
+  let instructions = `Danas je ${todayStr}. Koristi ovaj datum kada korisnik pita za aktuelne događaje, vreme ili termine.
+Odgovaraj prijateljski, jasno i sažeto.
 Svi tematski upiti su ravnopravni – koristi podatke iz baze i odgovaraj na pitanja o:
 - ekosistemu rezervata na Goču
 - životinjama (animals)

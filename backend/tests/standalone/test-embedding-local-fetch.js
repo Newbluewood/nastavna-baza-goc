@@ -1,9 +1,11 @@
 // test-embedding-local-fetch.js
 // Run: node test-embedding-local-fetch.js
 
+const EMBED_URL = process.env.EMBEDDING_SERVICE_URL || 'http://127.0.0.1:8000/embed';
+
 async function getLocalEmbedding(text) {
   try {
-    const response = await fetch('http://127.0.0.1:8000/embed', {
+    const response = await fetch(EMBED_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })

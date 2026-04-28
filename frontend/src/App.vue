@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router'
 import { useLangStore } from './stores/lang'
 import { useGuestStore } from './stores/guest'
-import StayAssistantPanel from './components/StayAssistantPanel.vue'
+import AgentChatWidget from './components/AgentChatWidget.vue'
 
 const isMenuOpen = ref(false)
 const langStore = useLangStore()
@@ -108,7 +108,7 @@ const handleGuestNav = () => {
       </div>
     </footer>
 
-    <StayAssistantPanel />
+    <AgentChatWidget />
   </div>
   <div class="admin-container" v-else>
     <RouterView />

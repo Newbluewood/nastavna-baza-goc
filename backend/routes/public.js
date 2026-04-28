@@ -5,7 +5,7 @@ const { optionalGuestAuthMiddleware } = require('../middleware/auth');
 const {
   getHome, getFacilities, getFacility, getRoomAvailability,
   submitInquiry, getNewsList, getSingleNews, likeNews,
-  getWeatherForecast
+  getWeatherForecast, getContactPage
 } = require('../controllers/publicController');
 
 const router = express.Router();
@@ -27,5 +27,6 @@ router.get('/news',                           asyncHandler(getNewsList));
 router.get('/news/:id',                       asyncHandler(getSingleNews));
 router.post('/news/:id/like',                 asyncHandler(likeNews));
 router.get('/weather/forecast',               asyncHandler(getWeatherForecast));
+router.get('/kontakt',                        asyncHandler(getContactPage));
 
 module.exports = router;

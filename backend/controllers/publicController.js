@@ -167,7 +167,14 @@ async function getFacilities(req, res) {
     localizeFacility(facility, lang);
   });
 
-  res.json(facilities);
+  const [pages] = await db.query(`SELECT COALESCE(pt.title, p.title) AS title, COALESCE(pt.content, p.content) AS content FROM pages p LEFT JOIN page_translations pt ON p.id = pt.entity_id AND pt.lang = ? WHERE p.slug = 'smestaj' LIMIT 1`, [langParam]);
+  const pageData = pages.length > 0 ? pages[0] : { title: 'Смештај', content: '' };
+
+  res.json({
+    pageTitle: pageData.title,
+    textContent: pageData.content,
+    facilities
+  });
 }
 
 async function getFacility(req, res) {
@@ -359,6 +366,13 @@ async function getWeatherForecast(req, res) {
   res.json(result);
 }
 
+async function getContactPage(req, res) {
+  const db = req.app.locals.db;
+  const [staff] = await db.query('SELECT id, full_name, role, contact_email, photo_url FROM staff ORDER BY id');
+  const [projects] = await db.query('SELECT id, title, description, status, start_date FROM projects ORDER BY start_date DESC');
+  res.json({ staff, projects });
+}
+
 module.exports = {
   getHome,
   getFacilities,
@@ -368,5 +382,6 @@ module.exports = {
   getNewsList,
   getSingleNews,
   likeNews,
-  getWeatherForecast
+  getWeatherForecast,
+  getContactPage
 };

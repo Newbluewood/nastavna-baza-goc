@@ -1,1 +1,62 @@
-(Moved from docs/refactor-docs/learning-path-on-my-app.txt)
+Evo kako bih ti preporučio da učiš dalje baš na ovom projektu, bez lutanja.
+
+1. Fokus redosled (najviše koristi za najmanje stresa)
+
+Stabilan backend API (Express + SQL upiti + validacija).
+Frontend tok podataka (Vue: view -> service -> API -> render).
+Git workflow (branch, commit, PR, rollback osnove).
+Deploy pipeline (Netlify/Render/Aiven) tek kad lokalno sve radi.
+
+2. Šta konkretno da pogledaš u kodu prvo
+
+Rute i SQL u backendu:
+public.js
+admin.js
+guest.js
+cancel.js
+API sloj na frontendu:
+api.js
+Ključni Vue ekrani:
+HomeView.vue
+SmestajView.vue
+SingleNewsView.vue
+AdminLoginView.vue
+Router i auth guard:
+index.js
+
+3. Kako da učiš efikasno (početnički-friendly)
+
+Uzmi jednu rutu, npr. GET /api/news/:id.
+Isprati ceo tok:
+frontend api.getNewsItem()
+backend route
+SQL query
+JSON response
+prikaz u Vue komponenti.
+Menjaj jednu stvar i odmah testiraj.
+Vodi svoj mini changelog: šta si menjao, zašto, rezultat.
+
+4. Git minimum koji ti treba odmah
+
+Uvek nova branch za veći task.
+Mali commit-ovi sa jasnim porukama.
+Nikad ne deploy direktno sa “work in progress” branch-a.
+Ako nešto pukne: rollback kroz git, ne ručno “krpljenje”.
+5. Za tebe sledeći pametan korak
+Preporučujem da zajedno uradimo ovo redom:
+
+Uskladimo preostale SQL neslaganja (admin, guest, cancel, inquiries).
+Napravimo bezbedan migrateDb.js (bez DROP TABLE).
+Napravimo “pre-deploy checklist” na 1 strani.
+Tek onda push + PR + deploy.
+
+6. Mentorski dokumenti u projektu
+
+docs/refactor-docs/MENTORSHIP_PLAN.md
+- Glavni plan mentorstva i milestone-i.
+
+docs/refactor-docs/CLIENT_READINESS_CHECKLIST.md
+- Checklista za klijentsku spremnost i pre-deploy kontrolu.
+
+docs/refactor-docs/SESSION_01_SQL_ALIGNMENT.md
+- Prva radna sesija: uskladjivanje SQL upita sa realnom Aiven semom.

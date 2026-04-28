@@ -92,6 +92,10 @@ class ApiService {
     return this.request(`/api/news/${id}?lang=${lang}`);
   }
 
+  async getContactPage() {
+    return this.request('/api/kontakt');
+  }
+
   async getAIStatus() {
     return this.request('/api/ai/ping');
   }
@@ -114,6 +118,14 @@ class ApiService {
     return this.request('/api/chat/plan-stay', {
       method: 'POST',
       body: JSON.stringify(payload || {})
+    });
+  }
+
+  async chatSiteGuideTurn({ message, lang = 'sr' }) {
+    return this.request('/api/chat/site-guide-turn', {
+      method: 'POST',
+      authMode: 'guest',
+      body: JSON.stringify({ message, lang })
     });
   }
 

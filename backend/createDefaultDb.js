@@ -1,14 +1,9 @@
-require('dotenv').config();
-const mysql = require('mysql2/promise');
+require('dotenv').config()
+const mysql = require('mysql2/promise')
+const { getMysqlConnectionOptions } = require('./lib/mysqlConnectionOptions')
 
-(async () => {
-  const dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
-  };
+;(async () => {
+  const dbConfig = getMysqlConnectionOptions({ skipDatabase: true })
   try {
     const conn = await mysql.createConnection(dbConfig);
     await conn.query('CREATE DATABASE IF NOT EXISTS `defaultdb`');

@@ -1,11 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import AdminSidebar from '../components/AdminSidebar.vue'
 
 const router = useRouter()
 const guests = ref([])
 const isLoading = ref(true)
-const sidebarOpen = ref(false)
+const sidebar = ref(null)
 
 // Vaucer modal state
 const showVoucherModal = ref(false)
@@ -124,28 +125,13 @@ const getActiveVouchersCount = (vouchers) => {
 
 <template>
   <div class="admin-layout">
-    <!-- SIDEBAR OVERLAY (mobilni) -->
-    <div class="sidebar-overlay" :class="{ active: sidebarOpen }" @click="sidebarOpen = false"></div>
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar" :class="{ 'sidebar-open': sidebarOpen }">
-      <h2>CMS Panel</h2>
-      <nav>
-        <router-link to="/admin/vesti">Вести</router-link>
-        <a href="#">Смештај</a>
-        <a href="#">Странице</a>
-        <router-link to="/admin/rezervacije">Упити/Резервације</router-link>
-        <router-link to="/admin/gosti" class="active">Гости и CRM</router-link>
-        <router-link to="/admin/mapa-soba">Мапа Соба</router-link>
-      </nav>
-      <button class="logout-btn" @click="handleLogout">Одјави се</button>
-    </aside>
+    <AdminSidebar ref="sidebar" />
 
     <!-- MAIN -->
     <main class="main-content">
       <!-- MOBILE TOP BAR -->
       <div class="mobile-topbar">
-        <button class="burger-admin" @click="sidebarOpen = !sidebarOpen">☰ CMS Panel</button>
+        <button class="burger-admin" @click="sidebar.sidebarOpen = !sidebar.sidebarOpen">☰ CMS Panel</button>
       </div>
 
       <div class="page-header">

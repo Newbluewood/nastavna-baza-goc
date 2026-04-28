@@ -51,6 +51,19 @@ export default {
       messagePlaceholder: 'Напишите нам уколико имате специјалне захтеве...',
       sending: 'Шаљем...',
       sendInquiry: 'Пошаљи упит'
+    },
+    assistant: {
+      modeBooking: 'Резервација',
+      modeGuide: 'Водич',
+      guidePlaceholder: 'Питајте о сајту, рубрикама, вестима, налогу...',
+      guideIntro: 'Помоћи ћу вам да се снађете на сајту. Поставите питање.',
+      guideError: 'Тренутно не могу да одговорим. Покушајте поново.',
+      guideEmpty: 'Унесите питање да бисте почели.',
+      open: 'Отвори',
+      close: 'Затвори',
+      send: 'Пошаљи',
+      openAssistant: 'Отвори асистента',
+      closeAssistant: 'Затвори асистента'
     }
   },
   en: {
@@ -105,6 +118,19 @@ export default {
       messagePlaceholder: 'Write us if you have any special requests...',
       sending: 'Sending...',
       sendInquiry: 'Send Inquiry'
+    },
+    assistant: {
+      modeBooking: 'Booking',
+      modeGuide: 'Guide',
+      guidePlaceholder: 'Ask about the site, sections, news, account...',
+      guideIntro: 'I will help you navigate the site. Ask a question.',
+      guideError: 'I cannot answer right now. Please try again.',
+      guideEmpty: 'Enter a question to begin.',
+      open: 'Open',
+      close: 'Close',
+      send: 'Send',
+      openAssistant: 'Open assistant',
+      closeAssistant: 'Close assistant'
     }
   }
 };
