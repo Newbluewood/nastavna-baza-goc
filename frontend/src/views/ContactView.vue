@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useLangStore } from '../stores/lang'
 import api from '../services/api.js'
+import PageTemplate from '../components/PageTemplate.vue'
 
 const langStore = useLangStore()
 const staff = ref([])
@@ -34,13 +35,11 @@ const statusClass = (s) => ({
 </script>
 
 <template>
-  <div class="contact-page">
-    <!-- HERO -->
-    <div class="contact-hero">
-      <h1>{{ langStore.currentLang === 'sr' ? 'Контакт' : 'Contact' }}</h1>
-      <p>{{ langStore.currentLang === 'sr' ? 'Наставна база Гоч–Гвоздац, Шумарски факултет Универзитета у Београду' : 'Teaching Base Goč–Gvozdac, Faculty of Forestry, University of Belgrade' }}</p>
-    </div>
-
+  <PageTemplate
+    :pageTitle="langStore.currentLang === 'sr' ? 'Контакт' : 'Contact'"
+    :textContent="langStore.currentLang === 'sr' ? 'Наставна база Гоч–Гвоздац, Шумарски факултет Универзитета у Београду. Ту смо за сва ваша питања и информације.' : 'Teaching Base Goč–Gvozdac, Faculty of Forestry, University of Belgrade. We are here for all your questions and information.'"
+    coverImage="https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=2070&auto=format&fit=crop"
+  >
     <div v-if="isLoading" class="loading-msg">
       {{ langStore.currentLang === 'sr' ? 'Учитавам...' : 'Loading...' }}
     </div>
@@ -105,33 +104,10 @@ const statusClass = (s) => ({
         </div>
       </section>
     </div>
-  </div>
+  </PageTemplate>
 </template>
 
 <style scoped>
-.contact-page {
-  max-width: var(--content-max-width, 1100px);
-  margin: 0 auto;
-  padding: 0 20px 60px;
-}
-
-.contact-hero {
-  background: #332317;
-  color: #cdac91;
-  padding: 50px 30px;
-  margin: 0 -20px 40px;
-  text-align: center;
-}
-.contact-hero h1 {
-  margin: 0 0 8px;
-  font-size: 2rem;
-  color: #fff;
-}
-.contact-hero p {
-  margin: 0;
-  font-size: 0.95rem;
-  opacity: 0.85;
-}
 
 .loading-msg {
   text-align: center;
@@ -238,8 +214,6 @@ const statusClass = (s) => ({
 
 /* MOBILE */
 @media (max-width: 640px) {
-  .contact-hero { padding: 35px 20px; }
-  .contact-hero h1 { font-size: 1.5rem; }
   .staff-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
   .staff-photo img { height: 140px; }
   .info-cards { grid-template-columns: 1fr; }
