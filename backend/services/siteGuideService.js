@@ -78,6 +78,50 @@ function makeGreetingTurnIfAsked(message, lang) {
   });
 }
 
+function isSmallTalkQuestion(raw) {
+  const m = normalizeUserQuestion(raw).toLowerCase();
+  return (
+    m === 'kako si' ||
+    m === 'kako si?' ||
+    m === 'how are you' ||
+    m === 'how are you?' ||
+    m === 'ko si' ||
+    m === 'ko si?' ||
+    m === 'who are you' ||
+    m === 'who are you?' ||
+    m === 'hvala' ||
+    m === 'thanks' ||
+    m === 'thank you'
+  );
+}
+
+function makeSmallTalkTurnIfAsked(message, lang) {
+  if (!isSmallTalkQuestion(message)) return null;
+  const m = normalizeUserQuestion(message).toLowerCase();
+  let answer;
+  if (m.startsWith('kako si') || m.startsWith('how are you')) {
+    answer = lang === 'en'
+      ? "I'm doing great, thanks! I'm here to help you navigate the Goč site and find concrete info."
+      : 'Odlično sam, hvala! Tu sam da pomognem oko snalaženja na sajtu i pronalaska konkretnih informacija.';
+  } else if (m.startsWith('ko si') || m.startsWith('who are you')) {
+    answer = lang === 'en'
+      ? 'I am the Goč site guide assistant. I can help with accommodation, news, contact, activities, and site sections.'
+      : 'Ja sam vodič-asistent za sajt Goča. Mogu da pomognem oko smeštaja, vesti, kontakta, aktivnosti i sekcija sajta.';
+  } else {
+    answer = lang === 'en'
+      ? "You're welcome! If you want, ask me about accommodation, events, or anything available on the site."
+      : 'Nema na čemu! Ako želiš, pitaj me za smeštaj, vesti, događaje ili bilo šta sa sajta.';
+  }
+  return makeAssistantTurn({
+    answer,
+    intent: 'site_guide',
+    confidence: 1,
+    suggestions: defaultNavigateSuggestions(lang),
+    sources: [],
+    meta: { source: 'smalltalk_turn' },
+  });
+}
+
 function makeTodaysDateTurnIfAsked(message, lang) {
   if (!isTodaysDateQuestion(message)) return null;
   const locale = lang === 'en' ? 'en-GB' : 'sr-Cyrl-RS';
@@ -1344,6 +1388,8 @@ async function composeSiteGuideTurn({
 
   const greetingTurn = makeGreetingTurnIfAsked(safeMessage, safeLang);
   if (greetingTurn) return greetingTurn;
+  const smallTalkTurn = makeSmallTalkTurnIfAsked(safeMessage, safeLang);
+  if (smallTalkTurn) return smallTalkTurn;
   const dateTurn = makeTodaysDateTurnIfAsked(safeMessage, safeLang);
   if (dateTurn) return dateTurn;
   const allKnowledgeTurn = await makeAllKnowledgeTurnIfAsked(safeMessage, safeLang);

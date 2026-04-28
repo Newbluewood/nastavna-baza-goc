@@ -6,7 +6,6 @@ const router = useRouter()
 const route = useRoute()
 const sidebarOpen = ref(false)
 const smestajOpen = ref(true)
-const sadrzajOpen = ref(true)
 
 function handleLogout() {
   localStorage.removeItem('admin_token')
@@ -14,7 +13,6 @@ function handleLogout() {
 }
 
 const isSmestajActive = () => ['/admin/rezervacije', '/admin/gosti', '/admin/mapa-soba'].some(p => route.path.startsWith(p))
-const isSadrzajActive = () => ['/admin/projekti', '/admin/osoblje', '/admin/stranice'].some(p => route.path.startsWith(p))
 
 defineExpose({ sidebarOpen })
 </script>
@@ -27,28 +25,21 @@ defineExpose({ sidebarOpen })
   <aside class="sidebar" :class="{ 'sidebar-open': sidebarOpen }">
     <h2>CMS Panel</h2>
     <nav>
-      <router-link to="/admin/vesti">📰 Вести</router-link>
-      <router-link to="/admin/ai">🤖 AI потрошња</router-link>
+      <router-link to="/admin/vesti">Вести</router-link>
+      <router-link to="/admin/stranice">Странице</router-link>
+      <router-link to="/admin/osoblje">Особље</router-link>
+      <router-link to="/admin/projekti">Пројекти</router-link>
+      <router-link to="/admin/ai">AI потрошња</router-link>
 
       <!-- Смештај група -->
       <button class="nav-group-toggle" :class="{ 'group-active': isSmestajActive() }" @click="smestajOpen = !smestajOpen">
-        🏠 Смештај <span class="toggle-arrow">{{ smestajOpen ? '▾' : '▸' }}</span>
+        Смештај <span class="toggle-arrow">{{ smestajOpen ? '▾' : '▸' }}</span>
       </button>
       <div v-show="smestajOpen" class="nav-group-items">
         <router-link to="/admin/rezervacije">Упити / Резервације</router-link>
         <router-link to="/admin/gosti">Гости и CRM</router-link>
         <router-link to="/admin/mapa-soba">Мапа Соба</router-link>
       </div>
-
-      <!-- Садржај сајта група -->
-      <button class="nav-group-toggle" :class="{ 'group-active': isSadrzajActive() }" @click="sadrzajOpen = !sadrzajOpen">
-        📋 Садржај сајта <span class="toggle-arrow">{{ sadrzajOpen ? '▾' : '▸' }}</span>
-      </button>
-        <div v-show="sadrzajOpen" class="nav-group-items">
-          <router-link to="/admin/stranice">Странице</router-link>
-          <router-link to="/admin/projekti">Пројекти</router-link>
-          <router-link to="/admin/osoblje">Особље</router-link>
-        </div>
     </nav>
     <button class="logout-btn" @click="handleLogout">Одјави се</button>
   </aside>

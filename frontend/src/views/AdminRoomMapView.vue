@@ -1,9 +1,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import AdminSidebar from '../components/AdminSidebar.vue'
 
 const router = useRouter()
-const sidebarOpen = ref(false)
+const sidebar = ref(null)
 const isLoading = ref(false)
 const selectedDate = ref(new Date().toISOString().split('T')[0])
 const facilities = ref([])
@@ -23,6 +24,18 @@ const capacityFullLabels = {
   double: 'Двокреветна',
   triple: 'Трокреветна',
   multi: 'Вишекреветна'
+}
+
+const capShort = {
+  single: 'јед',
+  double: 'дво',
+  triple: 'тро',
+  multi: 'вше'
+}
+
+function roomCapLabel(room) {
+  const max = room.capacity_max || 1
+  return `${max}.${capShort[room.capacity_type] || 'вше'}`
 }
 
 async function fetchRoomMap() {
@@ -59,7 +72,10 @@ function hideTooltip() {
 
 function fmtDate(d) {
   if (!d) return '—'
-  return new Date(d + 'T12:00:00').toLocaleDateString('sr-RS', {
+  const raw = String(d).trim()
+  const ymd = raw.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  const parsed = ymd ? new Date(`${ymd[1]}-${ymd[2]}-${ymd[3]}T12:00:00`) : new Date(raw)
+  return isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString('sr-RS', {
     day: '2-digit', month: '2-digit', year: 'numeric'
   })
 }
@@ -67,37 +83,17 @@ function fmtDate(d) {
 const totalRooms = computed(() => facilities.value.reduce((s, f) => s + f.rooms.length, 0))
 const occupiedRooms = computed(() => facilities.value.reduce((s, f) => s + f.rooms.filter(r => r.is_occupied).length, 0))
 
-function handleLogout() {
-  localStorage.removeItem('admin_token')
-  router.push('/admin/login')
-}
-
 onMounted(() => fetchRoomMap())
 </script>
 
 <template>
   <div class="admin-layout" @click="hideTooltip">
-    <!-- SIDEBAR OVERLAY (mobilni) -->
-    <div class="sidebar-overlay" :class="{ active: sidebarOpen }" @click.stop="sidebarOpen = false"></div>
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar" :class="{ 'sidebar-open': sidebarOpen }">
-      <h2>CMS Panel</h2>
-      <nav>
-        <router-link to="/admin/vesti">Вести</router-link>
-        <a href="#">Смештај</a>
-        <a href="#">Странице</a>
-        <router-link to="/admin/rezervacije">Упити/Резервације</router-link>
-        <router-link to="/admin/gosti">Гости и CRM</router-link>
-        <router-link to="/admin/mapa-soba" class="active">Мапа Соба</router-link>
-      </nav>
-      <button class="logout-btn" @click="handleLogout">Одјави се</button>
-    </aside>
+    <AdminSidebar ref="sidebar" />
 
     <!-- MAIN -->
     <main class="main-content">
       <div class="mobile-topbar">
-        <button class="burger-admin" @click.stop="sidebarOpen = !sidebarOpen">☰ CMS Panel</button>
+        <button class="burger-admin" @click.stop="sidebar.sidebarOpen = !sidebar.sidebarOpen">☰ CMS Panel</button>
       </div>
 
       <div class="page-header">
@@ -105,10 +101,15 @@ onMounted(() => fetchRoomMap())
           <h1>Мапа Соба</h1>
           <p class="subtitle">Преглед попуњености смештајних капацитета по датуму.</p>
         </div>
-        <div class="header-controls">
+      </div>
+
+      <!-- DATE PICKER — PROMINENT -->
+      <div class="date-picker-section">
+        <label class="date-picker-label">Провери стање за одређени датум:</label>
+        <div class="date-picker-row">
           <input type="date" v-model="selectedDate" @change="fetchRoomMap" class="date-picker" />
           <button class="refresh-btn" @click="fetchRoomMap" :disabled="isLoading">
-            {{ isLoading ? 'Учитавам...' : 'Освежи' }}
+            {{ isLoading ? 'Учитавам...' : 'Прикажи' }}
           </button>
         </div>
       </div>
@@ -147,7 +148,7 @@ onMounted(() => fetchRoomMap())
           <div v-if="facility.rooms.length === 0" class="no-rooms">Нема регистрованих соба.</div>
           <div class="rooms-grid">
             <div
-              v-for="room in facility.rooms"
+              v-for="(room, roomIndex) in facility.rooms"
               :key="room.id"
               class="room-tile"
               :class="[`type-${room.capacity_type}`, { 'is-occupied': room.is_occupied }]"
@@ -155,8 +156,8 @@ onMounted(() => fetchRoomMap())
               @mouseleave="hideTooltip"
               @click.stop="room.is_occupied && showTooltip($event, room)"
             >
-              <span class="room-number">{{ room.id }}</span>
-              <span class="room-type-label">{{ capacityLabels[room.capacity_type] }}</span>
+              <span class="room-number">{{ roomIndex + 1 }}</span>
+              <span class="room-type-label">{{ roomCapLabel(room) }}</span>
               <span v-if="room.is_occupied" class="occupied-icon">●</span>
             </div>
           </div>
@@ -190,122 +191,102 @@ onMounted(() => fetchRoomMap())
   display: flex;
   min-height: 100vh;
   background: #f5f3f0;
-  font-family: 'Georgia', serif;
+  font-family: inherit;
+  position: relative;
 }
-
-/* SIDEBAR */
-.sidebar {
-  width: 220px;
-  background: #332317;
-  color: #cdac91;
-  padding: 24px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-height: 100vh;
-  position: sticky;
-  top: 0;
-}
-.sidebar h2 { color: #cdac91; font-size: 1rem; letter-spacing: 2px; margin: 0 0 16px; }
-.sidebar nav { display: flex; flex-direction: column; gap: 4px; }
-.sidebar nav a {
-  color: #cdac91;
-  text-decoration: none;
-  padding: 8px 12px;
-  font-size: 0.9rem;
-  border-radius: 0;
-  transition: background 0.15s;
-}
-.sidebar nav a:hover, .sidebar nav a.active { background: rgba(255,255,255,0.1); color: #fff; }
-.logout-btn {
-  margin-top: auto;
-  background: none;
-  border: 1px solid #cdac91;
-  color: #cdac91;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-.logout-btn:hover { background: rgba(255,255,255,0.1); }
-
-.sidebar-overlay { display: none; }
 
 @media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    left: -240px;
-    top: 0;
-    z-index: 200;
-    transition: left 0.25s;
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
   }
-  .sidebar.sidebar-open { left: 0; }
-  .sidebar-overlay.active {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 199;
+  .burger-admin {
+    background: #332317;
+    color: #cdac91;
+    border: none;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0;
   }
+  .main-content { padding: 20px 16px !important; }
+  .page-header { flex-direction: column; gap: 12px; }
+  .date-picker-section { padding: 16px; }
+  .date-picker-row { flex-direction: column; gap: 10px; }
+  .date-picker { min-width: 0; width: 100%; }
+}
+
+@media (min-width: 769px) {
+  .mobile-topbar { display: none; }
 }
 
 /* MAIN */
 .main-content {
   flex: 1;
-  padding: 32px 28px;
-  max-width: 960px;
-}
-
-.mobile-topbar {
-  display: none;
-  margin-bottom: 16px;
-}
-@media (max-width: 768px) {
-  .mobile-topbar { display: flex; }
-  .main-content { padding: 16px; }
-}
-
-.burger-admin {
-  background: #332317;
-  color: #cdac91;
-  border: none;
-  padding: 8px 14px;
-  cursor: pointer;
-  font-size: 0.9rem;
+  padding: 40px;
+  overflow-x: auto;
 }
 
 /* PAGE HEADER */
 .page-header {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
-.page-header h1 { margin: 0; color: #332317; font-size: 1.6rem; }
-.subtitle { color: #67462e; font-size: 0.9rem; margin: 4px 0 0; }
+.page-header h1 { margin: 0 0 5px 0; font-size: 1.8rem; color: #332317; }
+.subtitle { color: #888; margin: 0; font-size: 0.95rem; }
 
-.header-controls {
+/* DATE PICKER SECTION */
+.date-picker-section {
+  background: #fdfaf7;
+  border: 2px solid #cdac91;
+  padding: 20px 24px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+.date-picker-label {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #332317;
+  margin-bottom: 12px;
+}
+.date-picker-row {
   display: flex;
-  gap: 10px;
+  justify-content: center;
   align-items: center;
+  gap: 12px;
 }
 .date-picker {
-  border: 1px solid #cdac91;
+  border: 2px solid #cdac91;
   background: #fff;
-  padding: 7px 12px;
-  font-size: 0.9rem;
+  padding: 10px 18px;
+  font-size: 1.1rem;
   color: #332317;
   cursor: pointer;
+  min-width: 200px;
+  text-align: center;
+}
+.date-picker:focus {
+  outline: none;
+  border-color: #332317;
 }
 .refresh-btn {
   background: #332317;
-  color: #cdac91;
+  color: #fff;
   border: none;
-  padding: 8px 16px;
+  padding: 10px 20px;
   cursor: pointer;
+  font-weight: bold;
   font-size: 0.85rem;
+  transition: opacity 0.2s;
 }
+.refresh-btn:hover { opacity: 0.8; }
 .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* SUMMARY BAR */
@@ -372,11 +353,12 @@ onMounted(() => fetchRoomMap())
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 2px solid rgba(0,0,0,0.12);
+  border: 3px solid rgba(0,0,0,0.12);
   cursor: default;
   position: relative;
   transition: transform 0.1s, box-shadow 0.1s;
   user-select: none;
+  gap: 0;
 }
 .room-tile:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
@@ -388,7 +370,7 @@ onMounted(() => fetchRoomMap())
 
 /* OCCUPIED STATE */
 .room-tile.is-occupied {
-  border: 3px solid #c0392b;
+  border: 4px solid #c0392b;
   cursor: pointer;
 }
 .room-tile.is-occupied .occupied-icon {
@@ -399,8 +381,8 @@ onMounted(() => fetchRoomMap())
   color: #c0392b;
 }
 
-.room-number { font-size: 1.1rem; font-weight: 700; line-height: 1; }
-.room-type-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.75; }
+.room-number { font-size: 1.1rem; font-weight: 700; line-height: 1; flex: 1; display: flex; align-items: center; }
+.room-type-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.75; border-top: 1px solid rgba(0,0,0,0.15); width: 100%; text-align: center; padding-top: 3px; padding-bottom: 2px; }
 
 /* TOOLTIP */
 .room-tooltip {
@@ -410,7 +392,7 @@ onMounted(() => fetchRoomMap())
   color: #f5e9df;
   padding: 10px 14px;
   font-size: 0.8rem;
-  font-family: 'Georgia', serif;
+  font-family: inherit;
   pointer-events: none;
   z-index: 9999;
   min-width: 180px;

@@ -92,6 +92,10 @@ class ApiService {
     return this.request(`/api/news/${id}?lang=${lang}`);
   }
 
+  async getContactPage() {
+    return this.request('/api/kontakt');
+  }
+
   async getAIStatus() {
     return this.request('/api/ai/ping');
   }

@@ -131,6 +131,24 @@ describe('composeSiteGuideTurn - disabled / mock paths', () => {
     expect(searchInCollection).not.toHaveBeenCalled();
   });
 
+  it('returns smalltalk turn for "kako si?" and does not hit docs fallback', async () => {
+    process.env.AI_PROVIDER = 'mock';
+    const { fetchFn, searchInCollection } = setupMocks();
+
+    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const result = await composeSiteGuideTurn({
+      message: 'kako si?',
+      lang: 'sr',
+      userKey: 'anon',
+    });
+
+    expect(() => validateAssistantTurn(result)).not.toThrow();
+    expect(result.meta.source).toBe('smalltalk_turn');
+    expect(result.answer).toMatch(/Odlično sam, hvala/i);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(searchInCollection).not.toHaveBeenCalled();
+  });
+
   it('returns hiking DB facts for walking-style question before RAG path', async () => {
     process.env.AI_PROVIDER = 'anthropic';
     process.env.AI_ENABLED = 'true';

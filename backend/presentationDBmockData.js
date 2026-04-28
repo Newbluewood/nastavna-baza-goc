@@ -56,7 +56,9 @@ async function seedFacilitiesAndRooms(connection, shouldExecute) {
   const facilities = [
     ['smestaj', 'Хотел Пирамида', 'Репрезентативан хотелски објекат за индивидуалне и групне посете.', '24 лежаја', 12, 24, 43.559095, 20.75393, placeholder, '["Централни објекат","Ресторан"]', '["group","restaurant","central"]'],
     ['smestaj', 'Нови Студенац', 'Највећи објекат за рекреативну наставу и презентације.', '56 лежајева', 20, 56, 43.559095, 20.75393, placeholder, '["Конференцијска сала","Брз интернет"]', '["group","conference","ski"]'],
-    ['smestaj', 'Вила Власта', 'Мирнији смештај за мање групе и породични боравак.', '16 лежајева', 4, 16, 43.558636, 20.750094, placeholder, '["Мирна локација","Башта"]', '["family","quiet","garden"]']
+    ['smestaj', 'Вила Власта', 'Мирнији смештај за мање групе и породични боравак.', '16 лежајева', 4, 16, 43.558636, 20.750094, placeholder, '["Мирна локација","Башта"]', '["family","quiet","garden"]'],
+    ['smestaj', 'Вила Борика', 'Уютан објекат окружен борима, погодан за мање групе.', '12 лежајева', 4, 12, 43.558200, 20.749800, placeholder, '["Борова шума","Тераса"]', '["family","quiet","nature"]'],
+    ['smestaj', 'Кућа Гвоздац', 'Планинска кућа за самосталан боравак мањих група.', '8 лежајева', 2, 8, 43.557900, 20.751200, placeholder, '["Самосталан","Камин"]', '["family","independent","fireplace"]']
   ];
 
   // Presentation seed intentionally excludes non-accommodation objects (e.g. sawmill).
@@ -65,11 +67,46 @@ async function seedFacilitiesAndRooms(connection, shouldExecute) {
   }
 
   const rooms = [
-    [1, 'Двокреветна соба', 'Комфорна соба са два лежаја.', '2 особе', 2, 2, placeholder, '["wifi","tv","parking"]', '["couple","quiet"]'],
-    [1, 'Трокреветна соба', 'Пространа соба за мању групу.', '3 особе', 3, 3, placeholder, '["wifi","parking"]', '["small-group"]'],
-    [2, 'Конференцијска соба', 'Соба погодна за наставнике и гостујуће предаваче.', '2 особе', 2, 2, placeholder, '["wifi","radni sto"]', '["business","quiet"]'],
-    [2, 'Студентска соба', 'Основни, уредан смештај за студенте.', '4 особе', 3, 4, placeholder, '["wifi"]', '["group","budget"]'],
-    [3, 'Породична соба', 'Тиха соба са додатним простором.', '4 особе', 3, 4, placeholder, '["wifi","kuhinja"]', '["family","quiet","garden"]']
+    // Хотел Пирамида (facility_id=1) — 10 soba
+    [1, 'Једнокреветна соба 101', 'Компактна соба за појединачног госта.', '1 особа', 1, 1, placeholder, '["wifi","tv","parking"]', '["solo","quiet"]'],
+    [1, 'Једнокреветна соба 102', 'Компактна соба за појединачног госта.', '1 особа', 1, 1, placeholder, '["wifi","tv","parking"]', '["solo","quiet"]'],
+    [1, 'Двокреветна соба 201', 'Комфорна соба са два лежаја.', '2 особе', 2, 2, placeholder, '["wifi","tv","parking"]', '["couple","quiet"]'],
+    [1, 'Двокреветна соба 202', 'Комфорна соба са два лежаја.', '2 особе', 2, 2, placeholder, '["wifi","tv","parking"]', '["couple","quiet"]'],
+    [1, 'Двокреветна соба 203', 'Комфорна соба са два лежаја и балконом.', '2 особе', 2, 2, placeholder, '["wifi","tv","parking","balkon"]', '["couple","quiet"]'],
+    [1, 'Трокреветна соба 301', 'Пространа соба за мању групу или породицу.', '3 особе', 2, 3, placeholder, '["wifi","tv","parking"]', '["family","small-group"]'],
+    [1, 'Трокреветна соба 302', 'Пространа соба за мању групу или породицу.', '3 особе', 2, 3, placeholder, '["wifi","tv","parking"]', '["family","small-group"]'],
+    [1, 'Четворокреветна соба 401', 'Велика соба за породицу или групу.', '4 особе', 3, 4, placeholder, '["wifi","tv","parking"]', '["family","group"]'],
+    [1, 'Четворокреветна соба 402', 'Велика соба за породицу или групу.', '4 особе', 3, 4, placeholder, '["wifi","tv","parking"]', '["family","group"]'],
+    [1, 'Апартман Гоч', 'Премијум соба са дневним боравком и мини кухињом.', '4 особе', 2, 4, placeholder, '["wifi","tv","parking","kuhinja","dnevni boravak"]', '["family","premium"]'],
+
+    // Нови Студенац (facility_id=2) — 10 soba
+    [2, 'Конференцијска соба 101', 'Соба за предаваче и гостујуће стручњаке.', '2 особе', 1, 2, placeholder, '["wifi","radni sto"]', '["business","quiet"]'],
+    [2, 'Конференцијска соба 102', 'Соба за предаваче и гостујуће стручњаке.', '2 особе', 1, 2, placeholder, '["wifi","radni sto"]', '["business","quiet"]'],
+    [2, 'Студентска соба А1', 'Уредан смештај за студенте, три лежаја.', '3 особе', 2, 3, placeholder, '["wifi"]', '["group","budget"]'],
+    [2, 'Студентска соба А2', 'Уредан смештај за студенте, три лежаја.', '3 особе', 2, 3, placeholder, '["wifi"]', '["group","budget"]'],
+    [2, 'Студентска соба А3', 'Уредан смештај за студенте, три лежаја.', '3 особе', 2, 3, placeholder, '["wifi"]', '["group","budget"]'],
+    [2, 'Студентска соба Б1', 'Смештај за четири студента.', '4 особе', 3, 4, placeholder, '["wifi"]', '["group","budget"]'],
+    [2, 'Студентска соба Б2', 'Смештај за четири студента.', '4 особе', 3, 4, placeholder, '["wifi"]', '["group","budget"]'],
+    [2, 'Студентска соба Б3', 'Смештај за четири студента.', '4 особе', 3, 4, placeholder, '["wifi"]', '["group","budget"]'],
+    [2, 'Шесторокреветна соба С1', 'Велика соба за веће групе.', '6 особа', 4, 6, placeholder, '["wifi"]', '["group","budget"]'],
+    [2, 'Шесторокреветна соба С2', 'Велика соба за веће групе.', '6 особа', 4, 6, placeholder, '["wifi"]', '["group","budget"]'],
+
+    // Вила Власта (facility_id=3) — 4 sobe
+    [3, 'Породична соба В1', 'Тиха соба са додатним простором за породицу.', '4 особе', 2, 4, placeholder, '["wifi","kuhinja"]', '["family","quiet","garden"]'],
+    [3, 'Породична соба В2', 'Тиха соба са додатним простором за породицу.', '4 особе', 2, 4, placeholder, '["wifi","kuhinja"]', '["family","quiet","garden"]'],
+    [3, 'Двокреветна соба В3', 'Мирна соба за двоје, поглед на башту.', '2 особе', 1, 2, placeholder, '["wifi","kuhinja"]', '["couple","quiet","garden"]'],
+    [3, 'Трокреветна соба В4', 'Соба за мању групу или породицу са дететом.', '3 особе', 2, 3, placeholder, '["wifi","kuhinja"]', '["family","quiet"]'],
+
+    // Вила Борика (facility_id=4) — 4 sobe
+    [4, 'Двокреветна Борика 1', 'Пријатна соба у боровој шуми.', '2 особе', 1, 2, placeholder, '["wifi","terasa"]', '["couple","nature"]'],
+    [4, 'Двокреветна Борика 2', 'Пријатна соба у боровој шуми.', '2 особе', 1, 2, placeholder, '["wifi","terasa"]', '["couple","nature"]'],
+    [4, 'Трокреветна Борика 3', 'Просторнија соба са погледом на шуму.', '3 особе', 2, 3, placeholder, '["wifi","terasa"]', '["family","nature"]'],
+    [4, 'Четворокреветна Борика 4', 'Велика соба за породицу, поглед на борове.', '4 особе', 3, 4, placeholder, '["wifi","terasa","kamin"]', '["family","nature","fireplace"]'],
+
+    // Кућа Гвоздац (facility_id=5) — 3 sobe
+    [5, 'Соба Гвоздац 1', 'Двокреветна соба у планинској кући.', '2 особе', 1, 2, placeholder, '["wifi","kamin"]', '["couple","independent"]'],
+    [5, 'Соба Гвоздац 2', 'Трокреветна соба са погледом на шуму.', '3 особе', 2, 3, placeholder, '["wifi","kamin"]', '["family","independent"]'],
+    [5, 'Соба Гвоздац 3', 'Четворокреветна соба за мању групу.', '4 особе', 3, 4, placeholder, '["wifi","kamin"]', '["group","independent","fireplace"]']
   ];
 
   for (const facility of facilities) {
@@ -263,7 +300,9 @@ async function seedTranslations(connection, shouldExecute) {
   const facilityTranslations = [
     [1, 'en', 'Hotel Pyramid', 'Representative hotel facility for individual and group visits.'],
     [2, 'en', 'New Studenac', 'The largest facility for recreational classes and presentations.'],
-    [3, 'en', 'Villa Vlasta', 'Quieter accommodation for smaller groups and family stays.']
+    [3, 'en', 'Villa Vlasta', 'Quieter accommodation for smaller groups and family stays.'],
+    [4, 'en', 'Villa Borika', 'Cozy facility surrounded by pines, suitable for smaller groups.'],
+    [5, 'en', 'Gvozdac House', 'Mountain house for independent stays of smaller groups.']
   ];
 
   for (const ft of facilityTranslations) {
@@ -275,11 +314,42 @@ async function seedTranslations(connection, shouldExecute) {
   }
 
   const roomTranslations = [
-    [1, 'en', 'Double Room', 'Comfortable room with two beds.'],
-    [2, 'en', 'Triple Room', 'Spacious room for a small group.'],
-    [3, 'en', 'Conference Room', 'Room suitable for teachers and guest lecturers.'],
-    [4, 'en', 'Student Room', 'Basic, tidy accommodation for students.'],
-    [5, 'en', 'Family Room', 'Quiet room with extra space.']
+    // Piramida
+    [1, 'en', 'Single Room 101', 'Compact room for a single guest.'],
+    [2, 'en', 'Single Room 102', 'Compact room for a single guest.'],
+    [3, 'en', 'Double Room 201', 'Comfortable room with two beds.'],
+    [4, 'en', 'Double Room 202', 'Comfortable room with two beds.'],
+    [5, 'en', 'Double Room 203', 'Comfortable room with two beds and balcony.'],
+    [6, 'en', 'Triple Room 301', 'Spacious room for a small group or family.'],
+    [7, 'en', 'Triple Room 302', 'Spacious room for a small group or family.'],
+    [8, 'en', 'Quad Room 401', 'Large room for a family or group.'],
+    [9, 'en', 'Quad Room 402', 'Large room for a family or group.'],
+    [10, 'en', 'Goč Apartment', 'Premium room with living area and kitchenette.'],
+    // Studenac
+    [11, 'en', 'Conference Room 101', 'Room for lecturers and visiting experts.'],
+    [12, 'en', 'Conference Room 102', 'Room for lecturers and visiting experts.'],
+    [13, 'en', 'Student Room A1', 'Tidy accommodation for students, three beds.'],
+    [14, 'en', 'Student Room A2', 'Tidy accommodation for students, three beds.'],
+    [15, 'en', 'Student Room A3', 'Tidy accommodation for students, three beds.'],
+    [16, 'en', 'Student Room B1', 'Accommodation for four students.'],
+    [17, 'en', 'Student Room B2', 'Accommodation for four students.'],
+    [18, 'en', 'Student Room B3', 'Accommodation for four students.'],
+    [19, 'en', 'Six-Bed Room C1', 'Large room for bigger groups.'],
+    [20, 'en', 'Six-Bed Room C2', 'Large room for bigger groups.'],
+    // Vlasta
+    [21, 'en', 'Family Room V1', 'Quiet room with extra space for families.'],
+    [22, 'en', 'Family Room V2', 'Quiet room with extra space for families.'],
+    [23, 'en', 'Double Room V3', 'Peaceful room for two, garden view.'],
+    [24, 'en', 'Triple Room V4', 'Room for a small group or family with a child.'],
+    // Borika
+    [25, 'en', 'Double Borika 1', 'Pleasant room in the pine forest.'],
+    [26, 'en', 'Double Borika 2', 'Pleasant room in the pine forest.'],
+    [27, 'en', 'Triple Borika 3', 'Spacious room with forest view.'],
+    [28, 'en', 'Quad Borika 4', 'Large family room with pine tree view.'],
+    // Gvozdac
+    [29, 'en', 'Gvozdac Room 1', 'Double room in the mountain house.'],
+    [30, 'en', 'Gvozdac Room 2', 'Triple room with forest view.'],
+    [31, 'en', 'Gvozdac Room 3', 'Quad room for a smaller group.']
   ];
 
   for (const rt of roomTranslations) {
@@ -341,8 +411,17 @@ async function seedGallery(connection, shouldExecute) {
     ['facility', 1, placeholder, 'Хотел Пирамида', 1],
     ['facility', 2, placeholder, 'Нови Студенац', 1],
     ['facility', 3, placeholder, 'Вила Власта', 1],
-    ['room', 1, placeholder, 'Двокреветна соба', 1],
-    ['room', 2, placeholder, 'Трокреветна соба', 1],
+    ['facility', 4, placeholder, 'Вила Борика', 1],
+    ['facility', 5, placeholder, 'Кућа Гвоздац', 1],
+    ['room', 1, placeholder, 'Једнокреветна соба 101', 1],
+    ['room', 3, placeholder, 'Двокреветна соба 201', 1],
+    ['room', 6, placeholder, 'Трокреветна соба 301', 1],
+    ['room', 10, placeholder, 'Апартман Гоч', 1],
+    ['room', 13, placeholder, 'Студентска соба А1', 1],
+    ['room', 16, placeholder, 'Студентска соба Б1', 1],
+    ['room', 21, placeholder, 'Породична соба В1', 1],
+    ['room', 25, placeholder, 'Двокреветна Борика 1', 1],
+    ['room', 29, placeholder, 'Соба Гвоздац 1', 1],
     ['news', 1, placeholder, 'Нова презентација базе', 1],
     ['news', 2, placeholder, 'Смештајни капацитети спремни', 1],
     ['news', 3, placeholder, 'Радни ток резервација', 1]
@@ -355,6 +434,43 @@ async function seedGallery(connection, shouldExecute) {
       item,
       `seed gallery ${item[0]}:${item[1]}`,
       shouldExecute
+    );
+  }
+}
+
+
+async function seedProjectsAndStaff(connection, shouldExecute) {
+  await executeOrPrint(connection, 'DELETE FROM projects', [], 'clear projects', shouldExecute);
+  await executeOrPrint(connection, 'DELETE FROM staff', [], 'clear staff', shouldExecute);
+
+  const projects = [
+    ['Рекреативна настава 2026', 'Организација пролећног и јесењег циклуса рекреативне наставе за студенте Универзитета у Београду.', 'активан', '2026-03-01'],
+    ['Обнова ски стаза', 'Реконструкција и проширење ски стаза за сезону 2026/2027.', 'планиран', '2026-06-01'],
+    ['Едукативни камп за децу', 'Летњи камп за ученике основних школа са фокусом на екологију и шумарство.', 'активан', '2026-07-01'],
+    ['Дигитализација базе', 'Увођење онлајн резервација, асистента за смештај и CRM система.', 'активан', '2025-09-01']
+  ];
+
+  for (const p of projects) {
+    await executeOrPrint(
+      connection,
+      'INSERT INTO projects (title, description, status, start_date) VALUES (?, ?, ?, ?)',
+      p, `seed project ${p[0]}`, shouldExecute
+    );
+  }
+
+  const staff = [
+    ['Проф. др Милан Петровић', 'Управник базе', 'uprava@goc.rs', placeholder],
+    ['Јелена Јовановић', 'Рецепција и резервације', 'recepcija@goc.rs', placeholder],
+    ['Марко Николић', 'Одржавање и логистика', 'tehnicka@goc.rs', placeholder],
+    ['Ана Стојановић', 'Ресторан и угоститељство', 'restoran@goc.rs', placeholder],
+    ['Драган Ђорђевић', 'Ски сервис и активности', 'aktivnosti@goc.rs', placeholder]
+  ];
+
+  for (const s of staff) {
+    await executeOrPrint(
+      connection,
+      'INSERT INTO staff (full_name, role, contact_email, photo_url) VALUES (?, ?, ?, ?)',
+      s, `seed staff ${s[0]}`, shouldExecute
     );
   }
 }
@@ -376,6 +492,7 @@ async function run() {
     await seedTranslations(connection, shouldExecute);
     await seedGallery(connection, shouldExecute);
     await seedAttractionsAndMenus(connection, shouldExecute);
+    await seedProjectsAndStaff(connection, shouldExecute);
 
     console.log('presentationDBmockData finished.');
     console.log(`Admin credentials for presentation: ${admin.username} / ${admin.password}`);
