@@ -29,7 +29,8 @@ const {
 	getPageById,
 	createPage,
 	updatePage,
-	deletePage
+	deletePage,
+	purgeCache
 } = require('../controllers/adminController');
 
 const router = express.Router();
@@ -66,5 +67,8 @@ router.get('/pages/:id',           adminAuthMiddleware,                         
 router.post('/pages',              adminAuthMiddleware,                                      asyncHandler(createPage));
 router.put('/pages/:id',           adminAuthMiddleware,                                      asyncHandler(updatePage));
 router.delete('/pages/:id',        adminAuthMiddleware,                                      asyncHandler(deletePage));
+
+// Cache Management
+router.post('/system/purge-cache', adminAuthMiddleware,                                      asyncHandler(purgeCache));
 
 module.exports = router;

@@ -790,6 +790,12 @@ async function deletePage(req, res) {
   res.json({ message: 'Page deleted' });
 }
 
+async function purgeCache(req, res) {
+  const cacheService = require('../services/cacheService');
+  cacheService.clear();
+  res.json({ message: 'Cache successfully purged' });
+}
+
 module.exports = {
   getProjects,
   createProject,
@@ -804,6 +810,7 @@ module.exports = {
   createPage,
   updatePage,
   deletePage,
+  purgeCache,
   getInquiries,
   getInquiryActivity,
   updateInquiryStatus,

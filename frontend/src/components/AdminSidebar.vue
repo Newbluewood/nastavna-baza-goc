@@ -6,10 +6,35 @@ const router = useRouter()
 const route = useRoute()
 const sidebarOpen = ref(false)
 const smestajOpen = ref(true)
+const isPurging = ref(false)
 
 function handleLogout() {
   localStorage.removeItem('admin_token')
   router.push('/admin/login')
+}
+
+const handlePurgeCache = async () => {
+  if (isPurging.value) return;
+  isPurging.value = true;
+  try {
+    const token = localStorage.getItem('admin_token')
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/admin/system/purge-cache`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (response.ok) {
+      alert('Кеш меморија је успешно очишћена. Промене ће бити видљиве јавно.');
+    } else {
+      alert('Дошло је до грешке приликом чишћења кеша.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Грешка при комуникацији са сервером.');
+  } finally {
+    isPurging.value = false;
+  }
 }
 
 const isSmestajActive = () => ['/admin/rezervacije', '/admin/gosti', '/admin/mapa-soba'].some(p => route.path.startsWith(p))
@@ -41,7 +66,12 @@ defineExpose({ sidebarOpen })
         <router-link to="/admin/mapa-soba">Мапа Соба</router-link>
       </div>
     </nav>
-    <button class="logout-btn" @click="handleLogout">Одјави се</button>
+    <div class="sidebar-actions">
+      <button class="purge-btn" @click="handlePurgeCache" :disabled="isPurging">
+        {{ isPurging ? 'Чистим...' : 'Очисти кеш' }}
+      </button>
+      <button class="logout-btn" @click="handleLogout">Одјави се</button>
+    </div>
   </aside>
 </template>
 
@@ -134,8 +164,40 @@ defineExpose({ sidebarOpen })
   font-size: 0.9rem !important;
 }
 
+/* Sidebar Akcije (dno) */
+.sidebar-actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.purge-btn {
+  background: transparent;
+  color: #e67e22;
+  border: 1px solid #e67e22;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.purge-btn:hover:not(:disabled) {
+  background: #e67e22;
+  color: #fff;
+}
+
+.purge-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .logout-btn {
-  margin-top: 20px;
+  margin-top: 10px;
   padding: 10px;
   background: transparent;
   color: #cdac91;

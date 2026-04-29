@@ -7,6 +7,7 @@ const {
   submitInquiry, getNewsList, getSingleNews, likeNews,
   getWeatherForecast, getContactPage
 } = require('../controllers/publicController');
+const cacheMiddleware = require('../middleware/cacheMiddleware');
 
 const router = express.Router();
 
@@ -18,15 +19,18 @@ router.get('/test', (req, res) => {
   res.json({ message: 'Test successful', timestamp: new Date() });
 });
 
-router.get('/home',                           asyncHandler(getHome));
-router.get('/smestaj',                        asyncHandler(getFacilities));
-router.get('/smestaj/:id',                    asyncHandler(getFacility));
-router.get('/rooms/:id/availability',         asyncHandler(getRoomAvailability));
+// 5 minuta kesa za sve javne read-only endpointe
+const CACHE_TTL = 5 * 60 * 1000;
+
+router.get('/home',                           cacheMiddleware(CACHE_TTL), asyncHandler(getHome));
+router.get('/smestaj',                        cacheMiddleware(CACHE_TTL), asyncHandler(getFacilities));
+router.get('/smestaj/:id',                    cacheMiddleware(CACHE_TTL), asyncHandler(getFacility));
+router.get('/rooms/:id/availability',         asyncHandler(getRoomAvailability)); // Do not cache availability heavily
 router.post('/inquiries', optionalGuestAuthMiddleware, validateInquiryRequest(), asyncHandler(submitInquiry));
-router.get('/news',                           asyncHandler(getNewsList));
-router.get('/news/:id',                       asyncHandler(getSingleNews));
+router.get('/news',                           cacheMiddleware(CACHE_TTL), asyncHandler(getNewsList));
+router.get('/news/:id',                       cacheMiddleware(CACHE_TTL), asyncHandler(getSingleNews));
 router.post('/news/:id/like',                 asyncHandler(likeNews));
-router.get('/weather/forecast',               asyncHandler(getWeatherForecast));
-router.get('/kontakt',                        asyncHandler(getContactPage));
+router.get('/weather/forecast',               cacheMiddleware(15 * 60 * 1000), asyncHandler(getWeatherForecast)); // 15 min cache for weather
+router.get('/kontakt',                        cacheMiddleware(CACHE_TTL), asyncHandler(getContactPage));
 
 module.exports = router;
