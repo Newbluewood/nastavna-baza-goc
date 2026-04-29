@@ -174,7 +174,7 @@ watch(
 
             <!-- Dugme za upit za SOBU -->
             <button @click="openInquiry(room)" class="inquiry-btn">
-              {{ langStore.currentLang === 'sr' ? 'Пошаљи упит' : 'Send Inquiry' }}
+              ✉ {{ langStore.currentLang === 'sr' ? 'Пошаљи упит' : 'Send Inquiry' }}
             </button>
           </div>
 
