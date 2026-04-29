@@ -1,9 +1,11 @@
 <script setup>
 import { ref, watch, nextTick, onMounted } from 'vue';
 import { useChatStore } from '../stores/chat';
+import { useLangStore } from '../stores/lang';
 import { marked } from 'marked';
 
 const chatStore = useChatStore();
+const langStore = useLangStore();
 const inputMessage = ref('');
 const messagesContainer = ref(null);
 
@@ -47,7 +49,10 @@ const sendMessage = async () => {
 
 onMounted(() => {
   if (chatStore.messages.length === 0) {
-    chatStore.addMessage('assistant', 'Zdravo! Ja sam vaš AI asistent za Nastavnu Bazu Goč. Kako mogu da vam pomognem danas?');
+    const msg = langStore.currentLang === 'sr' 
+      ? 'Zdravo! Ja sam vaš AI asistent za Nastavnu Bazu Goč. Kako mogu da vam pomognem danas?'
+      : 'Hello! I am your AI assistant for Teaching Base Goč. How can I help you today?';
+    chatStore.addMessage('assistant', msg);
   }
   scrollToBottom();
 });
@@ -59,7 +64,7 @@ onMounted(() => {
     <!-- Chat Toggle Button -->
     <button 
       class="agent-chat-toggle" 
-      :class="{ 'is-open': chatStore.isOpen }"
+      :class="{ 'is-open': chatStore.isOpen, 'hide-on-mobile-open': chatStore.isOpen }"
       @click="chatStore.toggleChat()"
       aria-label="Toggle chat"
     >
@@ -85,18 +90,24 @@ onMounted(() => {
             </svg>
           </div>
           <div class="title-wrap">
-            <h3>Goč AI Asistent</h3>
-            <span class="status">Uvek na mreži</span>
+            <h3>{{ langStore.currentLang === 'sr' ? 'Goč AI Asistent' : 'Goč AI Assistant' }}</h3>
+            <span class="status">{{ langStore.currentLang === 'sr' ? 'Uvek na mreži' : 'Always online' }}</span>
           </div>
         </div>
         <div class="header-actions">
           <router-link to="/smestaj" class="reserve-link" @click="chatStore.isOpen = false">
-            Rezerviši
+            {{ langStore.currentLang === 'sr' ? 'Rezerviši smeštaj' : 'Reserve stay' }}
           </router-link>
-          <button class="clear-btn" @click="chatStore.clearHistory()" title="Započni novi razgovor">
+          <button class="clear-btn" @click="chatStore.clearHistory()" :title="langStore.currentLang === 'sr' ? 'Započni novi razgovor' : 'Start new conversation'">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+          <button class="close-panel-btn" @click="chatStore.isOpen = false" aria-label="Close chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
         </div>
@@ -153,12 +164,12 @@ onMounted(() => {
                     <input type="date" v-model="msg.checkOut" class="ac-input" />
                   </div>
                 </div>
-                <button class="ac-btn success" @click="submitReservation(msg)">Pošalji Upit</button>
-                <button class="ac-btn secondary" @click="msg.showForm = false">Odustani</button>
+                <button class="ac-btn success" @click="submitReservation(msg)">{{ langStore.currentLang === 'sr' ? 'Pošalji Upit' : 'Send Inquiry' }}</button>
+                <button class="ac-btn secondary" @click="msg.showForm = false">{{ langStore.currentLang === 'sr' ? 'Odustani' : 'Cancel' }}</button>
               </div>
               <div class="ac-success" v-if="msg.submitted">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                <span>Upit uspešno prosleđen! Uskoro ćete dobiti potvrdni email.</span>
+                <span>{{ langStore.currentLang === 'sr' ? 'Upit uspešno prosleđen!' : 'Inquiry sent successfully!' }}</span>
               </div>
             </div>
 
@@ -171,7 +182,7 @@ onMounted(() => {
             <div class="typing-indicator">
               <span></span><span></span><span></span>
             </div>
-            <span class="loading-text">Agent kuca...</span>
+            <span class="loading-text">{{ langStore.currentLang === 'sr' ? 'Agent kuca...' : 'Agent is typing...' }}</span>
           </div>
         </div>
 
@@ -190,7 +201,7 @@ onMounted(() => {
           <input 
             v-model="inputMessage" 
             type="text" 
-            placeholder="Pitajte me bilo šta..." 
+            :placeholder="langStore.currentLang === 'sr' ? 'Pitajte me bilo šta u vezi Nastavne baze Goč...' : 'Ask me anything about Teaching Base Goč...'" 
             @keyup.enter="sendMessage"
             :disabled="chatStore.isLoading"
           />
@@ -359,7 +370,7 @@ onMounted(() => {
   background: #5a3821;
 }
 
-.clear-btn {
+.clear-btn, .close-panel-btn {
   background: transparent;
   border: none;
   color: #999;
@@ -377,7 +388,12 @@ onMounted(() => {
   color: #d32f2f;
 }
 
-.clear-btn svg {
+.close-panel-btn:hover {
+  background: rgba(0,0,0,0.05);
+  color: #333;
+}
+
+.clear-btn svg, .close-panel-btn svg {
   width: 18px;
   height: 18px;
 }
@@ -776,6 +792,10 @@ onMounted(() => {
   
   .agent-chat-toggle {
     z-index: 10002;
+  }
+
+  .hide-on-mobile-open {
+    display: none !important;
   }
 }
 </style>
