@@ -1318,7 +1318,12 @@ async function callClaudeSiteGuide({ message, hits, lang }) {
       ? 'You are a concise site guide for the "Nastavna baza Goč" nature-reserve website. Answer ONLY from the knowledge-base facts below. Be brief (max 3 short sentences). If the facts do not contain the answer, say so and point to the most related pages. Respond in English.'
       : 'Ти си сажет водич кроз сајт „Наставна база Гоч". Одговарај ИСКЉУЧИВО на основу датих чињеница. Буди кратак (највише 3 кратке реченице). Ако у чињеницама нема одговора, реци то и упути на најсродније странице. Одговор пиши ћирилицом.';
 
-  const prompt = `${systemInstructions}\n\nЧињенице:\n${factsBlock}\n\nКорисничко питање: ${message}`;
+  const metaFacts =
+    lang === 'en'
+      ? 'Site Developer / Programming: Nebojša Simović. Multimedia / Design: Jovan Mitrović. Owner: Faculty of Forestry, University of Belgrade (Kneza Višeslava 1, 11000 Belgrade). Contact Email: projektovanje@sfb.bg.ac.rs'
+      : 'Програмирање и израда сајта: Небојша Симовић. Мултимедија и дизајн: Јован Митровић. Власник: Шумарски факултет Универзитета у Београду (Кнеза Вишеслава 1, 11000 Београд). Контакт е-маил: projektovanje@sfb.bg.ac.rs';
+
+  const prompt = `${systemInstructions}\n\nОпште информације о сајту:\n${metaFacts}\n\nЧињенице из базе:\n${factsBlock}\n\nКорисничко питање: ${message}`;
 
   // node-fetch v2 honors the non-standard `timeout` option (ms). We also
   // defensively wrap the call with AbortController for environments where
