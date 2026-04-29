@@ -98,7 +98,7 @@ async function getHome(req, res) {
     LEFT JOIN media_gallery mg ON mg.entity_id = n.id AND mg.entity_type = 'news'
     GROUP BY n.id
     ORDER BY n.created_at DESC
-    LIMIT 3
+    LIMIT 7
   `, [langParam]);
 
   news.forEach(item => {
