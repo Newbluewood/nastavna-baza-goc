@@ -126,6 +126,9 @@ onUnmounted(() => {
       <p v-html="textContent"></p>
     </div>
     
+    <!-- Custom Page Content Slot -->
+    <slot></slot>
+    
     <hr class="section-divider" v-if="news && news.length > 0" />
 
     <!-- Najnovije Vesti (News sekcija) -->
