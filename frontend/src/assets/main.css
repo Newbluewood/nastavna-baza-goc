@@ -36,14 +36,23 @@
   --c-braon-5: #67462e;
   --c-braon-6: #332317;
 
-  --color-background: #ffffff;
+  /* Color Palette - Zelena (Forest) */
+  --c-green-1: #d1e8d6;
+  --c-green-2: #ADEAC0;
+  --c-green-3: #00D48F;
+  --c-green-4: #00865A;
+  --c-green-5: #03563A;
+  --c-green-6: #0D3018;
+
+  /* Forest Vibe Variables */
+  --color-background: #fdfbf7; /* Very subtle earthy white */
   --color-text: var(--c-braon-6);
-  --color-heading: var(--c-braon-4);
-  --color-link: var(--c-braon-4);
-  --color-nav: var(--c-braon-5);
+  --color-heading: var(--c-green-6); /* Deep forest green for headings */
+  --color-link: var(--c-green-4);
+  --color-nav: var(--c-green-6);
   --color-border: var(--c-braon-6);
-  --color-social: var(--c-braon-4);
-  --color-accent: var(--c-braon-3);
+  --color-social: var(--c-green-4);
+  --color-accent: var(--c-green-4);
 
   --font-base: "FOF24", sans-serif;
   --content-max-width: 780px;
@@ -229,9 +238,15 @@ a:hover {
   padding: 20px 0 0 0;
 }
 
+.footer-wrapper {
+  background-color: var(--c-green-6);
+  color: var(--c-green-1);
+  width: 100%;
+  margin-top: 40px;
+  padding: 40px 20px;
+}
+
 .footer {
-  border-top: 1px solid var(--color-border);
-  padding: 20px 0;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -240,6 +255,16 @@ a:hover {
   margin: 0 auto;
   width: 100%;
   font-size: 0.9rem;
+}
+
+.footer a {
+  color: var(--c-green-2);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer a:hover {
+  color: var(--c-green-3);
 }
 
 .footer-col {

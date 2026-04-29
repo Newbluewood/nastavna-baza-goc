@@ -85,28 +85,30 @@ const handleGuestNav = () => {
       <RouterView />
     </main>
 
-    <footer class="footer">
-      <div class="footer-col">
-        <p><strong>{{ langStore.t('footer.faculty') }}</strong><br>
-        {{ langStore.t('footer.university') }}<br>
-        {{ langStore.t('footer.address') }}<br>
-        {{ langStore.t('footer.city') }}</p>
-      </div>
-      <div class="footer-col">
-        <p><a href="mailto:projektovanje@sfb.bg.ac.rs">projektovanje@sfb.bg.ac.rs</a><br>
-        <a href="http://www.sfb.bg.ac.rs" target="_blank">www.sfb.bg.ac.rs</a></p>
-      </div>
-      <div class="footer-col footer-credits">
-        <p v-html="langStore.t('footer.credits')"></p>
-      </div>
-      <div class="footer-col footer-social">
-        <div class="social-icons">
-          <a href="#" class="social-icon">In</a>
-          <a href="#" class="social-icon">Fb</a>
-          <a href="#" class="social-icon">Li</a>
+    <div class="footer-wrapper">
+      <footer class="footer">
+        <div class="footer-col">
+          <p><strong>{{ langStore.t('footer.faculty') }}</strong><br>
+          {{ langStore.t('footer.university') }}<br>
+          {{ langStore.t('footer.address') }}<br>
+          {{ langStore.t('footer.city') }}</p>
         </div>
-      </div>
-    </footer>
+        <div class="footer-col">
+          <p><a href="mailto:projektovanje@sfb.bg.ac.rs">projektovanje@sfb.bg.ac.rs</a><br>
+          <a href="http://www.sfb.bg.ac.rs" target="_blank">www.sfb.bg.ac.rs</a></p>
+        </div>
+        <div class="footer-col footer-credits">
+          <p v-html="langStore.t('footer.credits')"></p>
+        </div>
+        <div class="footer-col footer-social">
+          <div class="social-icons">
+            <a href="#" class="social-icon">In</a>
+            <a href="#" class="social-icon">Fb</a>
+            <a href="#" class="social-icon">Li</a>
+          </div>
+        </div>
+      </footer>
+    </div>
 
     <AgentChatWidget />
   </div>
