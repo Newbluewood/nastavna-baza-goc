@@ -433,4 +433,24 @@ const asEntries = (obj) => {
   font-size: 0.8rem;
   color: #aaa;
 }
+
+@media (max-width: 768px) {
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .burger-admin {
+    background: #332317;
+    color: #cdac91;
+    border: none;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0;
+  }
+  .main-content { padding: 20px 16px !important; }
+  .page-header { flex-direction: column; gap: 12px; }
+}
 </style>
