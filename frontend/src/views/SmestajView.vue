@@ -134,9 +134,9 @@ watch(() => langStore.currentLang, () => {
 
   <div v-else class="page-content">
     <!-- Hero Slider -->
-    <div v-if="slides && slides.length > 0" class="hero-slider" style="position: relative; width: 100%; height: 500px; overflow: hidden; background: #332317; margin-bottom: 20px;">
+    <div v-if="slides && slides.length > 0" class="hero-slider" style="position: relative; width: 100%; height: 500px; overflow: hidden; background: var(--c-green-6); margin-bottom: 20px;">
       <div v-for="(slide, index) in slides" :key="index" :style="{ opacity: index === currentSlide ? 1 : 0, transition: 'opacity 0.8s ease', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }">
-        <img :src="slide.image_url" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;" />
+        <img :src="slide.image_url" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.65;" />
         <div class="slide-content">
            <h1 style="margin: 0; color: var(--color-nav);">{{ slide.title || pageTitle }}</h1>
            <p v-if="slide.subtitle" style="margin: 5px 0 0 0; color: var(--color-text);">{{ slide.subtitle }}</p>
@@ -396,7 +396,7 @@ watch(() => langStore.currentLang, () => {
   position: absolute;
   bottom: 40px;
   left: 40px;
-  background: rgba(255,255,255,0.88);
+  background: rgba(255, 255, 255, 0.66);
   padding: 15px 30px;
   max-width: calc(100% - 80px);
 }

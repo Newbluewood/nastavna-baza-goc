@@ -137,24 +137,24 @@ onUnmounted(() => {
       
       <!-- GRID -->
       <div v-if="!isCarousel" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-        <div v-for="item in news" :key="item.id" class="news-card" style="border: 1px solid var(--color-border); border-radius: 0; overflow: hidden; background: #fff; display: flex; flex-direction: column;">
-          <img v-if="item.cover_image" :src="item.cover_image" style="width: 100%; height: 180px; object-fit: cover; cursor: pointer;" @click="openLightbox(0)" />
-          <div style="padding: 15px; flex: 1; display: flex; flex-direction: column;">
-             <h3 style="margin-bottom: 10px; font-size: 1.1rem;">{{ item.title }}</h3>
-             <p style="font-size: 0.85rem; margin-bottom: 15px; flex: 1;">{{ item.excerpt }}</p>
-             <router-link :to="item.link || `/vesti/${item.slug || item.id}`" style="font-weight: bold; font-size: 0.85rem; display: inline-block;">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
+        <div v-for="item in news" :key="item.id" class="news-card" style="position: relative; height: 320px; border: 1px solid var(--color-border); border-radius: 0; overflow: hidden; background: #fff; display: flex; flex-direction: column;">
+          <img v-if="item.cover_image" :src="item.cover_image" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; cursor: pointer; z-index: 0;" @click="openLightbox(0)" />
+          <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.88); padding: 15px; z-index: 1;">
+             <h3 style="margin-bottom: 5px; font-size: 1.1rem; color: var(--color-nav);">{{ item.title }}</h3>
+             <p style="font-size: 0.85rem; margin-bottom: 10px; color: var(--color-text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ item.excerpt }}</p>
+             <router-link :to="item.link || `/vesti/${item.slug || item.id}`" style="font-weight: bold; font-size: 0.85rem; display: inline-block; color: var(--color-nav); border-bottom: 1px solid var(--color-nav);">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
           </div>
         </div>
       </div>
 
       <!-- CAROUSEL -->
       <div v-else class="news-carousel">
-        <div v-for="item in news" :key="item.id" class="news-card carousel-item" style="flex: 0 0 calc(33.333% - 1rem); min-width: 250px; scroll-snap-align: start; border: 1px solid var(--color-border); border-radius: 0; overflow: hidden; background: #fff; display: flex; flex-direction: column;">
-          <img v-if="item.cover_image" :src="item.cover_image" style="width: 100%; height: 180px; object-fit: cover;" />
-          <div style="padding: 15px; flex: 1; display: flex; flex-direction: column;">
-             <h3 style="margin-bottom: 10px; font-size: 1.1rem;">{{ item.title }}</h3>
-             <p style="font-size: 0.85rem; margin-bottom: 15px; flex: 1;">{{ item.excerpt }}</p>
-             <router-link :to="item.link || `/vesti/${item.slug || item.id}`" style="font-weight: bold; font-size: 0.85rem; display: inline-block; color: var(--color-nav);">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
+        <div v-for="item in news" :key="item.id" class="news-card carousel-item" style="position: relative; flex: 0 0 calc(33.333% - 1rem); min-width: 250px; height: 320px; scroll-snap-align: start; border: 1px solid var(--color-border); border-radius: 0; overflow: hidden; background: #fff;">
+          <img v-if="item.cover_image" :src="item.cover_image" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;" />
+          <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.88); padding: 15px; z-index: 1;">
+             <h3 style="margin-bottom: 5px; font-size: 1.1rem; color: var(--color-nav);">{{ item.title }}</h3>
+             <p style="font-size: 0.85rem; margin-bottom: 10px; color: var(--color-text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ item.excerpt }}</p>
+             <router-link :to="item.link || `/vesti/${item.slug || item.id}`" style="font-weight: bold; font-size: 0.85rem; display: inline-block; color: var(--color-nav); border-bottom: 1px solid var(--color-nav);">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
           </div>
         </div>
       </div>
