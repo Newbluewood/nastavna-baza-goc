@@ -453,4 +453,8 @@ const asEntries = (obj) => {
   .main-content { padding: 20px 16px !important; }
   .page-header { flex-direction: column; gap: 12px; }
 }
+
+@media (min-width: 769px) {
+  .mobile-topbar { display: none; }
+}
 </style>
