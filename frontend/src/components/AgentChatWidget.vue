@@ -47,12 +47,21 @@ const sendMessage = async () => {
   await chatStore.sendMessage(content);
 };
 
+const defaultGreetingSr = 'Zdravo! Ja sam vaš AI asistent za Nastavnu Bazu Goč. Kako mogu da vam pomognem danas?';
+const defaultGreetingEn = 'Hello! I am your AI assistant for Teaching Base Goč. How can I help you today?';
+
+watch(() => langStore.currentLang, (newLang) => {
+  if (chatStore.messages.length > 0) {
+    const firstMsg = chatStore.messages[0];
+    if (firstMsg.role === 'assistant' && (firstMsg.content === defaultGreetingSr || firstMsg.content === defaultGreetingEn)) {
+      firstMsg.content = newLang === 'sr' ? defaultGreetingSr : defaultGreetingEn;
+    }
+  }
+});
+
 onMounted(() => {
   if (chatStore.messages.length === 0) {
-    const msg = langStore.currentLang === 'sr' 
-      ? 'Zdravo! Ja sam vaš AI asistent za Nastavnu Bazu Goč. Kako mogu da vam pomognem danas?'
-      : 'Hello! I am your AI assistant for Teaching Base Goč. How can I help you today?';
-    chatStore.addMessage('assistant', msg);
+    chatStore.addMessage('assistant', langStore.currentLang === 'sr' ? defaultGreetingSr : defaultGreetingEn);
   }
   scrollToBottom();
 });
