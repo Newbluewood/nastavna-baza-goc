@@ -364,6 +364,10 @@ onMounted(() => {
   border-radius: 12px;
   font-weight: 500;
   transition: all 0.2s;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .reserve-link:hover {
