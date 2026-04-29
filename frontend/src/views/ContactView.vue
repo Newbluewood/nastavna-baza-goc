@@ -170,6 +170,7 @@ const statusClass = (s) => ({
   width: 100%;
   height: 180px;
   object-fit: cover;
+  object-position: top center;
   display: block;
   background: #f1ede8;
 }
