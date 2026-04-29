@@ -134,23 +134,24 @@ const asEntries = (obj) => {
             <span class="month-pill">Месец: {{ data.budget.monthKey }}</span>
           </div>
 
-          <div class="progress-track" role="progressbar" :aria-valuenow="data.budget.spent.globalPercent" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-track" role="progressbar" :aria-valuenow="(data.budget.spent.globalEur / 5.00) * 100" aria-valuemin="0" aria-valuemax="100">
             <div
               class="progress-fill"
               :style="{
-                width: `${clampPercent(data.budget.spent.globalPercent)}%`,
-                background: progressColor(data.budget.spent.globalPercent)
+                width: `${clampPercent((data.budget.spent.globalEur / 5.00) * 100)}%`,
+                background: progressColor((data.budget.spent.globalEur / 5.00) * 100)
               }"
             ></div>
           </div>
 
           <p class="progress-text">
             <strong>{{ toFixedEur(data.budget.spent.globalEur) }}</strong>
-            / {{ toFixedEur(data.budget.caps.globalEur) }} EUR
-            <span class="percent-label">({{ data.budget.spent.globalPercent }}%)</span>
+            / 5.00 EUR
+            <span class="percent-label">({{ ((data.budget.spent.globalEur / 5.00) * 100).toFixed(2) }}%)</span>
           </p>
-          <p class="muted">Лимит по кориснику: {{ toFixedEur(data.budget.caps.userEur) }} EUR</p>
           <p class="muted">Захтева овог месеца: {{ data.budget.spent.requestCount }}</p>
+          <p class="muted">Токена (улаз): {{ formatValue(data.budget.spent.tokensInput) }}</p>
+          <p class="muted">Токена (излаз): {{ formatValue(data.budget.spent.tokensOutput) }}</p>
           <p v-if="data.budget.spent.todayEur !== null && data.budget.spent.todayEur !== undefined" class="muted">
             Данас потрошено: {{ toFixedEur(data.budget.spent.todayEur) }} EUR
           </p>

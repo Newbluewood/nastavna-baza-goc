@@ -160,13 +160,18 @@ async function getUsageSnapshot() {
   const monthKey = currentMonthKey();
 
   const [globalRows] = await db.query(
-    `SELECT SUM(eur_spent) AS eur_spent, SUM(request_count) AS request_count
+    `SELECT SUM(eur_spent) AS eur_spent, 
+            SUM(request_count) AS request_count,
+            SUM(tokens_input) AS tokens_input,
+            SUM(tokens_output) AS tokens_output
        FROM ai_budget_monthly
       WHERE month_key=? AND user_key=?`,
     [monthKey, GLOBAL_USER_KEY]
   );
   const globalEur = globalRows[0] && globalRows[0].eur_spent != null ? Number(globalRows[0].eur_spent) : 0;
   const requestCount = globalRows[0] && globalRows[0].request_count != null ? Number(globalRows[0].request_count) : 0;
+  const tokensInput = globalRows[0] && globalRows[0].tokens_input != null ? Number(globalRows[0].tokens_input) : 0;
+  const tokensOutput = globalRows[0] && globalRows[0].tokens_output != null ? Number(globalRows[0].tokens_output) : 0;
 
   const [users] = await db.query(
     `SELECT user_key, SUM(eur_spent) AS eur_spent, SUM(request_count) AS request_count
@@ -184,7 +189,8 @@ async function getUsageSnapshot() {
     spent: {
       globalEur,
       globalPercent: CAP_GLOBAL_EUR > 0 ? Number(((globalEur / CAP_GLOBAL_EUR) * 100).toFixed(2)) : 0,
-      // Daily granularity is not tracked in this MVP; signal unavailable.
+      tokensInput,
+      tokensOutput,
       todayEur: null,
       requestCount
     },
