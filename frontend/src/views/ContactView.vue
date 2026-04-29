@@ -36,9 +36,12 @@ const statusClass = (s) => ({
 
 <template>
   <PageTemplate
-    :pageTitle="langStore.currentLang === 'sr' ? 'Контакт' : 'Contact'"
-    :textContent="langStore.currentLang === 'sr' ? 'Наставна база Гоч–Гвоздац, Шумарски факултет Универзитета у Београду. Ту смо за сва ваша питања и информације.' : 'Teaching Base Goč–Gvozdac, Faculty of Forestry, University of Belgrade. We are here for all your questions and information.'"
-    coverImage="https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=2070&auto=format&fit=crop"
+    :title="langStore.currentLang === 'sr' ? 'Контакт' : 'Contact'"
+    :textContent="langStore.currentLang === 'sr' ? '<p><strong>Добродошли у Наставну базу Гоч–Гвоздац!</strong></p><p>Шумарски факултет Универзитета у Београду.</p><p>Ту смо за сва ваша питања, резервације и информације у вези са наставним активностима и смештајем.</p>' : '<p><strong>Welcome to Teaching Base Goč–Gvozdac!</strong></p><p>Faculty of Forestry, University of Belgrade.</p><p>We are here for all your questions, reservations and information regarding teaching activities and accommodation.</p>'"
+    :slides="[{
+      title: langStore.currentLang === 'sr' ? 'Контакт' : 'Contact',
+      image_url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=2070&auto=format&fit=crop'
+    }]"
   >
     <div v-if="isLoading" class="loading-msg">
       {{ langStore.currentLang === 'sr' ? 'Учитавам...' : 'Loading...' }}
