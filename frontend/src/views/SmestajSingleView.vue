@@ -151,7 +151,7 @@ watch(
           <div class="facility-image-wrapper" @click="openGallery(room)">
             <img :src="room.cover_image || '/placeholder.jpg'" class="facility-img" />
             <div class="img-overlay">
-              <span>📷 {{ langStore.currentLang === 'sr' ? 'Погледај галерију' : 'View Gallery' }}</span>
+              <span>{{ langStore.currentLang === 'sr' ? 'Погледај галерију' : 'View Gallery' }}</span>
             </div>
           </div>
 
@@ -174,7 +174,7 @@ watch(
 
             <!-- Dugme za upit za SOBU -->
             <button @click="openInquiry(room)" class="inquiry-btn">
-              ✉ {{ langStore.currentLang === 'sr' ? 'Пошаљи упит' : 'Send Inquiry' }}
+              {{ langStore.currentLang === 'sr' ? 'Пошаљи упит' : 'Send Inquiry' }}
             </button>
           </div>
 
@@ -217,7 +217,7 @@ watch(
   position: absolute;
   bottom: 40px;
   left: 40px;
-  background: rgba(255,255,255,0.88);
+  background: rgba(255, 255, 255, 0.66);
   padding: 15px 30px;
   border-radius: 0;
   max-width: calc(100% - 80px);
@@ -347,7 +347,8 @@ watch(
   border-radius: 0;
 }
 .inquiry-btn:hover {
-  background: var(--color-btn-hover);
+  background: var(--c-green-5);
+  color: #fff;
 }
 
 .facility-plan {

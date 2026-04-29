@@ -187,7 +187,7 @@ watch(() => langStore.currentLang, () => {
             <div class="actions-row">
               <!-- Dugme za pregled soba -->
               <button @click="viewRooms(facility)" class="inquiry-btn">
-                🏠 {{ langStore.currentLang === 'sr' ? 'Погледај Собе' : 'View Rooms' }}
+                {{ langStore.currentLang === 'sr' ? 'Погледај Собе' : 'View Rooms' }}
               </button>
 
               <!-- Link ka mapi -->
@@ -195,7 +195,7 @@ watch(() => langStore.currentLang, () => {
                  :href="'https://www.google.com/maps/search/?api=1&query=' + facility.latitude + ',' + facility.longitude" 
                  target="_blank" 
                  class="map-btn">
-                📍 {{ langStore.currentLang === 'sr' ? 'Отвори Мапу' : 'Open Map' }}
+                {{ langStore.currentLang === 'sr' ? 'Отвори Мапу' : 'Open Map' }}
               </a>
             </div>
           </div>
@@ -357,7 +357,8 @@ watch(() => langStore.currentLang, () => {
   border-radius: 0;
 }
 .inquiry-btn:hover {
-  background: var(--color-btn-hover);
+  background: var(--c-green-5);
+  color: #fff;
 }
 
 .facility-plan {
