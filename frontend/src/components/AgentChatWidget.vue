@@ -794,15 +794,44 @@ onMounted(() => {
   
   .agent-chat-panel {
     position: fixed;
+    top: 0;
+    left: 0;
     bottom: 0;
     right: 0;
-    width: 100%;
-    height: 100vh;
-    max-height: 100vh;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
     border-radius: 0;
-    z-index: 10001;
+    z-index: 20000;
   }
   
+  .chat-header {
+    padding-top: env(safe-area-inset-top, 1.25rem);
+    padding-bottom: 1rem;
+  }
+
+  .header-info {
+    gap: 8px;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .title-wrap h3 {
+    font-size: 0.9rem;
+  }
+
+  .reserve-link {
+    display: none; /* Hide reserve link in header on mobile to save space */
+  }
+
+  .close-panel-btn {
+    padding: 10px;
+    color: #333;
+  }
+
   .agent-chat-toggle {
     z-index: 10002;
   }
