@@ -239,11 +239,13 @@ a:hover {
 }
 
 .footer-wrapper {
-  background-color: var(--c-green-6);
+  background-color: rgba(13, 48, 24, 0.85); /* Slightly transparent dark green */
   color: var(--c-green-1);
   width: 100%;
-  margin-top: 40px;
-  padding: 40px 20px;
+  max-width: var(--content-max-width);
+  margin: 40px auto 0 auto;
+  padding: 30px 20px;
+  border-radius: 4px 4px 0 0;
 }
 
 .footer {
