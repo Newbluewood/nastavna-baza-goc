@@ -46,19 +46,18 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   const adminToken = localStorage.getItem('admin_token');
   const guestToken = localStorage.getItem('guest_token');
 
   if (to.meta.requiresAuth && !adminToken) {
-    next({ name: 'admin-login' });
+    return { name: 'admin-login' };
   } else if (to.name === 'admin-login' && adminToken) {
-    next({ name: 'admin-news' });
+    return { name: 'admin-news' };
   } else if (to.meta.requiresGuestAuth && !guestToken) {
-    next({ name: 'prijava' });
-  } else {
-    next();
+    return { name: 'prijava' };
   }
+  return true;
 })
 
 export default router
