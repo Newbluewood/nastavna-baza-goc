@@ -4,10 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm run server",
-    "server": "npm run start:clean",
-    "start:server": "node server.js",
-    "start:clean": "powershell -NoProfile -Command \"$p=(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess); if($p){Stop-Process -Id $p -Force}; Set-Location .; node server.js\"",
+    "start": "node server.js",
+    "dev": "npm run start:win",
+    "start:win": "powershell -NoProfile -Command \"$p=(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess); if($p){Stop-Process -Id $p -Force}; Set-Location .; node server.js\"",
     "db:init:dry": "node InitialConfigDB.js",
     "db:init:run": "node InitialConfigDB.js --execute",
     "migrate:dry": "node migrateDb.js",
