@@ -37,6 +37,7 @@ async function reserveStayChat(req, res) {
       target_room_id: body.target_room_id,
       check_in: body.check_in,
       check_out: body.check_out,
+      board_type: body.board_type || 'base',
       allowExistingGuestByEmail: true
     });
 
@@ -62,6 +63,7 @@ async function reserveStayChat(req, res) {
       target_room_id: body.target_room_id,
       check_in: body.check_in,
       check_out: body.check_out,
+      board_type: body.board_type || 'base',
       allowExistingGuestByEmail: false
     });
 

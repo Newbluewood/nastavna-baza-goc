@@ -1,0 +1,103 @@
+/* ============================================
+   ADMIN SHARED STYLES
+   Used by all admin views via AdminLayout.vue
+   ============================================ */
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f3f0;
+  font-family: inherit;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  padding: 40px;
+  overflow-x: auto;
+}
+
+/* Mobile top bar */
+@media (max-width: 768px) {
+  .mobile-topbar { display: flex; align-items: center; margin-bottom: 20px; }
+  .burger-admin {
+    background: #332317; color: #cdac91; border: none;
+    padding: 10px 16px; font-size: 0.95rem; font-weight: bold; cursor: pointer;
+  }
+  .main-content { padding: 20px 16px !important; }
+  .page-header { flex-direction: column; gap: 12px; }
+  .form-grid { grid-template-columns: 1fr !important; }
+}
+@media (min-width: 769px) {
+  .mobile-topbar { display: none; }
+}
+
+/* Page header */
+.page-header {
+  display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;
+}
+.page-header h1 { margin: 0 0 5px; font-size: 1.8rem; color: #332317; }
+.subtitle { color: #888; margin: 0; font-size: 0.95rem; }
+
+/* Primary action buttons */
+.add-btn, .refresh-btn {
+  background: #332317; color: #fff; border: none;
+  padding: 10px 20px; cursor: pointer; font-weight: bold; transition: opacity 0.2s;
+}
+.add-btn:hover, .refresh-btn:hover { opacity: 0.85; }
+.refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Edit form */
+.edit-form {
+  background: #fff; border: 1px solid #e8ddd2; padding: 24px; margin-bottom: 30px;
+}
+.edit-form h2 { margin: 0 0 20px; font-size: 1.2rem; color: #332317; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 0.85rem; font-weight: 600; color: #555; }
+.form-group input, .form-group textarea, .form-group select {
+  padding: 10px; border: 1px solid #ddd; font-size: 0.9rem; font-family: inherit;
+}
+.form-actions { display: flex; gap: 10px; margin-top: 16px; }
+.save-btn {
+  background: #332317; color: #fff; border: none;
+  padding: 10px 24px; cursor: pointer; font-weight: bold;
+}
+.save-btn:hover { opacity: 0.85; }
+.cancel-btn {
+  background: transparent; color: #332317; border: 1px solid #332317;
+  padding: 10px 24px; cursor: pointer; font-weight: bold;
+}
+
+/* Data table */
+.data-table { width: 100%; border-collapse: collapse; background: #fff; font-size: 0.92rem; }
+.data-table th {
+  background: #332317; color: #cdac91; padding: 12px 14px; text-align: left;
+  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap;
+}
+.data-table td {
+  padding: 12px 14px; border-bottom: 1px solid #f0ebe5;
+  font-size: 0.9rem; color: #444; vertical-align: top;
+}
+.data-table tr:hover { background: #fdfaf7; }
+.table-wrapper { overflow-x: auto; }
+
+/* Action buttons inside tables */
+.actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+.action-btn {
+  padding: 6px 12px; border: none; cursor: pointer;
+  font-size: 0.8rem; font-weight: bold; transition: opacity 0.2s; white-space: nowrap;
+}
+.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.action-btn:hover { opacity: 0.8; }
+.action-btn.edit { background: #e8f5e9; color: #27ae60; }
+.action-btn.delete { background: #fde8e8; color: #e74c3c; }
+.action-btn.approve { background: #27ae60; color: #fff; }
+.action-btn.reject { background: #e74c3c; color: #fff; }
+.action-btn.cancel { background: #607d8b; color: #fff; }
+.action-btn.voucher { background: #b9770e; color: #fff; }
+.action-btn.timeline { background: #795548; color: #fff; }
+
+/* Status */
+.loading-msg, .empty-msg { text-align: center; padding: 40px; color: #999; }
+.muted { color: #aaa; font-size: 0.88rem; }

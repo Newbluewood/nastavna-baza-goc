@@ -19,6 +19,16 @@
       "naziv": "Planinarski maraton",
       "opis": "Takmičenje u pešačenju kroz označene staze Goča.",
       "datum": "2026-09-05"
+    },
+    {
+      "naziv": "Planinarska tura",
+      "opis": "Organizovana šetnja stazama Goca sa vodičem.",
+      "datum": "2026-05-10"
+    },
+    {
+      "naziv": "Veče tamburaša",
+      "opis": "Muzika uživo u restoranu baze.",
+      "datum": "2026-06-15"
     }
   ]
 }

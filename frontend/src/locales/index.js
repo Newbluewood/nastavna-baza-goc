@@ -50,7 +50,11 @@ export default {
       additionalMessage: 'Додатна порука (Опционо)',
       messagePlaceholder: 'Напишите нам уколико имате специјалне захтеве...',
       sending: 'Шаљем...',
-      sendInquiry: 'Пошаљи упит'
+      sendInquiry: 'Пошаљи упит',
+      boardType: 'Врста услуге',
+      boardBase: 'Само ноћење',
+      boardHalf: 'Полупансион',
+      boardFull: 'Пун пансион'
     },
     assistant: {
       modeBooking: 'Резервација',
@@ -117,7 +121,11 @@ export default {
       additionalMessage: 'Additional Message (Optional)',
       messagePlaceholder: 'Write us if you have any special requests...',
       sending: 'Sending...',
-      sendInquiry: 'Send Inquiry'
+      sendInquiry: 'Send Inquiry',
+      boardType: 'Board Type',
+      boardBase: 'Overnight only',
+      boardHalf: 'Half Board',
+      boardFull: 'Full Board'
     },
     assistant: {
       modeBooking: 'Booking',

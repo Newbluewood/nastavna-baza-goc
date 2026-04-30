@@ -31,6 +31,7 @@ export const useChatStore = defineStore('chat', {
         timestamp: new Date().toISOString(),
         checkIn: action?.check_in || '',
         checkOut: action?.check_out || '',
+        boardType: action?.board_type || 'base',
         guestName: '',
         guestEmail: ''
       });
@@ -69,6 +70,11 @@ export const useChatStore = defineStore('chat', {
       } finally {
         this.isLoading = false;
       }
+    },
+    
+    async chatReserveStay(payload) {
+      const { default: api } = await import('../services/api');
+      return api.chatReserveStay(payload);
     },
 
     clearHistory() {

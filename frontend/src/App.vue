@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router'
 import { useLangStore } from './stores/lang'
 import { useGuestStore } from './stores/guest'
-import AgentChatWidget from './components/AgentChatWidget.vue'
+import AgentChatWidget from './components/ui/AgentChatWidget.vue'
 
 const isMenuOpen = ref(false)
 const langStore = useLangStore()

@@ -92,7 +92,8 @@ async function createInquiryWithGuest(db, options) {
       message,
       target_room_id,
       check_in,
-      check_out
+      check_out,
+      board_type
     } = options;
 
     const [conflicts] = await connection.query(
@@ -118,8 +119,8 @@ async function createInquiryWithGuest(db, options) {
     const guestResolution = await resolveGuest(connection, options);
     const [inquiryResult] = await connection.query(
       `
-      INSERT INTO inquiries (sender_name, email, phone, message, check_in, check_out, target_room_id, status, created_at, guest_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
+      INSERT INTO inquiries (sender_name, email, phone, message, check_in, check_out, target_room_id, status, created_at, guest_id, board_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)
       `,
       [
         sender_name || guestResolution.guest.name,
@@ -130,27 +131,26 @@ async function createInquiryWithGuest(db, options) {
         check_out,
         target_room_id,
         INQUIRY_STATUS.NEW,
-        guestResolution.guest.id
+        guestResolution.guest.id,
+        board_type || 'base'
       ]
     );
 
     await connection.commit();
 
     if (guestResolution.newAccount) {
+      // For new guests, the 'Guest Created' email acts as the confirmation
       await sendEmailSafely('sendGuestCreated', () => emailService.sendGuestCreated(guestResolution.guest.email, {
         name: guestResolution.guest.name,
         email: guestResolution.guest.email,
         password: guestResolution.temporaryPassword
       }));
-    } else if (guestResolution.existingGuestEmailNotice) {
-      await sendEmailSafely('sendGuestExists', () => emailService.sendGuestExists(guestResolution.guest.email, {
+    } else {
+      // For existing guests (already have account or just logged in), send the inquiry confirmation
+      await sendEmailSafely('sendInquiryReceived', () => emailService.sendInquiryReceived(guestResolution.guest.email, {
         name: guestResolution.guest.name
       }));
     }
-
-    await sendEmailSafely('sendInquiryReceived', () => emailService.sendInquiryReceived(guestResolution.guest.email, {
-      name: guestResolution.guest.name
-    }));
 
     return {
       inquiryId: inquiryResult.insertId,

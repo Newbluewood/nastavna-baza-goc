@@ -30,8 +30,12 @@ const {
 	createPage,
 	updatePage,
 	deletePage,
-	purgeCache
-} = require('../controllers/adminController');
+	purgeCache,
+	uploadImage,
+	getFacilities,
+	getRoomsByFacility,
+	updateRoom
+} = require('../controllers/admin');
 
 const router = express.Router();
 
@@ -68,7 +72,16 @@ router.post('/pages',              adminAuthMiddleware,                         
 router.put('/pages/:id',           adminAuthMiddleware,                                      asyncHandler(updatePage));
 router.delete('/pages/:id',        adminAuthMiddleware,                                      asyncHandler(deletePage));
 
+// Uploads
+router.post('/upload',             adminAuthMiddleware,                                      asyncHandler(uploadImage));
+
 // Cache Management
 router.post('/system/purge-cache', adminAuthMiddleware,                                      asyncHandler(purgeCache));
+
+// Facility & Room management
+router.get('/facilities',          adminAuthMiddleware,                                      asyncHandler(getFacilities));
+router.get('/facilities/:id/rooms', adminAuthMiddleware,                                     asyncHandler(getRoomsByFacility));
+router.put('/rooms/:id',           adminAuthMiddleware,                                      asyncHandler(updateRoom));
+
 
 module.exports = router;

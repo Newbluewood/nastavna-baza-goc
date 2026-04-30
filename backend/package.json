@@ -7,15 +7,15 @@
     "start": "node server.js",
     "dev": "npm run start:win",
     "start:win": "powershell -NoProfile -Command \"$p=(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess); if($p){Stop-Process -Id $p -Force}; Set-Location .; node server.js\"",
-    "db:init:dry": "node InitialConfigDB.js",
-    "db:init:run": "node InitialConfigDB.js --execute",
+    "db:init:dry": "node scripts/InitialConfigDB.js",
+    "db:init:run": "node scripts/InitialConfigDB.js --execute",
     "migrate:dry": "node migrateDb.js",
     "migrate:run": "node migrateDb.js --execute",
     "db:seed:presentation:dry": "node presentationDBmockData.js",
     "db:seed:presentation:run": "node presentationDBmockData.js --execute",
     "db:sanity": "node dbSanityCheck.js",
-    "smoke:routes": "node smokeTestRoutes.js",
-    "smoke:write-flow": "node smokeTestWriteFlow.js",
+    "smoke:routes": "node tests/smokeTestRoutes.js",
+    "smoke:write-flow": "node tests/smokeTestWriteFlow.js",
     "smoke:all": "npm.cmd run smoke:routes && npm.cmd run smoke:write-flow",
     "test": "jest",
     "restart-site": "node resetSite.js",
@@ -37,6 +37,7 @@
     "handlebars": "^4.7.8",
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
     "mysql2": "^3.22.0",
     "node-fetch": "^2.7.0",
     "nodemailer": "^8.0.5",
@@ -44,6 +45,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "jest": "^30.3.0"
+    "jest": "^30.3.0",
+    "supertest": "^7.2.2"
   }
 }

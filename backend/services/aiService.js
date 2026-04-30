@@ -45,7 +45,6 @@ function extractRelevantFactsFromAnalysis(analysisJson) {
 }
 
 
-// --- Prompt builder za AI ---
 /**
  * Robustno učitava JSON fajl iz backend direktorijuma.
  * @param {string} filename - Ime fajla (npr. 'faq.json')
@@ -69,8 +68,6 @@ function readJsonDoc(filename) {
     return null;
   }
 }
-
-// --- Prompt builder za AI ---
 
 // --- AI-FIRST PIPELINE: Svi podaci iz baze, AI bira ---
 // (Pomereno ispod svih utility funkcija zbog scope-a)
@@ -105,13 +102,7 @@ async function processAssistantMessageV2(userMessage, context = {}, history = []
         _topic: 'restaurant_menu'
       })));
     }
-    // DEBUG: Log atrDoc before mapping
-    // eslint-disable-next-line no-console
-    console.log('DEBUG aiService.js: atrDoc:', JSON.stringify(atrDoc, null, 2));
     if (atrDoc && Array.isArray(atrDoc.atrakcije)) {
-      // DEBUG: Log loaded attractions and mapped facts
-      // eslint-disable-next-line no-console
-      console.log('DEBUG aiService.js: atrDoc.atrakcije:', JSON.stringify(atrDoc.atrakcije, null, 2));
       const mappedAttractions = atrDoc.atrakcije.map(item => {
         let tags = [];
         if (Array.isArray(item.category_tags)) {
@@ -129,8 +120,6 @@ async function processAssistantMessageV2(userMessage, context = {}, history = []
           _topic: 'attraction'
         };
       });
-      // eslint-disable-next-line no-console
-      console.log('DEBUG aiService.js: mappedAttractions:', JSON.stringify(mappedAttractions, null, 2));
       facts = facts.concat(mappedAttractions);
     }
     if (faqDoc && Array.isArray(faqDoc.faq)) {

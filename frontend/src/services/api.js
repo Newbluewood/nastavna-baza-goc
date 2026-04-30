@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:3000';
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:3000';
 
 class ApiService {
   constructor() {
@@ -8,12 +8,16 @@ class ApiService {
   async request(endpoint, options = {}) {
     const { authMode = 'any', ...requestOptions } = options;
     const url = `${this.baseURL}${endpoint}`;
+    const headers = { ...requestOptions.headers };
+    if (headers['Content-Type'] === null) {
+      delete headers['Content-Type'];
+    } else if (!headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...requestOptions.headers
-      },
-      ...requestOptions
+      ...requestOptions,
+      headers
     };
 
     // Add auth token based on endpoint auth mode
@@ -100,6 +104,16 @@ class ApiService {
     return this.request('/api/ai/ping');
   }
 
+  async uploadImage(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.request('/api/admin/upload', {
+      method: 'POST',
+      body: formData,
+      headers: { 'Content-Type': null }
+    });
+  }
+
   async aiProofread(text, lang = 'sr') {
     return this.request('/api/ai/proofread', {
       method: 'POST',
@@ -183,6 +197,10 @@ class ApiService {
     return this.request('/api/admin/inquiries');
   }
 
+  async getInquiryActivity(id) {
+    return this.request(`/api/admin/inquiries/${id}/activity`);
+  }
+
   async updateInquiryStatus(id, status) {
     return this.request(`/api/admin/inquiries/${id}/status`, {
       method: 'POST',
@@ -197,8 +215,127 @@ class ApiService {
     });
   }
 
+  async updateNews(id, data) {
+    return this.request(`/api/admin/news/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteNews(id) {
+    return this.request(`/api/admin/news/${id}`, { method: 'DELETE' });
+  }
+
+  async translateNews(id, lang) {
+    return this.request('/api/admin/translate', {
+      method: 'POST',
+      body: JSON.stringify({ id, lang })
+    });
+  }
+
+  async aiAssist(path, payload) {
+    return this.request(`/api/ai/${path}`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  // Admin — Staff
+  async getAdminStaff() {
+    return this.request('/api/admin/staff');
+  }
+
+  async createStaff(data) {
+    return this.request('/api/admin/staff', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateStaff(id, data) {
+    return this.request(`/api/admin/staff/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteStaff(id) {
+    return this.request(`/api/admin/staff/${id}`, { method: 'DELETE' });
+  }
+
+  // Admin — Projects
+  async getAdminProjects() {
+    return this.request('/api/admin/projects');
+  }
+
+  async createProject(data) {
+    return this.request('/api/admin/projects', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateProject(id, data) {
+    return this.request(`/api/admin/projects/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteProject(id) {
+    return this.request(`/api/admin/projects/${id}`, { method: 'DELETE' });
+  }
+
+  // Admin — Pages
+  async getAdminPages() {
+    return this.request('/api/admin/pages');
+  }
+
+  async updatePage(id, data) {
+    return this.request(`/api/admin/pages/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deletePage(id) {
+    return this.request(`/api/admin/pages/${id}`, { method: 'DELETE' });
+  }
+
+  // Admin — Room Map
+  async getRoomMap(date) {
+    const query = date ? `?date=${date}` : '';
+    return this.request(`/api/admin/room-map${query}`);
+  }
+
+  // Admin — AI Usage
+  async getAdminAiUsage() {
+    return this.request('/api/admin/ai/usage');
+  }
+
+  // Admin — Cache
+  async purgeCache() {
+    return this.request('/api/admin/system/purge-cache', { method: 'POST' });
+  }
+
   async getGuests() {
     return this.request('/api/admin/guests');
+  }
+
+  // Admin — Facilities & Rooms
+  async getAdminFacilities() {
+    return this.request('/api/admin/facilities');
+  }
+
+  async getAdminRooms(facilityId) {
+    return this.request(`/api/admin/facilities/${facilityId}/rooms`);
+  }
+
+  async updateRoom(roomId, data) {
+    return this.request(`/api/admin/rooms/${roomId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
   }
 
   async addVoucher(guestId, voucherData) {
@@ -229,24 +366,75 @@ class ApiService {
   }
 
   async getGuestReservations() {
-    return this.request('/api/guests/reservations');
+    return this.request('/api/guests/reservations', { authMode: 'guest' });
   }
 
   async updateReservationDates(inquiryId, checkIn, checkOut) {
     return this.request(`/api/guests/reservations/${inquiryId}`, {
       method: 'PATCH',
+      authMode: 'guest',
       body: JSON.stringify({ check_in: checkIn, check_out: checkOut })
+    });
+  }
+
+  async forgotPassword(email) {
+    return this.request('/api/guests/forgot-password', {
+      method: 'POST',
+      authMode: 'none',
+      body: JSON.stringify({ email })
+    });
+  }
+
+  async resetPassword(token, password) {
+    return this.request(`/api/guests/reset-password/${token}`, {
+      method: 'POST',
+      authMode: 'none',
+      body: JSON.stringify({ password })
+    });
+  }
+
+  async updateGuestPassword(data) {
+    return this.request('/api/guests/password', {
+      method: 'PUT',
+      authMode: 'guest',
+      body: JSON.stringify(data)
     });
   }
 
   // Cancel endpoints
   async getCancelInfo(token) {
-    return this.request(`/api/cancel/${token}`);
+    return this.request(`/api/cancel/${token}`, { authMode: 'none' });
   }
 
   async cancelReservation(token) {
     return this.request(`/api/cancel/${token}`, {
-      method: 'POST'
+      method: 'POST',
+      authMode: 'none'
+    });
+  }
+
+  // Admin News (full list with auth — different from public getNews)
+  async getAdminNews() {
+    return this.request('/api/admin/news');
+  }
+
+  async getAdminNewsItem(id) {
+    return this.request(`/api/admin/news/${id}`);
+  }
+
+  // Translation
+  async translateText(text, targetLang = 'EN') {
+    return this.request('/api/admin/translate', {
+      method: 'POST',
+      body: JSON.stringify({ text, target_lang: targetLang })
+    });
+  }
+
+  // Vouchers
+  async addVoucher(guestId, data) {
+    return this.request(`/api/admin/guests/${guestId}/vouchers`, {
+      method: 'POST',
+      body: JSON.stringify(data)
     });
   }
 
@@ -257,4 +445,4 @@ class ApiService {
   }
 }
 
-export default new ApiService();
+export default new ApiService();

@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+import api from '../services/api'
 
 export const useGuestStore = defineStore('guest', () => {
   const token = ref(localStorage.getItem('guest_token') || null)
@@ -10,36 +9,26 @@ export const useGuestStore = defineStore('guest', () => {
   const isLoggedIn = computed(() => !!token.value)
 
   const login = async (email, password) => {
-    const res = await fetch(`${BASE}/api/guests/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Greška pri prijavi.')
+    const data = await api.guestLogin({ email, password })
     token.value = data.token
     guest.value = { name: data.name, email: data.email }
-    localStorage.setItem('guest_token', data.token)
     return data
   }
 
   const logout = () => {
     token.value = null
     guest.value = null
-    localStorage.removeItem('guest_token')
+    api.logout()
   }
 
   const fetchMe = async () => {
     if (!token.value) return
     try {
-      const res = await fetch(`${BASE}/api/guests/me`, {
-        headers: { Authorization: `Bearer ${token.value}` }
-      })
-      if (!res.ok) { logout(); return }
-      guest.value = await res.json()
+      guest.value = await api.getGuestProfile()
     } catch { logout() }
   }
 
+  // Kept for backward compatibility with DashboardView
   const authHeaders = () => ({ Authorization: `Bearer ${token.value}`, 'Content-Type': 'application/json' })
 
   return { token, guest, isLoggedIn, login, logout, fetchMe, authHeaders }

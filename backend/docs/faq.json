@@ -15,6 +15,18 @@
     {
       "pitanje": "Da li je moguć smeštaj?",
       "odgovor": "Da, u Nastavnoj bazi Gvozdac i okolnim planinskim kućama postoji mogućnost smeštaja."
+    },
+    {
+      "pitanje": "Kako da rezervišem smeštaj?",
+      "odgovor": "Rezervaciju možete izvršiti putem sajta ili pozivom na recepciju."
+    },
+    {
+      "pitanje": "Koji su termini za prijavu i odjavu?",
+      "odgovor": "Prijava je od 14h, odjava do 10h."
+    },
+    {
+      "pitanje": "Da li je parking besplatan?",
+      "odgovor": "Da, obezbeđen je besplatan parking za goste."
     }
   ]
 }

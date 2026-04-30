@@ -131,7 +131,7 @@ async function seedFacilitiesAndRooms(connection, shouldExecute) {
 }
 
 async function seedAttractionsAndMenus(connection, shouldExecute) {
-  const docsDir = path.join(__dirname, '..', 'docs');
+  const docsDir = path.join(__dirname, 'docs');
   const attractionsDoc = readJsonFile(path.join(docsDir, 'goc-gvozdac-okolina.json'), { atrakcije: [] });
   const menuDoc = readJsonFile(path.join(docsDir, 'piramida-meni.json'), { meni: {} });
 

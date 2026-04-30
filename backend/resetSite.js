@@ -40,8 +40,8 @@ const steps = [
   { label: '3. Migracije (migrateDb)',                  cmd: `node migrateDb.js ${FLAG}`,                                       smoke: false, quiet: true  },
   { label: '4. Seed podaci (presentationDBmockData)',   cmd: `node presentationDBmockData.js ${FLAG}`,                          smoke: false, quiet: true  },
   { label: '5. Sanity check (dbSanityCheck)',           cmd: `node dbSanityCheck.js --mode=${DRY ? 'report' : 'presentation'}`, smoke: false, quiet: false },
-  { label: '6. Smoke: API rute (smokeTestRoutes)',      cmd: 'node smokeTestRoutes.js',                                         smoke: true,  quiet: false },
-  { label: '7. Smoke: Write flow (smokeTestWriteFlow)', cmd: 'node smokeTestWriteFlow.js',                                      smoke: true,  quiet: false },
+  { label: '6. Smoke: API rute (smokeTestRoutes)',      cmd: 'node tests/smokeTestRoutes.js',                                         smoke: true,  quiet: false },
+  { label: '7. Smoke: Write flow (smokeTestWriteFlow)', cmd: 'node tests/smokeTestWriteFlow.js',                                      smoke: true,  quiet: false },
 ];
 
 function summarizeOutput(output, stepLabel) {

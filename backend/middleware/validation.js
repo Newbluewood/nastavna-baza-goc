@@ -78,7 +78,8 @@ const schemas = {
     message: { max: 1000 },
     target_room_id: { required: true },
     check_in: { required: true },
-    check_out: { required: true }
+    check_out: { required: true },
+    board_type: { max: 20 }
   },
   news: {
     title: { required: true, min: 5, max: 200 },

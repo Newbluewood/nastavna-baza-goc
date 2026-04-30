@@ -68,7 +68,10 @@ console.log('CORS configured');
 
 app.use(express.json());
 
-console.log('JSON middleware added');
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+console.log('JSON and Static middleware added');
 
 // Make db available to routes
 app.locals.db = db;

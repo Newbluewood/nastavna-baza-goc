@@ -1,6 +1,0 @@
-{
-  "contacts": [
-    {"type": "recepcija", "phone": "+381 60 123 4567", "email": "recepcija@goc.rs"},
-    {"type": "direktor", "phone": "+381 60 765 4321", "email": "direktor@goc.rs"}
-  ]
-}

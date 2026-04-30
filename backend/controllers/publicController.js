@@ -152,6 +152,7 @@ async function getFacilities(req, res) {
       COALESCE(ft.name, f.name) AS name,
       COALESCE(ft.description, f.description) AS description,
       f.capacity, f.latitude, f.longitude, f.cover_image, f.floor_plan_image, f.location_badges,
+      (SELECT MIN(price_base) FROM rooms WHERE facility_id = f.id AND price_base > 0) as min_price,
       GROUP_CONCAT(mg.image_url) as gallery_urls
     FROM facilities f
     LEFT JOIN facility_translations ft ON f.id = ft.entity_id AND ft.lang = ?
@@ -210,6 +211,7 @@ async function getFacility(req, res) {
       COALESCE(rt.name, r.name) AS name,
       COALESCE(rt.description, r.description) AS description,
       r.capacity, r.cover_image, r.floor_plan_image, r.amenities,
+      r.price_base, r.price_half_board, r.price_full_board, r.meal_info,
       GROUP_CONCAT(mg.image_url) as room_gallery_urls
     FROM rooms r
     LEFT JOIN room_translations rt ON r.id = rt.entity_id AND rt.lang = ?

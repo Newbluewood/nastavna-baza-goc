@@ -333,6 +333,14 @@ function extractPreferences(message, context) {
   };
 }
 
+function parseBoardType(message, context) {
+  const source = String(message || '').toLowerCase();
+  if (source.includes('pun pansion') || source.includes('full board')) return 'full';
+  if (source.includes('polupansion') || source.includes('half board')) return 'half';
+  if (source.includes('nocenje') || source.includes('noćenje') || source.includes('overnight')) return 'base';
+  return context.board_type || 'base';
+}
+
 function buildFollowUpQuestion(criteria) {
   if (!criteria.adults && !criteria.children) {
     return 'Koliko dolazi odraslih i koliko dece?';
@@ -457,7 +465,11 @@ async function loadRoomMatrix(db) {
       r.capacity_min AS room_capacity_min,
       r.capacity_max AS room_capacity_max,
       r.cover_image AS room_cover_image,
-      r.stay_tags AS room_stay_tags
+      r.stay_tags AS room_stay_tags,
+      r.price_base,
+      r.price_half_board,
+      r.price_full_board,
+      r.meal_info
     FROM facilities f
     INNER JOIN rooms r ON r.facility_id = f.id
     WHERE f.type = 'smestaj'
@@ -521,6 +533,7 @@ async function planStay(db, payload) {
     check_in: arrival.check_in,
     arrival_hint: arrival.arrival_hint,
     stay_length_days: stayLengthDays,
+    board_type: parseBoardType(message, context),
     preferences,
     pending_slot: null
   };
@@ -577,10 +590,15 @@ async function planStay(db, payload) {
       score: item.score,
       rationale: item.rationale,
       cover_image: item.room_cover_image || item.facility_cover_image,
+      price_base: item.price_base,
+      price_half_board: item.price_half_board,
+      price_full_board: item.price_full_board,
+      meal_info: item.meal_info,
       reservation_payload: {
         target_room_id: item.room_id,
         check_in: criteria.check_in,
-        check_out: checkOut
+        check_out: checkOut,
+        board_type: criteria.board_type
       }
     })),
     alternatives: fallback.map((item) => ({
