@@ -11,6 +11,9 @@ const newsItem = ref(null)
 const isLoading = ref(true)
 const debugError = ref('')
 const isLiked = ref(false)
+const allNews = ref([])
+const prevNews = ref(null)
+const nextNews = ref(null)
 
 const lightboxOpen = ref(false)
 const lbIndex = ref(0)
@@ -29,6 +32,16 @@ const loadNews = async () => {
   try {
     newsItem.value = await api.getNewsItem(route.params.id, langStore.currentLang)
     isLiked.value = !!localStorage.getItem(`liked_news_${newsItem.value.id}`)
+    
+    // Load all news to find neighbors
+    const newsList = await api.getNews(langStore.currentLang)
+    allNews.value = newsList
+    const currentIndex = newsList.findIndex(n => n.id === newsItem.value.id || n.slug === newsItem.value.slug)
+    
+    if (currentIndex !== -1) {
+      prevNews.value = currentIndex < newsList.length - 1 ? newsList[currentIndex + 1] : null
+      nextNews.value = currentIndex > 0 ? newsList[currentIndex - 1] : null
+    }
   } catch (err) {
     debugError.value = err.message || JSON.stringify(err);
     console.error("Error loading news", err)
@@ -64,6 +77,10 @@ onMounted(() => {
 })
 
 watch(() => langStore.currentLang, () => {
+  loadNews()
+})
+
+watch(() => route.params.id, () => {
   loadNews()
 })
 </script>
@@ -121,6 +138,19 @@ watch(() => langStore.currentLang, () => {
             <div v-if="img.caption" class="gallery-caption">{{ img.caption }}</div>
           </div>
         </div>
+      </div>
+      
+      <!-- NAVIGACIJA -->
+      <div class="news-navigation">
+        <router-link :to="`/vesti/${prevNews.slug || prevNews.id}`" v-if="prevNews" class="nav-btn prev">
+          &larr; {{ langStore.currentLang === 'sr' ? 'Претходна' : 'Previous' }}
+        </router-link>
+        <router-link to="/vesti" class="nav-btn all">
+          {{ langStore.currentLang === 'sr' ? 'Све вести' : 'All news' }}
+        </router-link>
+        <router-link :to="`/vesti/${nextNews.slug || nextNews.id}`" v-if="nextNews" class="nav-btn next">
+          {{ langStore.currentLang === 'sr' ? 'Следећа' : 'Next' }} &rarr;
+        </router-link>
       </div>
     </div>
 
@@ -267,5 +297,39 @@ watch(() => langStore.currentLang, () => {
   .hero-content h1 { font-size: 2rem; }
   .news-hero { height: 40vh; min-height: 300px; }
   .photo-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}
+
+.news-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 60px;
+  padding-top: 30px;
+  border-top: 1px solid var(--color-border);
+}
+
+.nav-btn {
+  text-decoration: none;
+  font-weight: bold;
+  color: var(--color-nav);
+  padding: 8px 15px;
+  border: 1px solid var(--color-nav);
+  transition: all 0.3s;
+}
+
+.nav-btn:hover {
+  background: var(--color-nav);
+  color: #fff;
+}
+
+.nav-btn.all {
+  border: none;
+  background: #f5f0eb;
+  padding: 10px 25px;
+}
+
+.nav-btn.all:hover {
+  background: #e0d5c8;
+  color: var(--color-nav);
 }
 </style>

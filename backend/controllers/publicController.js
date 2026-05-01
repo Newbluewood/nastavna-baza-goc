@@ -1,6 +1,8 @@
 const { createInquiryWithGuest } = require('../services/inquiryService');
 const { sendError } = require('../utils/response');
 const { getForecastForUpcomingDays } = require('../services/weatherService');
+const fs = require('fs').promises;
+const path = require('path');
 
 const BADGE_TRANSLATIONS = {
   'Централни објекат': 'Central building',
@@ -375,6 +377,47 @@ async function getContactPage(req, res) {
   res.json({ staff, projects });
 }
 
+async function getThemes(req, res) {
+  try {
+    const dataPath = path.join(__dirname, '../data/goc-themes.json');
+    const rawData = await fs.readFile(dataPath, 'utf8');
+    const data = JSON.parse(rawData);
+    
+    // Return summary for the list view
+    const themes = data.themes.map(t => ({
+      id: t.id,
+      name: t.name,
+      keywords: t.keywords,
+      excerpt_sr: t.article_sr.substring(0, 150) + '...',
+      excerpt_en: t.article_en.substring(0, 150) + '...'
+    }));
+    
+    res.json(themes);
+  } catch (error) {
+    console.error('Error reading themes:', error);
+    res.status(500).json({ error: 'Failed to load themes' });
+  }
+}
+
+async function getThemeDetail(req, res) {
+  try {
+    const themeId = req.params.id;
+    const dataPath = path.join(__dirname, '../data/goc-themes.json');
+    const rawData = await fs.readFile(dataPath, 'utf8');
+    const data = JSON.parse(rawData);
+    
+    const theme = data.themes.find(t => t.id === themeId);
+    if (!theme) {
+      return res.status(404).json({ error: 'Theme not found' });
+    }
+    
+    res.json(theme);
+  } catch (error) {
+    console.error('Error reading theme detail:', error);
+    res.status(500).json({ error: 'Failed to load theme detail' });
+  }
+}
+
 module.exports = {
   getHome,
   getFacilities,
@@ -385,5 +428,7 @@ module.exports = {
   getSingleNews,
   likeNews,
   getWeatherForecast,
-  getContactPage
+  getContactPage,
+  getThemes,
+  getThemeDetail
 };

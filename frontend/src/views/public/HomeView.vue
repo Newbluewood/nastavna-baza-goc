@@ -7,6 +7,7 @@ import api from '../../services/api'
 const galleryItems = ref([])
 const slides = ref([])
 const news = ref([])
+const themes = ref([])
 const isLoading = ref(true)
 
 const pageTitle = ref("БАЗА ГОЧ")
@@ -36,6 +37,10 @@ const loadData = async () => {
             subtitle: item.excerpt || ''
           }))
     }
+    
+    // Fetch themes for highlights
+    const allThemes = await api.getThemes()
+    themes.value = allThemes.slice(0, 3) // Show top 3
   } catch (error) {
     console.error("Error fetching data from API:", error)
     textContent.value = langStore.currentLang === 'sr'
@@ -67,5 +72,61 @@ watch(() => langStore.currentLang, () => {
     :galleryItems="galleryItems"
     :gridType="6"
     :isCarousel="true"
-  />
+  >
+    <!-- Theme Highlights -->
+    <div class="themes-highlight" v-if="themes.length > 0">
+      <hr class="section-divider" />
+      <h2 style="margin: 30px 0 20px; border-left: 4px solid var(--color-nav); padding-left: 10px;">
+        {{ langStore.currentLang === 'sr' ? 'Откријте Гоч' : 'Discover Goč' }}
+      </h2>
+      <div class="themes-mini-grid">
+        <div v-for="theme in themes" :key="theme.id" class="theme-mini-card">
+          <div class="mini-icon">🌲</div>
+          <h3>{{ theme.name }}</h3>
+          <p>{{ langStore.currentLang === 'sr' ? theme.excerpt_sr : theme.excerpt_en }}</p>
+          <router-link :to="`/istrazi/${theme.id}`" class="mini-link">
+            {{ langStore.currentLang === 'sr' ? 'Опширније' : 'Read more' }} &rarr;
+          </router-link>
+        </div>
+      </div>
+      <div style="text-align: center; margin-top: 30px;">
+        <router-link to="/istrazi" class="view-all-btn">
+          {{ langStore.currentLang === 'sr' ? 'Погледај све теме' : 'View all themes' }}
+        </router-link>
+      </div>
+    </div>
+  </PageTemplate>
 </template>
+
+<style scoped>
+.themes-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+.theme-mini-card {
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  background: #fdf8f4;
+}
+.mini-icon { font-size: 2rem; margin-bottom: 10px; }
+.theme-mini-card h3 { margin-bottom: 10px; color: var(--color-nav); }
+.theme-mini-card p { font-size: 0.9rem; color: #666; margin-bottom: 15px; }
+.mini-link { font-weight: bold; color: var(--color-nav); text-decoration: none; border-bottom: 1px solid var(--color-nav); }
+.view-all-btn {
+  display: inline-block;
+  padding: 10px 30px;
+  background: var(--color-nav);
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+}
+.view-all-btn:hover {
+  background: #332317;
+}
+.section-divider {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  margin: 40px 0;
+}
+</style>

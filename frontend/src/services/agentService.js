@@ -1,6 +1,6 @@
 class AgentService {
   constructor() {
-    this.baseURL = 'https://chat-agent-kbjc.onrender.com';
+    this.baseURL = import.meta.env.VITE_CHAT_API_URL || 'http://chat-app-env.eba-zeuu2iph.eu-north-1.elasticbeanstalk.com';
   }
 
   async sendMessage(message, history = [], lang = 'sr') {
