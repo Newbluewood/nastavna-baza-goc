@@ -196,7 +196,7 @@ watch(() => route.params.id, () => {
   margin-bottom: 40px;
 }
 .glass-box {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   padding: 30px;
