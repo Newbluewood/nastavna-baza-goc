@@ -113,8 +113,9 @@ watch(() => route.params.id, fetchTheme)
 }
 
 .theme-article {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 20px;
   line-height: 1.8;
   font-size: 1.1rem;
   color: #444;

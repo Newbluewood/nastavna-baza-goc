@@ -55,7 +55,7 @@
   --color-accent: var(--c-green-4);
 
   --font-base: "FOF24", sans-serif;
-  --content-max-width: 780px;
+  --content-max-width: 1200px;
 
   /* Hero Section Variables */
   --hero-height: 500px;
