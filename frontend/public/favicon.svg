@@ -1,8 +1,7 @@
 <svg width="64" height="64" viewBox="0 0 170 170" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Pozadina u najsvetlijoj braon boji -->
-  <rect width="170" height="170" fill="#fff1e6"/>
+  <!-- Bez pozadine (prozirno) -->
   
-  <!-- Tvoj originalni planinski logo, ali blago spljošten (smanjena visina) -->
+  <!-- Tvoj originalni planinski logo, spljošten (smanjena visina) -->
   <g transform="translate(5, 45) scale(1, 0.8)">
     <path d="M5.281 68.5L39.781 19L60.781 42M60.781 42L77.781 19L135.781 102M60.781 42L19.281 105M151.781 68.5L116.281 19L60.781 105" 
           stroke="#332317" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
