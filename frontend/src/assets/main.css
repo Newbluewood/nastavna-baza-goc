@@ -56,6 +56,10 @@
 
   --font-base: "FOF24", sans-serif;
   --content-max-width: 780px;
+
+  /* Hero Section Variables */
+  --hero-height: 500px;
+  --hero-height-mobile: 250px;
 }
 
 *,

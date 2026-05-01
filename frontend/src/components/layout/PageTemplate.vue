@@ -88,7 +88,7 @@ onUnmounted(() => {
   <div class="page-content">
     
     <!-- Hero Slider -->
-    <div v-if="slides && slides.length > 0" class="hero-slider" style="position: relative; width: 100%; height: 500px; overflow: hidden; background: var(--c-green-6); border-radius: 0; margin-bottom: 20px;">
+    <div v-if="slides && slides.length > 0" class="hero-slider">
       <div v-for="(slide, index) in slides" :key="index" :style="{ 
         opacity: index === currentSlide ? 1 : 0, 
         zIndex: index === currentSlide ? 1 : 0,
@@ -112,7 +112,7 @@ onUnmounted(() => {
     </div>
     
     <!-- Placeholder ako nema slajdera -->
-    <div v-else-if="title" class="hero-slider" style="position: relative; width: 100%; height: 500px; overflow: hidden; background: #332317; border-radius: 0; margin-bottom: 20px;">
+    <div v-else-if="title" class="hero-slider hero-placeholder-bg">
       <img src="/placeholder.jpg" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;" />
       <div class="slide-content">
         <h1 style="margin: 0; color: var(--color-nav);">{{ title }}</h1>
@@ -201,7 +201,25 @@ onUnmounted(() => {
 }
 
 /* Hero Slide Content - Mobilni */
+/* Hero Slider Base Styles */
+.hero-slider {
+  position: relative; 
+  width: 100%; 
+  height: var(--hero-height); 
+  overflow: hidden; 
+  background: var(--c-green-6); 
+  border-radius: 0; 
+  margin-bottom: 20px;
+}
+
+.hero-placeholder-bg {
+  background: #332317;
+}
+
 @media (max-width: 640px) {
+  .hero-slider {
+    height: var(--hero-height-mobile);
+  }
   .slide-content {
     left: 50%;
     transform: translateX(-50%);

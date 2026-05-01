@@ -387,6 +387,7 @@ async function getThemes(req, res) {
     const themes = data.themes.map(t => ({
       id: t.id,
       name: t.name,
+      icon: t.icon,
       keywords: t.keywords,
       excerpt_sr: t.article_sr.substring(0, 150) + '...',
       excerpt_en: t.article_en.substring(0, 150) + '...'

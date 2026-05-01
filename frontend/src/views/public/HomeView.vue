@@ -81,7 +81,9 @@ watch(() => langStore.currentLang, () => {
       </h2>
       <div class="themes-mini-grid">
         <div v-for="theme in themes" :key="theme.id" class="theme-mini-card">
-          <div class="mini-icon">🌲</div>
+          <div class="mini-icon-container">
+             <img :src="theme.icon || '/themes/flora.png'" class="mini-card-icon" />
+          </div>
           <h3>{{ theme.name }}</h3>
           <p>{{ langStore.currentLang === 'sr' ? theme.excerpt_sr : theme.excerpt_en }}</p>
           <router-link :to="`/istrazi/${theme.id}`" class="mini-link">
@@ -109,7 +111,22 @@ watch(() => langStore.currentLang, () => {
   border: 1px solid var(--color-border);
   background: #fdf8f4;
 }
-.mini-icon { font-size: 2rem; margin-bottom: 10px; }
+.mini-icon-container {
+  width: 50px;
+  height: 50px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  border: 1px solid var(--c-braon-2);
+}
+.mini-card-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
 .theme-mini-card h3 { margin-bottom: 10px; color: var(--color-nav); }
 .theme-mini-card p { font-size: 0.9rem; color: #666; margin-bottom: 15px; }
 .mini-link { font-weight: bold; color: var(--color-nav); text-decoration: none; border-bottom: 1px solid var(--color-nav); }

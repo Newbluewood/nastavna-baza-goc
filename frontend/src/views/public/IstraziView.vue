@@ -39,7 +39,9 @@ onMounted(fetchThemes)
       <div v-else class="themes-grid">
         <div v-for="theme in themes" :key="theme.id" class="theme-card">
           <div class="theme-content">
-            <div class="theme-icon">🌲</div>
+            <div class="theme-icon-container">
+              <img :src="theme.icon || '/themes/flora.png'" class="theme-card-icon" />
+            </div>
             <h3>{{ theme.name }}</h3>
             <p>{{ langStore.currentLang === 'sr' ? theme.excerpt_sr : theme.excerpt_en }}</p>
             <div class="keywords">
@@ -62,7 +64,10 @@ onMounted(fetchThemes)
 
 .explore-hero {
   color: #fff;
-  padding: 100px 0;
+  height: var(--hero-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   margin-bottom: 50px;
 }
@@ -135,9 +140,21 @@ onMounted(fetchThemes)
   flex-direction: column;
 }
 
-.theme-icon {
-  font-size: 2.5rem;
+.theme-icon-container {
+  width: 70px;
+  height: 70px;
+  background: #fdf8f4;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 20px;
+}
+
+.theme-card-icon {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
 }
 
 .theme-content h3 {
@@ -183,6 +200,9 @@ onMounted(fetchThemes)
 }
 
 @media (max-width: 640px) {
+  .explore-hero {
+    height: var(--hero-height-mobile);
+  }
   .explore-hero h1 { font-size: 2rem; }
   .themes-grid { grid-template-columns: 1fr; }
 }
