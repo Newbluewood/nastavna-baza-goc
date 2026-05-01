@@ -105,7 +105,7 @@ watch(() => route.params.id, () => {
     <div class="news-hero">
       <img :src="newsItem.cover_image" class="hero-bg" />
       <div class="hero-overlay"></div>
-      <div class="hero-content">
+      <div class="hero-content glass-box">
         <h1>{{ newsItem.title }}</h1>
         <p class="news-date">{{ new Date(newsItem.created_at).toLocaleDateString() }}</p>
       </div>
@@ -189,20 +189,29 @@ watch(() => route.params.id, () => {
 .hero-content {
   position: relative;
   z-index: 3;
-  padding: 40px;
-  color: white;
+  padding: 0 20px;
   max-width: var(--content-max-width);
   width: 100%;
   margin: 0 auto;
+  margin-bottom: 40px;
+}
+.glass-box {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 30px;
+  border-left: 5px solid var(--c-green-6);
 }
 .hero-content h1 {
-  font-size: 3rem;
+  font-size: 2.5rem;
   margin: 0 0 10px 0;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  color: var(--c-green-6);
+  line-height: 1.2;
 }
 .news-date {
-  font-size: 1.1rem;
-  opacity: 0.9;
+  font-size: 1rem;
+  color: var(--c-braon-4);
+  font-weight: 600;
   margin: 0;
 }
 

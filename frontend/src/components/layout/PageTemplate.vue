@@ -194,10 +194,13 @@ onUnmounted(() => {
   position: absolute;
   bottom: 40px;
   left: 40px;
-  background: rgba(255, 255, 255, 0.66);
-  padding: 15px 30px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 20px 35px;
   border-radius: 0;
   max-width: calc(100% - 80px);
+  border-left: 4px solid var(--color-nav);
 }
 
 /* Hero Slide Content - Mobilni */

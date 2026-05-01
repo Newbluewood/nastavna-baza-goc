@@ -55,6 +55,7 @@ watch(() => route.params.id, fetchTheme)
   <PageTemplate
     v-else-if="theme"
     :title="theme.name"
+    :slides="[{ image_url: theme.hero_image || '/explore-hero.png', title: theme.name }]"
   >
     <div class="theme-article" v-html="formattedArticle"></div>
     
