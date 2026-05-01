@@ -10,6 +10,8 @@ import ContactView from '../views/public/ContactView.vue'
 import PageView from '../views/public/PageView.vue'
 import CancelView from '../views/public/CancelView.vue'
 import NotFoundView from '../views/public/NotFoundView.vue'
+import IstraziView from '../views/public/IstraziView.vue'
+import TemaDetailView from '../views/public/TemaDetailView.vue'
 
 // Guest (user)
 import GuestLoginView from '../views/guest/LoginView.vue'
@@ -39,6 +41,8 @@ const router = createRouter({
     { path: '/vesti/:id', name: 'single-news', component: SingleNewsView },
     { path: '/kontakt', name: 'kontakt', component: ContactView },
     { path: '/stranica/:slug', name: 'page', component: PageView },
+    { path: '/istrazi', name: 'istrazi', component: IstraziView },
+    { path: '/istrazi/:id', name: 'tema-detail', component: TemaDetailView },
     { path: '/cancel/:token', name: 'cancel', component: CancelView },
 
     // --- Guest ---

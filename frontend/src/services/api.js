@@ -100,6 +100,14 @@ class ApiService {
     return this.request('/api/kontakt');
   }
 
+  async getThemes() {
+    return this.request('/api/themes');
+  }
+
+  async getThemeDetail(id) {
+    return this.request(`/api/themes/${id}`);
+  }
+
   async getAIStatus() {
     return this.request('/api/ai/ping');
   }

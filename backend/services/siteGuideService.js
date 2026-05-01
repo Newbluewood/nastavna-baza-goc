@@ -25,6 +25,7 @@ const { recordSpend } = require('./aiBudgetService');
 
 const DOCS_DIR = path.join(__dirname, '../docs');
 const SITE_KB_COLLECTION = 'site_kb';
+const THEMES_DATA_PATH = path.join(__dirname, '../data/goc-themes.json');
 
 function normalizeUserQuestion(raw) {
   return String(raw || '')
@@ -328,6 +329,18 @@ function looksLikeAllKnowledgeQuestion(message) {
     m.includes('sve informacije') ||
     m.includes('sta sve mozes') ||
     m.includes('šta sve možeš')
+  );
+}
+
+function looksLikeThemeQuestion(message) {
+  const m = String(message || '').toLowerCase();
+  return (
+    m.includes('biljni') || m.includes('životinjski') || m.includes('flora') || m.includes('fauna') ||
+    m.includes('biljke') || m.includes('zivotinje') ||
+    m.includes('lov') || m.includes('ribolov') || m.includes('pecanje') ||
+    m.includes('znamenitosti') || m.includes('zanimljivosti') || m.includes('vidikovac') ||
+    m.includes('selište') || m.includes('staze') || m.includes('pesacenje') ||
+    m.includes('studenti') || m.includes('praksa') || m.includes('terenska')
   );
 }
 
@@ -788,6 +801,52 @@ async function makeHikingFactsTurnIfAsked(message, lang) {
     });
   } catch (err) {
     console.error('[siteGuide] hiking facts query failed:', err.message);
+    return null;
+  }
+}
+
+async function makeThemeFactsTurnIfAsked(message, lang) {
+  if (!looksLikeThemeQuestion(message)) return null;
+  try {
+    if (!fs.existsSync(THEMES_DATA_PATH)) return null;
+    const data = JSON.parse(fs.readFileSync(THEMES_DATA_PATH, 'utf8'));
+    const m = String(message || '').toLowerCase();
+    
+    // Find the most relevant theme based on keywords
+    let bestTheme = null;
+    let maxMatches = 0;
+    
+    for (const theme of data.themes) {
+      let matches = 0;
+      if (m.includes(theme.id.replace(/_/g, ' '))) matches += 5;
+      theme.keywords.forEach(kw => {
+        if (m.includes(kw.toLowerCase())) matches++;
+      });
+      
+      if (matches > maxMatches) {
+        maxMatches = matches;
+        bestTheme = theme;
+      }
+    }
+    
+    if (!bestTheme || maxMatches < 1) return null;
+    
+    const answer = lang === 'en' ? bestTheme.article_en : bestTheme.article_sr;
+    const suggestions = [
+      { label: lang === 'en' ? 'Learn more' : 'Saznaj više', route: `/istrazi/${bestTheme.id}`, type: 'navigate' },
+      { label: lang === 'en' ? 'All themes' : 'Sve teme', route: '/istrazi', type: 'navigate' }
+    ];
+    
+    return makeAssistantTurn({
+      answer: answer.slice(0, 4000),
+      intent: 'site_guide',
+      confidence: 0.95,
+      suggestions,
+      sources: [],
+      meta: { source: 'canonical_themes', theme_id: bestTheme.id }
+    });
+  } catch (err) {
+    console.error('[siteGuide] theme facts failed:', err.message);
     return null;
   }
 }
@@ -1415,6 +1474,8 @@ async function composeSiteGuideTurn({
   if (eventsFactsTurn) return eventsFactsTurn;
   const offerFactsTurn = await makeOfferFactsTurnIfAsked(safeMessage, safeLang);
   if (offerFactsTurn) return offerFactsTurn;
+  const themeFactsTurn = await makeThemeFactsTurnIfAsked(safeMessage, safeLang);
+  if (themeFactsTurn) return themeFactsTurn;
 
   // 1. Short-circuit when AI is disabled or in mock mode.
   const provider = process.env.AI_PROVIDER || 'mock';

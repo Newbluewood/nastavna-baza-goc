@@ -5,7 +5,7 @@ const { optionalGuestAuthMiddleware } = require('../middleware/auth');
 const {
   getHome, getFacilities, getFacility, getRoomAvailability,
   submitInquiry, getNewsList, getSingleNews, likeNews,
-  getWeatherForecast, getContactPage
+  getWeatherForecast, getContactPage, getThemes, getThemeDetail
 } = require('../controllers/publicController');
 const cacheMiddleware = require('../middleware/cacheMiddleware');
 
@@ -32,5 +32,7 @@ router.get('/news/:id',                       cacheMiddleware(CACHE_TTL), asyncH
 router.post('/news/:id/like',                 asyncHandler(likeNews));
 router.get('/weather/forecast',               cacheMiddleware(15 * 60 * 1000), asyncHandler(getWeatherForecast)); // 15 min cache for weather
 router.get('/kontakt',                        cacheMiddleware(CACHE_TTL), asyncHandler(getContactPage));
+router.get('/themes',                         cacheMiddleware(CACHE_TTL), asyncHandler(getThemes));
+router.get('/themes/:id',                     cacheMiddleware(CACHE_TTL), asyncHandler(getThemeDetail));
 
 module.exports = router;

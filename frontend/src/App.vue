@@ -74,6 +74,10 @@ const handleGuestNav = () => {
             <span class="nav-bold">{{ langStore.t('nav.research') }}</span>
           </router-link>
           <span class="nav-sep">|</span>
+          <router-link to="/istrazi" class="nav-link" @click="closeMenu">
+            <span class="nav-bold">{{ langStore.t('nav.explore') }}</span>
+          </router-link>
+          <span class="nav-sep">|</span>
           <router-link to="/kontakt" class="nav-link" @click="closeMenu">
             <span class="nav-bold">{{ langStore.t('nav.contact') }}</span>
           </router-link>

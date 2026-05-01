@@ -6,6 +6,7 @@ export default {
       news: 'ВЕСТИ',
       education: 'ЕДУКАЦИЈА',
       research: 'ИСТРАЖИВАЊE',
+      explore: 'ИСТРАЖИ ГОЧ',
       contact: 'КОНТАКТ'
     },
     footer: {
@@ -77,6 +78,7 @@ export default {
       news: 'NEWS',
       education: 'EDUCATION',
       research: 'RESEARCH',
+      explore: 'EXPLORE GOČ',
       contact: 'CONTACT'
     },
     footer: {

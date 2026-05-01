@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-05-01T20:18:02.538077+00:00",
+  "llm": "gemini",
+  "model": "gemini-2.5-flash",
+  "themes": [
+    {
+      "id": "biljni_i_zivotinjski_svet",
+      "name": "Biljni i zivotinjski svet",
+      "article_sr": "Goč je zvanično najšumovitija planina u Srbiji, poznata po bogatoj flori i fauni. Smatra se jednom od najbogatijih planina Balkanskog poluostrja po raznovrsnosti biljnog sveta i endemskih vrsta. Na Goču raste preko 700 različitih biljnih vrsta, od kojih je identifikovano oko 650, a više od 200 do 250 su lekovite vrste. Proleće je period kada su samonikle jestive biljke najkvalitetnije i najraznovrsnije na obroncima Goča, poput sremuša.\n\nŠumski kompleks „Goč-Gvozdac“ je proglašen specijalnim rezervatom prirode 2014. godine. U ovom rezervatu, koji je jedan od najlepših delova grebena Goča, raste 25 vrsta drveća. Posebno se izdvajaju endemske vrste Balkanskog poluostrva – planinski javor i varijetet crnog bora. Retke i ugrožene vrste obuhvataju trešnju, divlju jabuku, jasiku, brezu i beli jasen, dok su retke vrste divlja kruška, planinski jasen i planinski brest. Posebnu retkost predstavlja očuvana zajednica bukovih i jelovih šuma. Goč je uglavnom prekriven bukovim šumama.",
+      "article_en": "Goč is officially the most forested mountain in Serbia, known for its rich flora and fauna. It is considered one of the richest mountains on the Balkan Peninsula in terms of plant diversity and endemic species. Over 700 different plant species grow on Goč, of which about 650 have been identified, and more than 200 to 250 are medicinal species. Spring is the period when wild edible plants, such as wild garlic (sremuš), are most qualitative and diverse on the slopes of Goč.\n\nThe \"Goč-Gvozdac\" forest complex was declared a special nature reserve in 2014. In this reserve, which is one of the most beautiful parts of the Goč ridge, 25 tree species grow. Endemic species of the Balkan Peninsula, such as mountain maple and a variety of black pine, stand out. Rare and endangered species include cherry, wild apple, aspen, birch, and white ash, while rare species are wild pear, mountain ash, and mountain elm. A preserved community of beech and fir forests represents a special rarity. Goč is mainly covered by beech forests.",
+      "keywords": [
+        "flora",
+        "fauna",
+        "Goč",
+        "Gvozdac",
+        "rezervat"
+      ],
+      "related": [
+        "/priroda",
+        "/staze",
+        "/zanimljivosti"
+      ],
+      "ctas": [
+        {
+          "label": {
+            "sr": "Priroda",
+            "en": "Nature"
+          },
+          "route": "/priroda",
+          "type": "navigate"
+        }
+      ]
+    },
+    {
+      "id": "lov_i_ribolov",
+      "name": "Lov i ribolov",
+      "article_sr": "Lovište „Goč“ nalazi se u blizini Vrnjačke banje, na padinama planine Goč. Prostire se na površini od 29.298 hektara, na nadmorskoj visini od 200 do 1.785 metara. Na ovom lovištu je moguć lov na srnu i divlju svinju.\n\nŠto se tiče ribolova, vremenska prognoza za Goč uključuje i prognozu za ribolov, što ukazuje na mogućnost ove aktivnosti. U diskusijama o Gvozdackoj reci pominje se jezerce u kojem se mogu naći klenovi i babuške. Ribolov je dozvoljen isključivo na jezeru. Planina Goč takođe ima jezero Selište, što može biti jezero o kome je reč.",
+      "article_en": "The \"Goč\" hunting ground is located near Vrnjačka Banja, on the slopes of Goč mountain. It spans an area of 29,298 hectares, at altitudes ranging from 200 to 1,785 meters. Hunting for roe deer and wild boar is possible in this hunting ground.\n\nRegarding fishing, the weather forecast for Goč includes a fishing forecast, indicating the possibility of this activity. Discussions about the Gvozdacka river mention a small lake where main components of fresh fish such as chub and carp can be found. Fishing is permitted exclusively on the lake. Goč mountain also features Selište lake, which might be the lake in question.",
+      "keywords": [
+        "lov",
+        "ribolov",
+        "dozvole",
+        "pravila",
+        "Goč"
+      ],
+      "related": [
+        "/aktivnosti",
+        "/kontakt",
+        "/pravila"
+      ],
+      "ctas": [
+        {
+          "label": {
+            "sr": "Saznaj vise",
+            "en": "Learn more"
+          },
+          "route": "/istrazi",
+          "type": "navigate"
+        },
+        {
+          "label": {
+            "sr": "Kontakt",
+            "en": "Contact"
+          },
+          "route": "/kontakt",
+          "type": "navigate"
+        }
+      ]
+    },
+    {
+      "id": "nastavna_baza_i_osoblje",
+      "name": "Nastavna baza i osoblje",
+      "article_sr": "Наставна база Гоч је део Шумарског факултета и налази се у оквиру Центра за наставно-научне објекте. Ова база је повезана са Специјалним резерватом природе „Гоч-Гвоздац“. Шумарски факултет нуди теренску наставу као део својих студијских програма, а наставне базе су истакнуте на сајту факултета. Факултет такође пружа сервисе за наставничко особље.",
+      "article_en": "The Goč Teaching Base is part of the Faculty of Forestry and is located within the Center for Teaching and Scientific Facilities. This base is associated with the \"Goč-Gvozdac\" Special Nature Reserve. The Faculty of Forestry offers fieldwork as part of its study programs, and teaching bases are highlighted on the faculty's website. The Faculty also provides services for its teaching staff.",
+      "keywords": [
+        "nastavna baza",
+        "zaposleni",
+        "Sumarski fakultet",
+        "Goc",
+        "Gvozdac"
+      ],
+      "related": [
+        "/o-nama",
+        "/kontakt",
+        "/tim"
+      ],
+      "ctas": [
+        {
+          "label": {
+            "sr": "Saznaj vise",
+            "en": "Learn more"
+          },
+          "route": "/istrazi",
+          "type": "navigate"
+        },
+        {
+          "label": {
+            "sr": "Kontakt",
+            "en": "Contact"
+          },
+          "route": "/kontakt",
+          "type": "navigate"
+        }
+      ]
+    },
+    {
+      "id": "pesacke_i_sumske_staze",
+      "name": "Pesacke i sumske staze",
+      "article_sr": "Planina Goč je sve popularnija destinacija za turiste tokom letnjeg perioda, prvenstveno zbog mogućnosti šetnje i odmora na čistom planinskom vazduhu. Na Goču je oformljeno i obeleženo pet rekreativnih staza, koje su namenjene šetnji kroz prelepe predele, a nisu planinarske niti takmičarske. Pored ovih, Goč nudi i staze za šetnju i trčanje kao deo sportskog centra.\n\nMeđu stazama se izdvaja kružna staza Jezero VELIKA oko jezera Selište, koja je idealna za planinarsku šetnju kroz prelep šumski ambijent planine Goč, pogodna za spremnije sportiste i rekreativce. Za porodice i rekreativce, kraće rute poput staze do vrha Krst (1.35 km) ili \"Male\" kružne staze oko Selišta (2.35 km) su idealne, nudeći lagane šetnje kroz slikovite predele bez značajnog uspona.\n\nDruge obeležene staze uključuju:\n* Vidikovac Lisača, dužine 2.41 km, sa ukupnim usponom od 108.9 m, za koju je rekreativcima potrebno oko 45 minuta.\n* Vrh Ljukten, dužine 3.69 km, sa ukupnim usponom od 174.5 m.\n\nStaze na Goču prolaze kroz guste, drevne šume, posebno bukove i jelove, koje se smatraju retkošću i bogate su biodiverzitetom. Šumovito područje Goč-Gvozdac je 2014. godine proglašeno Specijalnim rezervatom prirode II kategorije, što ga čini jednim od najvrednijih šumskih mozaika. Greben Goča je dinamičan, nudeći kombinaciju šumskih prolaza i otvorenih delova sa pogledima, što ga čini odličnim izborom za šetnju.",
+      "article_en": "Goč mountain is an increasingly popular destination for tourists during the summer, primarily due to the opportunities for walking and relaxation in the clean mountain air. Five recreational trails have been established and marked on Goč, designed for walks through beautiful landscapes, and are not mountaineering or competitive routes. In addition to these, Goč also offers walking and jogging trails as part of its sports center facilities.\n\nAmong the trails, the circular trail Jezero VELIKA around Selište Lake stands out, ideal for hiking through the beautiful forest environment of Goč mountain, suitable for fitter athletes and recreational users. For families and recreational users, shorter routes like the Krst peak trail (1.35 km) or the 'Small' circular trail around Selište Lake (2.35 km) are ideal, offering gentle walks through scenic areas without significant elevation.\n\nOther marked trails include:\n* Vidikovac Lisača, 2.41 km long, with a total elevation gain of 108.9 m, taking approximately 45 minutes for recreational users.\n* Vrh Ljukten, 3.69 km long, with a total elevation gain of 174.5 m.\n\nThe trails on Goč pass through dense, ancient forests, particularly beech and fir, which are considered a rarity and are rich in biodiversity. The Goč-Gvozdac forest complex was declared a Special Nature Reserve of category II in 2014, making it one of the most valuable forest mosaics. Goč's ridge is dynamic, offering a mix of forest passages and open sections with views, making it an excellent choice for walking.",
+      "keywords": [
+        "staze",
+        "pesacenje",
+        "suma",
+        "planinarenje",
+        "Goč"
+      ],
+      "related": [
+        "/staze",
+        "/bezbednost",
+        "/kontakt"
+      ],
+      "ctas": [
+        {
+          "label": {
+            "sr": "Saznaj vise",
+            "en": "Learn more"
+          },
+          "route": "/istrazi",
+          "type": "navigate"
+        },
+        {
+          "label": {
+            "sr": "Kontakt",
+            "en": "Contact"
+          },
+          "route": "/kontakt",
+          "type": "navigate"
+        }
+      ]
+    },
+    {
+      "id": "smestaj_i_rezervacije",
+      "name": "Smestaj i rezervacije",
+      "article_sr": "Коначиште Пирамида Гоч је смештајно насеље смештено на планини Гоч, на локацији Гоч – Гвоздац. Ово туристичко насеље се налази у оквиру резервата природе Гоч – Гвоздац, који представља наставну базу Шумарског факултета. До насеља се може стићи из правца Краљева (удаљеnost 28 км) или Врњачке Бање.",
+      "article_en": "Konačište Piramida Goč is an accommodation complex located on Mount Goč, specifically at Goč – Gvozdac. This tourist settlement is situated within the Goč-Gvozdac nature reserve, which serves as the teaching base for the Faculty of Forestry. The settlement can be reached from Kraljevo (28 km away) or Vrnjačka Banja.",
+      "keywords": [
+        "smeštaj",
+        "sobe",
+        "rezervacija",
+        "Goč",
+        "Gvozdac",
+        "Univerzitet u Beogradu"
+      ],
+      "related": [
+        "/smestaj",
+        "/prijava",
+        "/kontakt"
+      ],
+      "ctas": [
+        {
+          "label": {
+            "sr": "Смештај",
+            "en": "Accommodation"
+          },
+          "route": "/smestaj",
+          "type": "navigate"
+        }
+      ]
+    },
+    {
+      "id": "studenti_i_pedagogija",
+      "name": "Studenti i pedagogija na bazi",
+      "article_sr": "Наставна база Гоч, која припада Шумарском факултету Универзитета у Београду, представља наставно-научни и истраживачки центар у Србији. Ова база се развија већ педесет година и пружа студентске сервисе и информације. Наставна база Гоч је такође место где се одржавају конкурси за упис, а повезана је и са студијским програмима Факултета. Поред тога, база служи као локација за окупљања академских стручњака и експерата из области шумарства и биодиверзитета.",
+      "article_en": "The Goč Teaching Base, which belongs to the University of Belgrade's Faculty of Forestry, serves as a teaching, scientific, and research center in Serbia. This base has been developing for fifty years and provides student services and information. The Goč Teaching Base is also where enrollment competitions are held and is connected to the Faculty's study programs. Furthermore, the base serves as a location for gatherings of academic experts and specialists in the fields of forestry and biodiversity.",
+      "keywords": [
+        "studenti",
+        "nastava",
+        "vezbe",
+        "Šumarski fakultet",
+        "Goc",
+        "rezervat"
+      ],
+      "related": [
+        "/edukacija",
+        "/o-nama",
+        "/kontakt"
+      ],
+      "ctas": [
+        {
+          "label": {
+            "sr": "Едукација",
+            "en": "Education"
+          },
+          "route": "/edukacija",
+          "type": "navigate"
+        }
+      ]
+    },
+    {
+      "id": "vesti_i_javni_dogadjaji",
+      "name": "Vesti i javni dogadjaji",
+      "article_sr": "Nastavna baza Goč, kao deo Centra za nastavne i naučne objekte Šumarskog fakulteta u Beogradu, povezana je sa aktivnostima fakulteta. Šumarski fakultet redovno objavljuje vesti i organizuje javne događaje. Neki od nedavnih događaja fakulteta uključuju: „ATRIJUM ŠUMARSKOG FAKULTETA NA 48. SALONU ARHITEKTURE“, „Zum kafica o motivaciji i samomotivaciji“, „Novi kursevi na Otvorenom kampusu Circle U.“ i interaktivne radionice za studente. Nastavna baza Goč je takođe bila deo terenske posete za praktične uvide u upravljanje šumama na Zapadnom Balkanu.\nPored toga, lokacija Gvozdac, koja je deo šumskog kompleksa Goč-Gvozdac, predmet je planova za razvoj turizma. JP „Skijališta Srbije“ planiraju izgradnju novih skijaških staza na lokaciji Gvozdac.",
+      "article_en": "The Goč Teaching Base, as part of the Center for Teaching and Scientific Facilities of the Faculty of Forestry in Belgrade, is connected to the faculty's activities. The Faculty of Forestry regularly publishes news and organizes public events. Some of the recent faculty events include: \"ATRIUM OF THE FACULTY OF FORESTRY AT THE 48TH SALON OF ARCHITECTURE\", \"Zoom Coffee Chat on Motivation and Self-Motivation\", \"New Courses at the Circle U. Open Campus\", and interactive workshops for students. The Goč Teaching Base was also part of a field visit for practical insights into forest management in the Western Balkans.\nAdditionally, the Gvozdac location, which is part of the Goč-Gvozdac forest complex, is subject to tourism development plans. Public Enterprise \"Skijališta Srbije\" plans to build new ski slopes at the Gvozdac location.",
+      "keywords": [
+        "vesti",
+        "događaji",
+        "javnost",
+        "Goč",
+        "Gvozdac",
+        "Sumarski fakultet"
+      ],
+      "related": [
+        "/vesti",
+        "/kontakt"
+      ],
+      "ctas": [
+        {
+          "label": {
+            "sr": "Вести",
+            "en": "News"
+          },
+          "route": "/vesti",
+          "type": "navigate"
+        }
+      ]
+    },
+    {
+      "id": "znamenitosti_i_zanimljivosti",
+      "name": "Znamenitosti i zanimljivosti",
+      "article_sr": "Планина Гоч, смештена изнад Врњачке Бање, позната је по својој прелепој природи и идеална је дестинација за викенд путовања. Њено подручје је обрасло буковим и јеловим шумама, а присутни су и гочки црни бор, храст китњак, племенито листопадно дрвеће и четинарске егзоте. Гоч је богат дивљим јагодама и лековитим биљем, а његове површине пружају богату медоносну пашу за пчеле.\n\nМеђу најзначајнијим атракцијама је **Видиковац Крст**, који се налази на надморској висини од 1.123 метра. Са овог видиковца пружа се предиван поглед на целу Врњачку Бању и околину Гоча. До њега води широка стаза, а могуће је доћи и преко ски стазе, чији је врх Видиковац Крст уједно и полазна тачка. Пут до видиковца траје око 15-25 минута хода кроз ниску боровu шуму и добро је обележен.\n\nЈедан од симбола Гоча је и вештачко **Селиште језеро**, које се налази на локалитету Гвоздац. Настало је за потребе водоснабдевања Врњачке Бање, због чега су купање и пецање у њему забрањени. Ипак, током летњих месеци језеро је веома популарно за излете и камповање. Поред језера, популарне атракције су и рибњаци, где љубитељи свеже рибе могу уживати у укусној пастрмци.\n\nПодручје Гоча и околине такође обилује културно-историјским споменицима, међу којима се истиче „римско гробље“.\n\nУ подножју Гоча налази се Врњачка Бања, најпопуларнија бања у Србији, која нуди велнес и спа-програме, базене са минералном водом и променаду. Врњачка Бања је такође домаћин фестивала електронске музике.\n\nГостопримљиви домаћини Гоча нуде домаће производе попут сира, кајмака, пршуте, ракије шљивовице, џема и слатка.",
+      "article_en": "Goč mountain, situated above Vrnjačka Banja, is known for its beautiful nature and is an ideal destination for weekend trips. Its area is covered with beech and fir forests, and Goč black pine, sessile oak, noble deciduous trees, and coniferous exotics are also present. Goč is rich in wild strawberries and medicinal herbs, and its surfaces provide rich honey pasture for bees.\n\nAmong the most significant attractions is **Vidikovac Krst** (Krst Viewpoint), located at an altitude of 1,123 meters above sea level. From this viewpoint, a beautiful panorama of the entire Vrnjačka Banja and the surroundings of Goč unfolds. A wide path leads to it, and it is also possible to reach it via the ski slope, whose peak Vidikovac Krst is also a starting point. The walk to the viewpoint takes about 15-25 minutes through a low pine forest and is well-marked.\n\nOne of Goč's symbols is the artificial **Selište Lake**, located at the Gvozdac site. It was created for the water supply needs of Vrnjačka Banja, which is why swimming and fishing in it are prohibited. Nevertheless, during the summer months, the lake is very popular for trips and camping. Besides the lake, popular attractions also include ponds, where lovers of fresh fish can enjoy delicious trout.\n\nThe area of Goč and its surroundings is also rich in cultural and historical monuments, among which the \"Roman cemetery\" stands out.\n\nAt the foot of Goč lies Vrnjačka Banja, the most popular spa in Serbia, offering wellness and spa programs, mineral water pools, and a promenade. Vrnjačka Banja also hosts an electronic music festival.\n\nThe hospitable hosts of Goč offer homemade products such as cheese, milk cream (kajmak), pršuta, plum brandy (šljivovica), jam, and slatko (fruit preserve).",
+      "keywords": [
+        "znamenitosti",
+        "vidikovac",
+        "istorija",
+        "Goč",
+        "Gvozdac"
+      ],
+      "related": [
+        "/zanimljivosti",
+        "/istorija",
+        "/staze"
+      ],
+      "ctas": [
+        {
+          "label": {
+            "sr": "Saznaj vise",
+            "en": "Learn more"
+          },
+          "route": "/istrazi",
+          "type": "navigate"
+        },
+        {
+          "label": {
+            "sr": "Kontakt",
+            "en": "Contact"
+          },
+          "route": "/kontakt",
+          "type": "navigate"
+        }
+      ]
+    }
+  ]
+}
