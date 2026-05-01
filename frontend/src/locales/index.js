@@ -10,12 +10,12 @@ export default {
       contact: 'КОНТАКТ'
     },
     footer: {
-      faculty: 'Шумарски факултет',
-      university: 'Универзитета у Београду',
-      address: 'Кнеза Вишеслава 1',
-      city: '11 000 Београд, Србија',
-      phone: 'Телефон',
-      email: 'Е-маил',
+      faculty: 'Наставна база Гоч',
+      university: 'Шумарски факултет Универзитета у Београду',
+      address: 'Брезнички пут бб',
+      city: '36000 Краљево, Србија',
+      phone: '036 815 102',
+      email: 'booking.goc@sfb.bg.ac.rs',
       credits: 'сајт | Небојша Симовић<br>мултимедија | Јован Митровић'
     },
     common: {
@@ -82,12 +82,12 @@ export default {
       contact: 'CONTACT'
     },
     footer: {
-      faculty: 'Faculty of Forestry',
-      university: 'University of Belgrade',
-      address: 'Kneza Višeslava 1',
-      city: '11 000 Belgrade, Serbia',
-      phone: 'Phone',
-      email: 'Email',
+      faculty: 'Goč Teaching Base',
+      university: 'Faculty of Forestry, University of Belgrade',
+      address: 'Breznički put bb',
+      city: '36000 Kraljevo, Serbia',
+      phone: '+381 36 815 102',
+      email: 'booking.goc@sfb.bg.ac.rs',
       credits: 'website | Nebojša Simović<br>multimedia | Jovan Mitrović'
     },
     common: {
