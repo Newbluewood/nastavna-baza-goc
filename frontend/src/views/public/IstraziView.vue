@@ -99,8 +99,9 @@ onMounted(fetchThemes)
   max-width: 700px;
   margin: 0 auto;
   opacity: 0.9;
-  text-align: center;
-  line-height: 1.5;
+  text-align: center !important;
+  line-height: 1.6;
+  font-weight: 400;
 }
 
 .container {
