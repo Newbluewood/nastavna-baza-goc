@@ -199,7 +199,7 @@ onMounted(fetchThemes)
   border-color: #332317;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1023px) {
   .explore-hero {
     height: var(--hero-height-mobile);
   }

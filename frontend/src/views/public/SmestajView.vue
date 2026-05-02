@@ -250,7 +250,7 @@ watch(() => langStore.currentLang, () => {
   margin-bottom: 20px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1023px) {
   .hero-slider {
     height: var(--hero-height-mobile);
   }
