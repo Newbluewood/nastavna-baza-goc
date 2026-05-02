@@ -41,6 +41,7 @@ watch(() => langStore.currentLang, loadAll)
       :title="pageData?.title"
       :textContent="pageData?.textContent"
       :news="news"
+      :slides="[{ image_url: '/news-hero.png', title: pageData?.title }]"
       :gridType="4"
     />
   </div>
