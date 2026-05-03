@@ -499,7 +499,7 @@ async function getPageBySlug(req, res) {
 
   try {
     const [rows] = await db.query(`
-      SELECT p.id, 
+      SELECT p.id, p.hero_image,
              COALESCE(pt.title, p.title) as title,
              COALESCE(pt.content, p.content) as content
       FROM pages p
