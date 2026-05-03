@@ -100,12 +100,24 @@ class ApiService {
     return this.request('/api/kontakt');
   }
 
-  async getThemes() {
-    return this.request('/api/themes');
+  async getPageBySlug(slug, lang = 'sr') {
+    return this.request(`/api/stranica/${slug}?lang=${lang}`);
   }
 
-  async getThemeDetail(id) {
-    return this.request(`/api/themes/${id}`);
+  async getThemes(lang = 'sr') {
+    return this.request(`/api/themes?lang=${lang}`);
+  }
+
+  async getThemeDetail(id, lang = 'sr') {
+    return this.request(`/api/themes/${id}?lang=${lang}`);
+  }
+
+  async getRestaurantsPublic(lang = 'sr') {
+    return this.request(`/api/restorani?lang=${lang}`);
+  }
+
+  async getRestaurantMenu(id, lang = 'sr') {
+    return this.request(`/api/restorani/${id}/meni?lang=${lang}`);
   }
 
   async getAIStatus() {
@@ -343,6 +355,41 @@ class ApiService {
     return this.request(`/api/admin/rooms/${roomId}`, {
       method: 'PUT',
       body: JSON.stringify(data)
+    });
+  }
+
+  async getAdminRestaurants() {
+    return this.request('/api/admin/restaurants');
+  }
+
+  async updateRestaurant(id, data) {
+    return this.request(`/api/admin/restaurants/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async getAdminMenuItems(restaurantId) {
+    return this.request(`/api/admin/restaurants/${restaurantId}/menu`);
+  }
+
+  async createMenuItem(data) {
+    return this.request('/api/admin/menu-items', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateMenuItem(id, data) {
+    return this.request(`/api/admin/menu-items/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteMenuItem(id) {
+    return this.request(`/api/admin/menu-items/${id}`, {
+      method: 'DELETE'
     });
   }
 

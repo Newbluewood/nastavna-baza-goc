@@ -62,6 +62,10 @@ const handleGuestNav = () => {
             <span class="nav-bold">{{ langStore.t('nav.accommodation') }}</span>
           </router-link>
           <span class="nav-sep">|</span>
+          <router-link to="/restoran" class="nav-link" @click="closeMenu">
+            <span class="nav-bold">{{ langStore.t('nav.restaurant') }}</span>
+          </router-link>
+          <span class="nav-sep">|</span>
           <router-link to="/vesti" class="nav-link" @click="closeMenu">
             <span class="nav-bold">{{ langStore.t('nav.news') }}</span>
           </router-link>
@@ -76,6 +80,10 @@ const handleGuestNav = () => {
           <span class="nav-sep">|</span>
           <router-link to="/istrazi" class="nav-link" @click="closeMenu">
             <span class="nav-bold">{{ langStore.t('nav.explore') }}</span>
+          </router-link>
+          <span class="nav-sep">|</span>
+          <router-link to="/faq" class="nav-link" @click="closeMenu">
+            <span class="nav-bold">{{ langStore.t('nav.faq') }}</span>
           </router-link>
           <span class="nav-sep">|</span>
           <router-link to="/kontakt" class="nav-link" @click="closeMenu">

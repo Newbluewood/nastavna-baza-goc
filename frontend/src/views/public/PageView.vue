@@ -3,7 +3,13 @@ import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useLangStore } from '../../stores/lang'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
-import api from '../../services/api'
+import api, { BASE_URL } from '../../services/api'
+
+const getImageUrl = (path) => {
+  if (!path) return '/placeholder.jpg'
+  if (path.startsWith('http')) return path
+  return `${BASE_URL}${path}`
+}
 
 const route = useRoute()
 const langStore = useLangStore()
@@ -11,13 +17,14 @@ const pageData = ref(null)
 const isLoading = ref(true)
 const notFound = ref(false)
 
-const slug = route.meta.pageSlug
-
 const fetchPage = async () => {
+  const currentSlug = route.meta.pageSlug
+  if (!currentSlug) return
+
   isLoading.value = true
   notFound.value = false
   try {
-    const data = await api.getPageBySlug(slug, langStore.currentLang)
+    const data = await api.getPageBySlug(currentSlug, langStore.currentLang)
     pageData.value = data
   } catch (err) {
     console.error('Error loading page:', err)
@@ -29,6 +36,7 @@ const fetchPage = async () => {
 
 onMounted(fetchPage)
 watch(() => langStore.currentLang, fetchPage)
+watch(() => route.meta.pageSlug, fetchPage)
 </script>
 
 <template>
@@ -46,6 +54,7 @@ watch(() => langStore.currentLang, fetchPage)
     v-else-if="pageData"
     :title="pageData.title"
     :textContent="pageData.content || ''"
+    :slides="pageData.hero_image ? [{ image_url: getImageUrl(pageData.hero_image), title: pageData.title }] : []"
   />
 </template>
 
