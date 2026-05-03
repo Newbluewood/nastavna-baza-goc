@@ -677,6 +677,36 @@ onMounted(() => {
   color: #111;
 }
 
+/* Table styling for better room presentation */
+.markdown-body :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.markdown-body :deep(th), .markdown-body :deep(td) {
+  padding: 10px 12px;
+  border: 1px solid #f0f0f0;
+  text-align: left;
+}
+
+.markdown-body :deep(th) {
+  background: #f8f6f4;
+  color: #6e4529;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.markdown-body :deep(tr:nth-child(even)) {
+  background: #faf9f8;
+}
+
 .loading-bubble {
   display: flex;
   align-items: center;
