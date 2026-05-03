@@ -1,29 +1,27 @@
+'use strict';
+
 const express = require('express');
 const asyncHandler = require('../middleware/asyncHandler');
 const { optionalGuestAuthMiddleware } = require('../middleware/auth');
-const { planStayChat, suggestVisitChat, reserveStayChat, siteGuideTurn } = require('../controllers/chatController');
-const { saveMessage, getHistory } = require('../controllers/chatHistoryController');
-const budgetGate = require('../middleware/budgetGate');
 const { chatRateLimit } = require('../middleware/chatRateLimit');
-const { aiUsageGuard } = require('../middleware/aiUsageGuard');
+const { reserveStayChat, fallbackChat } = require('../controllers/chatController');
 
 const router = express.Router();
 
-router.post('/plan-stay', optionalGuestAuthMiddleware, asyncHandler(planStayChat));
-router.post('/suggest-visit', asyncHandler(suggestVisitChat));
+/**
+ * POST /api/chat/reserve-stay
+ * Writes a reservation inquiry into the database.
+ * Called from the chat widget after the user confirms a room selection.
+ * Optional guest auth: authenticated guests skip name/email fields.
+ */
 router.post('/reserve-stay', optionalGuestAuthMiddleware, asyncHandler(reserveStayChat));
 
-router.post(
-  '/site-guide-turn',
-  optionalGuestAuthMiddleware,
-  chatRateLimit,
-  aiUsageGuard,
-  budgetGate('site_guide'),
-  asyncHandler(siteGuideTurn)
-);
-
-// Chat history endpoints
-router.post('/history', optionalGuestAuthMiddleware, asyncHandler(saveMessage));
-router.get('/history', optionalGuestAuthMiddleware, asyncHandler(getHistory));
+/**
+ * POST /api/chat/fallback
+ * Gemini Flash backup endpoint, used by the frontend when the primary
+ * microservice (Render) is unreachable or returns an error.
+ * Rate-limited to prevent abuse of the free API tier.
+ */
+router.post('/fallback', chatRateLimit, asyncHandler(fallbackChat));
 
 module.exports = router;

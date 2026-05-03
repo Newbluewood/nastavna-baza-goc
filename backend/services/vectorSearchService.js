@@ -15,21 +15,10 @@ const client = new QdrantClient(qdrantClientOptions);
 
 async function upsertFact(id, text, payload = {}) {
   const vector = await getEmbedding(text, { gemini: { role: 'document' } });
-  // Force id to be integer (Qdrant default)
-  const intId = typeof id === 'number' ? id : Date.now();
-  // Debug: print vector length and sample
-  console.log('Qdrant upsert debug:', {
-    id: intId,
-    vectorLength: Array.isArray(vector) ? vector.length : 'not array',
-    vectorSample: Array.isArray(vector) ? vector.slice(0, 5) : vector,
-    payload: { text, ...payload }
-  });
+  const intId  = typeof id === 'number' ? id : Date.now();
+
   await client.upsert(QDRANT_COLLECTION, {
-    points: [{
-      id: intId,
-      vector,
-      payload: { text, ...payload }
-    }]
+    points: [{ id: intId, vector, payload: { text, ...payload } }],
   });
 }
 

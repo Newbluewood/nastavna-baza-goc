@@ -31,21 +31,20 @@ const submitReservation = async (msg) => {
     return;
   }
   msg.showForm = false;
-  
-  // Send inquiry to backend
+
   try {
-    const res = await chatStore.chatReserveStay({
-      target_room_id: msg.action.room_id || null, 
-      sender_name: msg.guestName,
-      email: msg.guestEmail,
-      check_in: msg.checkIn,
-      check_out: msg.checkOut,
-      board_type: msg.boardType || 'base'
+    await chatStore.reserveStay({
+      target_room_id: msg.action.room_id || null,
+      sender_name:    msg.guestName,
+      email:          msg.guestEmail,
+      check_in:       msg.checkIn,
+      check_out:      msg.checkOut,
+      board_type:     msg.boardType || 'base',
     });
     msg.submitted = true;
   } catch (err) {
     alert("Greška pri slanju upita: " + err.message);
-    msg.showForm = true;
+    msg.showForm  = true;
     msg.submitted = false;
   }
 };
@@ -132,6 +131,15 @@ onMounted(() => {
             </svg>
           </button>
         </div>
+      </div>
+
+      <!-- Fallback mode notice -->
+      <div v-if="chatStore.usedFallback" class="fallback-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span>{{ langStore.currentLang === 'sr' ? 'Primarni agent nedostupan — koristi se backup.' : 'Primary agent unavailable — using backup.' }}</span>
       </div>
 
       <div class="chat-messages" ref="messagesContainer">
@@ -889,5 +897,24 @@ onMounted(() => {
   .hide-on-mobile-open {
     display: none !important;
   }
+}
+
+/* Fallback mode notice — shown when Gemini backup is active */
+.fallback-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.4rem 1rem;
+  background: #fff8e1;
+  border-bottom: 1px solid #ffe082;
+  color: #795548;
+  font-size: 0.78rem;
+}
+
+.fallback-banner svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: #f57c00;
 }
 </style>
