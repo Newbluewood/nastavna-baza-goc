@@ -39,30 +39,31 @@ export const useChatStore = defineStore('chat', {
 
     async sendMessage(content) {
       this.error = null;
-      // Add user message to UI immediately
       this.addMessage('user', content);
       this.isLoading = true;
 
       try {
-        // Sliding window: get last 5 messages for history
-        // Wait, history should be mapped to the format expected by the backend
-        // Format expected by agent (Anthropic style or general): { role: 'user' | 'assistant', content: string }
         const history = this.messages
-          .slice(-6, -1) // get last 5 messages, excluding the one we just added? Wait, the one we just added is included in history or sent as current message?
-          // The prompt says: Payload: { "message": "Ima li slobodnih soba?", "history": [...] }
-          // So history should be previous messages. Let's send the last 5 BEFORE this message.
-          // Since we pushed the user message, it's at length-1.
+          .slice(-6, -1)
           .map(m => ({ role: m.role, content: m.content }));
 
         const langStore = useLangStore();
-        const response = await agentService.sendMessage(content, history, langStore.currentLang);
         
-        // Ensure response format: { reply: "..." } or { text: "..." }
-        // Depending on backend response
-        const replyText = response.reply || response.text || response.message || response.answer || "Agent returned an empty response";
-        const action = response.action || null;
-        
-        this.addMessage('assistant', replyText, action);
+        // Create an empty assistant message that we will populate
+        this.addMessage('assistant', '');
+        const assistantMsg = this.messages[this.messages.length - 1];
+
+        await agentService.sendMessageStream(
+          content, 
+          history, 
+          langStore.currentLang,
+          (chunk) => {
+            assistantMsg.content += chunk;
+          },
+          (action) => {
+            assistantMsg.action = action;
+          }
+        );
       } catch (err) {
         console.error('Chat Agent error:', err);
         this.error = err.message;
