@@ -98,7 +98,7 @@ export const useChatStore = defineStore('chat', {
           // onFallback — mark message as coming from fallback
           ({ reason }) => {
             this.usedFallback = true;
-            console.info(`[ChatStore] Using Gemini fallback (${reason})`);
+            console.warn(`!!! [ChatStore] ACTIVATING FALLBACK !!! Reason: ${reason}`);
           },
         );
       } catch (err) {

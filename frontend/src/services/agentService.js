@@ -16,12 +16,13 @@
 
 import chatApi from './chatApi';
 
-const MICROSERVICE_URL  = import.meta.env.VITE_CHAT_API_URL || 'https://chat-agent-kbjc.onrender.com';
+const MICROSERVICE_URL  = import.meta.env.VITE_CHAT_API_URL;
 const STREAM_TIMEOUT_MS = 15_000;
+console.log('DEBUG: AgentService URL set to:', MICROSERVICE_URL);
 
 class AgentService {
   constructor() {
-    this.baseURL = MICROSERVICE_URL;
+    this.baseURL = MICROSERVICE_URL || '';
   }
 
   /**

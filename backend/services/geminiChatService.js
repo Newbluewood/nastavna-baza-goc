@@ -4,21 +4,21 @@ const fetch = require('node-fetch');
 const logger = require('../logger');
 
 const GEMINI_API_KEY   = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-const GEMINI_CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || 'gemini-1.5-flash-latest';
+const GEMINI_CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || 'gemini-2.5-flash';
 const GEMINI_TIMEOUT_MS = 12_000;
 
 /**
  * Builds the Gemini API request URL.
  */
 function buildUrl() {
-  const model = GEMINI_CHAT_MODEL.replace(/^models\//, '');
-  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+  const model = GEMINI_CHAT_MODEL.startsWith('models/') ? GEMINI_CHAT_MODEL : `models/${GEMINI_CHAT_MODEL}`;
+  return `https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${GEMINI_API_KEY}`;
 }
 
 /**
  * Generic function to call Gemini API with a prompt.
  */
-async function callGemini(systemPrompt, userMessage, contents = []) {
+async function callGemini(systemPrompt, contents) {
   if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not configured');
 
   const controller = new AbortController();
@@ -27,10 +27,10 @@ async function callGemini(systemPrompt, userMessage, contents = []) {
   try {
     const payload = {
       systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents: contents.length > 0 ? contents : [{ role: 'user', parts: [{ text: userMessage }] }],
+      contents: contents,
       generationConfig: {
-        maxOutputTokens: 800,
-        temperature: 0.4,
+        maxOutputTokens: 1000,
+        temperature: 0.7,
       },
     };
 
@@ -42,7 +42,10 @@ async function callGemini(systemPrompt, userMessage, contents = []) {
     });
 
     const data = await response.json();
-    if (!response.ok) throw new Error(data?.error?.message || `Gemini HTTP ${response.status}`);
+    if (!response.ok) {
+      const msg = data?.error?.message || `Gemini HTTP ${response.status}`;
+      throw new Error(msg);
+    }
 
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) throw new Error('Gemini returned an empty response');
@@ -54,22 +57,49 @@ async function callGemini(systemPrompt, userMessage, contents = []) {
 }
 
 /**
- * Fallback Chat (Existing functionality)
+ * Fallback Chat
  */
 async function askGemini(message, history = []) {
-  const systemPrompt = `Ti si ljubazni asistent za Nastavnu bazu Goč. Odgovaraj kratko i na jeziku upita.`;
+  const systemPrompt = `Ti si ljubazni asistent za Nastavnu bazu Goč Šumarskog fakulteta. Odgovaraj kratko, ljubazno i na jeziku upita korisnika.`;
   
-  const contents = history.map(msg => ({
-    role: msg.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: String(msg.content || '') }]
-  }));
-  contents.push({ role: 'user', parts: [{ text: message }] });
+  // Format history and ensure alternating roles (User -> Model -> User)
+  const contents = [];
+  
+  // Filter history to remove any empty content or invalid roles
+  const validHistory = (history || []).filter(h => h.content && h.content.trim() !== '');
+  
+  validHistory.forEach(msg => {
+    contents.push({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    });
+  });
 
-  return callGemini(systemPrompt, message, contents);
+  // Always append the current user message at the end
+  contents.push({
+    role: 'user',
+    parts: [{ text: message }]
+  });
+
+  // CRITICAL: Gemini requires the last message to be from 'user' 
+  // and roles must alternate. If two 'user' messages are consecutive, 
+  // we should merge them or clean up.
+  
+  const cleanedContents = [];
+  contents.forEach((item, index) => {
+    if (index > 0 && item.role === cleanedContents[cleanedContents.length - 1].role) {
+      // Merge consecutive same-role messages
+      cleanedContents[cleanedContents.length - 1].parts[0].text += '\n' + item.parts[0].text;
+    } else {
+      cleanedContents.push(item);
+    }
+  });
+
+  return callGemini(systemPrompt, cleanedContents);
 }
 
 /**
- * Proofread and rewrite for Admin tools
+ * Admin tools
  */
 async function adminToolCall(type, text, options = {}) {
   const lang = options.lang || 'sr';
@@ -77,12 +107,13 @@ async function adminToolCall(type, text, options = {}) {
   
   let systemPrompt = '';
   if (type === 'proofread') {
-    systemPrompt = `Ti si stručnjak za lekturu. Popravi gramatičke i pravopisne greške u sledećem tekstu na jeziku [${lang}]. Vrati SAMO ispravljen tekst, bez ikakvih komentara.`;
+    systemPrompt = `Popravi gramatičke i pravopisne greške u tekstu na jeziku [${lang}]. Vrati samo ispravljen tekst.`;
   } else {
-    systemPrompt = `Ti si stručnjak za pisanje. Preformuliši sledeći tekst na jeziku [${lang}] koristeći ton: ${tone}. Vrati SAMO preformulisani tekst.`;
+    systemPrompt = `Preformuliši tekst na jeziku [${lang}] koristeći ${tone} ton. Vrati samo rezultat.`;
   }
 
-  return callGemini(systemPrompt, text);
+  const contents = [{ role: 'user', parts: [{ text }] }];
+  return callGemini(systemPrompt, contents);
 }
 
 module.exports = { askGemini, adminToolCall };

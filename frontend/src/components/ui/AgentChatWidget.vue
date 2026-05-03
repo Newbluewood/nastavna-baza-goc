@@ -139,7 +139,12 @@ onMounted(() => {
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
           <line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
-        <span>{{ langStore.currentLang === 'sr' ? 'Primarni agent nedostupan — koristi se backup.' : 'Primary agent unavailable — using backup.' }}</span>
+        <span>
+          {{ langStore.currentLang === 'sr' 
+            ? 'Kozak je na odmoru (zavejan u planini), trenutno vas uslužuje njegov zamenik Gemini.' 
+            : 'Chief agent Kozak is snowed in, you are talking to his Gemini deputy.' 
+          }}
+        </span>
       </div>
 
       <div class="chat-messages" ref="messagesContainer">
@@ -903,17 +908,21 @@ onMounted(() => {
 .fallback-banner {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0.4rem 1rem;
-  background: #fff8e1;
-  border-bottom: 1px solid #ffe082;
-  color: #795548;
-  font-size: 0.78rem;
+  gap: 8px;
+  padding: 0.6rem 1rem;
+  background: #fff3e0;
+  border-bottom: 2px solid #ffb74d;
+  color: #e65100;
+  font-size: 0.8rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .fallback-banner svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
   color: #f57c00;
 }
