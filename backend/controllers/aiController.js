@@ -1,4 +1,6 @@
-const aiService = require('../services/aiService');
+'use strict';
+
+const { adminToolCall } = require('../services/geminiChatService');
 const { sendError } = require('../utils/response');
 
 function countWords(text) {
@@ -7,8 +9,8 @@ function countWords(text) {
 
 function getLimitConfig() {
   return {
-    maxInputWords: Number.parseInt(process.env.AI_MAX_INPUT_WORDS || '100', 10),
-    maxInputChars: Number.parseInt(process.env.AI_MAX_INPUT_CHARS || '700', 10)
+    maxInputWords: Number.parseInt(process.env.AI_MAX_INPUT_WORDS || '300', 10),
+    maxInputChars: Number.parseInt(process.env.AI_MAX_INPUT_CHARS || '2000', 10)
   };
 }
 
@@ -31,63 +33,49 @@ function validateInputText(text, res) {
 }
 
 async function pingAI(req, res) {
-  return res.json(aiService.getStatus());
+  const enabled = !!(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+  return res.json({ 
+    enabled, 
+    model: 'gemini-1.5-flash',
+    status: enabled ? 'active' : 'api_key_missing'
+  });
 }
 
 async function proofread(req, res) {
-  const status = aiService.getStatus();
-  if (!status.enabled) {
-    return res.json({
-      enabled: false,
-      fallback: true,
-      message: 'AI is disabled. Continue manually.',
-      status
-    });
-  }
-
   const { text, lang } = req.body || {};
-  if (!text || typeof text !== 'string') {
-    return sendError(res, 400, 'Text is required');
-  }
+  if (!text || typeof text !== 'string') return sendError(res, 400, 'Text is required');
+  if (!validateInputText(text, res)) return;
 
-  if (!validateInputText(text, res)) {
-    return;
+  try {
+    const correctedText = await adminToolCall('proofread', text, { lang: lang || 'sr' });
+    return res.json({ 
+      enabled: true, 
+      correctedText,
+      originalText: text
+    });
+  } catch (err) {
+    return sendError(res, 500, `AI Error: ${err.message}`);
   }
-
-  const result = await aiService.proofread(text, lang || 'sr');
-  return res.json({ enabled: true, fallback: false, ...result });
 }
 
 async function rewrite(req, res) {
-  const status = aiService.getStatus();
-  if (!status.enabled) {
-    return res.json({
-      enabled: false,
-      fallback: true,
-      message: 'AI is disabled. Continue manually.',
-      status
-    });
-  }
-
   const { text, lang, tone } = req.body || {};
-  if (!text || typeof text !== 'string') {
-    return sendError(res, 400, 'Text is required');
+  if (!text || typeof text !== 'string') return sendError(res, 400, 'Text is required');
+  if (!validateInputText(text, res)) return;
+
+  try {
+    const rewrittenText = await adminToolCall('rewrite', text, { 
+      lang: lang || 'sr', 
+      tone: tone || 'professional' 
+    });
+    return res.json({ 
+      enabled: true, 
+      rewrittenText,
+      originalText: text
+    });
+  } catch (err) {
+    return sendError(res, 500, `AI Error: ${err.message}`);
   }
-
-  if (!validateInputText(text, res)) {
-    return;
-  }
-
-  const result = await aiService.rewrite(text, {
-    lang: lang || 'sr',
-    tone: tone || 'professional'
-  });
-
-  return res.json({ enabled: true, fallback: false, ...result });
 }
 
-module.exports = {
-  pingAI,
-  proofread,
-  rewrite
-};
+module.exports = { pingAI, proofread, rewrite };

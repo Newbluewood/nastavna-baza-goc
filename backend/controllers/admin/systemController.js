@@ -1,30 +1,57 @@
-const chatMetricsService = require('../../services/chatMetricsService');
+'use strict';
+
+/**
+ * systemController.js
+ * 
+ * Handles administrative system tasks and metrics.
+ * Updated to handle removal of internal AI chat services.
+ */
+
+// Placeholder for removed chat metrics
+const emptyMetrics = {
+  startedAt: new Date().toISOString(),
+  totals: {
+    plan_stay_requests: 0,
+    blocked_requests: 0,
+    in_domain_requests: 0,
+    out_of_domain_requests: 0,
+    unsafe_requests: 0
+  },
+  token_estimates: {
+    hypothetical_live_tokens: 0,
+    actual_live_tokens: 0,
+    saved_tokens: 0,
+    saved_percent: 0,
+    avg_saved_tokens_per_turn: 0
+  },
+  recent: []
+};
 
 async function getChatMetrics(req, res) {
-  const snapshot = chatMetricsService.getSnapshot();
-  return res.json(snapshot);
+  return res.json(emptyMetrics);
 }
 
 async function getAiUsage(req, res) {
   const { getUsageSnapshot } = require('../../services/aiBudgetService');
   let budget = null;
   let budgetError = null;
+
   try {
     budget = await getUsageSnapshot();
   } catch (err) {
     budgetError = { message: err.message };
   }
-  const metrics = chatMetricsService.getSnapshot();
+
   return res.status(200).json({
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     budget,
     budgetError,
     metrics: {
-      startedAt: metrics.startedAt,
-      totals: metrics.totals,
-      tokenEstimates: metrics.token_estimates,
-      recent: metrics.recent
+      startedAt: emptyMetrics.startedAt,
+      totals: emptyMetrics.totals,
+      tokenEstimates: emptyMetrics.token_estimates,
+      recent: emptyMetrics.recent
     }
   });
 }
