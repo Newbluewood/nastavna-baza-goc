@@ -1,52 +1,30 @@
-// Winston logger with daily rotation for best practice
-const { createLogger, format, transports } = require('winston');
-require('winston-daily-rotate-file');
+'use strict';
 
-const logFormat = format.combine(
-  format.timestamp(),
-  format.json()
-);
+/**
+ * logger.js
+ * 
+ * A systematic wrapper for console logging. 
+ * Provides an 'info', 'warn', and 'error' interface so that
+ * we can easily swap it with Winston/Morgan later without 
+ * changing the business logic.
+ */
 
-const requestLogger = createLogger({
-  level: 'info',
-  format: logFormat,
-  transports: [
-    new transports.DailyRotateFile({
-      filename: 'logs/requests-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
-      maxFiles: '14d', // keep 14 days
-      zippedArchive: true
-    })
-  ]
-});
+const format = () => new Date().toISOString();
 
-const qaLogger = createLogger({
-  level: 'info',
-  format: logFormat,
-  transports: [
-    new transports.DailyRotateFile({
-      filename: 'logs/qa-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
-      maxFiles: '30d', // keep 30 days
-      zippedArchive: true
-    })
-  ]
-});
+const logger = {
+  info: (msg) => {
+    console.log(`[${format()}] INFO: ${msg}`);
+  },
+  warn: (msg) => {
+    console.warn(`[${format()}] WARN: ${msg}`);
+  },
+  error: (msg) => {
+    console.error(`[${format()}] ERROR: ${msg}`);
+  },
+  // Compatibility with legacy code if any
+  requestLogger: {
+    info: (msg) => console.log(`[${format()}] REQ: ${msg}`)
+  }
+};
 
-// Returns a logger for a specific user (personal Q&A log)
-function getUserQaLogger(userId) {
-  return createLogger({
-    level: 'info',
-    format: logFormat,
-    transports: [
-      new transports.DailyRotateFile({
-        filename: `logs/qa-user-${userId}-%DATE%.log`,
-        datePattern: 'YYYY-MM-DD',
-        maxFiles: '30d',
-        zippedArchive: true
-      })
-    ]
-  });
-}
-
-module.exports = { requestLogger, qaLogger, getUserQaLogger };
+module.exports = logger;

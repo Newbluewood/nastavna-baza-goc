@@ -31,21 +31,20 @@ const submitReservation = async (msg) => {
     return;
   }
   msg.showForm = false;
-  
-  // Send inquiry to backend
+
   try {
-    const res = await chatStore.chatReserveStay({
-      target_room_id: msg.action.room_id || null, 
-      sender_name: msg.guestName,
-      email: msg.guestEmail,
-      check_in: msg.checkIn,
-      check_out: msg.checkOut,
-      board_type: msg.boardType || 'base'
+    await chatStore.reserveStay({
+      target_room_id: msg.action.room_id || null,
+      sender_name:    msg.guestName,
+      email:          msg.guestEmail,
+      check_in:       msg.checkIn,
+      check_out:      msg.checkOut,
+      board_type:     msg.boardType || 'base',
     });
     msg.submitted = true;
   } catch (err) {
     alert("Greška pri slanju upita: " + err.message);
-    msg.showForm = true;
+    msg.showForm  = true;
     msg.submitted = false;
   }
 };
@@ -132,6 +131,20 @@ onMounted(() => {
             </svg>
           </button>
         </div>
+      </div>
+
+      <!-- Fallback mode notice -->
+      <div v-if="chatStore.usedFallback" class="fallback-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span>
+          {{ langStore.currentLang === 'sr' 
+            ? 'Kozak je na odmoru (zavejan u planini), trenutno vas uslužuje njegov zamenik Gemini.' 
+            : 'Chief agent Kozak is snowed in, you are talking to his Gemini deputy.' 
+          }}
+        </span>
       </div>
 
       <div class="chat-messages" ref="messagesContainer">
@@ -889,5 +902,28 @@ onMounted(() => {
   .hide-on-mobile-open {
     display: none !important;
   }
+}
+
+/* Fallback mode notice — shown when Gemini backup is active */
+.fallback-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.6rem 1rem;
+  background: #fff3e0;
+  border-bottom: 2px solid #ffb74d;
+  color: #e65100;
+  font-size: 0.8rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.fallback-banner svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #f57c00;
 }
 </style>

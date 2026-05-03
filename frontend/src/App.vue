@@ -5,18 +5,20 @@ import { useLangStore } from './stores/lang'
 import { useGuestStore } from './stores/guest'
 import AgentChatWidget from './components/ui/AgentChatWidget.vue'
 
-const isMenuOpen = ref(false)
-const langStore = useLangStore()
-const guestStore = useGuestStore()
-const route = useRoute()
-const router = useRouter()
+const isMenuOpen  = ref(false)
+const langStore   = useLangStore()
+const guestStore  = useGuestStore()
+const route       = useRoute()
+const router      = useRouter()
 
-const isAdminRoute = computed(() => {
-  return route.path.startsWith('/admin')
-})
+// Hide the chat widget by setting VITE_AGENT_ENABLED=false in .env
+// This acts as the rollback switch without requiring a code change.
+const AGENT_ENABLED = import.meta.env.VITE_AGENT_ENABLED !== 'false'
+
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
 const toggleMenu = () => { isMenuOpen.value = !isMenuOpen.value }
-const closeMenu = () => { isMenuOpen.value = false }
+const closeMenu  = () => { isMenuOpen.value = false }
 
 const handleGuestNav = () => {
   closeMenu()
@@ -125,7 +127,7 @@ const handleGuestNav = () => {
       </footer>
     </div>
 
-    <AgentChatWidget />
+    <AgentChatWidget v-if="AGENT_ENABLED" />
   </div>
   <div class="admin-container" v-else>
     <RouterView />
