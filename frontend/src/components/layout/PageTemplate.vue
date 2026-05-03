@@ -219,7 +219,7 @@ onUnmounted(() => {
   background: #332317;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1023px) {
   .hero-slider {
     height: var(--hero-height-mobile);
   }

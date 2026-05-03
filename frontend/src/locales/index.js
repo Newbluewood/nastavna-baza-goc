@@ -7,6 +7,8 @@ export default {
       education: 'ЕДУКАЦИЈА',
       research: 'ИСТРАЖИВАЊE',
       explore: 'ИСТРАЖИ ГОЧ',
+      restaurant: 'РЕСТОРАН',
+      faq: 'ФАК',
       contact: 'КОНТАКТ'
     },
     footer: {
@@ -79,6 +81,8 @@ export default {
       education: 'EDUCATION',
       research: 'RESEARCH',
       explore: 'EXPLORE GOČ',
+      restaurant: 'RESTAURANT',
+      faq: 'FAQ',
       contact: 'CONTACT'
     },
     footer: {

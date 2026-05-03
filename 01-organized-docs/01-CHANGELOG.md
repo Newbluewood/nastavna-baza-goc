@@ -8,6 +8,14 @@ Document all significant changes here. Use date, author, and a short description
 
 ## Workflow and Major Changes
 
+- 2026-05-03 (Antigravity): **Full SQL Migration & Multilingual Sync**:
+    - Successfully migrated all static JSON data (Themes, Attractions, Restaurants, News, FAQ, Prices, Campus) to AWS RDS MySQL.
+    - Implemented a robust `base_table + translation_table` architecture for full SR/EN support across all dynamic site content.
+    - Created a new premium `/restoran` module with categorized menus and high-quality "Forest Vibe" imagery for Paviljon Pečenjara and Restoran Piramida.
+    - Refactored `publicController.js` and `api.js` to serve content exclusively from the database, decoupling the frontend from local file dependency.
+    - Standardized dynamic routing for `/edukacija`, `/istrazivanje`, and `/faq` with automatic route watching for seamless navigation.
+    - Enabled static file serving for `/images` on the backend to support persistent visual assets.
+
 - 2026-04-23 (user): Created 01-organized-docs folder and started systematic documentation.
 - 2026-04-23 (user): Moved all legacy context and implementation docs to 01-organized-docs for unified onboarding and tracking.
 - 2026-04-23 (user): Added backend and frontend checklists for chat history and new chat button features.

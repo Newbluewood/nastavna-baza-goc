@@ -134,7 +134,7 @@ watch(() => langStore.currentLang, () => {
 
   <div v-else class="page-content">
     <!-- Hero Slider -->
-    <div v-if="slides && slides.length > 0" class="hero-slider" style="position: relative; width: 100%; height: 500px; overflow: hidden; background: var(--c-green-6); margin-bottom: 20px;">
+    <div v-if="slides && slides.length > 0" class="hero-slider">
       <div v-for="(slide, index) in slides" :key="index" :style="{ opacity: index === currentSlide ? 1 : 0, transition: 'opacity 0.8s ease', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }">
         <img :src="slide.image_url" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.65;" />
         <div class="slide-content">
@@ -241,6 +241,21 @@ watch(() => langStore.currentLang, () => {
 </template>
 
 <style scoped>
+.hero-slider {
+  position: relative; 
+  width: 100%; 
+  height: var(--hero-height); 
+  overflow: hidden; 
+  background: var(--c-green-6); 
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1023px) {
+  .hero-slider {
+    height: var(--hero-height-mobile);
+  }
+}
+
 .facilities-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));

@@ -103,7 +103,7 @@ watch(() => route.params.id, () => {
     
     <!-- HERO SLIKA -->
     <div class="news-hero">
-      <img :src="newsItem.cover_image" class="hero-bg" />
+      <img :src="newsItem.cover_image || '/news-hero.png'" class="hero-bg" />
       <div class="hero-overlay"></div>
       <div class="hero-content glass-box">
         <h1>{{ newsItem.title }}</h1>

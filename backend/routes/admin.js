@@ -34,7 +34,13 @@ const {
 	uploadImage,
 	getFacilities,
 	getRoomsByFacility,
-	updateRoom
+	updateRoom,
+	getRestaurants,
+	updateRestaurant,
+	getMenuItems,
+	createMenuItem,
+	updateMenuItem,
+	deleteMenuItem
 } = require('../controllers/admin');
 
 const router = express.Router();
@@ -82,6 +88,14 @@ router.post('/system/purge-cache', adminAuthMiddleware,                         
 router.get('/facilities',          adminAuthMiddleware,                                      asyncHandler(getFacilities));
 router.get('/facilities/:id/rooms', adminAuthMiddleware,                                     asyncHandler(getRoomsByFacility));
 router.put('/rooms/:id',           adminAuthMiddleware,                                      asyncHandler(updateRoom));
+
+// Restaurant & Menu management
+router.get('/restaurants',        adminAuthMiddleware,                                      asyncHandler(getRestaurants));
+router.put('/restaurants/:id',     adminAuthMiddleware,                                      asyncHandler(updateRestaurant));
+router.get('/restaurants/:id/menu', adminAuthMiddleware,                                    asyncHandler(getMenuItems));
+router.post('/menu-items',        adminAuthMiddleware,                                      asyncHandler(createMenuItem));
+router.put('/menu-items/:id',     adminAuthMiddleware,                                      asyncHandler(updateMenuItem));
+router.delete('/menu-items/:id',  adminAuthMiddleware,                                      asyncHandler(deleteMenuItem));
 
 
 module.exports = router;

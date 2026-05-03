@@ -5,7 +5,8 @@ const { optionalGuestAuthMiddleware } = require('../middleware/auth');
 const {
   getHome, getFacilities, getFacility, getRoomAvailability,
   submitInquiry, getNewsList, getSingleNews, likeNews,
-  getWeatherForecast, getContactPage, getThemes, getThemeDetail
+  getWeatherForecast, getContactPage, getThemes, getThemeDetail,
+  getRestaurantsPublic, getRestaurantMenu, getPageBySlug
 } = require('../controllers/publicController');
 const cacheMiddleware = require('../middleware/cacheMiddleware');
 
@@ -34,5 +35,8 @@ router.get('/weather/forecast',               cacheMiddleware(15 * 60 * 1000), a
 router.get('/kontakt',                        cacheMiddleware(CACHE_TTL), asyncHandler(getContactPage));
 router.get('/themes',                         cacheMiddleware(CACHE_TTL), asyncHandler(getThemes));
 router.get('/themes/:id',                     cacheMiddleware(CACHE_TTL), asyncHandler(getThemeDetail));
+router.get('/restorani',                      cacheMiddleware(CACHE_TTL), asyncHandler(getRestaurantsPublic));
+router.get('/restorani/:id/meni',             cacheMiddleware(CACHE_TTL), asyncHandler(getRestaurantMenu));
+router.get('/stranica/:slug',                 cacheMiddleware(CACHE_TTL), asyncHandler(getPageBySlug));
 
 module.exports = router;

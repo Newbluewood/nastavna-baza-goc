@@ -99,6 +99,9 @@ onMounted(fetchThemes)
   max-width: 700px;
   margin: 0 auto;
   opacity: 0.9;
+  text-align: center !important;
+  line-height: 1.6;
+  font-weight: 400;
 }
 
 .container {
@@ -199,7 +202,7 @@ onMounted(fetchThemes)
   border-color: #332317;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1023px) {
   .explore-hero {
     height: var(--hero-height-mobile);
   }

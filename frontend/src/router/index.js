@@ -29,6 +29,7 @@ import AdminGuestsView from '../views/admin/GuestsView.vue'
 import AdminRoomMapView from '../views/admin/RoomMapView.vue'
 import AdminRoomsView from '../views/admin/RoomsView.vue'
 import AdminAiUsageView from '../views/admin/AiUsageView.vue'
+import AdminRestaurantView from '../views/admin/RestaurantView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,9 +38,13 @@ const router = createRouter({
     { path: '/', name: 'home', component: HomeView },
     { path: '/smestaj', name: 'smestaj', component: SmestajView },
     { path: '/smestaj/:id', name: 'smestaj-single', component: SmestajSingleView },
+    { path: '/restoran', name: 'restoran', component: () => import('../views/public/RestoranView.vue') },
     { path: '/vesti', name: 'vesti', component: VestiView },
     { path: '/vesti/:id', name: 'single-news', component: SingleNewsView },
     { path: '/kontakt', name: 'kontakt', component: ContactView },
+    { path: '/edukacija', name: 'edukacija', component: PageView, meta: { pageSlug: 'edukacija' } },
+    { path: '/istrazivanje', name: 'istrazivanje', component: PageView, meta: { pageSlug: 'istrazivanje' } },
+    { path: '/faq', name: 'faq', component: PageView, meta: { pageSlug: 'faq' } },
     { path: '/stranica/:slug', name: 'page', component: PageView },
     { path: '/istrazi', name: 'istrazi', component: IstraziView },
     { path: '/istrazi/:id', name: 'tema-detail', component: TemaDetailView },
@@ -61,6 +66,7 @@ const router = createRouter({
     { path: '/admin/mapa-soba', name: 'admin-room-map', component: AdminRoomMapView, meta: { requiresAuth: true } },
     { path: '/admin/sobe', name: 'admin-rooms', component: AdminRoomsView, meta: { requiresAuth: true } },
     { path: '/admin/ai', name: 'admin-ai', component: AdminAiUsageView, meta: { requiresAuth: true } },
+    { path: '/admin/restoran', name: 'admin-restaurant', component: AdminRestaurantView, meta: { requiresAuth: true } },
 
     // --- Fallback ---
     { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView }

@@ -378,44 +378,143 @@ async function getContactPage(req, res) {
 }
 
 async function getThemes(req, res) {
+  const db = req.app.locals.db;
   try {
-    const dataPath = path.join(__dirname, '../data/goc-themes.json');
-    const rawData = await fs.readFile(dataPath, 'utf8');
-    const data = JSON.parse(rawData);
+    const [rows] = await db.query(`
+      SELECT t.slug as id, t.icon, t.hero_image,
+             MAX(CASE WHEN tt.lang = 'sr' THEN tt.name END) as name,
+             MAX(CASE WHEN tt.lang = 'sr' THEN tt.article END) as article_sr,
+             MAX(CASE WHEN tt.lang = 'en' THEN tt.article END) as article_en
+      FROM themes t
+      LEFT JOIN theme_translations tt ON t.id = tt.entity_id
+      GROUP BY t.id
+      ORDER BY t.display_order ASC, t.id ASC
+    `);
     
-    // Return summary for the list view
-    const themes = data.themes.map(t => ({
+    const themes = rows.map(t => ({
       id: t.id,
-      name: t.name,
+      name: t.name || t.id,
       icon: t.icon,
-      keywords: t.keywords,
-      excerpt_sr: t.article_sr.substring(0, 150) + '...',
-      excerpt_en: t.article_en.substring(0, 150) + '...'
+      excerpt_sr: (t.article_sr || '').substring(0, 150) + '...',
+      excerpt_en: (t.article_en || '').substring(0, 150) + '...'
     }));
     
     res.json(themes);
   } catch (error) {
-    console.error('Error reading themes:', error);
+    console.error('Error fetching themes from DB:', error);
     res.status(500).json({ error: 'Failed to load themes' });
   }
 }
 
 async function getThemeDetail(req, res) {
+  const db = req.app.locals.db;
   try {
     const themeId = req.params.id;
-    const dataPath = path.join(__dirname, '../data/goc-themes.json');
-    const rawData = await fs.readFile(dataPath, 'utf8');
-    const data = JSON.parse(rawData);
+    const [rows] = await db.query(`
+      SELECT t.slug as id, t.icon, t.hero_image,
+             MAX(CASE WHEN tt.lang = 'sr' THEN tt.name END) as name,
+             MAX(CASE WHEN tt.lang = 'sr' THEN tt.article END) as article_sr,
+             MAX(CASE WHEN tt.lang = 'en' THEN tt.article END) as article_en
+      FROM themes t
+      LEFT JOIN theme_translations tt ON t.id = tt.entity_id
+      WHERE t.slug = ?
+      GROUP BY t.id
+    `, [themeId]);
     
-    const theme = data.themes.find(t => t.id === themeId);
-    if (!theme) {
+    if (rows.length === 0) {
       return res.status(404).json({ error: 'Theme not found' });
     }
     
+    const theme = rows[0];
+    theme.keywords = []; 
+    theme.ctas = [];
+    
     res.json(theme);
   } catch (error) {
-    console.error('Error reading theme detail:', error);
+    console.error('Error fetching theme detail from DB:', error);
     res.status(500).json({ error: 'Failed to load theme detail' });
+  }
+}
+
+async function getRestaurantsPublic(req, res) {
+  const db = req.app.locals.db;
+  const lang = req.query.lang || 'sr';
+  const langParam = lang === 'sr' ? 'sr' : 'en';
+
+  try {
+    const [rows] = await db.query(`
+      SELECT a.id, a.type, a.cover_image,
+             COALESCE(at.name, a.name) as name,
+             COALESCE(at.description, a.description) as description,
+             a.distance_km, a.distance_minutes
+      FROM attractions a
+      LEFT JOIN attraction_translations at ON a.id = at.entity_id AND at.lang = ?
+      WHERE a.type = 'restaurant'
+    `, [langParam]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching public restaurants:', error);
+    res.status(500).json({ error: 'Failed to load restaurants' });
+  }
+}
+
+async function getRestaurantMenu(req, res) {
+  const db = req.app.locals.db;
+  const restaurantId = req.params.id;
+  const lang = req.query.lang || 'sr';
+  const langParam = lang === 'sr' ? 'sr' : 'en';
+
+  try {
+    const [rows] = await db.query(`
+      SELECT rmi.id, rmi.price,
+             COALESCE(rmit.name, rmi.name) as name,
+             COALESCE(rmit.description, rmi.description) as description,
+             COALESCE(rmit.category, rmi.category) as category
+      FROM restaurant_menu_items rmi
+      LEFT JOIN restaurant_menu_item_translations rmit ON rmi.id = rmit.entity_id AND rmit.lang = ?
+      WHERE rmi.attraction_id = ?
+      ORDER BY rmi.category, rmi.sort_order ASC
+    `, [langParam, restaurantId]);
+    
+    // Group by category
+    const menu = rows.reduce((acc, item) => {
+      const cat = item.category || 'ostalo';
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(item);
+      return acc;
+    }, {});
+    
+    res.json(menu);
+  } catch (error) {
+    console.error('Error fetching restaurant menu:', error);
+    res.status(500).json({ error: 'Failed to load menu' });
+  }
+}
+
+async function getPageBySlug(req, res) {
+  const db = req.app.locals.db;
+  const slug = req.params.slug;
+  const lang = req.query.lang || 'sr';
+  const langParam = lang === 'sr' ? 'sr' : 'en';
+
+  try {
+    const [rows] = await db.query(`
+      SELECT p.id, p.hero_image,
+             COALESCE(pt.title, p.title) as title,
+             COALESCE(pt.content, p.content) as content
+      FROM pages p
+      LEFT JOIN page_translations pt ON p.id = pt.entity_id AND pt.lang = ?
+      WHERE p.slug = ?
+    `, [langParam, slug]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Page not found' });
+    }
+
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching page by slug:', error);
+    res.status(500).json({ error: 'Failed to load page' });
   }
 }
 
@@ -431,5 +530,8 @@ module.exports = {
   getWeatherForecast,
   getContactPage,
   getThemes,
-  getThemeDetail
+  getThemeDetail,
+  getRestaurantsPublic,
+  getRestaurantMenu,
+  getPageBySlug
 };

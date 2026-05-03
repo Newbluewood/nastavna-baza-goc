@@ -10,6 +10,7 @@ const guestAdminController = require('./guestAdminController');
 const roomMapController   = require('./roomMapController');
 const systemController    = require('./systemController');
 const uploadController    = require('./uploadController');
+const restaurantController = require('./restaurantController');
 
 module.exports = {
   ...inquiryController,
@@ -18,5 +19,6 @@ module.exports = {
   ...guestAdminController,
   ...roomMapController,
   ...systemController,
-  ...uploadController
+  ...uploadController,
+  ...restaurantController
 };
