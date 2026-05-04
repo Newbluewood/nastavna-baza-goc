@@ -158,8 +158,19 @@ watch(() => langStore.currentLang, loadRestaurants)
 
 .restaurants-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 30px;
+}
+
+@media (max-width: 480px) {
+  .restaurants-grid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .restaurant-card {
+    width: 100%;
+    max-width: 400px;
+  }
 }
 
 .restaurant-card {
