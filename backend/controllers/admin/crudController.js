@@ -97,27 +97,31 @@ async function getPageById(req, res) {
 
 async function createPage(req, res) {
   const db = req.app.locals.db;
-  const { slug, title, content } = req.body;
+  const { slug, title, content, metadata } = req.body;
   if (!slug || !title) return sendError(res, 400, 'Slug and title are required');
 
   const [existing] = await db.query('SELECT id FROM pages WHERE slug = ?', [slug]);
   if (existing.length) return sendError(res, 409, 'Page with this slug already exists');
 
+  const metaStr = metadata ? JSON.stringify(metadata) : null;
+
   const [result] = await db.query(
-    'INSERT INTO pages (slug, title, content) VALUES (?, ?, ?)',
-    [slug, title, content || null]
+    'INSERT INTO pages (slug, title, content, metadata) VALUES (?, ?, ?, ?)',
+    [slug, title, content || null, metaStr]
   );
   res.json({ message: 'Page created', pageId: result.insertId });
 }
 
 async function updatePage(req, res) {
   const db = req.app.locals.db;
-  const { title, content } = req.body;
+  const { title, content, metadata } = req.body;
   if (!title) return sendError(res, 400, 'Title is required');
 
+  const metaStr = metadata ? JSON.stringify(metadata) : null;
+
   const [result] = await db.query(
-    'UPDATE pages SET title = ?, content = ? WHERE id = ?',
-    [title, content || null, req.params.id]
+    'UPDATE pages SET title = ?, content = ?, metadata = ? WHERE id = ?',
+    [title, content || null, metaStr, req.params.id]
   );
   if (result.affectedRows === 0) return sendError(res, 404, 'Page not found');
   res.json({ message: 'Page updated' });

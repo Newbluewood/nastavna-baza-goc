@@ -35,13 +35,13 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     // --- Public ---
-    { path: '/', name: 'home', component: HomeView },
-    { path: '/smestaj', name: 'smestaj', component: SmestajView },
+    { path: '/', name: 'home', component: PageView, meta: { pageSlug: 'pocetna' } },
+    { path: '/smestaj', name: 'smestaj', component: PageView, meta: { pageSlug: 'smestaj' } },
     { path: '/smestaj/:id', name: 'smestaj-single', component: SmestajSingleView },
-    { path: '/restoran', name: 'restoran', component: () => import('../views/public/RestoranView.vue') },
+    { path: '/restoran', name: 'restoran', component: PageView, meta: { pageSlug: 'restoran' } },
     { path: '/vesti', name: 'vesti', component: VestiView },
     { path: '/vesti/:id', name: 'single-news', component: SingleNewsView },
-    { path: '/kontakt', name: 'kontakt', component: ContactView },
+    { path: '/kontakt', name: 'kontakt', component: PageView, meta: { pageSlug: 'kontakt' } },
     { path: '/edukacija', name: 'edukacija', component: PageView, meta: { pageSlug: 'edukacija' } },
     { path: '/istrazivanje', name: 'istrazivanje', component: PageView, meta: { pageSlug: 'istrazivanje' } },
     { path: '/faq', name: 'faq', component: PageView, meta: { pageSlug: 'faq' } },
