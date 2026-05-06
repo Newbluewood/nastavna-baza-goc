@@ -50,8 +50,10 @@ export const useChatStore = defineStore('chat', {
         checkIn:    action?.check_in  || '',
         checkOut:   action?.check_out || '',
         boardType:  action?.board_type || 'base',
-        guestName:  '',
-        guestEmail: '',
+        guestName:  action?.guest_name || '',
+        guestEmail: action?.guest_email || '',
+        showForm:   !!action,
+        submitted:  false,
       });
     },
 
