@@ -38,6 +38,20 @@ const chatApi = {
   },
 
   /**
+   * After a successful reservation by an anonymous user, link their chat
+   * session (identified by IP on the chat-agent backend) to the new guest.
+   *
+   * @param {{ sessionId: string, guestId: number }} payload
+   */
+  linkSession({ sessionId, guestId }) {
+    return api.request('/api/chat/link-session', {
+      method: 'POST',
+      authMode: 'none',
+      body: JSON.stringify({ sessionId, guestId }),
+    });
+  },
+
+  /**
    * Send a message to the Gemini Flash fallback.
    * Called automatically by agentService when the primary stream fails.
    *
