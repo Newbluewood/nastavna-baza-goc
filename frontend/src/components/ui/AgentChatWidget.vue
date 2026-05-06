@@ -695,17 +695,24 @@ onMounted(() => {
   width: 100%;
   border-collapse: collapse;
   margin: 1rem 0;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   background: #fff;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
 }
 
 .markdown-body :deep(th), .markdown-body :deep(td) {
-  padding: 10px 12px;
+  padding: 7px 10px;
   border: 1px solid #f0f0f0;
   text-align: left;
+  white-space: normal;
+  word-break: break-word;
+  min-width: 60px;
 }
 
 .markdown-body :deep(th) {
@@ -713,7 +720,8 @@ onMounted(() => {
   color: #6e4529;
   font-weight: 600;
   text-transform: uppercase;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  white-space: nowrap;
 }
 
 .markdown-body :deep(tr:nth-child(even)) {
