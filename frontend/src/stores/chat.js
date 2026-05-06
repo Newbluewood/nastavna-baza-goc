@@ -106,8 +106,17 @@ export const useChatStore = defineStore('chat', {
           userContext,
           // onChunk — append streamed text
           (chunk) => { assistantMsg.content += chunk; },
-          // onAction — attach action card to message
-          (action) => { assistantMsg.action = action; },
+          // onAction — attach action card and populate prefill fields
+          (action) => {
+            assistantMsg.action    = action;
+            assistantMsg.checkIn   = action?.check_in   || '';
+            assistantMsg.checkOut  = action?.check_out  || '';
+            assistantMsg.boardType = action?.board_type || 'base';
+            assistantMsg.guestName  = action?.guest_name  || '';
+            assistantMsg.guestEmail = action?.guest_email || '';
+            assistantMsg.guestPhone = action?.guest_phone || '';
+            assistantMsg.showForm  = true;
+          },
           // onFallback — mark message as coming from fallback
           ({ reason }) => {
             this.usedFallback = true;
