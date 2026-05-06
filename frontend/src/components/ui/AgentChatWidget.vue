@@ -698,9 +698,9 @@ onMounted(() => {
   font-size: 0.8rem;
   background: #fff;
   border-radius: 8px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  display: block;
+  overflow: hidden;
+  display: table;
+  table-layout: fixed;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 
@@ -708,7 +708,8 @@ onMounted(() => {
   padding: 8px 10px;
   border: 1px solid #ede8e3;
   text-align: left;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .markdown-body :deep(th) {
@@ -726,6 +727,18 @@ onMounted(() => {
 
 .markdown-body :deep(tr:hover td) {
   background: #f0e9e2;
+}
+
+.markdown-body :deep(tr > th:first-child),
+.markdown-body :deep(tr > td:first-child) {
+  width: 44%;
+  font-weight: 600;
+}
+
+.markdown-body :deep(tr > th:last-child),
+.markdown-body :deep(tr > td:last-child) {
+  width: 56%;
+  text-align: right;
 }
 
 .loading-bubble {
