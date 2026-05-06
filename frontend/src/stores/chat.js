@@ -14,7 +14,7 @@ import agentService    from '../services/agentService';
 import chatApi         from '../services/chatApi';
 import { useLangStore } from './lang';
 import { useGuestStore } from './guest';
-import { useGuestStore } from './guest';
+import { getOrCreateSessionId } from '../services/agentService';
 
 export const useChatStore = defineStore('chat', {
   state: () => ({
@@ -146,8 +146,7 @@ export const useChatStore = defineStore('chat', {
           // backend resolve it via the Authorization header / token.
           // Fallback: send the email so the backend can join on session_id
           // using a best-effort match (handled gracefully if no match).
-          const guestStore = useGuestStore();
-          const sessionId = guestStore.guest?.email || result.guest.email || '';
+          const sessionId = getOrCreateSessionId();
           await chatApi.linkSession({ sessionId, guestId: result.guest.id });
         } catch (_) {
           // Non-critical — never block the reservation flow

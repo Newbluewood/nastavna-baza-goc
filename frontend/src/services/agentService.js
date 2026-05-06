@@ -20,6 +20,22 @@ const MICROSERVICE_URL  = import.meta.env.VITE_CHAT_API_URL;
 const STREAM_TIMEOUT_MS = 15_000;
 console.log('DEBUG: AgentService URL set to:', MICROSERVICE_URL);
 
+/**
+ * Returns a persistent UUID that identifies this browser session.
+ * Generated once and stored in localStorage under 'chat_session_id'.
+ */
+function getOrCreateSessionId() {
+  const key = 'chat_session_id';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
+export { getOrCreateSessionId };
+
 class AgentService {
   constructor() {
     this.baseURL = MICROSERVICE_URL || '';
@@ -47,7 +63,7 @@ class AgentService {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         signal:  controller.signal,
-        body:    JSON.stringify({ message, history, lang, userContext }),
+        body:    JSON.stringify({ message, history, lang, userContext, sessionId: getOrCreateSessionId() }),
       });
 
       clearTimeout(timer);
