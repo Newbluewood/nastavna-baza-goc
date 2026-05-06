@@ -26,8 +26,8 @@ const renderMarkdown = (text) => {
 };
 
 const submitReservation = async (msg) => {
-  if (!msg.guestName || !msg.guestEmail || !msg.checkIn || !msg.checkOut) {
-    alert("Molimo popunite sva polja (uključujući oba datuma).");
+  if (!msg.guestName || !msg.guestEmail || !msg.guestPhone || !msg.checkIn || !msg.checkOut) {
+    alert("Molimo popunite sva obavezna polja (ime, email, telefon i oba datuma).");
     return;
   }
   msg.showForm = false;
@@ -37,6 +37,7 @@ const submitReservation = async (msg) => {
       target_room_id: msg.action.room_id || null,
       sender_name:    msg.guestName,
       email:          msg.guestEmail,
+      phone:          msg.guestPhone,
       check_in:       msg.checkIn,
       check_out:      msg.checkOut,
       board_type:     msg.boardType || 'base',
@@ -187,6 +188,10 @@ onMounted(() => {
                 <div class="form-group">
                   <label>Email adresa</label>
                   <input type="email" v-model="msg.guestEmail" placeholder="vas@email.com" class="ac-input" />
+                </div>
+                <div class="form-group">
+                  <label>Kontakt telefon</label>
+                  <input type="tel" v-model="msg.guestPhone" placeholder="+381 6x xxx xxxx" class="ac-input" />
                 </div>
                 <div class="form-row">
                   <div class="form-group">

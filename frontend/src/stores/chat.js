@@ -13,6 +13,7 @@ import { defineStore } from 'pinia';
 import agentService    from '../services/agentService';
 import chatApi         from '../services/chatApi';
 import { useLangStore } from './lang';
+import { useGuestStore } from './guest';
 
 export const useChatStore = defineStore('chat', {
   state: () => ({
@@ -52,6 +53,7 @@ export const useChatStore = defineStore('chat', {
         boardType:  action?.board_type || 'base',
         guestName:  action?.guest_name || '',
         guestEmail: action?.guest_email || '',
+        guestPhone: action?.guest_phone || '',
         showForm:   !!action,
         submitted:  false,
       });
@@ -78,11 +80,18 @@ export const useChatStore = defineStore('chat', {
       this.isLoading   = true;
 
       const langStore = useLangStore();
+      const guestStore = useGuestStore();
 
-      // Prepare the last 6 turns (excluding the message we just added)
+      // Keep a deeper short-term context window for better follow-up handling.
       const history = this.messages
-        .slice(-7, -1)
+        .slice(-11, -1)
         .map(m => ({ role: m.role, content: m.content }));
+
+      const userContext = {
+        logged_in: !!guestStore.isLoggedIn,
+        guest_name: guestStore.guest?.name || '',
+        guest_email: guestStore.guest?.email || '',
+      };
 
       // Pre-create the assistant message so the UI can show it being typed
       this.addMessage('assistant', '');
@@ -93,6 +102,7 @@ export const useChatStore = defineStore('chat', {
           content,
           history,
           langStore.currentLang,
+          userContext,
           // onChunk — append streamed text
           (chunk) => { assistantMsg.content += chunk; },
           // onAction — attach action card to message

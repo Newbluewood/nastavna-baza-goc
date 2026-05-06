@@ -32,12 +32,13 @@ class AgentService {
    * @param {string}   message            — user message
    * @param {Array}    [history=[]]        — recent conversation turns [{role, content}]
    * @param {string}   [lang='sr']         — 'sr' | 'en'
-   * @param {Function} onChunk            — called with each streamed text chunk (string)
+  * @param {object}   [userContext={}]   — session user metadata (login/profile hints)
+  * @param {Function} onChunk            — called with each streamed text chunk (string)
    * @param {Function} onAction           — called when the agent emits an action payload
    * @param {Function} [onFallback]        — called when fallback is used ({ reason: string })
    * @returns {Promise<void>}
    */
-  async sendMessageStream(message, history = [], lang = 'sr', onChunk, onAction, onFallback) {
+  async sendMessageStream(message, history = [], lang = 'sr', userContext = {}, onChunk, onAction, onFallback) {
     const controller = new AbortController();
     const timer      = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
 
@@ -46,7 +47,7 @@ class AgentService {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         signal:  controller.signal,
-        body:    JSON.stringify({ message, history, lang }),
+        body:    JSON.stringify({ message, history, lang, userContext }),
       });
 
       clearTimeout(timer);
