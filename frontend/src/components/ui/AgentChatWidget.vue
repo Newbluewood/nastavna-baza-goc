@@ -694,38 +694,38 @@ onMounted(() => {
 .markdown-body :deep(table) {
   width: 100%;
   border-collapse: collapse;
-  margin: 1rem 0;
-  font-size: 0.78rem;
+  margin: 0.75rem 0;
+  font-size: 0.8rem;
   background: #fff;
   border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  display: block;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  white-space: nowrap;
+  display: block;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 
 .markdown-body :deep(th), .markdown-body :deep(td) {
-  padding: 7px 10px;
-  border: 1px solid #f0f0f0;
+  padding: 8px 10px;
+  border: 1px solid #ede8e3;
   text-align: left;
-  white-space: normal;
-  word-break: break-word;
-  min-width: 60px;
-}
-
-.markdown-body :deep(th) {
-  background: #f8f6f4;
-  color: #6e4529;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.7rem;
   white-space: nowrap;
 }
 
-.markdown-body :deep(tr:nth-child(even)) {
-  background: #faf9f8;
+.markdown-body :deep(th) {
+  background: #6e4529;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.markdown-body :deep(tr:nth-child(even) td) {
+  background: #faf7f4;
+}
+
+.markdown-body :deep(tr:hover td) {
+  background: #f0e9e2;
 }
 
 .loading-bubble {
