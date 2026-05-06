@@ -63,7 +63,7 @@ watch(() => route.params.id, fetchTheme)
     <div class="theme-footer">
       <div class="container">
         <div class="meta-box">
-          <div class="keywords">
+          <div v-if="theme.keywords && theme.keywords.length > 0" class="keywords">
             <strong>{{ langStore.currentLang === 'sr' ? 'Кључне речи:' : 'Keywords:' }}</strong>
             <span v-for="kw in theme.keywords" :key="kw" class="tag">#{{ kw }}</span>
           </div>

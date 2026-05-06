@@ -44,7 +44,7 @@ onMounted(fetchThemes)
             </div>
             <h3>{{ theme.name }}</h3>
             <p>{{ langStore.currentLang === 'sr' ? theme.excerpt_sr : theme.excerpt_en }}</p>
-            <div class="keywords">
+            <div v-if="theme.keywords && theme.keywords.length > 0" class="keywords">
               <span v-for="kw in theme.keywords" :key="kw" class="kw-tag">#{{ kw }}</span>
             </div>
             <router-link :to="`/istrazi/${theme.id}`" class="read-more">
