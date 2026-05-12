@@ -26,8 +26,10 @@ const renderMarkdown = (text) => {
 };
 
 const submitReservation = async (msg) => {
-  if (!msg.guestName || !msg.guestEmail || !msg.checkIn || !msg.checkOut) {
-    alert("Molimo popunite sva polja (uključujući oba datuma).");
+  console.log('📝 [WIDGET] SUBMITTING RESERVATION WITH DATA:', msg.action);
+  const data = msg.action || {};
+  if (!data.guest_name || !data.guest_email || !data.check_in || !data.check_out) {
+    alert("Molimo popunite sva polja (ime, email i oba datuma).");
     return;
   }
   msg.showForm = false;
@@ -35,15 +37,18 @@ const submitReservation = async (msg) => {
   // Send inquiry to backend
   try {
     const res = await chatStore.chatReserveStay({
-      target_room_id: msg.action.room_id || null, 
-      sender_name: msg.guestName,
-      email: msg.guestEmail,
-      check_in: msg.checkIn,
-      check_out: msg.checkOut,
-      board_type: msg.boardType || 'base'
+      target_room_id: data.room_id || null, 
+      sender_name: data.guest_name,
+      email: data.guest_email,
+      phone: data.guest_phone || '',
+      check_in: data.check_in,
+      check_out: data.check_out,
+      board_type: data.board_type || 'base'
     });
+    console.log('✅ [WIDGET] RESERVATION SUCCESS:', res);
     msg.submitted = true;
   } catch (err) {
+    console.error('❌ [WIDGET] RESERVATION ERROR:', err);
     alert("Greška pri slanju upita: " + err.message);
     msg.showForm = true;
     msg.submitted = false;

@@ -67,6 +67,7 @@ export const useChatStore = defineStore('chat', {
           langStore.currentLang,
           (chunk) => { assistantMsg.content += chunk; },
           (action) => {
+            console.log('🚀 [CHAT_STORE] RECEIVED ACTION:', action);
             if (action && !action.target_room && action.room_name) {
               action.target_room = action.room_name;
             }
@@ -78,6 +79,7 @@ export const useChatStore = defineStore('chat', {
             assistantMsg.checkOut = action?.check_out || '';
             assistantMsg.boardType = action?.board_type || 'base';
             assistantMsg.showForm = true;
+            console.log('✅ [CHAT_STORE] UPDATED ASSISTANT MSG:', assistantMsg);
           }
         );
       } catch (err) {
