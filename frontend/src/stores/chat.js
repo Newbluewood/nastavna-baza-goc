@@ -41,11 +41,9 @@ export const useChatStore = defineStore('chat', {
     },
     
     async sendMessage(content) {
-      const { useUserStore } = await import('./user');
-      const userStore = useUserStore();
       const userContext = {
-        guest_name: userStore.user?.name || '',
-        guest_email: userStore.user?.email || '',
+        guest_name: '',
+        guest_email: '',
       };
 
       this.error = null;
