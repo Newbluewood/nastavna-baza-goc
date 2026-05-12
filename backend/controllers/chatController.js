@@ -126,9 +126,26 @@ async function siteGuideTurn(req, res) {
   return res.status(200).json(turn);
 }
 
+/** Fallback Chat via Gemini */
+async function fallbackChat(req, res) {
+  const { askGemini } = require('../services/geminiChatService');
+  const body = req.body || {};
+  const message = body.message;
+  const history = body.history || [];
+
+  try {
+    const { reply, action } = await askGemini(message, history);
+    return res.json({ reply, action });
+  } catch (err) {
+    console.error('[fallbackChat] error:', err.message);
+    return res.status(500).json({ error: 'Fallback chat failed' });
+  }
+}
+
 module.exports = {
   planStayChat,
   suggestVisitChat,
   reserveStayChat,
-  siteGuideTurn
+  siteGuideTurn,
+  fallbackChat
 };

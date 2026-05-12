@@ -167,27 +167,39 @@ onMounted(() => {
                 </button>
               </div>
               <div class="ac-form" v-if="msg.showForm && !msg.submitted">
+                <div class="ac-row">
+                  <span>Odabrano:</span>
+                  <strong>{{ msg.action.target_room || 'Vaš Smeštaj' }}</strong>
+                </div>
+                <!-- DEBUG -->
+                <div style="font-size: 10px; color: #888; background: #eee; padding: 5px; margin-top: 5px; border-radius: 4px;">
+                  DEBUG: {{ JSON.stringify(msg.action) }}
+                </div>
                 <div class="form-group">
                   <label>Ime i prezime</label>
-                  <input type="text" v-model="msg.guestName" placeholder="Unesite vaše ime" class="ac-input" />
+                  <input type="text" v-model="msg.action.guest_name" placeholder="Unesite vaše ime" class="ac-input" />
                 </div>
                 <div class="form-group">
                   <label>Email adresa</label>
-                  <input type="email" v-model="msg.guestEmail" placeholder="vas@email.com" class="ac-input" />
+                  <input type="email" v-model="msg.action.guest_email" placeholder="vas@email.com" class="ac-input" />
+                </div>
+                <div class="form-group">
+                  <label>Kontakt telefon</label>
+                  <input type="tel" v-model="msg.action.guest_phone" placeholder="+381 6x xxx xxxx" class="ac-input" />
                 </div>
                 <div class="form-row">
                   <div class="form-group">
                     <label>Datum dolaska</label>
-                    <input type="date" v-model="msg.checkIn" class="ac-input" />
+                    <input type="date" v-model="msg.action.check_in" class="ac-input" />
                   </div>
                   <div class="form-group">
                     <label>Datum odlaska</label>
-                    <input type="date" v-model="msg.checkOut" class="ac-input" />
+                    <input type="date" v-model="msg.action.check_out" class="ac-input" />
                   </div>
                 </div>
                 <div class="form-group">
                   <label>{{ langStore.currentLang === 'sr' ? 'Vrsta usluge' : 'Service Type' }}</label>
-                  <select v-model="msg.boardType" class="ac-input">
+                  <select v-model="msg.action.board_type" class="ac-input">
                     <option value="base">{{ langStore.currentLang === 'sr' ? 'Samo noćenje' : 'Room only' }}</option>
                     <option value="half">{{ langStore.currentLang === 'sr' ? 'Polupansion' : 'Half board' }}</option>
                     <option value="full">{{ langStore.currentLang === 'sr' ? 'Pun pansion' : 'Full board' }}</option>

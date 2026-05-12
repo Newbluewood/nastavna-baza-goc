@@ -32,12 +32,22 @@ export const useChatStore = defineStore('chat', {
         checkIn: action?.check_in || '',
         checkOut: action?.check_out || '',
         boardType: action?.board_type || 'base',
-        guestName: '',
-        guestEmail: ''
+        guestName: action?.guest_name || '',
+        guestEmail: action?.guest_email || '',
+        guestPhone: action?.guest_phone || '',
+        showForm: !!action,
+        submitted: false
       });
     },
-
+    
     async sendMessage(content) {
+      const { useUserStore } = await import('./user');
+      const userStore = useUserStore();
+      const userContext = {
+        guest_name: userStore.user?.name || '',
+        guest_email: userStore.user?.email || '',
+      };
+
       this.error = null;
       this.addMessage('user', content);
       this.isLoading = true;
@@ -48,8 +58,6 @@ export const useChatStore = defineStore('chat', {
           .map(m => ({ role: m.role, content: m.content }));
 
         const langStore = useLangStore();
-        
-        // Create an empty assistant message that we will populate
         this.addMessage('assistant', '');
         const assistantMsg = this.messages[this.messages.length - 1];
 
@@ -57,17 +65,26 @@ export const useChatStore = defineStore('chat', {
           content, 
           history, 
           langStore.currentLang,
-          (chunk) => {
-            assistantMsg.content += chunk;
-          },
+          (chunk) => { assistantMsg.content += chunk; },
           (action) => {
+            if (action && !action.target_room && action.room_name) {
+              action.target_room = action.room_name;
+            }
             assistantMsg.action = action;
+            assistantMsg.guestName = action?.guest_name || userContext.guest_name || '';
+            assistantMsg.guestEmail = action?.guest_email || userContext.guest_email || '';
+            assistantMsg.guestPhone = action?.guest_phone || '';
+            assistantMsg.checkIn = action?.check_in || '';
+            assistantMsg.checkOut = action?.check_out || '';
+            assistantMsg.boardType = action?.board_type || 'base';
+            assistantMsg.showForm = true;
           }
         );
       } catch (err) {
         console.error('Chat Agent error:', err);
         this.error = err.message;
-        this.addMessage('assistant', 'Sorry, I encountered an error. Please try again later.');
+        // Fallback bi trebao biti ovde, ali za sada samo poruka
+        assistantMsg.content = 'Žao mi je, došlo je do greške. Molim vas pokušajte ponovo.';
       } finally {
         this.isLoading = false;
       }
