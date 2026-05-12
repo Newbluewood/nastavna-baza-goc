@@ -158,7 +158,7 @@ onMounted(() => {
                   <polyline points="17 21 17 13 7 13 7 21"></polyline>
                   <polyline points="7 3 7 8 15 8"></polyline>
                 </svg>
-                <h4>Pokretanje Rezervacije</h4>
+                <h4>Pokretanje Rezervacije v5.0</h4>
               </div>
               <div class="ac-body">
                 <div class="ac-row">
