@@ -20,6 +20,13 @@ const renderTemplate = (templateName, data) => {
 };
 
 const sendEmail = async (to, template) => {
+  // Anti-spam / Fake email filter for tests
+  const isFake = /example\.com|test|fake|invalid/i.test(to);
+  if (isFake) {
+    console.log(`[EMAIL SKIP] Preskačem slanje na fiktivnu adresu: ${to}`);
+    return { ok: true, skipped: true };
+  }
+
   const apiKey = process.env.BREVO_API_KEY;
 
   // Brevo REST API

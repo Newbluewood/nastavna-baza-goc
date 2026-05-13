@@ -22,9 +22,29 @@ async function suggestVisitChat(req, res) {
 async function reserveStayChat(req, res) {
   const db = req.app.locals.db;
   const body = req.body || {};
+  console.log('📥 [BACKEND] RECEIVED RESERVE REQUEST:', JSON.stringify(body, null, 2));
 
-  if (!body.target_room_id || !body.check_in || !body.check_out) {
-    return sendError(res, 400, 'target_room_id, check_in and check_out are required');
+  // Simple date sanitizer to ensure YYYY-MM-DD
+  const sanitizeDate = (d) => {
+    if (!d) return d;
+    // If it's DD.MM.YYYY
+    if (d.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
+      const [dd, mm, yyyy] = d.split('.');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    // If it's DD/MM/YYYY
+    if (d.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+      const [dd, mm, yyyy] = d.split('/');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    return d;
+  };
+
+  const check_in = sanitizeDate(body.check_in);
+  const check_out = sanitizeDate(body.check_out);
+
+  if (!check_in || !check_out) {
+    return sendError(res, 400, 'check_in and check_out are required');
   }
 
   if (req.user?.id) {
@@ -35,8 +55,8 @@ async function reserveStayChat(req, res) {
       phone: body.phone,
       message: body.message || 'Chat assistant reservation request',
       target_room_id: body.target_room_id,
-      check_in: body.check_in,
-      check_out: body.check_out,
+      check_in: check_in,
+      check_out: check_out,
       board_type: body.board_type || 'base',
       allowExistingGuestByEmail: true
     });
@@ -61,8 +81,8 @@ async function reserveStayChat(req, res) {
       phone: body.phone,
       message: body.message || 'Chat assistant reservation request',
       target_room_id: body.target_room_id,
-      check_in: body.check_in,
-      check_out: body.check_out,
+      check_in: check_in,
+      check_out: check_out,
       board_type: body.board_type || 'base',
       allowExistingGuestByEmail: false
     });
