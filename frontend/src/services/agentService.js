@@ -59,11 +59,9 @@ class AgentService {
 
         try {
           const data = JSON.parse(dataStr);
-          console.log('📡 [AGENT_SERVICE] SSE DATA RECEIVED:', data);
           if (data.type === 'text') {
             onChunk(data.content);
           } else if (data.type === 'action') {
-            console.log('⚡ [AGENT_SERVICE] ACTION DETECTED:', data.content);
             onAction(data.content);
           } else if (data.type === 'error') {
             throw new Error(data.content);

@@ -26,7 +26,6 @@ const renderMarkdown = (text) => {
 };
 
 const submitReservation = async (msg) => {
-  console.log('📝 [WIDGET] SUBMITTING RESERVATION WITH DATA:', msg.action);
   const data = msg.action || {};
   if (!data.guest_name || !data.guest_email || !data.check_in || !data.check_out) {
     alert("Molimo popunite sva polja (ime, email i oba datuma).");
@@ -158,7 +157,7 @@ onMounted(() => {
                   <polyline points="17 21 17 13 7 13 7 21"></polyline>
                   <polyline points="7 3 7 8 15 8"></polyline>
                 </svg>
-                <h4>Pokretanje Rezervacije v5.0</h4>
+                <h4>Pokretanje Rezervacije</h4>
               </div>
               <div class="ac-body">
                 <div class="ac-row">
@@ -175,10 +174,6 @@ onMounted(() => {
                 <div class="ac-row">
                   <span>Odabrano:</span>
                   <strong>{{ msg.action.target_room || 'Vaš Smeštaj' }}</strong>
-                </div>
-                <!-- DEBUG -->
-                <div style="font-size: 10px; color: #888; background: #eee; padding: 5px; margin-top: 5px; border-radius: 4px;">
-                  DEBUG: {{ JSON.stringify(msg.action) }}
                 </div>
                 <div class="form-group">
                   <label>Ime i prezime</label>
