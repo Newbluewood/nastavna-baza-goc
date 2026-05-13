@@ -35,6 +35,7 @@ const submitReservation = async (msg) => {
   
   // Send inquiry to backend
   try {
+    const roomName = data.target_room || 'Nepoznata soba';
     const res = await chatStore.chatReserveStay({
       target_room_id: data.room_id || null, 
       sender_name: data.guest_name,
@@ -42,7 +43,8 @@ const submitReservation = async (msg) => {
       phone: data.guest_phone || '',
       check_in: data.check_in,
       check_out: data.check_out,
-      board_type: data.board_type || 'base'
+      board_type: data.board_type || 'base',
+      message: `Upit za smeštaj: ${roomName}. (Poslato preko AI asistenta)`
     });
     console.log('✅ [WIDGET] RESERVATION SUCCESS:', res);
     msg.submitted = true;
@@ -171,10 +173,6 @@ onMounted(() => {
                 </button>
               </div>
               <div class="ac-form" v-if="msg.showForm && !msg.submitted">
-                <div class="ac-row">
-                  <span>Odabrano:</span>
-                  <strong>{{ msg.action.target_room || 'Vaš Smeštaj' }}</strong>
-                </div>
                 <div class="form-group">
                   <label>Ime i prezime</label>
                   <input type="text" v-model="msg.action.guest_name" placeholder="Unesite vaše ime" class="ac-input" />
