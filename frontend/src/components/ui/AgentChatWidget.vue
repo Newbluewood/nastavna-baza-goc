@@ -148,7 +148,7 @@ onMounted(async () => {
         </div>
         <div class="header-actions">
           <router-link to="/smestaj" class="reserve-link" @click="chatStore.isOpen = false">
-            {{ langStore.currentLang === 'sr' ? 'Rezerviši smeštaj' : 'Reserve stay' }}
+            {{ langStore.currentLang === 'sr' ? 'Pogledaj smeštaj' : 'View accommodation' }}
           </router-link>
           <button class="clear-btn" @click="chatStore.clearHistory()" :title="langStore.currentLang === 'sr' ? 'Započni novi razgovor' : 'Start new conversation'">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
