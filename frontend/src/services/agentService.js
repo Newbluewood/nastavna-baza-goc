@@ -3,13 +3,14 @@ class AgentService {
     this.baseURL = import.meta.env.VITE_CHAT_API_URL || 'https://chat-agent-kbjc.onrender.com';
   }
 
-  async sendMessage(message, history = [], lang = 'sr') {
+  async sendMessage(message, history = [], lang = 'sr', options = {}) {
+    const { sessionId, userContext } = options;
     const response = await fetch(`${this.baseURL}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ message, history, lang })
+      body: JSON.stringify({ message, history, lang, sessionId, userContext })
     });
 
     if (!response.ok) {
@@ -23,13 +24,20 @@ class AgentService {
     return response.json();
   }
 
-  async sendMessageStream(message, history = [], lang = 'sr', onChunk, onAction) {
+  async sendMessageStream(message, history = [], lang = 'sr', onChunk, onAction, options = {}) {
+    const { sessionId, userContext } = options;
     const response = await fetch(`${this.baseURL}/api/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ message, history, lang })
+      body: JSON.stringify({
+        message,
+        history,
+        lang,
+        sessionId,
+        userContext,
+      })
     });
 
     if (!response.ok) {
