@@ -134,6 +134,22 @@ const props = defineProps({
   initialCheckOut: {
     type: String,
     default: ''
+  },
+  initialGuestName: {
+    type: String,
+    default: ''
+  },
+  initialGuestEmail: {
+    type: String,
+    default: ''
+  },
+  initialGuestPhone: {
+    type: String,
+    default: ''
+  },
+  initialBoardType: {
+    type: String,
+    default: 'base'
   }
 })
 
@@ -227,7 +243,15 @@ const fetchAvailability = async () => {
 // Reset form kada se otvori and fetch availability
 watch(() => props.isOpen, async (newVal) => {
   if (newVal) {
-    form.value = { sender_name: '', email: '', phone: '', message: '', board_type: 'base' }
+    form.value = {
+      sender_name: props.initialGuestName || '',
+      email: props.initialGuestEmail || '',
+      phone: props.initialGuestPhone || '',
+      message: '',
+      board_type: ['base', 'half', 'full'].includes(props.initialBoardType)
+        ? props.initialBoardType
+        : 'base',
+    }
     await prefillFromGuestProfile()
     const checkInDate = parseDateOnly(props.initialCheckIn)
     const checkOutDate = parseDateOnly(props.initialCheckOut)

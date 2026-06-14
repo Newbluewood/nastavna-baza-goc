@@ -222,6 +222,10 @@ watch(
     :buildingName="building?.name"
     :initialCheckIn="typeof route.query.checkIn === 'string' ? route.query.checkIn : ''"
     :initialCheckOut="typeof route.query.checkOut === 'string' ? route.query.checkOut : ''"
+    :initialGuestName="typeof route.query.guestName === 'string' ? route.query.guestName : ''"
+    :initialGuestEmail="typeof route.query.guestEmail === 'string' ? route.query.guestEmail : ''"
+    :initialGuestPhone="typeof route.query.guestPhone === 'string' ? route.query.guestPhone : ''"
+    :initialBoardType="typeof route.query.boardType === 'string' ? route.query.boardType : 'base'"
   />
 
 </template>

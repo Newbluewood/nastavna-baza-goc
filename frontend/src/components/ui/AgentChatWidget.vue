@@ -1,11 +1,14 @@
 <script setup>
 import { ref, watch, nextTick, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useChatStore } from '../../stores/chat';
 import { useLangStore } from '../../stores/lang';
+import { buildReservationRoute } from '../../utils/reservationDeepLink';
 import { marked } from 'marked';
 
 const chatStore = useChatStore();
 const langStore = useLangStore();
+const router = useRouter();
 const inputMessage = ref('');
 const messagesContainer = ref(null);
 
@@ -25,35 +28,12 @@ const renderMarkdown = (text) => {
   return marked.parse(text);
 };
 
-const submitReservation = async (msg) => {
-  const data = msg.action || {};
-  if (!data.guest_name || !data.guest_email || !data.check_in || !data.check_out) {
-    alert("Molimo popunite sva polja (ime, email i oba datuma).");
-    return;
-  }
-  msg.showForm = false;
-  
-  // Send inquiry to backend
-  try {
-    const roomName = data.target_room || 'Nepoznata soba';
-    const res = await chatStore.chatReserveStay({
-      target_room_id: data.room_id || null, 
-      sender_name: data.guest_name,
-      email: data.guest_email,
-      phone: data.guest_phone || '',
-      check_in: data.check_in,
-      check_out: data.check_out,
-      board_type: data.board_type || 'base',
-      message: `Upit za smeštaj: ${roomName}. (Poslato preko AI asistenta)`
-    });
-    console.log('✅ [WIDGET] RESERVATION SUCCESS:', res);
-    msg.submitted = true;
-  } catch (err) {
-    console.error('❌ [WIDGET] RESERVATION ERROR:', err);
-    alert("Greška pri slanju upita: " + err.message);
-    msg.showForm = true;
-    msg.submitted = false;
-  }
+const openSiteForm = (msg) => {
+  const route = buildReservationRoute(msg.action);
+  if (!route) return;
+  chatStore.isOpen = false;
+  router.push(route);
+  msg.redirectedToSite = true;
 };
 
 const sendMessage = async () => {
@@ -159,56 +139,26 @@ onMounted(() => {
                   <polyline points="17 21 17 13 7 13 7 21"></polyline>
                   <polyline points="7 3 7 8 15 8"></polyline>
                 </svg>
-                <h4>Pokretanje Rezervacije</h4>
+                <h4>{{ langStore.currentLang === 'sr' ? 'Rezervacija smeštaja' : 'Stay reservation' }}</h4>
               </div>
               <div class="ac-body">
                 <div class="ac-row">
-                  <span>Odabrano:</span>
-                  <strong>{{ msg.action.target_room || 'Vaš Smeštaj' }}</strong>
+                  <span>{{ langStore.currentLang === 'sr' ? 'Odabrano:' : 'Selected:' }}</span>
+                  <strong>{{ msg.action.target_room || 'Vaš smeštaj' }}</strong>
+                </div>
+                <div v-if="msg.action.check_in && msg.action.check_out" class="ac-row">
+                  <span>{{ langStore.currentLang === 'sr' ? 'Datumi:' : 'Dates:' }}</span>
+                  <strong>{{ msg.action.check_in }} → {{ msg.action.check_out }}</strong>
                 </div>
               </div>
-              <div class="ac-actions" v-if="!msg.showForm && !msg.submitted">
-                <button class="ac-btn primary" @click="msg.showForm = true">
-                  Završi rezervaciju
-                </button>
-              </div>
-              <div class="ac-form" v-if="msg.showForm && !msg.submitted">
-                <div class="form-group">
-                  <label>Ime i prezime</label>
-                  <input type="text" v-model="msg.action.guest_name" placeholder="Unesite vaše ime" class="ac-input" />
-                </div>
-                <div class="form-group">
-                  <label>Email adresa</label>
-                  <input type="email" v-model="msg.action.guest_email" placeholder="vas@email.com" class="ac-input" />
-                </div>
-                <div class="form-group">
-                  <label>Kontakt telefon</label>
-                  <input type="tel" v-model="msg.action.guest_phone" placeholder="+381 6x xxx xxxx" class="ac-input" />
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Datum dolaska</label>
-                    <input type="date" v-model="msg.action.check_in" class="ac-input" />
-                  </div>
-                  <div class="form-group">
-                    <label>Datum odlaska</label>
-                    <input type="date" v-model="msg.action.check_out" class="ac-input" />
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>{{ langStore.currentLang === 'sr' ? 'Vrsta usluge' : 'Service Type' }}</label>
-                  <select v-model="msg.action.board_type" class="ac-input">
-                    <option value="base">{{ langStore.currentLang === 'sr' ? 'Samo noćenje' : 'Room only' }}</option>
-                    <option value="half">{{ langStore.currentLang === 'sr' ? 'Polupansion' : 'Half board' }}</option>
-                    <option value="full">{{ langStore.currentLang === 'sr' ? 'Pun pansion' : 'Full board' }}</option>
-                  </select>
-                </div>
-                <button class="ac-btn success" @click="submitReservation(msg)">{{ langStore.currentLang === 'sr' ? 'Pošalji Upit' : 'Send Inquiry' }}</button>
-                <button class="ac-btn secondary" @click="msg.showForm = false">{{ langStore.currentLang === 'sr' ? 'Odustani' : 'Cancel' }}</button>
-              </div>
-              <div class="ac-success" v-if="msg.submitted">
+              <div class="ac-success" v-if="msg.redirectedToSite">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                <span>{{ langStore.currentLang === 'sr' ? 'Upit uspešno prosleđen!' : 'Inquiry sent successfully!' }}</span>
+                <span>{{ langStore.currentLang === 'sr' ? 'Forma je otvorena na sajtu — popunite i pošaljite upit.' : 'Form opened on site — review and submit.' }}</span>
+              </div>
+              <div class="ac-actions" v-else>
+                <button class="ac-btn primary" @click="openSiteForm(msg)">
+                  {{ langStore.currentLang === 'sr' ? 'Otvori formu za rezervaciju' : 'Open reservation form' }}
+                </button>
               </div>
             </div>
 

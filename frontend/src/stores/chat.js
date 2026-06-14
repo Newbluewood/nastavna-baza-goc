@@ -2,6 +2,8 @@ import { defineStore } from 'pinia';
 import agentService from '../services/agentService';
 import { useLangStore } from './lang';
 import { useGuestStore } from './guest';
+import router from '../router';
+import { buildReservationRoute } from '../utils/reservationDeepLink';
 
 const SESSION_KEY = 'goc_chat_session_id';
 
@@ -59,6 +61,14 @@ export const useChatStore = defineStore('chat', {
       this.isOpen = false;
     },
 
+    openSiteReservationForm(action) {
+      const route = buildReservationRoute(action);
+      if (!route) return false;
+      this.isOpen = false;
+      router.push(route);
+      return true;
+    },
+
     addMessage(role, content, action = null) {
       this.messages.push({ 
         role, 
@@ -72,6 +82,7 @@ export const useChatStore = defineStore('chat', {
         guestEmail: action?.guest_email || '',
         guestPhone: action?.guest_phone || '',
         showForm: !!action,
+        redirectedToSite: false,
         submitted: false
       });
     },
@@ -113,7 +124,8 @@ export const useChatStore = defineStore('chat', {
             assistantMsg.checkIn = normalized?.check_in || '';
             assistantMsg.checkOut = normalized?.check_out || '';
             assistantMsg.boardType = normalized?.board_type || 'base';
-            assistantMsg.showForm = normalized?.type === 'open_reservation_form';
+            assistantMsg.showForm = false;
+            assistantMsg.redirectedToSite = this.openSiteReservationForm(normalized);
           },
           {
             sessionId: this.sessionId,
