@@ -95,6 +95,8 @@ function mapHistoryRow(row) {
     submitted: false,
     needsRoomChoice: false,
     roomCandidates: [],
+    alternativeRooms: [],
+    showAlternatives: false,
   };
 }
 
@@ -160,15 +162,30 @@ export const useChatStore = defineStore('chat', {
     },
 
     /**
-     * Ako nema room_id — prikaži slobodne opcije sa dugmetom Odaberi (bez poruke greške).
+     * Pronađena soba → otvori formu; alternative ispod za „drugi smeštaj“.
+     * Bez room_id → primarni izbor sobe.
      */
     async prepareReservation(msg, action, { autoOpen = false } = {}) {
       const normalized = normalizeReservationAction(action);
       msg.action = normalized;
       msg.needsRoomChoice = false;
       msg.roomCandidates = [];
+      msg.alternativeRooms = [];
+      msg.showAlternatives = false;
 
       if (normalized.room_id) {
+        msg.alternativeRooms = (normalized.alternative_rooms || [])
+          .filter((r) => Number(r.id) !== Number(normalized.room_id));
+
+        if (msg.alternativeRooms.length === 0 && normalized.facility_name) {
+          const broad = await agentService.searchRooms(normalized.facility_name.split(/\s+/).pop() || normalized.facility_name, {
+            check_in: normalized.check_in,
+            check_out: normalized.check_out,
+          });
+          const opts = broad.room_options || broad.candidates || [];
+          msg.alternativeRooms = opts.filter((r) => Number(r.id) !== Number(normalized.room_id));
+        }
+
         if (autoOpen) {
           const opened = this.openInquiryFromAction(normalized);
           if (opened) {
@@ -212,10 +229,18 @@ export const useChatStore = defineStore('chat', {
       }
     },
 
+    toggleAlternativeRooms(msg) {
+      msg.showAlternatives = !msg.showAlternatives;
+    },
+
     async selectRoomForReservation(msg, room) {
       msg.action = this.applyResolvedRoom(msg.action, room);
       msg.needsRoomChoice = false;
       msg.roomCandidates = [];
+      msg.alternativeRooms = (msg.alternativeRooms || []).filter(
+        (r) => Number(r.id) !== Number(room.id),
+      );
+      msg.showAlternatives = false;
       const opened = this.openInquiryFromAction(msg.action);
       if (opened) {
         msg.action = opened;
@@ -250,6 +275,8 @@ export const useChatStore = defineStore('chat', {
         submitted: false,
         needsRoomChoice: false,
         roomCandidates: [],
+        alternativeRooms: [],
+        showAlternatives: false,
       });
     },
     

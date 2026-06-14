@@ -44,6 +44,10 @@ const selectRoom = async (msg, room) => {
   await chatStore.selectRoomForReservation(msg, room);
 };
 
+const toggleAlternatives = (msg) => {
+  chatStore.toggleAlternativeRooms(msg);
+};
+
 function formatRsd(value) {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return '';
@@ -182,12 +186,8 @@ onMounted(async () => {
               </div>
               <div class="ac-body">
                 <div class="ac-row">
-                  <span>{{ msg.needsRoomChoice
-                    ? (langStore.currentLang === 'sr' ? 'Status:' : 'Status:')
-                    : (langStore.currentLang === 'sr' ? 'Odabrano:' : 'Selected:') }}</span>
-                  <strong>{{ msg.needsRoomChoice
-                    ? (langStore.currentLang === 'sr' ? 'Izaberite sobu ispod' : 'Choose a room below')
-                    : (msg.action.target_room || 'Vaš smeštaj') }}</strong>
+                  <span>{{ langStore.currentLang === 'sr' ? 'Odabrano:' : 'Selected:' }}</span>
+                  <strong>{{ msg.action.target_room || 'Vaš smeštaj' }}</strong>
                 </div>
                 <div v-if="msg.action.check_in && msg.action.check_out" class="ac-row">
                   <span>{{ langStore.currentLang === 'sr' ? 'Datumi:' : 'Dates:' }}</span>
@@ -196,7 +196,12 @@ onMounted(async () => {
               </div>
               <div class="ac-success" v-if="msg.redirectedToSite">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                <span>{{ langStore.currentLang === 'sr' ? 'Forma je otvorena na sajtu — popunite i pošaljite upit.' : 'Form opened on site — review and submit.' }}</span>
+                <span>{{ langStore.currentLang === 'sr' ? 'Forma je otvorena — pregledajte i pošaljite upit.' : 'Form opened — review and submit.' }}</span>
+              </div>
+              <div class="ac-actions" v-else-if="msg.action.room_id">
+                <button class="ac-btn primary" @click="openSiteForm(msg)">
+                  {{ langStore.currentLang === 'sr' ? 'Otvori formu za rezervaciju' : 'Open reservation form' }}
+                </button>
               </div>
               <div class="ac-room-picker" v-else-if="msg.needsRoomChoice && msg.roomCandidates?.length">
                 <p class="ac-picker-title">
@@ -222,12 +227,35 @@ onMounted(async () => {
                   </span>
                 </button>
               </div>
-              <div class="ac-actions" v-else-if="msg.action.room_id">
-                <button class="ac-btn primary" @click="openSiteForm(msg)">
-                  {{ langStore.currentLang === 'sr' ? 'Otvori formu za rezervaciju' : 'Open reservation form' }}
+              <div class="ac-alternatives" v-if="msg.action.room_id && msg.alternativeRooms?.length">
+                <button type="button" class="ac-alt-toggle" @click="toggleAlternatives(msg)">
+                  {{ msg.showAlternatives
+                    ? (langStore.currentLang === 'sr' ? 'Sakrij druge opcije' : 'Hide other options')
+                    : (langStore.currentLang === 'sr' ? 'Ili ipak izaberite drugi smeštaj' : 'Or choose different accommodation') }}
                 </button>
+                <div v-if="msg.showAlternatives" class="ac-alt-list">
+                  <button
+                    v-for="room in msg.alternativeRooms"
+                    :key="room.id"
+                    type="button"
+                    class="ac-room-option"
+                    @click="selectRoom(msg, room)"
+                  >
+                    <div class="ac-room-option-body">
+                      <span class="ac-room-name">{{ room.name }}</span>
+                      <span v-if="room.capacity" class="ac-room-capacity">{{ room.capacity }}</span>
+                      <span v-if="roomPriceLabel(msg, room)" class="ac-room-price">{{ roomPriceLabel(msg, room) }}</span>
+                      <span v-if="room.available !== false" class="ac-room-badge">
+                        {{ langStore.currentLang === 'sr' ? 'Slobodno' : 'Available' }}
+                      </span>
+                    </div>
+                    <span class="ac-room-select-btn">
+                      {{ langStore.currentLang === 'sr' ? 'Odaberi' : 'Select' }}
+                    </span>
+                  </button>
+                </div>
               </div>
-              <div class="ac-hint" v-else>
+              <div class="ac-hint" v-else-if="!msg.action.room_id && !msg.needsRoomChoice">
                 <span>{{ langStore.currentLang === 'sr' ? 'Tražimo odgovarajuću sobu…' : 'Looking for matching rooms…' }}</span>
               </div>
             </div>
@@ -657,6 +685,36 @@ onMounted(async () => {
   padding: 0 0.75rem 0.75rem;
   font-size: 0.82rem;
   color: #888;
+}
+
+.ac-alternatives {
+  padding: 0 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ac-alt-toggle {
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: #6e4529;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ac-alt-toggle:hover {
+  color: #4a2f1c;
+}
+
+.ac-alt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .ac-btn {
