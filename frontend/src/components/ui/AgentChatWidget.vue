@@ -27,17 +27,8 @@ const renderMarkdown = (text) => {
   return marked.parse(text);
 };
 
-const openSiteForm = async (msg) => {
-  if (msg.needsRoomChoice) return;
-  if (!msg.action?.room_id) {
-    await chatStore.prepareReservation(msg, msg.action, { autoOpen: true });
-    return;
-  }
-  const opened = await chatStore.openSiteReservationForm(msg.action);
-  if (opened) {
-    msg.action = opened;
-    msg.redirectedToSite = true;
-  }
+const confirmReservation = async (msg) => {
+  await chatStore.confirmReservation(msg);
 };
 
 const selectRoom = async (msg, room) => {
@@ -62,6 +53,17 @@ function roomPriceLabel(msg, room) {
       ? room.price_half_board
       : room.price_base;
   return formatRsd(price);
+}
+
+function boardLabel(boardType) {
+  if (langStore.currentLang === 'en') {
+    if (boardType === 'half') return 'Half board';
+    if (boardType === 'full') return 'Full board';
+    return 'Room only';
+  }
+  if (boardType === 'half') return 'Polupansion';
+  if (boardType === 'full') return 'Pun pansion';
+  return 'Samo noćenje';
 }
 
 const sendMessage = async () => {
@@ -193,14 +195,25 @@ onMounted(async () => {
                   <span>{{ langStore.currentLang === 'sr' ? 'Datumi:' : 'Dates:' }}</span>
                   <strong>{{ msg.action.check_in }} → {{ msg.action.check_out }}</strong>
                 </div>
+                <div v-if="msg.action.guest_name" class="ac-row">
+                  <span>{{ langStore.currentLang === 'sr' ? 'Gost:' : 'Guest:' }}</span>
+                  <strong>{{ msg.action.guest_name }}</strong>
+                </div>
+                <div v-if="msg.action.board_type && msg.action.board_type !== 'base'" class="ac-row">
+                  <span>{{ langStore.currentLang === 'sr' ? 'Usluga:' : 'Board:' }}</span>
+                  <strong>{{ boardLabel(msg.action.board_type) }}</strong>
+                </div>
               </div>
               <div class="ac-success" v-if="msg.redirectedToSite">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 <span>{{ langStore.currentLang === 'sr' ? 'Forma je otvorena — pregledajte i pošaljite upit.' : 'Form opened — review and submit.' }}</span>
               </div>
               <div class="ac-actions" v-else-if="msg.action.room_id">
-                <button class="ac-btn primary" @click="openSiteForm(msg)">
-                  {{ langStore.currentLang === 'sr' ? 'Otvori formu za rezervaciju' : 'Open reservation form' }}
+                <p class="ac-confirm-hint">
+                  {{ langStore.currentLang === 'sr' ? 'Pregledajte podatke i potvrdite da otvorite formu.' : 'Review details and confirm to open the form.' }}
+                </p>
+                <button class="ac-btn primary" @click="confirmReservation(msg)">
+                  {{ langStore.currentLang === 'sr' ? 'Potvrdi' : 'Confirm' }}
                 </button>
               </div>
               <div class="ac-room-picker" v-else-if="msg.needsRoomChoice && msg.roomCandidates?.length">
@@ -597,6 +610,12 @@ onMounted(async () => {
 
 .ac-actions {
   padding: 0 0.75rem 0.75rem;
+}
+
+.ac-confirm-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: #666;
 }
 
 .ac-room-picker {

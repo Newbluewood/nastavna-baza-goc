@@ -162,16 +162,17 @@ export const useChatStore = defineStore('chat', {
     },
 
     /**
-     * Pronađena soba → otvori formu; alternative ispod za „drugi smeštaj“.
+     * Pronađena soba → prikaži karticu sa Potvrdi (forma tek na klik).
      * Bez room_id → primarni izbor sobe.
      */
-    async prepareReservation(msg, action, { autoOpen = false } = {}) {
+    async prepareReservation(msg, action) {
       const normalized = normalizeReservationAction(action);
       msg.action = normalized;
       msg.needsRoomChoice = false;
       msg.roomCandidates = [];
       msg.alternativeRooms = [];
       msg.showAlternatives = false;
+      msg.redirectedToSite = false;
 
       if (normalized.room_id) {
         msg.alternativeRooms = (normalized.alternative_rooms || [])
@@ -184,14 +185,6 @@ export const useChatStore = defineStore('chat', {
           });
           const opts = broad.room_options || broad.candidates || [];
           msg.alternativeRooms = opts.filter((r) => Number(r.id) !== Number(normalized.room_id));
-        }
-
-        if (autoOpen || msg.redirectedToSite) {
-          const opened = this.openInquiryFromAction(normalized);
-          if (opened) {
-            msg.action = opened;
-            msg.redirectedToSite = true;
-          }
         }
         return;
       }
@@ -237,15 +230,21 @@ export const useChatStore = defineStore('chat', {
       msg.action = this.applyResolvedRoom(msg.action, room);
       msg.needsRoomChoice = false;
       msg.roomCandidates = [];
+      msg.redirectedToSite = false;
       msg.alternativeRooms = (msg.alternativeRooms || []).filter(
         (r) => Number(r.id) !== Number(room.id),
       );
       msg.showAlternatives = false;
+    },
+
+    async confirmReservation(msg) {
+      if (!msg.action?.room_id) return false;
       const opened = this.openInquiryFromAction(msg.action);
       if (opened) {
         msg.action = opened;
         msg.redirectedToSite = true;
       }
+      return !!opened;
     },
 
     async openSiteReservationForm(action) {
@@ -314,9 +313,7 @@ export const useChatStore = defineStore('chat', {
             assistantMsg.checkOut = normalized?.check_out || '';
             assistantMsg.boardType = normalized?.board_type || 'base';
             assistantMsg.showForm = false;
-            this.prepareReservation(assistantMsg, normalized, {
-              autoOpen: !normalized.needs_room_choice,
-            });
+            this.prepareReservation(assistantMsg, normalized);
           },
           {
             sessionId: this.sessionId,
