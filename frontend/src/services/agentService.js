@@ -81,11 +81,14 @@ class AgentService {
     }
   }
 
-  async searchRooms(name) {
+  async searchRooms(name, { check_in: checkIn, check_out: checkOut } = {}) {
     const q = encodeURIComponent(String(name || '').trim());
-    if (!q) return { certain: null, candidates: [], needs_choice: true };
-    const response = await fetch(`${this.baseURL}/api/rooms/resolve?name=${q}`);
-    if (!response.ok) return { certain: null, candidates: [], needs_choice: true };
+    if (!q) return { certain: null, candidates: [], room_options: [], needs_choice: true };
+    const params = new URLSearchParams({ name: String(name || '').trim() });
+    if (checkIn) params.set('check_in', checkIn);
+    if (checkOut) params.set('check_out', checkOut);
+    const response = await fetch(`${this.baseURL}/api/rooms/resolve?${params}`);
+    if (!response.ok) return { certain: null, candidates: [], room_options: [], needs_choice: true };
     return response.json();
   }
 

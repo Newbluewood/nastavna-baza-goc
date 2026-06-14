@@ -44,6 +44,22 @@ const selectRoom = async (msg, room) => {
   await chatStore.selectRoomForReservation(msg, room);
 };
 
+function formatRsd(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  return `${n.toLocaleString('sr-RS')} RSD`;
+}
+
+function roomPriceLabel(msg, room) {
+  const board = msg.action?.board_type || 'base';
+  const price = board === 'full'
+    ? room.price_full_board
+    : board === 'half'
+      ? room.price_half_board
+      : room.price_base;
+  return formatRsd(price);
+}
+
 const sendMessage = async () => {
   if (!inputMessage.value.trim() || chatStore.isLoading) return;
   
@@ -167,9 +183,11 @@ onMounted(async () => {
               <div class="ac-body">
                 <div class="ac-row">
                   <span>{{ msg.needsRoomChoice
-                    ? (langStore.currentLang === 'sr' ? 'Pretraga:' : 'Search:')
+                    ? (langStore.currentLang === 'sr' ? 'Status:' : 'Status:')
                     : (langStore.currentLang === 'sr' ? 'Odabrano:' : 'Selected:') }}</span>
-                  <strong>{{ msg.action.target_room || 'Vaš smeštaj' }}</strong>
+                  <strong>{{ msg.needsRoomChoice
+                    ? (langStore.currentLang === 'sr' ? 'Izaberite sobu ispod' : 'Choose a room below')
+                    : (msg.action.target_room || 'Vaš smeštaj') }}</strong>
                 </div>
                 <div v-if="msg.action.check_in && msg.action.check_out" class="ac-row">
                   <span>{{ langStore.currentLang === 'sr' ? 'Datumi:' : 'Dates:' }}</span>
@@ -182,7 +200,7 @@ onMounted(async () => {
               </div>
               <div class="ac-room-picker" v-else-if="msg.needsRoomChoice && msg.roomCandidates?.length">
                 <p class="ac-picker-title">
-                  {{ langStore.currentLang === 'sr' ? 'Izaberite sobu pre rezervacije:' : 'Choose a room before booking:' }}
+                  {{ langStore.currentLang === 'sr' ? 'Izaberite sobu za rezervaciju:' : 'Choose a room to book:' }}
                 </p>
                 <button
                   v-for="room in msg.roomCandidates"
@@ -191,8 +209,17 @@ onMounted(async () => {
                   class="ac-room-option"
                   @click="selectRoom(msg, room)"
                 >
-                  <span class="ac-room-facility">{{ room.facility_name }}</span>
-                  <span class="ac-room-name">{{ room.name }}</span>
+                  <div class="ac-room-option-body">
+                    <span class="ac-room-name">{{ room.name }}</span>
+                    <span v-if="room.capacity" class="ac-room-capacity">{{ room.capacity }}</span>
+                    <span v-if="roomPriceLabel(msg, room)" class="ac-room-price">{{ roomPriceLabel(msg, room) }}</span>
+                    <span v-if="room.available !== false" class="ac-room-badge">
+                      {{ langStore.currentLang === 'sr' ? 'Slobodno' : 'Available' }}
+                    </span>
+                  </div>
+                  <span class="ac-room-select-btn">
+                    {{ langStore.currentLang === 'sr' ? 'Odaberi' : 'Select' }}
+                  </span>
                 </button>
               </div>
               <div class="ac-actions" v-else-if="msg.action.room_id">
@@ -560,9 +587,10 @@ onMounted(async () => {
 
 .ac-room-option {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.15rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
   width: 100%;
   padding: 0.55rem 0.65rem;
   border: 1px solid #d8cbb8;
@@ -571,6 +599,42 @@ onMounted(async () => {
   cursor: pointer;
   text-align: left;
   transition: background 0.15s, border-color 0.15s;
+}
+
+.ac-room-option-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.ac-room-select-btn {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  background: #6e4529;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+}
+
+.ac-room-capacity {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.ac-room-price {
+  font-size: 0.75rem;
+  color: #6e4529;
+  font-weight: 600;
+}
+
+.ac-room-badge {
+  font-size: 0.68rem;
+  color: #2d6a2d;
+  font-weight: 600;
 }
 
 .ac-room-option:hover {

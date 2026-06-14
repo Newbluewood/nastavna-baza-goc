@@ -160,7 +160,7 @@ export const useChatStore = defineStore('chat', {
     },
 
     /**
-     * Ako nema room_id ili match nije siguran — ponudi izbor soba pre forme.
+     * Ako nema room_id — prikaži slobodne opcije sa dugmetom Odaberi (bez poruke greške).
      */
     async prepareReservation(msg, action, { autoOpen = false } = {}) {
       const normalized = normalizeReservationAction(action);
@@ -179,30 +179,37 @@ export const useChatStore = defineStore('chat', {
         return;
       }
 
-      const lookupName = normalized.target_room || normalized.room_name;
-      if (!lookupName) return;
-
-      const search = await agentService.searchRooms(lookupName);
-      msg.roomCandidates = search.candidates || [];
-
-      if (search.certain) {
-        msg.action = this.applyResolvedRoom(normalized, search.certain);
-        if (autoOpen) {
-          const opened = this.openInquiryFromAction(msg.action);
-          if (opened) {
-            msg.action = opened;
-            msg.redirectedToSite = true;
-          }
-        }
-        return;
-      }
-
-      if (msg.roomCandidates.length > 0) {
+      const optionsFromAction = normalized.room_options;
+      if (Array.isArray(optionsFromAction) && optionsFromAction.length > 0) {
+        msg.roomCandidates = optionsFromAction;
         msg.needsRoomChoice = true;
         return;
       }
 
-      this.error = 'Nismo pronašli sobu u bazi. Pokušajte preciznije (npr. „Piramida apartman“ ili broj sobe).';
+      const lookupName = normalized.target_room || normalized.room_name;
+      if (!lookupName) return;
+
+      const search = await agentService.searchRooms(lookupName, {
+        check_in: normalized.check_in,
+        check_out: normalized.check_out,
+      });
+
+      const options = search.room_options || search.candidates || [];
+      if (options.length > 0) {
+        msg.roomCandidates = options;
+        msg.needsRoomChoice = true;
+        return;
+      }
+
+      const broad = await agentService.searchRooms(lookupName.split(/\s+/)[0], {
+        check_in: normalized.check_in,
+        check_out: normalized.check_out,
+      });
+      const broadOptions = broad.room_options || broad.candidates || [];
+      if (broadOptions.length > 0) {
+        msg.roomCandidates = broadOptions;
+        msg.needsRoomChoice = true;
+      }
     },
 
     async selectRoomForReservation(msg, room) {
@@ -280,7 +287,9 @@ export const useChatStore = defineStore('chat', {
             assistantMsg.checkOut = normalized?.check_out || '';
             assistantMsg.boardType = normalized?.board_type || 'base';
             assistantMsg.showForm = false;
-            this.prepareReservation(assistantMsg, normalized, { autoOpen: true });
+            this.prepareReservation(assistantMsg, normalized, {
+              autoOpen: !normalized.needs_room_choice,
+            });
           },
           {
             sessionId: this.sessionId,
