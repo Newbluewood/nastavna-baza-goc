@@ -177,7 +177,10 @@ onMounted(async () => {
             <div v-else class="text-body">{{ msg.content }}</div>
             
             <!-- Action / Tool Card -->
-            <div v-if="msg.action && msg.action.type === 'open_reservation_form'" class="action-card">
+            <div
+              v-if="msg.action && msg.action.type === 'open_reservation_form' && !(chatStore.isLoading && index === chatStore.messages.length - 1)"
+              class="action-card"
+            >
               <div class="ac-header">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>

@@ -288,8 +288,9 @@ export const useChatStore = defineStore('chat', {
       await this.persistMessageToSite('user', content);
       this.isLoading = true;
 
-      let assistantMsg = null;
-      try {
+        let assistantMsg = null;
+        let pendingAction = null;
+        try {
         const history = this.messages
           .slice(-6, -1)
           .map(m => ({ role: m.role, content: m.content }));
@@ -304,22 +305,24 @@ export const useChatStore = defineStore('chat', {
           langStore.currentLang,
           (chunk) => { assistantMsg.content += chunk; },
           (action) => {
-            const normalized = normalizeReservationAction(action);
-            assistantMsg.action = normalized;
-            assistantMsg.guestName = normalized?.guest_name || userContext.guest_name || '';
-            assistantMsg.guestEmail = normalized?.guest_email || userContext.guest_email || '';
-            assistantMsg.guestPhone = normalized?.guest_phone || userContext.guest_phone || '';
-            assistantMsg.checkIn = normalized?.check_in || '';
-            assistantMsg.checkOut = normalized?.check_out || '';
-            assistantMsg.boardType = normalized?.board_type || 'base';
-            assistantMsg.showForm = false;
-            this.prepareReservation(assistantMsg, normalized);
+            pendingAction = normalizeReservationAction(action);
           },
           {
             sessionId: this.sessionId,
             userContext,
           },
         );
+
+        if (pendingAction && assistantMsg) {
+          assistantMsg.action = pendingAction;
+          assistantMsg.guestName = pendingAction.guest_name || userContext.guest_name || '';
+          assistantMsg.guestEmail = pendingAction.guest_email || userContext.guest_email || '';
+          assistantMsg.guestPhone = pendingAction.guest_phone || userContext.guest_phone || '';
+          assistantMsg.checkIn = pendingAction.check_in || '';
+          assistantMsg.checkOut = pendingAction.check_out || '';
+          assistantMsg.boardType = pendingAction.board_type || 'base';
+          await this.prepareReservation(assistantMsg, pendingAction);
+        }
 
         if (assistantMsg?.content) {
           const meta = assistantMsg.action
