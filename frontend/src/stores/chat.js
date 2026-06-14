@@ -129,8 +129,33 @@ export const useChatStore = defineStore('chat', {
       this.isOpen = false;
     },
 
-    openSiteReservationForm(action) {
+    async ensureActionResolvable(action) {
       const normalized = normalizeReservationAction(action);
+      if (!normalized || normalized.type !== 'open_reservation_form') return normalized;
+      if (normalized.room_id) return normalized;
+
+      const lookupName = normalized.target_room || normalized.room_name;
+      if (!lookupName) return normalized;
+
+      try {
+        const resolved = await agentService.resolveRoom(lookupName);
+        if (resolved?.id) {
+          return normalizeReservationAction({
+            ...normalized,
+            room_id: resolved.id,
+            facility_id: resolved.facility_id,
+            facility_name: resolved.facility_name,
+            target_room: resolved.name,
+          });
+        }
+      } catch (err) {
+        console.warn('Room resolve failed:', err.message);
+      }
+      return normalized;
+    },
+
+    async openSiteReservationForm(action) {
+      const normalized = await this.ensureActionResolvable(action);
       if (!canOpenSiteReservationForm(normalized)) return false;
 
       this.inquiryModal = {
@@ -146,7 +171,7 @@ export const useChatStore = defineStore('chat', {
         boardType: normalized.board_type || 'base',
       };
       this.isOpen = false;
-      return true;
+      return normalized;
     },
 
     closeInquiryModal() {
@@ -205,7 +230,12 @@ export const useChatStore = defineStore('chat', {
             assistantMsg.checkOut = normalized?.check_out || '';
             assistantMsg.boardType = normalized?.board_type || 'base';
             assistantMsg.showForm = false;
-            assistantMsg.redirectedToSite = this.openSiteReservationForm(normalized);
+            this.openSiteReservationForm(normalized).then((resolved) => {
+              if (resolved) {
+                assistantMsg.action = resolved;
+                assistantMsg.redirectedToSite = true;
+              }
+            });
           },
           {
             sessionId: this.sessionId,

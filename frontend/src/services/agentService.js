@@ -81,6 +81,15 @@ class AgentService {
     }
   }
 
+  async resolveRoom(name) {
+    const q = encodeURIComponent(String(name || '').trim());
+    if (!q) return null;
+    const response = await fetch(`${this.baseURL}/api/rooms/resolve?name=${q}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data?.id ? data : null;
+  }
+
   async linkSession(sessionId, guestId) {
     const response = await fetch(`${this.baseURL}/api/chat/link-session`, {
       method: 'POST',
