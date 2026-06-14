@@ -186,7 +186,7 @@ export const useChatStore = defineStore('chat', {
           msg.alternativeRooms = opts.filter((r) => Number(r.id) !== Number(normalized.room_id));
         }
 
-        if (autoOpen) {
+        if (autoOpen || msg.redirectedToSite) {
           const opened = this.openInquiryFromAction(normalized);
           if (opened) {
             msg.action = opened;

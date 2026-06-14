@@ -240,31 +240,49 @@ const fetchAvailability = async () => {
   }
 }
 
-// Reset form kada se otvori and fetch availability
-watch(() => props.isOpen, async (newVal) => {
-  if (newVal) {
-    form.value = {
-      sender_name: props.initialGuestName || '',
-      email: props.initialGuestEmail || '',
-      phone: props.initialGuestPhone || '',
-      message: '',
-      board_type: ['base', 'half', 'full'].includes(props.initialBoardType)
-        ? props.initialBoardType
-        : 'base',
-    }
-    await prefillFromGuestProfile()
-    const checkInDate = parseDateOnly(props.initialCheckIn)
-    const checkOutDate = parseDateOnly(props.initialCheckOut)
-    if (checkInDate && checkOutDate && checkOutDate >= checkInDate) {
-      dateRange.value = [checkInDate, checkOutDate]
-    } else {
-      dateRange.value = null
-    }
-    error.value = ''
-    success.value = ''
-    fetchAvailability()
+const applyInitialValues = async () => {
+  if (!props.isOpen) return
+
+  form.value = {
+    sender_name: props.initialGuestName || '',
+    email: props.initialGuestEmail || '',
+    phone: props.initialGuestPhone || '',
+    message: '',
+    board_type: ['base', 'half', 'full'].includes(props.initialBoardType)
+      ? props.initialBoardType
+      : 'base',
   }
-})
+  await prefillFromGuestProfile()
+
+  const checkInDate = parseDateOnly(props.initialCheckIn)
+  const checkOutDate = parseDateOnly(props.initialCheckOut)
+  if (checkInDate && checkOutDate && checkOutDate >= checkInDate) {
+    dateRange.value = [checkInDate, checkOutDate]
+  } else {
+    dateRange.value = null
+  }
+
+  error.value = ''
+  success.value = false
+  fetchAvailability()
+}
+
+// Popuni formu kad se modal otvori ILI kad stignu podaci posle SSE refine-a.
+watch(
+  () => ({
+    open: props.isOpen,
+    checkIn: props.initialCheckIn,
+    checkOut: props.initialCheckOut,
+    guestName: props.initialGuestName,
+    guestEmail: props.initialGuestEmail,
+    guestPhone: props.initialGuestPhone,
+    boardType: props.initialBoardType,
+  }),
+  async (vals) => {
+    if (vals.open) await applyInitialValues()
+  },
+  { immediate: true, deep: true },
+)
 
 const close = () => {
   emit('update:isOpen', false)
