@@ -93,6 +93,8 @@ function mapHistoryRow(row) {
     showForm: !!action,
     redirectedToSite: false,
     submitted: false,
+    needsRoomChoice: false,
+    roomCandidates: [],
   };
 }
 
@@ -129,49 +131,95 @@ export const useChatStore = defineStore('chat', {
       this.isOpen = false;
     },
 
-    async ensureActionResolvable(action) {
+    applyResolvedRoom(action, room) {
+      return normalizeReservationAction({
+        ...action,
+        room_id: room.id,
+        facility_id: room.facility_id,
+        facility_name: room.facility_name,
+        target_room: room.name,
+      });
+    },
+
+    openInquiryFromAction(action) {
+      if (!canOpenSiteReservationForm(action)) return false;
+      this.inquiryModal = {
+        open: true,
+        roomId: Number(action.room_id),
+        roomName: action.target_room || action.room_name || '',
+        buildingName: action.facility_name || '',
+        checkIn: action.check_in || '',
+        checkOut: action.check_out || '',
+        guestName: action.guest_name || '',
+        guestEmail: action.guest_email || '',
+        guestPhone: action.guest_phone || '',
+        boardType: action.board_type || 'base',
+      };
+      this.isOpen = false;
+      return action;
+    },
+
+    /**
+     * Ako nema room_id ili match nije siguran — ponudi izbor soba pre forme.
+     */
+    async prepareReservation(msg, action, { autoOpen = false } = {}) {
       const normalized = normalizeReservationAction(action);
-      if (!normalized || normalized.type !== 'open_reservation_form') return normalized;
-      if (normalized.room_id) return normalized;
+      msg.action = normalized;
+      msg.needsRoomChoice = false;
+      msg.roomCandidates = [];
+
+      if (normalized.room_id) {
+        if (autoOpen) {
+          const opened = this.openInquiryFromAction(normalized);
+          if (opened) {
+            msg.action = opened;
+            msg.redirectedToSite = true;
+          }
+        }
+        return;
+      }
 
       const lookupName = normalized.target_room || normalized.room_name;
-      if (!lookupName) return normalized;
+      if (!lookupName) return;
 
-      try {
-        const resolved = await agentService.resolveRoom(lookupName);
-        if (resolved?.id) {
-          return normalizeReservationAction({
-            ...normalized,
-            room_id: resolved.id,
-            facility_id: resolved.facility_id,
-            facility_name: resolved.facility_name,
-            target_room: resolved.name,
-          });
+      const search = await agentService.searchRooms(lookupName);
+      msg.roomCandidates = search.candidates || [];
+
+      if (search.certain) {
+        msg.action = this.applyResolvedRoom(normalized, search.certain);
+        if (autoOpen) {
+          const opened = this.openInquiryFromAction(msg.action);
+          if (opened) {
+            msg.action = opened;
+            msg.redirectedToSite = true;
+          }
         }
-      } catch (err) {
-        console.warn('Room resolve failed:', err.message);
+        return;
       }
-      return normalized;
+
+      if (msg.roomCandidates.length > 0) {
+        msg.needsRoomChoice = true;
+        return;
+      }
+
+      this.error = 'Nismo pronašli sobu u bazi. Pokušajte preciznije (npr. „Piramida apartman“ ili broj sobe).';
+    },
+
+    async selectRoomForReservation(msg, room) {
+      msg.action = this.applyResolvedRoom(msg.action, room);
+      msg.needsRoomChoice = false;
+      msg.roomCandidates = [];
+      const opened = this.openInquiryFromAction(msg.action);
+      if (opened) {
+        msg.action = opened;
+        msg.redirectedToSite = true;
+      }
     },
 
     async openSiteReservationForm(action) {
-      const normalized = await this.ensureActionResolvable(action);
+      const normalized = normalizeReservationAction(action);
       if (!canOpenSiteReservationForm(normalized)) return false;
-
-      this.inquiryModal = {
-        open: true,
-        roomId: Number(normalized.room_id),
-        roomName: normalized.target_room || normalized.room_name || '',
-        buildingName: normalized.facility_name || '',
-        checkIn: normalized.check_in || '',
-        checkOut: normalized.check_out || '',
-        guestName: normalized.guest_name || '',
-        guestEmail: normalized.guest_email || '',
-        guestPhone: normalized.guest_phone || '',
-        boardType: normalized.board_type || 'base',
-      };
-      this.isOpen = false;
-      return normalized;
+      return this.openInquiryFromAction(normalized);
     },
 
     closeInquiryModal() {
@@ -192,7 +240,9 @@ export const useChatStore = defineStore('chat', {
         guestPhone: action?.guest_phone || '',
         showForm: !!action,
         redirectedToSite: false,
-        submitted: false
+        submitted: false,
+        needsRoomChoice: false,
+        roomCandidates: [],
       });
     },
     
@@ -230,12 +280,7 @@ export const useChatStore = defineStore('chat', {
             assistantMsg.checkOut = normalized?.check_out || '';
             assistantMsg.boardType = normalized?.board_type || 'base';
             assistantMsg.showForm = false;
-            this.openSiteReservationForm(normalized).then((resolved) => {
-              if (resolved) {
-                assistantMsg.action = resolved;
-                assistantMsg.redirectedToSite = true;
-              }
-            });
+            this.prepareReservation(assistantMsg, normalized, { autoOpen: true });
           },
           {
             sessionId: this.sessionId,

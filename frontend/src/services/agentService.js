@@ -81,13 +81,12 @@ class AgentService {
     }
   }
 
-  async resolveRoom(name) {
+  async searchRooms(name) {
     const q = encodeURIComponent(String(name || '').trim());
-    if (!q) return null;
+    if (!q) return { certain: null, candidates: [], needs_choice: true };
     const response = await fetch(`${this.baseURL}/api/rooms/resolve?name=${q}`);
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data?.id ? data : null;
+    if (!response.ok) return { certain: null, candidates: [], needs_choice: true };
+    return response.json();
   }
 
   async linkSession(sessionId, guestId) {

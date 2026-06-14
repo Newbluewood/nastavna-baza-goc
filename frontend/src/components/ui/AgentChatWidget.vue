@@ -28,15 +28,20 @@ const renderMarkdown = (text) => {
 };
 
 const openSiteForm = async (msg) => {
-  const resolved = await chatStore.openSiteReservationForm(msg.action);
-  if (resolved) {
-    msg.action = resolved;
-    msg.redirectedToSite = true;
+  if (msg.needsRoomChoice) return;
+  if (!msg.action?.room_id) {
+    await chatStore.prepareReservation(msg, msg.action, { autoOpen: true });
     return;
   }
-  chatStore.error = langStore.currentLang === 'sr'
-    ? 'Nije moguće otvoriti formu — soba nije pronađena u bazi. Pitajte agenta ponovo.'
-    : 'Cannot open the form — room was not found. Please ask the agent again.';
+  const opened = await chatStore.openSiteReservationForm(msg.action);
+  if (opened) {
+    msg.action = opened;
+    msg.redirectedToSite = true;
+  }
+};
+
+const selectRoom = async (msg, room) => {
+  await chatStore.selectRoomForReservation(msg, room);
 };
 
 const sendMessage = async () => {
@@ -161,7 +166,9 @@ onMounted(async () => {
               </div>
               <div class="ac-body">
                 <div class="ac-row">
-                  <span>{{ langStore.currentLang === 'sr' ? 'Odabrano:' : 'Selected:' }}</span>
+                  <span>{{ msg.needsRoomChoice
+                    ? (langStore.currentLang === 'sr' ? 'Pretraga:' : 'Search:')
+                    : (langStore.currentLang === 'sr' ? 'Odabrano:' : 'Selected:') }}</span>
                   <strong>{{ msg.action.target_room || 'Vaš smeštaj' }}</strong>
                 </div>
                 <div v-if="msg.action.check_in && msg.action.check_out" class="ac-row">
@@ -173,10 +180,28 @@ onMounted(async () => {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 <span>{{ langStore.currentLang === 'sr' ? 'Forma je otvorena na sajtu — popunite i pošaljite upit.' : 'Form opened on site — review and submit.' }}</span>
               </div>
-              <div class="ac-actions" v-else>
+              <div class="ac-room-picker" v-else-if="msg.needsRoomChoice && msg.roomCandidates?.length">
+                <p class="ac-picker-title">
+                  {{ langStore.currentLang === 'sr' ? 'Izaberite sobu pre rezervacije:' : 'Choose a room before booking:' }}
+                </p>
+                <button
+                  v-for="room in msg.roomCandidates"
+                  :key="room.id"
+                  type="button"
+                  class="ac-room-option"
+                  @click="selectRoom(msg, room)"
+                >
+                  <span class="ac-room-facility">{{ room.facility_name }}</span>
+                  <span class="ac-room-name">{{ room.name }}</span>
+                </button>
+              </div>
+              <div class="ac-actions" v-else-if="msg.action.room_id">
                 <button class="ac-btn primary" @click="openSiteForm(msg)">
                   {{ langStore.currentLang === 'sr' ? 'Otvori formu za rezervaciju' : 'Open reservation form' }}
                 </button>
+              </div>
+              <div class="ac-hint" v-else>
+                <span>{{ langStore.currentLang === 'sr' ? 'Tražimo odgovarajuću sobu…' : 'Looking for matching rooms…' }}</span>
               </div>
             </div>
 
@@ -517,6 +542,57 @@ onMounted(async () => {
 
 .ac-actions {
   padding: 0 0.75rem 0.75rem;
+}
+
+.ac-room-picker {
+  padding: 0 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ac-picker-title {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #555;
+  font-weight: 600;
+}
+
+.ac-room-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #d8cbb8;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ac-room-option:hover {
+  background: #f8f3eb;
+  border-color: #6e4529;
+}
+
+.ac-room-facility {
+  font-size: 0.72rem;
+  color: #888;
+}
+
+.ac-room-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.ac-hint {
+  padding: 0 0.75rem 0.75rem;
+  font-size: 0.82rem;
+  color: #888;
 }
 
 .ac-btn {
