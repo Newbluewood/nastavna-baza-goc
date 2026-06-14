@@ -2,11 +2,13 @@
 import { ref, watch, nextTick, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useChatStore } from '../../stores/chat';
+import { useGuestStore } from '../../stores/guest';
 import { useLangStore } from '../../stores/lang';
 import { buildReservationRoute } from '../../utils/reservationDeepLink';
 import { marked } from 'marked';
 
 const chatStore = useChatStore();
+const guestStore = useGuestStore();
 const langStore = useLangStore();
 const router = useRouter();
 const inputMessage = ref('');
@@ -57,8 +59,23 @@ watch(() => langStore.currentLang, (newLang) => {
   }
 });
 
-onMounted(() => {
-  if (chatStore.messages.length === 0) {
+watch(() => guestStore.isLoggedIn, async (loggedIn) => {
+  if (loggedIn) {
+    if (!guestStore.guest?.id) {
+      await guestStore.fetchMe();
+    }
+    await chatStore.loadHistory();
+    scrollToBottom();
+  }
+});
+
+onMounted(async () => {
+  if (guestStore.isLoggedIn && !guestStore.guest?.id) {
+    await guestStore.fetchMe();
+  }
+
+  const loaded = await chatStore.loadHistory();
+  if (!loaded && chatStore.messages.length === 0) {
     chatStore.addMessage('assistant', langStore.currentLang === 'sr' ? defaultGreetingSr : defaultGreetingEn);
   }
   scrollToBottom();

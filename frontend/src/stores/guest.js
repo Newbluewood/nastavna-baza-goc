@@ -11,7 +11,7 @@ export const useGuestStore = defineStore('guest', () => {
   const login = async (email, password) => {
     const data = await api.guestLogin({ email, password })
     token.value = data.token
-    guest.value = { name: data.name, email: data.email }
+    guest.value = data.guest || { name: data.name, email: data.email }
     return data
   }
 

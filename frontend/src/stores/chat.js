@@ -39,6 +39,59 @@ function normalizeReservationAction(action) {
   return normalized;
 }
 
+function parseMeta(meta) {
+  if (!meta) return null;
+  if (typeof meta === 'string') {
+    try {
+      return JSON.parse(meta);
+    } catch {
+      return null;
+    }
+  }
+  return meta;
+}
+
+function dedupeHistoryRows(rows) {
+  const seen = new Set();
+  return rows.filter((row) => {
+    const key = `${row.role}::${row.message}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function mapHistoryRow(row) {
+  const meta = parseMeta(row.meta);
+  const action = normalizeReservationAction(meta?.action || null);
+
+  return {
+    role: row.role,
+    content: row.message,
+    action,
+    timestamp: row.created_at || new Date().toISOString(),
+    checkIn: action?.check_in || '',
+    checkOut: action?.check_out || '',
+    boardType: action?.board_type || 'base',
+    guestName: action?.guest_name || '',
+    guestEmail: action?.guest_email || '',
+    guestPhone: action?.guest_phone || '',
+    showForm: !!action,
+    redirectedToSite: false,
+    submitted: false,
+  };
+}
+
+function buildUserContext(guestStore) {
+  return {
+    logged_in: guestStore.isLoggedIn,
+    guest_id: guestStore.guest?.id || null,
+    guest_name: guestStore.guest?.name || '',
+    guest_email: guestStore.guest?.email || '',
+    guest_phone: guestStore.guest?.phone || '',
+  };
+}
+
 export const useChatStore = defineStore('chat', {
   state: () => ({
     messages: [],
@@ -89,15 +142,11 @@ export const useChatStore = defineStore('chat', {
     
     async sendMessage(content) {
       const guestStore = useGuestStore();
-      const userContext = {
-        logged_in: guestStore.isLoggedIn,
-        guest_name: guestStore.guest?.name || '',
-        guest_email: guestStore.guest?.email || '',
-        guest_phone: guestStore.guest?.phone || '',
-      };
+      const userContext = buildUserContext(guestStore);
 
       this.error = null;
       this.addMessage('user', content);
+      await this.persistMessageToSite('user', content);
       this.isLoading = true;
 
       let assistantMsg = null;
@@ -132,6 +181,13 @@ export const useChatStore = defineStore('chat', {
             userContext,
           },
         );
+
+        if (assistantMsg?.content) {
+          const meta = assistantMsg.action
+            ? { action: assistantMsg.action, profile: userContext }
+            : null;
+          await this.persistMessageToSite('assistant', assistantMsg.content, meta);
+        }
       } catch (err) {
         console.error('Chat Agent error:', err);
         this.error = err.message;
@@ -153,6 +209,40 @@ export const useChatStore = defineStore('chat', {
       this.error = null;
       this.sessionId = getOrCreateSessionId();
       sessionStorage.setItem(SESSION_KEY, this.sessionId);
-    }
+    },
+
+    async persistMessageToSite(role, message, meta = null) {
+      const guestStore = useGuestStore();
+      if (!guestStore.isLoggedIn) return;
+
+      try {
+        const { default: api } = await import('../services/api');
+        await api.saveChatMessage({
+          role,
+          message,
+          session_id: this.sessionId,
+          meta,
+        });
+      } catch (err) {
+        console.warn('Chat history save failed:', err.message);
+      }
+    },
+
+    async loadHistory() {
+      const guestStore = useGuestStore();
+      if (!guestStore.isLoggedIn) return false;
+
+      try {
+        const { default: api } = await import('../services/api');
+        const rows = await api.getChatHistory(this.sessionId);
+        if (!Array.isArray(rows) || rows.length === 0) return false;
+
+        this.messages = dedupeHistoryRows(rows).map(mapHistoryRow);
+        return true;
+      } catch (err) {
+        console.warn('Chat history load failed:', err.message);
+        return false;
+      }
+    },
   }
 });
