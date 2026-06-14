@@ -306,6 +306,16 @@ const submitForm = async () => {
     
     newAccount.value = !!data.newAccount
     success.value = true
+
+    const sessionId = sessionStorage.getItem('goc_chat_session_id')
+    if (sessionId && data.guestId) {
+      try {
+        const agentService = (await import('../../services/agentService')).default
+        await agentService.linkSession(sessionId, data.guestId)
+      } catch (linkErr) {
+        console.warn('Chat session link failed:', linkErr.message)
+      }
+    }
     // Bez auto-zatvaranja — korisnik sam cita i klikne Zatvori
     
   } catch (err) {

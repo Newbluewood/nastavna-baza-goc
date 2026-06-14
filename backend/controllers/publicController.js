@@ -275,7 +275,8 @@ async function submitInquiry(req, res) {
     res.json({
       message: 'Inquiry submitted successfully',
       inquiryId: result.inquiryId,
-      newAccount: result.newAccount
+      newAccount: result.newAccount,
+      guestId: result.guest?.id || null,
     });
   } catch (error) {
     if (error.code === 'ROOM_UNAVAILABLE') {

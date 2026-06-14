@@ -80,6 +80,21 @@ class AgentService {
       }
     }
   }
+
+  async linkSession(sessionId, guestId) {
+    const response = await fetch(`${this.baseURL}/api/chat/link-session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, guestId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    }
+
+    return response.json();
+  }
 }
 
 export default new AgentService();
