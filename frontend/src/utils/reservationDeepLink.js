@@ -18,6 +18,7 @@ export function buildReservationRoute(action) {
   if (action.guest_email) query.guestEmail = action.guest_email;
   if (action.guest_phone) query.guestPhone = action.guest_phone;
   if (action.board_type && action.board_type !== 'base') query.boardType = action.board_type;
+  if (action.target_room) query.roomName = action.target_room;
 
   return {
     path: `/smestaj/${action.facility_id}`,
@@ -26,5 +27,6 @@ export function buildReservationRoute(action) {
 }
 
 export function canOpenSiteReservationForm(action) {
-  return !!buildReservationRoute(action);
+  if (!action || action.type !== 'open_reservation_form') return false;
+  return !!(action.room_id);
 }

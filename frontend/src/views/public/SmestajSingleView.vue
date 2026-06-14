@@ -82,14 +82,22 @@ const openInquiryFromQuery = () => {
   if (queryInquiryHandled.value) return
   if (String(route.query.openInquiry || '') !== '1') return
 
-  const rooms = building.value?.rooms || []
-  if (!rooms.length) return
-
   const roomId = Number(route.query.roomId)
-  const targetRoom = rooms.find((room) => Number(room.id) === roomId)
-  if (!targetRoom) return
+  if (!roomId) return
 
-  openInquiry(targetRoom)
+  const rooms = building.value?.rooms || []
+  const targetRoom = rooms.find((room) => Number(room.id) === roomId)
+
+  if (targetRoom) {
+    openInquiry(targetRoom)
+  } else if (building.value) {
+    selectedRoomId.value = roomId
+    selectedRoomName.value = typeof route.query.roomName === 'string'
+      ? route.query.roomName
+      : ''
+    inquiryOpen.value = true
+  }
+
   queryInquiryHandled.value = true
 }
 

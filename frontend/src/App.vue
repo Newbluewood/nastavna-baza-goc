@@ -3,13 +3,21 @@ import { ref, computed } from 'vue'
 import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router'
 import { useLangStore } from './stores/lang'
 import { useGuestStore } from './stores/guest'
+import { useChatStore } from './stores/chat'
 import AgentChatWidget from './components/ui/AgentChatWidget.vue'
+import InquiryModal from './components/forms/InquiryModal.vue'
 
 const isMenuOpen = ref(false)
 const langStore = useLangStore()
 const guestStore = useGuestStore()
+const chatStore = useChatStore()
 const route = useRoute()
 const router = useRouter()
+
+const inquiryModalOpen = computed({
+  get: () => chatStore.inquiryModal.open,
+  set: (value) => { chatStore.inquiryModal.open = value },
+})
 
 const isAdminRoute = computed(() => {
   return route.path.startsWith('/admin')
@@ -126,6 +134,20 @@ const handleGuestNav = () => {
     </div>
 
     <AgentChatWidget />
+
+    <InquiryModal
+      v-if="chatStore.inquiryModal.roomId"
+      v-model:isOpen="inquiryModalOpen"
+      :roomId="chatStore.inquiryModal.roomId"
+      :roomName="chatStore.inquiryModal.roomName"
+      :buildingName="chatStore.inquiryModal.buildingName"
+      :initialCheckIn="chatStore.inquiryModal.checkIn"
+      :initialCheckOut="chatStore.inquiryModal.checkOut"
+      :initialGuestName="chatStore.inquiryModal.guestName"
+      :initialGuestEmail="chatStore.inquiryModal.guestEmail"
+      :initialGuestPhone="chatStore.inquiryModal.guestPhone"
+      :initialBoardType="chatStore.inquiryModal.boardType"
+    />
   </div>
   <div class="admin-container" v-else>
     <RouterView />

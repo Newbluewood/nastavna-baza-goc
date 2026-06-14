@@ -2,10 +2,24 @@ import { defineStore } from 'pinia';
 import agentService from '../services/agentService';
 import { useLangStore } from './lang';
 import { useGuestStore } from './guest';
-import router from '../router';
-import { buildReservationRoute } from '../utils/reservationDeepLink';
+import { canOpenSiteReservationForm } from '../utils/reservationDeepLink';
 
 const SESSION_KEY = 'goc_chat_session_id';
+
+function emptyInquiryModal() {
+  return {
+    open: false,
+    roomId: null,
+    roomName: '',
+    buildingName: '',
+    checkIn: '',
+    checkOut: '',
+    guestName: '',
+    guestEmail: '',
+    guestPhone: '',
+    boardType: 'base',
+  };
+}
 
 function getOrCreateSessionId() {
   let id = sessionStorage.getItem(SESSION_KEY);
@@ -99,6 +113,7 @@ export const useChatStore = defineStore('chat', {
     isLoading: false,
     error: null,
     sessionId: getOrCreateSessionId(),
+    inquiryModal: emptyInquiryModal(),
   }),
 
   actions: {
@@ -115,11 +130,27 @@ export const useChatStore = defineStore('chat', {
     },
 
     openSiteReservationForm(action) {
-      const route = buildReservationRoute(action);
-      if (!route) return false;
+      const normalized = normalizeReservationAction(action);
+      if (!canOpenSiteReservationForm(normalized)) return false;
+
+      this.inquiryModal = {
+        open: true,
+        roomId: Number(normalized.room_id),
+        roomName: normalized.target_room || normalized.room_name || '',
+        buildingName: normalized.facility_name || '',
+        checkIn: normalized.check_in || '',
+        checkOut: normalized.check_out || '',
+        guestName: normalized.guest_name || '',
+        guestEmail: normalized.guest_email || '',
+        guestPhone: normalized.guest_phone || '',
+        boardType: normalized.board_type || 'base',
+      };
       this.isOpen = false;
-      router.push(route);
       return true;
+    },
+
+    closeInquiryModal() {
+      this.inquiryModal.open = false;
     },
 
     addMessage(role, content, action = null) {
@@ -209,6 +240,7 @@ export const useChatStore = defineStore('chat', {
       this.error = null;
       this.sessionId = getOrCreateSessionId();
       sessionStorage.setItem(SESSION_KEY, this.sessionId);
+      this.inquiryModal = emptyInquiryModal();
     },
 
     async persistMessageToSite(role, message, meta = null) {

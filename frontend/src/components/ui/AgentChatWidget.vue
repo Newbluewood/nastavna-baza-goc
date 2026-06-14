@@ -1,16 +1,14 @@
 <script setup>
 import { ref, watch, nextTick, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { useChatStore } from '../../stores/chat';
 import { useGuestStore } from '../../stores/guest';
 import { useLangStore } from '../../stores/lang';
-import { buildReservationRoute } from '../../utils/reservationDeepLink';
+import { canOpenSiteReservationForm } from '../../utils/reservationDeepLink';
 import { marked } from 'marked';
 
 const chatStore = useChatStore();
 const guestStore = useGuestStore();
 const langStore = useLangStore();
-const router = useRouter();
 const inputMessage = ref('');
 const messagesContainer = ref(null);
 
@@ -31,11 +29,13 @@ const renderMarkdown = (text) => {
 };
 
 const openSiteForm = (msg) => {
-  const route = buildReservationRoute(msg.action);
-  if (!route) return;
-  chatStore.isOpen = false;
-  router.push(route);
-  msg.redirectedToSite = true;
+  if (chatStore.openSiteReservationForm(msg.action)) {
+    msg.redirectedToSite = true;
+    return;
+  }
+  chatStore.error = langStore.currentLang === 'sr'
+    ? 'Nije moguće otvoriti formu — nedostaje ID sobe. Pitajte agenta ponovo.'
+    : 'Cannot open the form — room ID is missing. Please ask the agent again.';
 };
 
 const sendMessage = async () => {
@@ -172,7 +172,7 @@ onMounted(async () => {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 <span>{{ langStore.currentLang === 'sr' ? 'Forma je otvorena na sajtu — popunite i pošaljite upit.' : 'Form opened on site — review and submit.' }}</span>
               </div>
-              <div class="ac-actions" v-else>
+              <div class="ac-actions" v-else-if="canOpenSiteReservationForm(msg.action)">
                 <button class="ac-btn primary" @click="openSiteForm(msg)">
                   {{ langStore.currentLang === 'sr' ? 'Otvori formu za rezervaciju' : 'Open reservation form' }}
                 </button>
