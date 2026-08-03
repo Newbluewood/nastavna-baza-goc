@@ -382,7 +382,7 @@ async function getThemes(req, res) {
   const db = req.app.locals.db;
   try {
     const [rows] = await db.query(`
-      SELECT t.slug as id, t.icon, t.hero_image,
+      SELECT t.slug as id, t.icon, t.hero_image, t.keywords,
              MAX(CASE WHEN tt.lang = 'sr' THEN tt.name END) as name,
              MAX(CASE WHEN tt.lang = 'sr' THEN tt.article END) as article_sr,
              MAX(CASE WHEN tt.lang = 'en' THEN tt.article END) as article_en
@@ -396,6 +396,7 @@ async function getThemes(req, res) {
       id: t.id,
       name: t.name || t.id,
       icon: t.icon,
+      keywords: Array.isArray(t.keywords) ? t.keywords : [],
       excerpt_sr: (t.article_sr || '').substring(0, 150) + '...',
       excerpt_en: (t.article_en || '').substring(0, 150) + '...'
     }));
@@ -412,7 +413,7 @@ async function getThemeDetail(req, res) {
   try {
     const themeId = req.params.id;
     const [rows] = await db.query(`
-      SELECT t.slug as id, t.icon, t.hero_image,
+      SELECT t.slug as id, t.icon, t.hero_image, t.keywords,
              MAX(CASE WHEN tt.lang = 'sr' THEN tt.name END) as name,
              MAX(CASE WHEN tt.lang = 'sr' THEN tt.article END) as article_sr,
              MAX(CASE WHEN tt.lang = 'en' THEN tt.article END) as article_en
@@ -427,7 +428,7 @@ async function getThemeDetail(req, res) {
     }
     
     const theme = rows[0];
-    theme.keywords = []; 
+    theme.keywords = Array.isArray(theme.keywords) ? theme.keywords : [];
     theme.ctas = [];
     
     res.json(theme);
