@@ -8,7 +8,7 @@ const createAuthMiddleware = (secret, errorMsg) => (req, res, next) => {
   if (!token) return res.status(401).json({ error: errorMsg.missingToken });
 
   jwt.verify(token, secret, (err, user) => {
-    if (err) return res.status(403).json({ error: errorMsg.invalidToken });
+    if (err) return res.status(401).json({ error: errorMsg.invalidToken });
     req.user = user;
     next();
   });

@@ -36,6 +36,11 @@ class ApiService {
       const error = new Error(errorData.error || `HTTP ${response.status}`);
       error.status = response.status;
       error.data = errorData;
+      if (response.status === 401) {
+        // Stale/expired token — clear it so the router guard doesn't bounce
+        // the redirect-to-login straight back to an admin page in a loop.
+        localStorage.removeItem(authMode === 'guest' ? 'guest_token' : 'admin_token');
+      }
       throw error;
     }
 

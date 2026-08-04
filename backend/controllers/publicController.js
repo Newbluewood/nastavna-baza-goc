@@ -498,17 +498,22 @@ async function getRestaurantMenu(req, res) {
   const langParam = lang === 'sr' ? 'sr' : 'en';
 
   try {
-    const [rows] = await db.query(`
-      SELECT rmi.id, rmi.price,
-             COALESCE(rmit.name, rmi.name) as name,
-             COALESCE(rmit.description, rmi.description) as description,
-             COALESCE(rmit.category, rmi.category) as category
-      FROM restaurant_menu_items rmi
-      LEFT JOIN restaurant_menu_item_translations rmit ON rmi.id = rmit.entity_id AND rmit.lang = ?
-      WHERE rmi.attraction_id = ?
-      ORDER BY rmi.category, rmi.sort_order ASC
-    `, [langParam, restaurantId]);
-    
+    let [rows] = await db.query(`
+      SELECT id, price, name, description, category
+      FROM restaurant_menu_items
+      WHERE attraction_id = ? AND lang = ?
+      ORDER BY category, sort_order ASC
+    `, [restaurantId, langParam]);
+
+    if (rows.length === 0 && langParam !== 'sr') {
+      [rows] = await db.query(`
+        SELECT id, price, name, description, category
+        FROM restaurant_menu_items
+        WHERE attraction_id = ? AND lang = 'sr'
+        ORDER BY category, sort_order ASC
+      `, [restaurantId]);
+    }
+
     // Group by category
     const menu = rows.reduce((acc, item) => {
       const cat = item.category || 'ostalo';
