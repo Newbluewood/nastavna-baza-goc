@@ -71,6 +71,7 @@ app.use(express.json());
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
+app.use('/themes', express.static(path.join(__dirname, 'public/themes')));
 
 console.log('JSON and Static middleware added');
 
