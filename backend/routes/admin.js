@@ -30,6 +30,8 @@ const {
 	createPage,
 	updatePage,
 	deletePage,
+	getSettings,
+	updateSettings,
 	purgeCache,
 	uploadImage,
 	getFacilities,
@@ -77,6 +79,10 @@ router.get('/pages/:id',           adminAuthMiddleware,                         
 router.post('/pages',              adminAuthMiddleware,                                      asyncHandler(createPage));
 router.put('/pages/:id',           adminAuthMiddleware,                                      asyncHandler(updatePage));
 router.delete('/pages/:id',        adminAuthMiddleware,                                      asyncHandler(deletePage));
+
+// Site Settings
+router.get('/settings',            adminAuthMiddleware,                                      asyncHandler(getSettings));
+router.put('/settings',            adminAuthMiddleware,                                      asyncHandler(updateSettings));
 
 // Uploads
 router.post('/upload',             adminAuthMiddleware,                                      asyncHandler(uploadImage));

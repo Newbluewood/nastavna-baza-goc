@@ -1,17 +1,26 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useLangStore } from '../../stores/lang'
-import api from '../../services/api'
+import { useSettingsStore } from '../../stores/settings'
+import api, { BASE_URL } from '../../services/api'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
 
+const getImageUrl = (path) => {
+  if (!path) return '/placeholder.jpg'
+  if (path.startsWith('http')) return path
+  return `${BASE_URL}${path}`
+}
+
 const langStore = useLangStore()
+const settingsStore = useSettingsStore()
 const staff = ref([])
 const projects = ref([])
 const isLoading = ref(true)
+const pageData = ref(null)
 
-onMounted(async () => {
+const loadContact = async () => {
   try {
-    const data = await api.getContactPage()
+    const data = await api.getContactPage(langStore.currentLang)
     staff.value = data.staff || []
     projects.value = data.projects || []
   } catch (err) {
@@ -19,7 +28,18 @@ onMounted(async () => {
   } finally {
     isLoading.value = false
   }
-})
+}
+
+const loadPageData = async () => {
+  try {
+    pageData.value = await api.getPageBySlug('kontakt', langStore.currentLang)
+  } catch (err) {
+    console.error('Error loading page data:', err)
+  }
+}
+
+onMounted(() => { loadContact(); loadPageData() })
+watch(() => langStore.currentLang, () => { loadContact(); loadPageData() })
 
 const statusLabel = (s) => ({
   активан: langStore.currentLang === 'sr' ? 'Активан' : 'Active',
@@ -36,11 +56,11 @@ const statusClass = (s) => ({
 
 <template>
   <PageTemplate
-    :title="langStore.currentLang === 'sr' ? 'Контакт' : 'Contact'"
-    :textContent="langStore.currentLang === 'sr' ? '<p><strong>Добродошли у Наставну базу Гоч–Гвоздац!</strong></p><p>Шумарски факултет Универзитета у Београду.</p><p>Ту смо за сва ваша питања, резервације и информације у вези са наставним активностима и смештајем.</p>' : '<p><strong>Welcome to Teaching Base Goč–Gvozdac!</strong></p><p>Faculty of Forestry, University of Belgrade.</p><p>We are here for all your questions, reservations and information regarding teaching activities and accommodation.</p>'"
+    :title="pageData?.title || (langStore.currentLang === 'sr' ? 'Контакт' : 'Contact')"
+    :textContent="pageData?.content || ''"
     :slides="[{
-      title: langStore.currentLang === 'sr' ? 'Контакт' : 'Contact',
-      image_url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=2070&auto=format&fit=crop'
+      title: pageData?.title || (langStore.currentLang === 'sr' ? 'Контакт' : 'Contact'),
+      image_url: getImageUrl(pageData?.hero_image)
     }]"
   >
     <div v-if="isLoading" class="loading-msg">
@@ -56,21 +76,21 @@ const statusClass = (s) => ({
             <span class="info-icon">📍</span>
             <div>
               <strong>{{ langStore.currentLang === 'sr' ? 'Адреса' : 'Address' }}</strong>
-              <p>{{ langStore.currentLang === 'sr' ? 'Гоч–Гвоздац, Врњачка Бања, Србија' : 'Goč–Gvozdac, Vrnjačka Banja, Serbia' }}</p>
+              <p>{{ settingsStore.get('contact_address') }}</p>
             </div>
           </div>
           <div class="info-card">
             <span class="info-icon">📞</span>
             <div>
               <strong>{{ langStore.currentLang === 'sr' ? 'Телефон' : 'Phone' }}</strong>
-              <p><a href="tel:+38136123456">+381 36 123 456</a></p>
+              <p><a :href="`tel:${settingsStore.get('contact_phone').replace(/\s+/g, '')}`">{{ settingsStore.get('contact_phone') }}</a></p>
             </div>
           </div>
           <div class="info-card">
             <span class="info-icon">✉️</span>
             <div>
               <strong>{{ langStore.currentLang === 'sr' ? 'Е-маил' : 'Email' }}</strong>
-              <p><a href="mailto:info@gvozdac.rs">info@gvozdac.rs</a></p>
+              <p><a :href="`mailto:${settingsStore.get('contact_email')}`">{{ settingsStore.get('contact_email') }}</a></p>
             </div>
           </div>
         </div>

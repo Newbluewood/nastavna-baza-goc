@@ -96,8 +96,8 @@ class ApiService {
     return this.request(`/api/news/${id}?lang=${lang}`);
   }
 
-  async getContactPage() {
-    return this.request('/api/kontakt');
+  async getContactPage(lang = 'sr') {
+    return this.request(`/api/kontakt?lang=${lang}`);
   }
 
   async getPageBySlug(slug, lang = 'sr') {
@@ -320,6 +320,23 @@ class ApiService {
 
   async deletePage(id) {
     return this.request(`/api/admin/pages/${id}`, { method: 'DELETE' });
+  }
+
+  // Public — Site Settings
+  async getSiteSettings(lang = 'sr') {
+    return this.request(`/api/settings?lang=${lang}`);
+  }
+
+  // Admin — Site Settings
+  async getAdminSettings() {
+    return this.request('/api/admin/settings');
+  }
+
+  async updateSettings(settings) {
+    return this.request('/api/admin/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ settings })
+    });
   }
 
   // Admin — Room Map

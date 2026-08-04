@@ -16,6 +16,7 @@ const isLoading = ref(true)
 const selectedRestaurant = ref(null)
 const menu = ref(null)
 const isMenuLoading = ref(false)
+const pageData = ref(null)
 
 const loadRestaurants = async () => {
   isLoading.value = true
@@ -26,6 +27,14 @@ const loadRestaurants = async () => {
     console.error('Error loading restaurants:', err)
   } finally {
     isLoading.value = false
+  }
+}
+
+const loadPageData = async () => {
+  try {
+    pageData.value = await api.getPageBySlug('restoran', langStore.currentLang)
+  } catch (err) {
+    console.error('Error loading page data:', err)
   }
 }
 
@@ -50,14 +59,14 @@ const closeMenu = () => {
   document.body.style.overflow = 'auto'
 }
 
-onMounted(loadRestaurants)
-watch(() => langStore.currentLang, loadRestaurants)
+onMounted(() => { loadRestaurants(); loadPageData() })
+watch(() => langStore.currentLang, () => { loadRestaurants(); loadPageData() })
 </script>
 
 <template>
   <PageTemplate
-    :title="langStore.t('nav.restaurant')"
-    :slides="[{ image_url: '/explore-hero.png', title: langStore.t('nav.restaurant') }]"
+    :title="pageData?.title || langStore.t('nav.restaurant')"
+    :slides="[{ image_url: getImageUrl(pageData?.hero_image), title: pageData?.title || langStore.t('nav.restaurant') }]"
   >
     <div class="restaurants-container">
       <div v-if="isLoading" class="loader-container">

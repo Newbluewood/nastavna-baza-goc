@@ -1,16 +1,23 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useLangStore } from '../../stores/lang'
-import api from '../../services/api'
+import api, { BASE_URL } from '../../services/api'
+
+const getImageUrl = (path) => {
+  if (!path) return '/placeholder.jpg'
+  if (path.startsWith('http')) return path
+  return `${BASE_URL}${path}`
+}
 
 const langStore = useLangStore()
 const themes = ref([])
 const isLoading = ref(true)
+const pageData = ref(null)
 
 const fetchThemes = async () => {
   isLoading.value = true
   try {
-    themes.value = await api.getThemes()
+    themes.value = await api.getThemes(langStore.currentLang)
   } catch (err) {
     console.error('Error fetching themes:', err)
   } finally {
@@ -18,16 +25,25 @@ const fetchThemes = async () => {
   }
 }
 
-onMounted(fetchThemes)
+const fetchPageData = async () => {
+  try {
+    pageData.value = await api.getPageBySlug('istrazi', langStore.currentLang)
+  } catch (err) {
+    console.error('Error loading page data:', err)
+  }
+}
+
+onMounted(() => { fetchThemes(); fetchPageData() })
+watch(() => langStore.currentLang, () => { fetchThemes(); fetchPageData() })
 </script>
 
 <template>
   <div class="explore-page">
-    <div class="explore-hero" style="background-image: url('/explore-hero.png'); background-size: cover; background-position: center; position: relative;">
+    <div class="explore-hero" :style="{ backgroundImage: `url('${getImageUrl(pageData?.hero_image)}')`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }">
       <div class="hero-overlay"></div>
       <div class="container hero-content">
-        <h1>{{ langStore.currentLang === 'sr' ? 'Истражи Гоч' : 'Explore Goč' }}</h1>
-        <p>{{ langStore.currentLang === 'sr' ? 'Откријте све тајне најшумовитије планине Србије кроз наше тематске водиче.' : 'Discover all the secrets of Serbia\'s most forested mountain through our thematic guides.' }}</p>
+        <h1>{{ pageData?.title || (langStore.currentLang === 'sr' ? 'Истражи Гоч' : 'Explore Goč') }}</h1>
+        <div v-if="pageData?.content" v-html="pageData.content"></div>
       </div>
     </div>
 

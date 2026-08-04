@@ -46,6 +46,7 @@ defineExpose({ sidebarOpen })
       <router-link to="/admin/projekti">Пројекти</router-link>
       <router-link to="/admin/ai">AI Потрошња</router-link>
       <router-link to="/admin/restoran">Ресторан</router-link>
+      <router-link to="/admin/podesavanja">Подешавања</router-link>
 
       <!-- Смештај група -->
       <button class="nav-group-toggle" :class="{ 'group-active': isSmestajActive() }" @click="smestajOpen = !smestajOpen">
@@ -110,6 +111,7 @@ defineExpose({ sidebarOpen })
   padding-bottom: 10px;
   font-size: 1.1rem;
   letter-spacing: 1px;
+  color: #cdac91;
 }
 .sidebar nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .sidebar nav a {

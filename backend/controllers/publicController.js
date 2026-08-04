@@ -373,28 +373,36 @@ async function getWeatherForecast(req, res) {
 
 async function getContactPage(req, res) {
   const db = req.app.locals.db;
-  const [staff] = await db.query('SELECT id, full_name, role, contact_email, photo_url FROM staff ORDER BY id');
+  const lang = req.query.lang === 'en' ? 'en' : 'sr';
+  const [staff] = await db.query(`
+    SELECT s.id, s.full_name, COALESCE(st.role, s.role) as role, s.contact_email, s.photo_url
+    FROM staff s
+    LEFT JOIN staff_translations st ON s.id = st.entity_id AND st.lang = ?
+    ORDER BY s.id
+  `, [lang]);
   const [projects] = await db.query('SELECT id, title, description, status, start_date FROM projects ORDER BY start_date DESC');
   res.json({ staff, projects });
 }
 
 async function getThemes(req, res) {
   const db = req.app.locals.db;
+  const lang = req.query.lang === 'en' ? 'en' : 'sr';
   try {
     const [rows] = await db.query(`
       SELECT t.slug as id, t.icon, t.hero_image, t.keywords,
-             MAX(CASE WHEN tt.lang = 'sr' THEN tt.name END) as name,
+             MAX(CASE WHEN tt.lang = ? THEN tt.name END) as name,
+             MAX(CASE WHEN tt.lang = 'sr' THEN tt.name END) as name_sr,
              MAX(CASE WHEN tt.lang = 'sr' THEN tt.article END) as article_sr,
              MAX(CASE WHEN tt.lang = 'en' THEN tt.article END) as article_en
       FROM themes t
       LEFT JOIN theme_translations tt ON t.id = tt.entity_id
       GROUP BY t.id
       ORDER BY t.display_order ASC, t.id ASC
-    `);
-    
+    `, [lang]);
+
     const themes = rows.map(t => ({
       id: t.id,
-      name: t.name || t.id,
+      name: t.name || t.name_sr || t.id,
       icon: t.icon,
       keywords: Array.isArray(t.keywords) ? t.keywords : [],
       excerpt_sr: (t.article_sr || '').substring(0, 150) + '...',
@@ -410,24 +418,28 @@ async function getThemes(req, res) {
 
 async function getThemeDetail(req, res) {
   const db = req.app.locals.db;
+  const lang = req.query.lang === 'en' ? 'en' : 'sr';
   try {
     const themeId = req.params.id;
     const [rows] = await db.query(`
       SELECT t.slug as id, t.icon, t.hero_image, t.keywords,
-             MAX(CASE WHEN tt.lang = 'sr' THEN tt.name END) as name,
+             MAX(CASE WHEN tt.lang = ? THEN tt.name END) as name,
+             MAX(CASE WHEN tt.lang = 'sr' THEN tt.name END) as name_sr,
              MAX(CASE WHEN tt.lang = 'sr' THEN tt.article END) as article_sr,
              MAX(CASE WHEN tt.lang = 'en' THEN tt.article END) as article_en
       FROM themes t
       LEFT JOIN theme_translations tt ON t.id = tt.entity_id
       WHERE t.slug = ?
       GROUP BY t.id
-    `, [themeId]);
-    
+    `, [lang, themeId]);
+
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Theme not found' });
     }
-    
+
     const theme = rows[0];
+    theme.name = theme.name || theme.name_sr;
+    delete theme.name_sr;
     theme.keywords = Array.isArray(theme.keywords) ? theme.keywords : [];
     theme.ctas = [];
     
@@ -493,6 +505,23 @@ async function getRestaurantMenu(req, res) {
   }
 }
 
+async function getSiteSettings(req, res) {
+  const db = req.app.locals.db;
+  const lang = req.query.lang === 'en' ? 'en' : 'sr';
+
+  try {
+    const [rows] = await db.query('SELECT setting_key, value_sr, value_en FROM site_settings');
+    const settings = {};
+    rows.forEach(r => {
+      settings[r.setting_key] = lang === 'en' ? (r.value_en || r.value_sr) : r.value_sr;
+    });
+    res.json(settings);
+  } catch (error) {
+    console.error('Error fetching site settings:', error);
+    res.status(500).json({ error: 'Failed to load site settings' });
+  }
+}
+
 async function getPageBySlug(req, res) {
   const db = req.app.locals.db;
   const slug = req.params.slug;
@@ -535,5 +564,6 @@ module.exports = {
   getThemeDetail,
   getRestaurantsPublic,
   getRestaurantMenu,
+  getSiteSettings,
   getPageBySlug
 };

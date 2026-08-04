@@ -13,7 +13,7 @@ const isLoading = ref(true)
 const fetchTheme = async () => {
   isLoading.value = true
   try {
-    const data = await api.getThemeDetail(route.params.id)
+    const data = await api.getThemeDetail(route.params.id, langStore.currentLang)
     theme.value = data
   } catch (err) {
     console.error('Error fetching theme detail:', err)
@@ -44,6 +44,7 @@ const formattedArticle = computed(() => {
 
 onMounted(fetchTheme)
 watch(() => route.params.id, fetchTheme)
+watch(() => langStore.currentLang, fetchTheme)
 </script>
 
 <template>

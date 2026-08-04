@@ -11,7 +11,7 @@ const isEditing = ref(false)
 const editingId = ref(null)
 const isUploading = ref(false)
 
-const form = ref({ full_name: '', role: '', contact_email: '', photo_url: '' })
+const form = ref({ full_name: '', role: '', role_en: '', contact_email: '', photo_url: '' })
 
 const getImageUrl = (url) => {
   if (!url || url.includes('placeholder-staff')) return '/placeholder-staff.png'
@@ -50,7 +50,7 @@ const handleFileUpload = async (event) => {
 }
 
 const resetForm = () => {
-  form.value = { full_name: '', role: '', contact_email: '', photo_url: '' }
+  form.value = { full_name: '', role: '', role_en: '', contact_email: '', photo_url: '' }
   isEditing.value = false
   editingId.value = null
 }
@@ -61,6 +61,7 @@ const startEdit = (member) => {
   form.value = {
     full_name: member.full_name,
     role: member.role || '',
+    role_en: member.role_en || '',
     contact_email: member.contact_email || '',
     photo_url: member.photo_url || ''
   }
@@ -133,6 +134,10 @@ onMounted(() => fetchStaff())
             <input v-model="form.role" type="text" placeholder="нпр. Управник базе" />
           </div>
           <div class="form-group">
+            <label>Position (EN)</label>
+            <input v-model="form.role_en" type="text" placeholder="e.g. Base Manager" />
+          </div>
+          <div class="form-group">
             <label>Е-маил</label>
             <input v-model="form.contact_email" type="email" placeholder="email@goc.rs" />
           </div>
@@ -156,6 +161,7 @@ onMounted(() => fetchStaff())
             <th>Фото</th>
             <th>Име</th>
             <th>Позиција</th>
+            <th>Position (EN)</th>
             <th>Е-маил</th>
             <th>Акције</th>
           </tr>
@@ -166,6 +172,7 @@ onMounted(() => fetchStaff())
             <td><img :src="getImageUrl(m.photo_url)" class="thumb" /></td>
             <td>{{ m.full_name }}</td>
             <td>{{ m.role || '—' }}</td>
+            <td>{{ m.role_en || '—' }}</td>
             <td>{{ m.contact_email || '—' }}</td>
             <td class="actions-cell">
               <button class="action-btn edit" @click="startEdit(m)">Уреди</button>

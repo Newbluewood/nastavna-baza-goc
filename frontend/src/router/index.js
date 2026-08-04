@@ -30,6 +30,7 @@ import AdminRoomMapView from '../views/admin/RoomMapView.vue'
 import AdminRoomsView from '../views/admin/RoomsView.vue'
 import AdminAiUsageView from '../views/admin/AiUsageView.vue'
 import AdminRestaurantView from '../views/admin/RestaurantView.vue'
+import AdminSettingsView from '../views/admin/SettingsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -67,6 +68,7 @@ const router = createRouter({
     { path: '/admin/sobe', name: 'admin-rooms', component: AdminRoomsView, meta: { requiresAuth: true } },
     { path: '/admin/ai', name: 'admin-ai', component: AdminAiUsageView, meta: { requiresAuth: true } },
     { path: '/admin/restoran', name: 'admin-restaurant', component: AdminRestaurantView, meta: { requiresAuth: true } },
+    { path: '/admin/podesavanja', name: 'admin-settings', component: AdminSettingsView, meta: { requiresAuth: true } },
 
     // --- Fallback ---
     { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView }

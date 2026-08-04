@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router'
 import { useLangStore } from './stores/lang'
 import { useGuestStore } from './stores/guest'
 import { useChatStore } from './stores/chat'
+import { useSettingsStore } from './stores/settings'
 import AgentChatWidget from './components/ui/AgentChatWidget.vue'
 import InquiryModal from './components/forms/InquiryModal.vue'
 
@@ -11,8 +12,12 @@ const isMenuOpen = ref(false)
 const langStore = useLangStore()
 const guestStore = useGuestStore()
 const chatStore = useChatStore()
+const settingsStore = useSettingsStore()
 const route = useRoute()
 const router = useRouter()
+
+onMounted(() => settingsStore.fetch(langStore.currentLang))
+watch(() => langStore.currentLang, (lang) => settingsStore.fetch(lang))
 
 const inquiryModalOpen = computed({
   get: () => chatStore.inquiryModal.open,
@@ -108,26 +113,26 @@ const handleGuestNav = () => {
     <div class="footer-wrapper">
       <footer class="footer">
         <div class="footer-col">
-          <p><strong>{{ langStore.t('footer.faculty') }}</strong><br>
-          {{ langStore.t('footer.university') }}<br>
-          {{ langStore.t('footer.address') }}<br>
-          {{ langStore.t('footer.city') }}</p>
+          <p><strong>{{ settingsStore.get('footer_faculty') }}</strong><br>
+          {{ settingsStore.get('footer_university') }}<br>
+          {{ settingsStore.get('footer_address') }}<br>
+          {{ settingsStore.get('footer_city') }}</p>
         </div>
         <div class="footer-col">
           <p>
-            <a :href="`mailto:${langStore.t('footer.email')}`">{{ langStore.t('footer.email') }}</a><br>
-            {{ langStore.t('footer.phone') }}<br>
-            <a href="https://www.sfb.bg.ac.rs" target="_blank">www.sfb.bg.ac.rs</a>
+            <a :href="`mailto:${settingsStore.get('footer_email')}`">{{ settingsStore.get('footer_email') }}</a><br>
+            {{ settingsStore.get('footer_phone') }}<br>
+            <a :href="settingsStore.get('footer_website_url')" target="_blank">{{ settingsStore.get('footer_website_label') }}</a>
           </p>
         </div>
         <div class="footer-col footer-credits">
-          <p v-html="langStore.t('footer.credits')"></p>
+          <p v-html="settingsStore.get('footer_credits')"></p>
         </div>
         <div class="footer-col footer-social">
           <div class="social-icons">
-            <a href="#" class="social-icon">In</a>
-            <a href="#" class="social-icon">Fb</a>
-            <a href="#" class="social-icon">Li</a>
+            <a v-if="settingsStore.get('social_facebook')" :href="settingsStore.get('social_facebook')" target="_blank" class="social-icon">Fb</a>
+            <a v-if="settingsStore.get('social_instagram')" :href="settingsStore.get('social_instagram')" target="_blank" class="social-icon">In</a>
+            <a v-if="settingsStore.get('social_linkedin')" :href="settingsStore.get('social_linkedin')" target="_blank" class="social-icon">Li</a>
           </div>
         </div>
       </footer>

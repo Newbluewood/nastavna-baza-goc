@@ -6,7 +6,7 @@ const {
   getHome, getFacilities, getFacility, getRoomAvailability,
   submitInquiry, getNewsList, getSingleNews, likeNews,
   getWeatherForecast, getContactPage, getThemes, getThemeDetail,
-  getRestaurantsPublic, getRestaurantMenu, getPageBySlug
+  getRestaurantsPublic, getRestaurantMenu, getPageBySlug, getSiteSettings
 } = require('../controllers/publicController');
 const cacheMiddleware = require('../middleware/cacheMiddleware');
 
@@ -38,5 +38,6 @@ router.get('/themes/:id',                     cacheMiddleware(CACHE_TTL), asyncH
 router.get('/restorani',                      cacheMiddleware(CACHE_TTL), asyncHandler(getRestaurantsPublic));
 router.get('/restorani/:id/meni',             cacheMiddleware(CACHE_TTL), asyncHandler(getRestaurantMenu));
 router.get('/stranica/:slug',                 cacheMiddleware(CACHE_TTL), asyncHandler(getPageBySlug));
+router.get('/settings',                       cacheMiddleware(CACHE_TTL), asyncHandler(getSiteSettings));
 
 module.exports = router;
