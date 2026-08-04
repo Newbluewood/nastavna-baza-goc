@@ -25,7 +25,6 @@ const { recordSpend } = require('./aiBudgetService');
 
 const DOCS_DIR = path.join(__dirname, '../docs');
 const SITE_KB_COLLECTION = 'site_kb';
-const THEMES_DATA_PATH = path.join(__dirname, '../data/goc-themes.json');
 
 function normalizeUserQuestion(raw) {
   return String(raw || '')
@@ -808,42 +807,51 @@ async function makeHikingFactsTurnIfAsked(message, lang) {
 async function makeThemeFactsTurnIfAsked(message, lang) {
   if (!looksLikeThemeQuestion(message)) return null;
   try {
-    if (!fs.existsSync(THEMES_DATA_PATH)) return null;
-    const data = JSON.parse(fs.readFileSync(THEMES_DATA_PATH, 'utf8'));
+    const db = require('../db');
+    const langParam = lang === 'en' ? 'en' : 'sr';
+    const [rows] = await db.query(`
+      SELECT t.slug, t.keywords,
+        COALESCE(tt_lang.name, tt_sr.name) as name,
+        COALESCE(tt_lang.article, tt_sr.article) as article
+      FROM themes t
+      LEFT JOIN theme_translations tt_lang ON t.id = tt_lang.entity_id AND tt_lang.lang = ?
+      LEFT JOIN theme_translations tt_sr ON t.id = tt_sr.entity_id AND tt_sr.lang = 'sr'
+    `, [langParam]);
+
     const m = String(message || '').toLowerCase();
-    
+
     // Find the most relevant theme based on keywords
     let bestTheme = null;
     let maxMatches = 0;
-    
-    for (const theme of data.themes) {
+
+    for (const theme of rows) {
       let matches = 0;
-      if (m.includes(theme.id.replace(/_/g, ' '))) matches += 5;
-      theme.keywords.forEach(kw => {
-        if (m.includes(kw.toLowerCase())) matches++;
+      if (m.includes(theme.slug.replace(/_/g, ' '))) matches += 5;
+      const keywords = Array.isArray(theme.keywords) ? theme.keywords : [];
+      keywords.forEach(kw => {
+        if (m.includes(String(kw).toLowerCase())) matches++;
       });
-      
+
       if (matches > maxMatches) {
         maxMatches = matches;
         bestTheme = theme;
       }
     }
-    
-    if (!bestTheme || maxMatches < 1) return null;
-    
-    const answer = lang === 'en' ? bestTheme.article_en : bestTheme.article_sr;
+
+    if (!bestTheme || maxMatches < 1 || !bestTheme.article) return null;
+
     const suggestions = [
-      { label: lang === 'en' ? 'Learn more' : 'Saznaj više', route: `/istrazi/${bestTheme.id}`, type: 'navigate' },
+      { label: lang === 'en' ? 'Learn more' : 'Saznaj više', route: `/istrazi/${bestTheme.slug}`, type: 'navigate' },
       { label: lang === 'en' ? 'All themes' : 'Sve teme', route: '/istrazi', type: 'navigate' }
     ];
-    
+
     return makeAssistantTurn({
-      answer: answer.slice(0, 4000),
+      answer: bestTheme.article.slice(0, 4000),
       intent: 'site_guide',
       confidence: 0.95,
       suggestions,
       sources: [],
-      meta: { source: 'canonical_themes', theme_id: bestTheme.id }
+      meta: { source: 'db_theme_facts', theme_id: bestTheme.slug }
     });
   } catch (err) {
     console.error('[siteGuide] theme facts failed:', err.message);
@@ -1570,5 +1578,6 @@ module.exports = {
     callClaudeSiteGuide,
     makeKeywordFallbackTurn,
     extractSuggestionsFromHits,
+    makeThemeFactsTurnIfAsked,
   },
 };

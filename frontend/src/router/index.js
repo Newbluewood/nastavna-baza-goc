@@ -31,6 +31,7 @@ import AdminRoomsView from '../views/admin/RoomsView.vue'
 import AdminAiUsageView from '../views/admin/AiUsageView.vue'
 import AdminRestaurantView from '../views/admin/RestaurantView.vue'
 import AdminSettingsView from '../views/admin/SettingsView.vue'
+import AdminThemesView from '../views/admin/ThemesView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -69,6 +70,7 @@ const router = createRouter({
     { path: '/admin/ai', name: 'admin-ai', component: AdminAiUsageView, meta: { requiresAuth: true } },
     { path: '/admin/restoran', name: 'admin-restaurant', component: AdminRestaurantView, meta: { requiresAuth: true } },
     { path: '/admin/podesavanja', name: 'admin-settings', component: AdminSettingsView, meta: { requiresAuth: true } },
+    { path: '/admin/teme', name: 'admin-themes', component: AdminThemesView, meta: { requiresAuth: true } },
 
     // --- Fallback ---
     { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView }

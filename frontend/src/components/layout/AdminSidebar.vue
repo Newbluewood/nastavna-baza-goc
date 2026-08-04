@@ -46,6 +46,7 @@ defineExpose({ sidebarOpen })
       <router-link to="/admin/projekti">Пројекти</router-link>
       <router-link to="/admin/ai">AI Потрошња</router-link>
       <router-link to="/admin/restoran">Ресторан</router-link>
+      <router-link to="/admin/teme">Теме (Истражи Гоч)</router-link>
       <router-link to="/admin/podesavanja">Подешавања</router-link>
 
       <!-- Смештај група -->

@@ -30,6 +30,11 @@ const {
 	createPage,
 	updatePage,
 	deletePage,
+	getThemes,
+	getThemeById,
+	createTheme,
+	updateTheme,
+	deleteTheme,
 	getSettings,
 	updateSettings,
 	getHeroSlides,
@@ -84,6 +89,13 @@ router.get('/pages/:id',           adminAuthMiddleware,                         
 router.post('/pages',              adminAuthMiddleware,                                      asyncHandler(createPage));
 router.put('/pages/:id',           adminAuthMiddleware,                                      asyncHandler(updatePage));
 router.delete('/pages/:id',        adminAuthMiddleware,                                      asyncHandler(deletePage));
+
+// Themes CRUD (Istraži Goč)
+router.get('/themes',              adminAuthMiddleware,                                      asyncHandler(getThemes));
+router.get('/themes/:id',          adminAuthMiddleware,                                      asyncHandler(getThemeById));
+router.post('/themes',             adminAuthMiddleware,                                      asyncHandler(createTheme));
+router.put('/themes/:id',          adminAuthMiddleware,                                      asyncHandler(updateTheme));
+router.delete('/themes/:id',       adminAuthMiddleware,                                      asyncHandler(deleteTheme));
 
 // Site Settings
 router.get('/settings',            adminAuthMiddleware,                                      asyncHandler(getSettings));

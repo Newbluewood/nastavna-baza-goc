@@ -322,6 +322,33 @@ class ApiService {
     return this.request(`/api/admin/pages/${id}`, { method: 'DELETE' });
   }
 
+  // Admin — Themes (Istraži Goč)
+  async getAdminThemes() {
+    return this.request('/api/admin/themes');
+  }
+
+  async getAdminThemeById(id) {
+    return this.request(`/api/admin/themes/${id}`);
+  }
+
+  async createTheme(data) {
+    return this.request('/api/admin/themes', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateTheme(id, data) {
+    return this.request(`/api/admin/themes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteTheme(id) {
+    return this.request(`/api/admin/themes/${id}`, { method: 'DELETE' });
+  }
+
   // Public — Site Settings
   async getSiteSettings(lang = 'sr') {
     return this.request(`/api/settings?lang=${lang}`);
