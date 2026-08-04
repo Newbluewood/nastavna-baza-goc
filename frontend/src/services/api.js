@@ -387,6 +387,13 @@ class ApiService {
     return this.request('/api/admin/facilities');
   }
 
+  async updateFacility(facilityId, data) {
+    return this.request(`/api/admin/facilities/${facilityId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
   async getAdminRooms(facilityId) {
     return this.request(`/api/admin/facilities/${facilityId}/rooms`);
   }

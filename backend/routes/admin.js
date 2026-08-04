@@ -39,6 +39,7 @@ const {
 	purgeCache,
 	uploadImage,
 	getFacilities,
+	updateFacility,
 	getRoomsByFacility,
 	updateRoom,
 	getRestaurants,
@@ -102,6 +103,7 @@ router.post('/system/purge-cache', adminAuthMiddleware,                         
 
 // Facility & Room management
 router.get('/facilities',          adminAuthMiddleware,                                      asyncHandler(getFacilities));
+router.put('/facilities/:id',      adminAuthMiddleware,                                      asyncHandler(updateFacility));
 router.get('/facilities/:id/rooms', adminAuthMiddleware,                                     asyncHandler(getRoomsByFacility));
 router.put('/rooms/:id',           adminAuthMiddleware,                                      asyncHandler(updateRoom));
 

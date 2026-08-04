@@ -394,7 +394,12 @@ async function getContactPage(req, res) {
     LEFT JOIN staff_translations st ON s.id = st.entity_id AND st.lang = ?
     ORDER BY s.id
   `, [lang]);
-  const [projects] = await db.query('SELECT id, title, description, status, start_date FROM projects ORDER BY start_date DESC');
+  const [projects] = await db.query(`
+    SELECT p.id, COALESCE(pt.title, p.title) as title, COALESCE(pt.description, p.description) as description, p.status, p.start_date
+    FROM projects p
+    LEFT JOIN project_translations pt ON p.id = pt.entity_id AND pt.lang = ?
+    ORDER BY p.start_date DESC
+  `, [lang]);
   res.json({ staff, projects });
 }
 

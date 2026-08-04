@@ -1,21 +1,16 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import AdminLayout from '../../components/layout/AdminLayout.vue'
+import { ref, watch, onMounted } from 'vue'
 import api, { BASE_URL } from '../../services/api'
 
-const router = useRouter()
+const props = defineProps({
+  pageSlug: { type: String, required: true }
+})
+
 const isLoading = ref(true)
 const isUploading = ref(false)
 const isEditing = ref(false)
 const editingId = ref(null)
 const slides = ref([])
-
-const PAGES = [
-  { slug: 'pocetna', label: 'Почетна' },
-  { slug: 'smestaj', label: 'Смештај' }
-]
-const activePage = ref('pocetna')
 
 const emptyForm = () => ({ title: '', subtitle: '', title_en: '', subtitle_en: '', image_url: '', target_link: '', display_order: 0 })
 const form = ref(emptyForm())
@@ -31,19 +26,12 @@ const getImageUrl = (url) => {
 const fetchSlides = async () => {
   isLoading.value = true
   try {
-    slides.value = await api.getAdminHeroSlides(activePage.value)
+    slides.value = await api.getAdminHeroSlides(props.pageSlug)
   } catch (err) {
-    if (err.status === 401 || err.status === 403) { router.push('/admin/login'); return }
     console.error('Failed to load hero slides:', err)
   } finally {
     isLoading.value = false
   }
-}
-
-const switchPage = (slug) => {
-  activePage.value = slug
-  resetForm()
-  fetchSlides()
 }
 
 const resetForm = () => {
@@ -91,7 +79,7 @@ const handleUpload = async (event) => {
 const saveSlide = async () => {
   if (!form.value.image_url) { alert('Слика је обавезна.'); return }
   try {
-    const payload = { ...form.value, page_slug: activePage.value }
+    const payload = { ...form.value, page_slug: props.pageSlug }
     if (editingId.value) {
       await api.updateHeroSlide(editingId.value, payload)
     } else {
@@ -131,27 +119,19 @@ const moveSlide = async (index, direction) => {
 }
 
 onMounted(fetchSlides)
+watch(() => props.pageSlug, () => { resetForm(); fetchSlides() })
 </script>
 
 <template>
-  <AdminLayout>
-    <div class="page-header">
-      <div>
-        <h1>Hero слајдови</h1>
-        <p class="subtitle">Управљај галеријом слика у карауселу на Почетној и Смештај страни.</p>
-      </div>
-      <button v-if="!isEditing" class="add-btn" @click="startCreate">+ Додај слајд</button>
-    </div>
-
-    <div class="page-tabs">
-      <button v-for="p in PAGES" :key="p.slug" :class="{ active: activePage === p.slug }" @click="switchPage(p.slug)">
-        {{ p.label }}
-      </button>
+  <div class="hero-slides-editor">
+    <div class="editor-header">
+      <label>Hero слајдови (карусел)</label>
+      <button v-if="!isEditing" type="button" class="add-btn small" @click="startCreate">+ Додај слајд</button>
     </div>
 
     <!-- FORM -->
-    <div v-if="isEditing" class="edit-form">
-      <h2>{{ editingId ? 'Уреди слајд' : 'Нови слајд' }}</h2>
+    <div v-if="isEditing" class="edit-form nested-form">
+      <h3>{{ editingId ? 'Уреди слајд' : 'Нови слајд' }}</h3>
       <div class="form-grid">
         <div class="form-group full-width">
           <label>Слика *</label>
@@ -186,8 +166,8 @@ onMounted(fetchSlides)
         </div>
       </div>
       <div class="form-actions">
-        <button class="save-btn" @click="saveSlide">{{ editingId ? 'Сачувај' : 'Креирај' }}</button>
-        <button class="cancel-btn" @click="resetForm">Откажи</button>
+        <button type="button" class="save-btn" @click="saveSlide">{{ editingId ? 'Сачувај слајд' : 'Креирај слајд' }}</button>
+        <button type="button" class="cancel-btn" @click="resetForm">Откажи</button>
       </div>
     </div>
 
@@ -202,28 +182,30 @@ onMounted(fetchSlides)
           <span class="slide-order">Редослед: {{ slide.display_order }}</span>
         </div>
         <div class="slide-actions">
-          <button class="order-btn" :disabled="index === 0" @click="moveSlide(index, -1)">▲</button>
-          <button class="order-btn" :disabled="index === slides.length - 1" @click="moveSlide(index, 1)">▼</button>
-          <button class="action-btn edit" @click="startEdit(slide)">Уреди</button>
-          <button class="action-btn delete" @click="deleteSlide(slide.id)">Обриши</button>
+          <button type="button" class="order-btn" :disabled="index === 0" @click="moveSlide(index, -1)">▲</button>
+          <button type="button" class="order-btn" :disabled="index === slides.length - 1" @click="moveSlide(index, 1)">▼</button>
+          <button type="button" class="action-btn edit" @click="startEdit(slide)">Уреди</button>
+          <button type="button" class="action-btn delete" @click="deleteSlide(slide.id)">Обриши</button>
         </div>
       </div>
     </div>
     <div v-else class="empty-msg">Нема слајдова за ову страну. Додај нови слајд.</div>
-  </AdminLayout>
+  </div>
 </template>
 
 <style scoped>
-.page-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-.page-tabs button {
-  background: transparent;
-  border: 1px solid #332317;
-  color: #332317;
-  padding: 8px 18px;
-  cursor: pointer;
-  font-weight: 600;
+.hero-slides-editor {
+  grid-column: 1 / -1;
+  border: 1px dashed #cdac91;
+  padding: 16px;
+  background: #fdfaf7;
 }
-.page-tabs button.active { background: #332317; color: #cdac91; }
+.editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.editor-header label { font-size: 0.85rem; font-weight: 600; color: #555; }
+.add-btn.small { padding: 6px 14px; font-size: 0.85rem; }
+
+.nested-form { background: #fff; border: 1px solid #e8ddd2; padding: 16px; margin-bottom: 16px; }
+.nested-form h3 { margin: 0 0 12px; font-size: 1rem; color: #332317; }
 
 .form-group.full-width { grid-column: 1 / -1; }
 .upload-row { display: flex; gap: 8px; }
@@ -250,16 +232,16 @@ onMounted(fetchSlides)
   border: 1px solid #ddd;
 }
 
-.slides-list { display: flex; flex-direction: column; gap: 12px; }
+.slides-list { display: flex; flex-direction: column; gap: 10px; }
 .slide-card {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid #e8ddd2;
-  background: #fdfaf7;
+  background: #fff;
 }
-.slide-thumb { width: 100px; height: 60px; object-fit: cover; flex-shrink: 0; }
+.slide-thumb { width: 90px; height: 54px; object-fit: cover; flex-shrink: 0; }
 .slide-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
 .slide-info strong { color: #332317; }
 .slide-subtitle { color: #67462e; font-size: 0.85rem; }
@@ -268,8 +250,8 @@ onMounted(fetchSlides)
 .order-btn {
   background: #fff;
   border: 1px solid #ccc;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   cursor: pointer;
 }
 .order-btn:disabled { opacity: 0.3; cursor: not-allowed; }

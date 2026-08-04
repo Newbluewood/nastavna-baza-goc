@@ -4,25 +4,36 @@ const { sendError } = require('../../utils/response');
 
 async function getProjects(req, res) {
   const db = req.app.locals.db;
-  const [rows] = await db.query('SELECT * FROM projects ORDER BY id DESC');
+  const [rows] = await db.query(`
+    SELECT p.*, pt.title as title_en, pt.description as description_en
+    FROM projects p
+    LEFT JOIN project_translations pt ON p.id = pt.entity_id AND pt.lang = 'en'
+    ORDER BY p.id DESC
+  `);
   res.json(rows);
 }
 
 async function createProject(req, res) {
   const db = req.app.locals.db;
-  const { title, description, status, start_date } = req.body;
+  const { title, description, title_en, description_en, status, start_date } = req.body;
   if (!title) return sendError(res, 400, 'Title is required');
 
   const [result] = await db.query(
     'INSERT INTO projects (title, description, status, start_date) VALUES (?, ?, ?, ?)',
     [title, description || null, status || 'активан', start_date || null]
   );
+  if (title_en || description_en) {
+    await db.query(
+      'INSERT INTO project_translations (entity_id, lang, title, description) VALUES (?, ?, ?, ?)',
+      [result.insertId, 'en', title_en || null, description_en || null]
+    );
+  }
   res.json({ message: 'Project created', projectId: result.insertId });
 }
 
 async function updateProject(req, res) {
   const db = req.app.locals.db;
-  const { title, description, status, start_date } = req.body;
+  const { title, description, title_en, description_en, status, start_date } = req.body;
   if (!title) return sendError(res, 400, 'Title is required');
 
   const [result] = await db.query(
@@ -30,6 +41,11 @@ async function updateProject(req, res) {
     [title, description || null, status || 'активан', start_date || null, req.params.id]
   );
   if (result.affectedRows === 0) return sendError(res, 404, 'Project not found');
+
+  await db.query(
+    'INSERT INTO project_translations (entity_id, lang, title, description) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description)',
+    [req.params.id, 'en', title_en || null, description_en || null]
+  );
   res.json({ message: 'Project updated' });
 }
 
@@ -233,8 +249,21 @@ async function deleteHeroSlide(req, res) {
 
 async function getFacilities(req, res) {
   const db = req.app.locals.db;
-  const [rows] = await db.query('SELECT id, name, type FROM facilities ORDER BY id ASC');
+  const [rows] = await db.query('SELECT id, name, type, description, cover_image FROM facilities ORDER BY id ASC');
   res.json(rows);
+}
+
+async function updateFacility(req, res) {
+  const db = req.app.locals.db;
+  const { name, description, cover_image } = req.body;
+  if (!name) return sendError(res, 400, 'Name is required');
+
+  const [result] = await db.query(
+    'UPDATE facilities SET name = ?, description = ?, cover_image = ? WHERE id = ?',
+    [name, description || null, cover_image || null, req.params.id]
+  );
+  if (result.affectedRows === 0) return sendError(res, 404, 'Facility not found');
+  res.json({ message: 'Facility updated' });
 }
 
 async function getRoomsByFacility(req, res) {
@@ -271,5 +300,5 @@ module.exports = {
   getPages, getPageById, createPage, updatePage, deletePage,
   getSettings, updateSettings,
   getHeroSlides, createHeroSlide, updateHeroSlide, deleteHeroSlide,
-  getFacilities, getRoomsByFacility, updateRoom
+  getFacilities, updateFacility, getRoomsByFacility, updateRoom
 };

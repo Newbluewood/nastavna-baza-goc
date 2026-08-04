@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
+import HeroSlidesEditor from '../../components/admin/HeroSlidesEditor.vue'
 import api, { BASE_URL } from '../../services/api'
 
 const router = useRouter()
@@ -12,6 +13,9 @@ const editingId = ref(null)
 const isUploading = ref(false)
 
 const form = ref({ slug: '', title: '', content: '', hero_image: '' })
+
+const CAROUSEL_SLUGS = ['pocetna', 'smestaj']
+const usesCarousel = (slug) => CAROUSEL_SLUGS.includes(slug)
 
 const getImageUrl = (url) => {
   if (!url) return '/placeholder.jpg'
@@ -115,7 +119,8 @@ onMounted(() => fetchPages())
             <input v-model="form.slug" type="text" placeholder="npr. edukacija" :disabled="!!editingId" />
             <small v-if="!editingId" class="hint">URL путања (нпр. edukacija → /edukacija)</small>
           </div>
-          <div class="form-group full-width">
+          <HeroSlidesEditor v-if="usesCarousel(form.slug)" :page-slug="form.slug" />
+          <div v-else class="form-group full-width">
             <label>Hero slika</label>
             <div class="upload-row">
               <input type="text" v-model="form.hero_image" placeholder="/uploads/image.jpg">

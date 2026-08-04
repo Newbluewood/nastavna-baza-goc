@@ -11,7 +11,7 @@ const isLoading = ref(true)
 const isEditing = ref(false)
 const editingId = ref(null)
 
-const form = ref({ title: '', description: '', status: 'активан', start_date: '' })
+const form = ref({ title: '', description: '', title_en: '', description_en: '', status: 'активан', start_date: '' })
 
 const statusOptions = [
   { value: 'активан', label: 'Активан' },
@@ -32,7 +32,7 @@ const fetchProjects = async () => {
 }
 
 const resetForm = () => {
-  form.value = { title: '', description: '', status: 'активан', start_date: '' }
+  form.value = { title: '', description: '', title_en: '', description_en: '', status: 'активан', start_date: '' }
   isEditing.value = false
   editingId.value = null
 }
@@ -43,6 +43,8 @@ const startEdit = (project) => {
   form.value = {
     title: project.title,
     description: project.description || '',
+    title_en: project.title_en || '',
+    description_en: project.description_en || '',
     status: project.status || 'активан',
     start_date: project.start_date ? project.start_date.split('T')[0] : ''
   }
@@ -97,6 +99,10 @@ onMounted(() => fetchProjects())
             <input v-model="form.title" type="text" placeholder="Назив пројекта" />
           </div>
           <div class="form-group">
+            <label>Title (EN)</label>
+            <input v-model="form.title_en" type="text" placeholder="Project title" />
+          </div>
+          <div class="form-group">
             <label>Статус</label>
             <select v-model="form.status">
               <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
@@ -109,6 +115,10 @@ onMounted(() => fetchProjects())
           <div class="form-group full-width">
             <label>Опис</label>
             <textarea v-model="form.description" rows="3" placeholder="Кратак опис пројекта"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label>Description (EN)</label>
+            <textarea v-model="form.description_en" rows="3" placeholder="Short project description"></textarea>
           </div>
         </div>
         <div class="form-actions">
