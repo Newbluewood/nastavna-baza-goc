@@ -74,8 +74,12 @@ const form = ref({
   price_base: 0,
   price_half_board: 0,
   price_full_board: 0,
-  meal_info: ''
+  meal_info: '',
+  cover_image: '',
+  gallery: []
 })
+const isUploadingRoomCover = ref(false)
+const isUploadingGalleryItem = ref(false)
 
 const fetchFacilities = async () => {
   try {
@@ -108,12 +112,50 @@ const startEdit = (room) => {
     price_base: room.price_base || 0,
     price_half_board: room.price_half_board || 0,
     price_full_board: room.price_full_board || 0,
-    meal_info: room.meal_info || ''
+    meal_info: room.meal_info || '',
+    cover_image: room.cover_image || '',
+    gallery: (room.gallery || []).map(g => ({ image_url: g.image_url, caption: g.caption || '', sort_order: g.sort_order || 0 }))
   }
 }
 
 const cancelEdit = () => {
   editingRoom.value = null
+}
+
+const handleRoomCoverUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  isUploadingRoomCover.value = true
+  try {
+    const res = await api.uploadImage(file)
+    form.value.cover_image = res.imageUrl
+  } catch (err) {
+    alert('Грешка при отпремању слике: ' + err.message)
+  } finally {
+    isUploadingRoomCover.value = false
+  }
+}
+
+const addGalleryItem = () => {
+  form.value.gallery.push({ image_url: '', caption: '', sort_order: form.value.gallery.length + 1 })
+}
+
+const removeGalleryItem = (index) => {
+  form.value.gallery.splice(index, 1)
+}
+
+const handleGalleryItemUpload = async (event, index) => {
+  const file = event.target.files[0]
+  if (!file) return
+  isUploadingGalleryItem.value = true
+  try {
+    const res = await api.uploadImage(file)
+    form.value.gallery[index].image_url = res.imageUrl
+  } catch (err) {
+    alert('Грешка при отпремању слике: ' + err.message)
+  } finally {
+    isUploadingGalleryItem.value = false
+  }
 }
 
 const saveRoom = async () => {
@@ -145,7 +187,7 @@ watch(selectedFacilityId, () => {
     <div class="page-header">
       <div>
         <h1>Управљање смештајем</h1>
-        <p class="subtitle">Подеси цене и информације о оброцима за сваку собу.</p>
+        <p class="subtitle">Подеси цене, слике и галерију за сваку собу.</p>
       </div>
     </div>
 
@@ -204,6 +246,7 @@ watch(selectedFacilityId, () => {
     <div v-else-if="rooms.length" class="rooms-container">
       <div v-for="room in rooms" :key="room.id" class="room-card" :class="{ 'is-editing': editingRoom?.id === room.id }">
         <div v-if="editingRoom?.id !== room.id" class="room-view">
+          <img :src="getImageUrl(room.cover_image)" class="room-cover-thumb" />
           <div class="room-info">
             <h3>{{ room.name }}</h3>
             <p class="room-meta">Капацитет: {{ room.capacity || '—' }}</p>
@@ -263,6 +306,38 @@ watch(selectedFacilityId, () => {
             <div class="form-group full-width">
               <label>Инфо о оброцима (meal_info)</label>
               <textarea v-model="form.meal_info" rows="2" placeholder="npr. Doručak uključen u cenu"></textarea>
+            </div>
+            <div class="form-group full-width">
+              <label>Насловна слика собе</label>
+              <div class="upload-row">
+                <input type="text" v-model="form.cover_image" placeholder="/uploads/image.jpg">
+                <label class="upload-btn">
+                  <input type="file" @change="handleRoomCoverUpload" accept="image/*" style="display:none;">
+                  <span>{{ isUploadingRoomCover ? '...' : 'Upload' }}</span>
+                </label>
+              </div>
+              <img v-if="form.cover_image" :src="getImageUrl(form.cover_image)" class="facility-cover-preview">
+            </div>
+            <div class="form-group full-width">
+              <div class="gallery-header">
+                <label>Галерија собе ({{ form.gallery.length }})</label>
+                <button type="button" class="add-gallery-btn" @click="addGalleryItem">+ Додај слику</button>
+              </div>
+              <div v-for="(item, idx) in form.gallery" :key="idx" class="gallery-item-row">
+                <img :src="getImageUrl(item.image_url)" class="gallery-item-thumb">
+                <div class="gallery-item-fields">
+                  <div class="upload-row">
+                    <input type="text" v-model="item.image_url" placeholder="/uploads/image.jpg">
+                    <label class="upload-btn small">
+                      <input type="file" @change="(e) => handleGalleryItemUpload(e, idx)" accept="image/*" style="display:none;">
+                      <span>{{ isUploadingGalleryItem ? '...' : 'Upload' }}</span>
+                    </label>
+                  </div>
+                  <input type="text" v-model="item.caption" placeholder="Опис слике (опционо)" class="gallery-caption-input">
+                </div>
+                <button type="button" class="remove-gallery-btn" @click="removeGalleryItem(idx)">✕</button>
+              </div>
+              <p v-if="!form.gallery.length" class="gallery-empty-hint">Нема додатих слика у галерији.</p>
             </div>
           </div>
           <div class="form-actions">
@@ -369,7 +444,51 @@ watch(selectedFacilityId, () => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 14px;
 }
+.room-cover-thumb {
+  width: 90px;
+  height: 70px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #f1ede8;
+}
+
+.gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.add-gallery-btn {
+  background: transparent;
+  border: 1px solid #cdac91;
+  color: #332317;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+.add-gallery-btn:hover { background: #cdac91; color: #fff; }
+.gallery-item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid #eee;
+  margin-bottom: 8px;
+  background: #fafafa;
+}
+.gallery-item-thumb { width: 60px; height: 45px; object-fit: cover; flex-shrink: 0; background: #f1ede8; }
+.gallery-item-fields { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.gallery-caption-input { padding: 8px; border: 1px solid #ddd; width: 100%; box-sizing: border-box; }
+.upload-btn.small { padding: 0 10px; font-size: 0.78rem; }
+.remove-gallery-btn {
+  background: transparent;
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.remove-gallery-btn:hover { background: #e74c3c; color: #fff; }
+.gallery-empty-hint { color: #999; font-size: 0.82rem; }
 
 .room-info h3 {
   margin: 0 0 5px;

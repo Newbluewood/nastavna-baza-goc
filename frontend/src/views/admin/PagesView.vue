@@ -17,6 +17,16 @@ const form = ref({ slug: '', title: '', content: '', hero_image: '' })
 const CAROUSEL_SLUGS = ['pocetna', 'smestaj']
 const usesCarousel = (slug) => CAROUSEL_SLUGS.includes(slug)
 
+const galleryFacilities = ref([])
+const fetchGalleryFacilities = async () => {
+  try {
+    const all = await api.getAdminFacilities()
+    galleryFacilities.value = all.filter(f => f.type === 'smestaj')
+  } catch (err) {
+    console.error('Failed to load facilities for gallery preview:', err)
+  }
+}
+
 const getImageUrl = (url) => {
   if (!url) return '/placeholder.jpg'
   if (url.startsWith('http')) return url
@@ -63,6 +73,7 @@ const startEdit = (page) => {
   form.value = { slug: page.slug, title: page.title || '', content: page.content || '', hero_image: page.hero_image || '' }
   editingId.value = page.id
   isEditing.value = true
+  if (page.slug === 'pocetna') fetchGalleryFacilities()
 }
 
 const savePage = async () => {
@@ -120,6 +131,20 @@ onMounted(() => fetchPages())
             <small v-if="!editingId" class="hint">URL путања (нпр. edukacija → /edukacija)</small>
           </div>
           <HeroSlidesEditor v-if="usesCarousel(form.slug)" :page-slug="form.slug" />
+
+          <div v-if="form.slug === 'pocetna'" class="form-group full-width gallery-note">
+            <label>Галерија (секција испод тема на Почетној)</label>
+            <p class="gallery-hint">
+              Слике у овој секцији су насловне слике смештајних објеката, не посебна галерија.
+              Уређују се у <router-link to="/admin/sobe">Уређивање соба</router-link>.
+            </p>
+            <div class="gallery-preview-strip">
+              <div v-for="f in galleryFacilities" :key="f.id" class="gallery-preview-item">
+                <img :src="getImageUrl(f.cover_image)" />
+                <span>{{ f.name }}</span>
+              </div>
+            </div>
+          </div>
           <div v-else class="form-group full-width">
             <label>Hero slika</label>
             <div class="upload-row">
@@ -208,5 +233,36 @@ onMounted(() => fetchPages())
   object-fit: cover;
   background: #f1ede8;
   border: 1px solid #ddd;
+}
+.gallery-note {
+  border: 1px dashed #cdac91;
+  padding: 16px;
+  background: #fdfaf7;
+}
+.gallery-hint { margin: 0 0 12px; font-size: 0.85rem; color: #666; }
+.gallery-hint a { color: #9a714e; font-weight: 600; }
+.gallery-preview-strip {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.gallery-preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 90px;
+}
+.gallery-preview-item img {
+  width: 90px;
+  height: 60px;
+  object-fit: cover;
+  background: #f1ede8;
+  border: 1px solid #ddd;
+}
+.gallery-preview-item span {
+  font-size: 0.7rem;
+  color: #555;
+  text-align: center;
 }
 </style>

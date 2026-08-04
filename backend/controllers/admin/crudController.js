@@ -266,30 +266,62 @@ async function updateFacility(req, res) {
   res.json({ message: 'Facility updated' });
 }
 
+function sanitizeGalleryItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item, index) => ({
+      image_url: String(item?.image_url || '').trim(),
+      caption: String(item?.caption || '').trim(),
+      sort_order: Number.isFinite(Number(item?.sort_order)) ? Number(item.sort_order) : index + 1
+    }))
+    .filter((item) => item.image_url)
+    .slice(0, 20);
+}
+
 async function getRoomsByFacility(req, res) {
   const db = req.app.locals.db;
-  const [rows] = await db.query('SELECT * FROM rooms WHERE facility_id = ? ORDER BY id ASC', [req.params.id]);
-  res.json(rows);
+  const [rooms] = await db.query('SELECT * FROM rooms WHERE facility_id = ? ORDER BY id ASC', [req.params.id]);
+  const [gallery] = await db.query(
+    "SELECT id, entity_id, image_url, caption, sort_order FROM media_gallery WHERE entity_type = 'room' AND entity_id IN (?) ORDER BY sort_order ASC, id ASC",
+    [rooms.length ? rooms.map(r => r.id) : [0]]
+  );
+  rooms.forEach(room => {
+    room.gallery = gallery.filter(g => g.entity_id === room.id);
+  });
+  res.json(rooms);
 }
 
 async function updateRoom(req, res) {
   const db = req.app.locals.db;
-  const { name, capacity, price_base, price_half_board, price_full_board, meal_info } = req.body;
+  const { name, capacity, price_base, price_half_board, price_full_board, meal_info, cover_image, gallery } = req.body;
   if (!name) return sendError(res, 400, 'Name is required');
 
   const [result] = await db.query(
-    `UPDATE rooms SET 
-      name = ?, 
-      capacity = ?, 
-      price_base = ?, 
-      price_half_board = ?, 
-      price_full_board = ?, 
-      meal_info = ? 
+    `UPDATE rooms SET
+      name = ?,
+      capacity = ?,
+      price_base = ?,
+      price_half_board = ?,
+      price_full_board = ?,
+      meal_info = ?,
+      cover_image = ?
     WHERE id = ?`,
-    [name, capacity || null, price_base || 0, price_half_board || 0, price_full_board || 0, meal_info || null, req.params.id]
+    [name, capacity || null, price_base || 0, price_half_board || 0, price_full_board || 0, meal_info || null, cover_image || null, req.params.id]
   );
 
   if (result.affectedRows === 0) return sendError(res, 404, 'Room not found');
+
+  if (gallery !== undefined) {
+    await db.query("DELETE FROM media_gallery WHERE entity_type = 'room' AND entity_id = ?", [req.params.id]);
+    const sanitized = sanitizeGalleryItems(gallery);
+    for (const item of sanitized) {
+      await db.query(
+        'INSERT INTO media_gallery (entity_type, entity_id, image_url, caption, sort_order) VALUES (?, ?, ?, ?, ?)',
+        ['room', req.params.id, item.image_url, item.caption || null, item.sort_order]
+      );
+    }
+  }
+
   res.json({ message: 'Room updated' });
 }
 
