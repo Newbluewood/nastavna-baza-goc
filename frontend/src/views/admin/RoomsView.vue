@@ -18,6 +18,9 @@ const facilityForm = ref({ name: '', description: '', cover_image: '' })
 
 const selectedFacility = computed(() => facilities.value.find(f => f.id === selectedFacilityId.value))
 
+const TYPE_LABELS = { smestaj: 'Смештај', restoran: 'Ресторан' }
+const typeLabel = (type) => TYPE_LABELS[type] || type
+
 const getImageUrl = (url) => {
   if (!url) return '/placeholder.jpg'
   if (url.startsWith('http')) return url
@@ -150,7 +153,7 @@ watch(selectedFacilityId, () => {
       <label>Одаберите објекат:</label>
       <select v-model="selectedFacilityId" class="facility-select">
         <option v-for="f in facilities" :key="f.id" :value="f.id">
-          {{ f.name }} ({{ f.type }})
+          {{ f.name }} ({{ typeLabel(f.type) }})
         </option>
       </select>
     </div>
