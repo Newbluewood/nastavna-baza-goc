@@ -173,10 +173,24 @@ async function getFacilities(req, res) {
   const [pages] = await db.query(`SELECT COALESCE(pt.title, p.title) AS title, COALESCE(pt.content, p.content) AS content FROM pages p LEFT JOIN page_translations pt ON p.id = pt.entity_id AND pt.lang = ? WHERE p.slug = 'smestaj' LIMIT 1`, [langParam]);
   const pageData = pages.length > 0 ? pages[0] : { title: 'Смештај', content: '' };
 
+  const [slides] = await db.query(`
+    SELECT hs.id,
+      COALESCE(hst.title, hs.title) AS title,
+      COALESCE(hst.subtitle, hs.subtitle) AS subtitle,
+      hs.image_url,
+      hs.target_link,
+      hs.display_order
+    FROM hero_slides hs
+    LEFT JOIN hero_slides_translations hst ON hs.id = hst.entity_id AND hst.lang = ?
+    WHERE hs.page_slug = 'smestaj'
+    ORDER BY hs.display_order ASC, hs.id ASC
+  `, [langParam]);
+
   res.json({
     pageTitle: pageData.title,
     textContent: pageData.content,
-    facilities
+    facilities,
+    slides
   });
 }
 

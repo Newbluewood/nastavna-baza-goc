@@ -32,6 +32,10 @@ const {
 	deletePage,
 	getSettings,
 	updateSettings,
+	getHeroSlides,
+	createHeroSlide,
+	updateHeroSlide,
+	deleteHeroSlide,
 	purgeCache,
 	uploadImage,
 	getFacilities,
@@ -83,6 +87,12 @@ router.delete('/pages/:id',        adminAuthMiddleware,                         
 // Site Settings
 router.get('/settings',            adminAuthMiddleware,                                      asyncHandler(getSettings));
 router.put('/settings',            adminAuthMiddleware,                                      asyncHandler(updateSettings));
+
+// Hero Slides
+router.get('/hero-slides',         adminAuthMiddleware,                                      asyncHandler(getHeroSlides));
+router.post('/hero-slides',        adminAuthMiddleware,                                      asyncHandler(createHeroSlide));
+router.put('/hero-slides/:id',     adminAuthMiddleware,                                      asyncHandler(updateHeroSlide));
+router.delete('/hero-slides/:id',  adminAuthMiddleware,                                      asyncHandler(deleteHeroSlide));
 
 // Uploads
 router.post('/upload',             adminAuthMiddleware,                                      asyncHandler(uploadImage));

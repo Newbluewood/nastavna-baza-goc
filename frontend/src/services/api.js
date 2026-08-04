@@ -339,6 +339,29 @@ class ApiService {
     });
   }
 
+  // Admin — Hero Slides
+  async getAdminHeroSlides(pageSlug) {
+    return this.request(`/api/admin/hero-slides?page_slug=${pageSlug}`);
+  }
+
+  async createHeroSlide(data) {
+    return this.request('/api/admin/hero-slides', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateHeroSlide(id, data) {
+    return this.request(`/api/admin/hero-slides/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteHeroSlide(id) {
+    return this.request(`/api/admin/hero-slides/${id}`, { method: 'DELETE' });
+  }
+
   // Admin — Room Map
   async getRoomMap(date) {
     const query = date ? `?date=${date}` : '';
