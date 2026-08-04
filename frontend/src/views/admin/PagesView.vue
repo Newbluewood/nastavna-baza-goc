@@ -2,15 +2,38 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
-import api from '../../services/api'
+import api, { BASE_URL } from '../../services/api'
 
 const router = useRouter()
 const pages = ref([])
 const isLoading = ref(true)
 const isEditing = ref(false)
 const editingId = ref(null)
+const isUploading = ref(false)
 
-const form = ref({ slug: '', title: '', content: '' })
+const form = ref({ slug: '', title: '', content: '', hero_image: '' })
+
+const getImageUrl = (url) => {
+  if (!url) return '/placeholder.jpg'
+  if (url.startsWith('http')) return url
+  const base = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL
+  const path = url.startsWith('/') ? url : `/${url}`
+  return `${base}${path}`
+}
+
+const handleHeroUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  isUploading.value = true
+  try {
+    const res = await api.uploadImage(file)
+    form.value.hero_image = res.imageUrl
+  } catch (err) {
+    alert('Greška pri otpremanju slike: ' + err.message)
+  } finally {
+    isUploading.value = false
+  }
+}
 
 const fetchPages = async () => {
   isLoading.value = true
@@ -25,7 +48,7 @@ const fetchPages = async () => {
 }
 
 const resetForm = () => {
-  form.value = { slug: '', title: '', content: '' }
+  form.value = { slug: '', title: '', content: '', hero_image: '' }
   isEditing.value = false
   editingId.value = null
 }
@@ -33,7 +56,7 @@ const resetForm = () => {
 const startCreate = () => { resetForm(); isEditing.value = true }
 
 const startEdit = (page) => {
-  form.value = { slug: page.slug, title: page.title || '', content: page.content || '' }
+  form.value = { slug: page.slug, title: page.title || '', content: page.content || '', hero_image: page.hero_image || '' }
   editingId.value = page.id
   isEditing.value = true
 }
@@ -93,6 +116,17 @@ onMounted(() => fetchPages())
             <small v-if="!editingId" class="hint">URL путања (нпр. edukacija → /edukacija)</small>
           </div>
           <div class="form-group full-width">
+            <label>Hero slika</label>
+            <div class="upload-row">
+              <input type="text" v-model="form.hero_image" placeholder="/uploads/image.jpg">
+              <label class="upload-btn">
+                <input type="file" @change="handleHeroUpload" accept="image/*" style="display:none;">
+                <span>{{ isUploading ? '...' : 'Upload' }}</span>
+              </label>
+            </div>
+            <img v-if="form.hero_image" :src="getImageUrl(form.hero_image)" alt="Hero preview" class="hero-preview-image">
+          </div>
+          <div class="form-group full-width">
             <label>Садржај (HTML)</label>
             <textarea v-model="form.content" rows="12" placeholder="<h2>Наслов секције</h2><p>Текст...</p>"></textarea>
           </div>
@@ -113,6 +147,7 @@ onMounted(() => fetchPages())
         <thead>
           <tr>
             <th>ID</th>
+            <th>Slika</th>
             <th>Slug</th>
             <th>Наслов</th>
             <th>Акције</th>
@@ -121,6 +156,7 @@ onMounted(() => fetchPages())
         <tbody>
           <tr v-for="p in pages" :key="p.id">
             <td>{{ p.id }}</td>
+            <td><img :src="getImageUrl(p.hero_image)" width="50" height="50" style="object-fit:cover;"></td>
             <td><code>/{{ p.slug }}</code></td>
             <td>{{ p.title }}</td>
             <td class="actions-cell">
@@ -145,4 +181,27 @@ onMounted(() => fetchPages())
 .data-table code { background: #f5f0ea; padding: 2px 6px; font-size: 0.85rem; }
 .red-star { color: #e74c3c; font-weight: bold; font-size: 1em; margin-right: 2px; }
 .slug-hint { color: #b94a48; font-size: 0.92em; font-weight: 400; font-style: italic; }
+.upload-row { display: flex; gap: 8px; }
+.upload-row input { flex: 1; }
+.upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #332317;
+  color: #cdac91;
+  padding: 0 15px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.85rem;
+  transition: opacity 0.2s;
+}
+.upload-btn:hover { opacity: 0.85; }
+.hero-preview-image {
+  margin-top: 10px;
+  width: 220px;
+  height: 120px;
+  object-fit: cover;
+  background: #f1ede8;
+  border: 1px solid #ddd;
+}
 </style>
