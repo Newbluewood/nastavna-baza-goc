@@ -267,7 +267,7 @@ watch(selectedFacilityId, () => {
             <p v-if="room.meal_info" class="meal-info-text">🍴 {{ room.meal_info }}</p>
           </div>
           <div class="room-actions">
-            <button class="edit-btn" @click="startEdit(room)">Уреди цене</button>
+            <button class="edit-btn" @click="startEdit(room)">Уреди податке</button>
           </div>
         </div>
 
