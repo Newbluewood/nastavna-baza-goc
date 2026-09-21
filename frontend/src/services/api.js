@@ -557,10 +557,14 @@ class ApiService {
   }
 
   // Translation
-  async translateText(text, targetLang = 'EN') {
+  async translateText(text, targetLang = 'EN', options = {}) {
     return this.request('/api/admin/translate', {
       method: 'POST',
-      body: JSON.stringify({ text, target_lang: targetLang })
+      body: JSON.stringify({
+        text,
+        target_lang: targetLang,
+        html: !!options.html
+      })
     });
   }
 

@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
+import TranslateButton from '../../components/admin/TranslateButton.vue'
 import api from '../../services/api'
 
 const router = useRouter()
@@ -16,8 +17,11 @@ const isEditingRestaurant = ref(false)
 
 const form = ref({
   name: '',
+  name_en: '',
   category: '',
+  category_en: '',
   description: '',
+  description_en: '',
   price: 0,
   is_available: true,
   sort_order: 0,
@@ -26,7 +30,9 @@ const form = ref({
 
 const restaurantForm = ref({
   name: '',
+  name_en: '',
   description: '',
+  description_en: '',
   distance_km: 0,
   distance_minutes: 0,
   cover_image: ''
@@ -49,7 +55,9 @@ const fetchRestaurants = async () => {
 const setRestaurantForm = (res) => {
   restaurantForm.value = {
     name: res.name || '',
+    name_en: res.name_en || '',
     description: res.description || '',
+    description_en: res.description_en || '',
     distance_km: res.distance_km || 0,
     distance_minutes: res.distance_minutes || 0,
     cover_image: res.cover_image || ''
@@ -60,7 +68,8 @@ const fetchMenu = async () => {
   if (!selectedRestaurantId.value) return
   isLoading.value = true
   try {
-    menuItems.value = await api.getAdminMenuItems(selectedRestaurantId.value)
+    menuItems.value = (await api.getAdminMenuItems(selectedRestaurantId.value))
+      .filter((item) => item.lang !== 'en')
     const current = restaurants.value.find(r => r.id === selectedRestaurantId.value)
     if (current) setRestaurantForm(current)
   } catch (err) {
@@ -102,8 +111,11 @@ const startEdit = (item) => {
   editingItem.value = item
   form.value = {
     name: item.name || '',
+    name_en: item.name_en || '',
     category: item.category || '',
+    category_en: item.category_en || '',
     description: item.description || '',
+    description_en: item.description_en || '',
     price: item.price || 0,
     is_available: item.is_available === 1 || item.is_available === true,
     sort_order: item.sort_order || 0,
@@ -116,8 +128,11 @@ const startAdd = () => {
   isAddingNew.value = true
   form.value = {
     name: '',
+    name_en: '',
     category: '',
+    category_en: '',
     description: '',
+    description_en: '',
     price: 0,
     is_available: true,
     sort_order: menuItems.value.length + 1,
@@ -213,6 +228,13 @@ watch(selectedRestaurantId, () => {
             <input v-model="restaurantForm.name" type="text" />
           </div>
           <div class="form-group">
+            <label class="label-with-translate">
+              Name (EN)
+              <TranslateButton :source="restaurantForm.name" :current="restaurantForm.name_en" @translated="restaurantForm.name_en = $event" />
+            </label>
+            <input v-model="restaurantForm.name_en" type="text" placeholder="Restaurant name" />
+          </div>
+          <div class="form-group">
             <label>Удаљеност (km)</label>
             <input v-model.number="restaurantForm.distance_km" type="number" step="0.1" />
           </div>
@@ -223,6 +245,13 @@ watch(selectedRestaurantId, () => {
           <div class="form-group full-width">
             <label>Опис</label>
             <textarea v-model="restaurantForm.description" rows="3"></textarea>
+          </div>
+          <div class="form-group full-width translate-between">
+            <TranslateButton :source="restaurantForm.description" :current="restaurantForm.description_en" @translated="restaurantForm.description_en = $event" />
+          </div>
+          <div class="form-group full-width">
+            <label>Description (EN)</label>
+            <textarea v-model="restaurantForm.description_en" rows="3"></textarea>
           </div>
         </div>
         <div class="form-actions">
@@ -242,8 +271,22 @@ watch(selectedRestaurantId, () => {
           <input v-model="form.name" type="text" placeholder="npr. Teleća čorba" />
         </div>
         <div class="form-group">
+          <label class="label-with-translate">
+            Name (EN)
+            <TranslateButton :source="form.name" :current="form.name_en" @translated="form.name_en = $event" />
+          </label>
+          <input v-model="form.name_en" type="text" placeholder="e.g. Veal soup" />
+        </div>
+        <div class="form-group">
           <label>Категорија</label>
           <input v-model="form.category" type="text" placeholder="npr. Supe i čorbe" />
+        </div>
+        <div class="form-group">
+          <label class="label-with-translate">
+            Category (EN)
+            <TranslateButton :source="form.category" :current="form.category_en" @translated="form.category_en = $event" />
+          </label>
+          <input v-model="form.category_en" type="text" placeholder="e.g. Soups" />
         </div>
         <div class="form-group">
           <label>Цена (RSD)</label>
@@ -263,6 +306,13 @@ watch(selectedRestaurantId, () => {
         <div class="form-group full-width">
           <label>Опис / Састојци</label>
           <textarea v-model="form.description" rows="2" placeholder="Sastojci, način pripreme..."></textarea>
+        </div>
+        <div class="form-group full-width translate-between">
+          <TranslateButton :source="form.description" :current="form.description_en" @translated="form.description_en = $event" />
+        </div>
+        <div class="form-group full-width">
+          <label>Description (EN)</label>
+          <textarea v-model="form.description_en" rows="2" placeholder="Ingredients, preparation..."></textarea>
         </div>
       </div>
       <div class="form-actions">
@@ -301,8 +351,22 @@ watch(selectedRestaurantId, () => {
               <input v-model="form.name" type="text" />
             </div>
             <div class="form-group">
+              <label class="label-with-translate">
+                Name (EN)
+                <TranslateButton :source="form.name" :current="form.name_en" @translated="form.name_en = $event" />
+              </label>
+              <input v-model="form.name_en" type="text" placeholder="e.g. Veal soup" />
+            </div>
+            <div class="form-group">
               <label>Категорија</label>
               <input v-model="form.category" type="text" />
+            </div>
+            <div class="form-group">
+              <label class="label-with-translate">
+                Category (EN)
+                <TranslateButton :source="form.category" :current="form.category_en" @translated="form.category_en = $event" />
+              </label>
+              <input v-model="form.category_en" type="text" placeholder="e.g. Soups" />
             </div>
             <div class="form-group">
               <label>Цена (RSD)</label>
@@ -322,6 +386,13 @@ watch(selectedRestaurantId, () => {
             <div class="form-group full-width">
               <label>Опис / Састојци</label>
               <textarea v-model="form.description" rows="2"></textarea>
+            </div>
+            <div class="form-group full-width translate-between">
+              <TranslateButton :source="form.description" :current="form.description_en" @translated="form.description_en = $event" />
+            </div>
+            <div class="form-group full-width">
+              <label>Description (EN)</label>
+              <textarea v-model="form.description_en" rows="2"></textarea>
             </div>
           </div>
           <div class="form-actions">
@@ -567,6 +638,12 @@ watch(selectedRestaurantId, () => {
   margin-bottom: 6px;
   color: #555;
   font-weight: bold;
+}
+.form-group .label-with-translate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .form-group input, 

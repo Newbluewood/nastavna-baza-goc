@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
+import TranslateButton from '../../components/admin/TranslateButton.vue'
 import api, { BASE_URL } from '../../services/api'
 
 const router = useRouter()
@@ -134,7 +135,10 @@ onMounted(() => fetchStaff())
             <input v-model="form.role" type="text" placeholder="нпр. Управник базе" />
           </div>
           <div class="form-group">
-            <label>Position (EN)</label>
+            <label class="label-with-translate">
+              Position (EN)
+              <TranslateButton :source="form.role" :current="form.role_en" @translated="form.role_en = $event" />
+            </label>
             <input v-model="form.role_en" type="text" placeholder="e.g. Base Manager" />
           </div>
           <div class="form-group">

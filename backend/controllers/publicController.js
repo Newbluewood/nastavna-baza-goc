@@ -222,7 +222,21 @@ async function getFacility(req, res) {
   delete facility.gallery_urls;
   localizeFacility(facility, lang);
 
-  const [rooms] = await db.query(`
+  const roomsSqlWithMeal = `
+    SELECT r.id, r.facility_id,
+      COALESCE(rt.name, r.name) AS name,
+      COALESCE(rt.description, r.description) AS description,
+      r.capacity, r.cover_image, r.floor_plan_image, r.amenities,
+      r.price_base, r.price_half_board, r.price_full_board,
+      COALESCE(rt.meal_info, r.meal_info) AS meal_info,
+      GROUP_CONCAT(mg.image_url) as room_gallery_urls
+    FROM rooms r
+    LEFT JOIN room_translations rt ON r.id = rt.entity_id AND rt.lang = ?
+    LEFT JOIN media_gallery mg ON mg.entity_id = r.id AND mg.entity_type = 'room'
+    WHERE r.facility_id = ?
+    GROUP BY r.id
+  `;
+  const roomsSqlWithoutMeal = `
     SELECT r.id, r.facility_id,
       COALESCE(rt.name, r.name) AS name,
       COALESCE(rt.description, r.description) AS description,
@@ -234,7 +248,14 @@ async function getFacility(req, res) {
     LEFT JOIN media_gallery mg ON mg.entity_id = r.id AND mg.entity_type = 'room'
     WHERE r.facility_id = ?
     GROUP BY r.id
-  `, [langParam, facilityId]);
+  `;
+  let rooms;
+  try {
+    [rooms] = await db.query(roomsSqlWithMeal, [langParam, facilityId]);
+  } catch (err) {
+    if (err.code !== 'ER_BAD_FIELD_ERROR') throw err;
+    [rooms] = await db.query(roomsSqlWithoutMeal, [langParam, facilityId]);
+  }
 
   rooms.forEach(room => {
     room.gallery = room.room_gallery_urls ? room.room_gallery_urls.split(',') : [];

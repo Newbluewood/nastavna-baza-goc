@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
+import TranslateButton from '../../components/admin/TranslateButton.vue'
 import api, { BASE_URL } from '../../services/api'
 
 const router = useRouter()
@@ -178,12 +179,18 @@ onMounted(() => fetchThemes())
           <input v-model="form.name_sr" type="text" placeholder="нпр. Биљни и животињски свет" />
         </div>
         <div class="form-group">
-          <label>Title (EN)</label>
+          <label class="label-with-translate">
+            Title (EN)
+            <TranslateButton :source="form.name_sr" :current="form.name_en" @translated="form.name_en = $event" />
+          </label>
           <input v-model="form.name_en" type="text" placeholder="e.g. Flora and Fauna" />
         </div>
         <div class="form-group full-width">
           <label>Чланак (СРП)</label>
           <textarea v-model="form.article_sr" rows="8" placeholder="Текст чланка на српском"></textarea>
+        </div>
+        <div class="form-group full-width translate-between">
+          <TranslateButton :source="form.article_sr" :current="form.article_en" @translated="form.article_en = $event" />
         </div>
         <div class="form-group full-width">
           <label>Article (EN)</label>

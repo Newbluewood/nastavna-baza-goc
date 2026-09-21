@@ -116,20 +116,30 @@ async function deleteStaffMember(req, res) {
 
 async function getPages(req, res) {
   const db = req.app.locals.db;
-  const [rows] = await db.query('SELECT * FROM pages ORDER BY id ASC');
+  const [rows] = await db.query(`
+    SELECT p.*, pt.title AS title_en, pt.content AS content_en
+    FROM pages p
+    LEFT JOIN page_translations pt ON p.id = pt.entity_id AND pt.lang = 'en'
+    ORDER BY p.id ASC
+  `);
   res.json(rows);
 }
 
 async function getPageById(req, res) {
   const db = req.app.locals.db;
-  const [rows] = await db.query('SELECT * FROM pages WHERE id = ?', [req.params.id]);
+  const [rows] = await db.query(`
+    SELECT p.*, pt.title AS title_en, pt.content AS content_en
+    FROM pages p
+    LEFT JOIN page_translations pt ON p.id = pt.entity_id AND pt.lang = 'en'
+    WHERE p.id = ?
+  `, [req.params.id]);
   if (!rows.length) return sendError(res, 404, 'Page not found');
   res.json(rows[0]);
 }
 
 async function createPage(req, res) {
   const db = req.app.locals.db;
-  const { slug, title, content, hero_image } = req.body;
+  const { slug, title, content, hero_image, title_en, content_en } = req.body;
   if (!slug || !title) return sendError(res, 400, 'Slug and title are required');
 
   const [existing] = await db.query('SELECT id FROM pages WHERE slug = ?', [slug]);
@@ -139,12 +149,18 @@ async function createPage(req, res) {
     'INSERT INTO pages (slug, title, content, hero_image) VALUES (?, ?, ?, ?)',
     [slug, title, content || null, hero_image || null]
   );
+  if (title_en || content_en) {
+    await db.query(
+      'INSERT INTO page_translations (entity_id, lang, title, content) VALUES (?, ?, ?, ?)',
+      [result.insertId, 'en', title_en || null, content_en || null]
+    );
+  }
   res.json({ message: 'Page created', pageId: result.insertId });
 }
 
 async function updatePage(req, res) {
   const db = req.app.locals.db;
-  const { title, content, hero_image } = req.body;
+  const { title, content, hero_image, title_en, content_en } = req.body;
   if (!title) return sendError(res, 400, 'Title is required');
 
   const [result] = await db.query(
@@ -152,6 +168,13 @@ async function updatePage(req, res) {
     [title, content || null, hero_image || null, req.params.id]
   );
   if (result.affectedRows === 0) return sendError(res, 404, 'Page not found');
+
+  await db.query(
+    `INSERT INTO page_translations (entity_id, lang, title, content)
+     VALUES (?, 'en', ?, ?)
+     ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content)`,
+    [req.params.id, title_en || null, content_en || null]
+  );
   res.json({ message: 'Page updated' });
 }
 
@@ -323,15 +346,53 @@ async function deleteHeroSlide(req, res) {
 
 // --- FACILITIES & ROOMS ---
 
+async function upsertEnTranslation(db, table, entityId, fields) {
+  const [rows] = await db.query(
+    `SELECT id FROM ${table} WHERE entity_id = ? AND lang = 'en' LIMIT 1`,
+    [entityId]
+  );
+  const write = async (payload) => {
+    const keys = Object.keys(payload);
+    const values = keys.map((key) => payload[key]);
+    const hasValue = values.some((value) => value);
+    if (rows.length) {
+      await db.query(
+        `UPDATE ${table} SET ${keys.map((key) => `${key} = ?`).join(', ')} WHERE id = ?`,
+        [...values, rows[0].id]
+      );
+      return;
+    }
+    if (!hasValue) return;
+    await db.query(
+      `INSERT INTO ${table} (entity_id, lang, ${keys.join(', ')}) VALUES (?, 'en', ${keys.map(() => '?').join(', ')})`,
+      [entityId, ...values]
+    );
+  };
+
+  try {
+    await write(fields);
+  } catch (err) {
+    if (err.code !== 'ER_BAD_FIELD_ERROR' || !('meal_info' in fields)) throw err;
+    const { meal_info, ...rest } = fields;
+    await write(rest);
+  }
+}
+
 async function getFacilities(req, res) {
   const db = req.app.locals.db;
-  const [rows] = await db.query('SELECT id, name, type, description, cover_image FROM facilities ORDER BY id ASC');
+  const [rows] = await db.query(`
+    SELECT f.id, f.name, f.type, f.description, f.cover_image,
+      ft.name AS name_en, ft.description AS description_en
+    FROM facilities f
+    LEFT JOIN facility_translations ft ON f.id = ft.entity_id AND ft.lang = 'en'
+    ORDER BY f.id ASC
+  `);
   res.json(rows);
 }
 
 async function updateFacility(req, res) {
   const db = req.app.locals.db;
-  const { name, description, cover_image } = req.body;
+  const { name, description, cover_image, name_en, description_en } = req.body;
   if (!name) return sendError(res, 400, 'Name is required');
 
   const [result] = await db.query(
@@ -339,6 +400,11 @@ async function updateFacility(req, res) {
     [name, description || null, cover_image || null, req.params.id]
   );
   if (result.affectedRows === 0) return sendError(res, 404, 'Facility not found');
+
+  await upsertEnTranslation(db, 'facility_translations', req.params.id, {
+    name: name_en || null,
+    description: description_en || null
+  });
   res.json({ message: 'Facility updated' });
 }
 
@@ -356,7 +422,27 @@ function sanitizeGalleryItems(items) {
 
 async function getRoomsByFacility(req, res) {
   const db = req.app.locals.db;
-  const [rooms] = await db.query('SELECT * FROM rooms WHERE facility_id = ? ORDER BY id ASC', [req.params.id]);
+  const sqlWithMeal = `
+    SELECT r.*, rt.name AS name_en, rt.description AS description_en, rt.meal_info AS meal_info_en
+    FROM rooms r
+    LEFT JOIN room_translations rt ON r.id = rt.entity_id AND rt.lang = 'en'
+    WHERE r.facility_id = ?
+    ORDER BY r.id ASC
+  `;
+  const sqlWithoutMeal = `
+    SELECT r.*, rt.name AS name_en, rt.description AS description_en
+    FROM rooms r
+    LEFT JOIN room_translations rt ON r.id = rt.entity_id AND rt.lang = 'en'
+    WHERE r.facility_id = ?
+    ORDER BY r.id ASC
+  `;
+  let rooms;
+  try {
+    [rooms] = await db.query(sqlWithMeal, [req.params.id]);
+  } catch (err) {
+    if (err.code !== 'ER_BAD_FIELD_ERROR') throw err;
+    [rooms] = await db.query(sqlWithoutMeal, [req.params.id]);
+  }
   const [gallery] = await db.query(
     "SELECT id, entity_id, image_url, caption, sort_order FROM media_gallery WHERE entity_type = 'room' AND entity_id IN (?) ORDER BY sort_order ASC, id ASC",
     [rooms.length ? rooms.map(r => r.id) : [0]]
@@ -369,12 +455,16 @@ async function getRoomsByFacility(req, res) {
 
 async function updateRoom(req, res) {
   const db = req.app.locals.db;
-  const { name, capacity, price_base, price_half_board, price_full_board, meal_info, cover_image, gallery } = req.body;
+  const {
+    name, capacity, price_base, price_half_board, price_full_board, meal_info, cover_image, gallery,
+    name_en, description, description_en, meal_info_en
+  } = req.body;
   if (!name) return sendError(res, 400, 'Name is required');
 
   const [result] = await db.query(
     `UPDATE rooms SET
       name = ?,
+      description = ?,
       capacity = ?,
       price_base = ?,
       price_half_board = ?,
@@ -382,10 +472,16 @@ async function updateRoom(req, res) {
       meal_info = ?,
       cover_image = ?
     WHERE id = ?`,
-    [name, capacity || null, price_base || 0, price_half_board || 0, price_full_board || 0, meal_info || null, cover_image || null, req.params.id]
+    [name, description || null, capacity || null, price_base || 0, price_half_board || 0, price_full_board || 0, meal_info || null, cover_image || null, req.params.id]
   );
 
   if (result.affectedRows === 0) return sendError(res, 404, 'Room not found');
+
+  await upsertEnTranslation(db, 'room_translations', req.params.id, {
+    name: name_en || null,
+    description: description_en || null,
+    meal_info: meal_info_en || null
+  });
 
   if (gallery !== undefined) {
     await db.query("DELETE FROM media_gallery WHERE entity_type = 'room' AND entity_id = ?", [req.params.id]);

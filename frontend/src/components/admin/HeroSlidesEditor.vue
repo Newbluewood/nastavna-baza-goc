@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import api, { BASE_URL } from '../../services/api'
+import TranslateButton from './TranslateButton.vue'
 
 const props = defineProps({
   pageSlug: { type: String, required: true }
@@ -149,7 +150,10 @@ watch(() => props.pageSlug, () => { resetForm(); fetchSlides() })
           <input v-model="form.title" type="text" placeholder="Наслов слајда" />
         </div>
         <div class="form-group">
-          <label>Title (EN)</label>
+          <label class="label-with-translate">
+            Title (EN)
+            <TranslateButton :source="form.title" :current="form.title_en" @translated="form.title_en = $event" />
+          </label>
           <input v-model="form.title_en" type="text" placeholder="Slide title" />
         </div>
         <div class="form-group">
@@ -157,7 +161,10 @@ watch(() => props.pageSlug, () => { resetForm(); fetchSlides() })
           <input v-model="form.subtitle" type="text" placeholder="Поднаслов" />
         </div>
         <div class="form-group">
-          <label>Subtitle (EN)</label>
+          <label class="label-with-translate">
+            Subtitle (EN)
+            <TranslateButton :source="form.subtitle" :current="form.subtitle_en" @translated="form.subtitle_en = $event" />
+          </label>
           <input v-model="form.subtitle_en" type="text" placeholder="Subtitle" />
         </div>
         <div class="form-group">

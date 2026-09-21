@@ -2,6 +2,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
+import TranslateButton from '../../components/admin/TranslateButton.vue'
 import api, { BASE_URL } from '../../services/api'
 
 const router = useRouter()
@@ -14,7 +15,7 @@ const editingRoom = ref(null)
 
 const isEditingFacility = ref(false)
 const isUploadingCover = ref(false)
-const facilityForm = ref({ name: '', description: '', cover_image: '' })
+const facilityForm = ref({ name: '', description: '', cover_image: '', name_en: '', description_en: '' })
 
 const selectedFacility = computed(() => facilities.value.find(f => f.id === selectedFacilityId.value))
 
@@ -34,7 +35,9 @@ const startEditFacility = () => {
   facilityForm.value = {
     name: selectedFacility.value.name || '',
     description: selectedFacility.value.description || '',
-    cover_image: selectedFacility.value.cover_image || ''
+    cover_image: selectedFacility.value.cover_image || '',
+    name_en: selectedFacility.value.name_en || '',
+    description_en: selectedFacility.value.description_en || ''
   }
   isEditingFacility.value = true
 }
@@ -70,11 +73,15 @@ const saveFacility = async () => {
 
 const form = ref({
   name: '',
+  name_en: '',
+  description: '',
+  description_en: '',
   capacity: '',
   price_base: 0,
   price_half_board: 0,
   price_full_board: 0,
   meal_info: '',
+  meal_info_en: '',
   cover_image: '',
   gallery: []
 })
@@ -108,11 +115,15 @@ const startEdit = (room) => {
   editingRoom.value = room
   form.value = {
     name: room.name || '',
+    name_en: room.name_en || '',
+    description: room.description || '',
+    description_en: room.description_en || '',
     capacity: room.capacity || '',
     price_base: room.price_base || 0,
     price_half_board: room.price_half_board || 0,
     price_full_board: room.price_full_board || 0,
     meal_info: room.meal_info || '',
+    meal_info_en: room.meal_info_en || '',
     cover_image: room.cover_image || '',
     gallery: (room.gallery || []).map(g => ({ image_url: g.image_url, caption: g.caption || '', sort_order: g.sort_order || 0 }))
   }
@@ -218,6 +229,13 @@ watch(selectedFacilityId, () => {
             <label>Назив објекта</label>
             <input v-model="facilityForm.name" type="text" />
           </div>
+          <div class="form-group">
+            <label class="label-with-translate">
+              Name (EN)
+              <TranslateButton :source="facilityForm.name" :current="facilityForm.name_en" @translated="facilityForm.name_en = $event" />
+            </label>
+            <input v-model="facilityForm.name_en" type="text" placeholder="Facility name" />
+          </div>
           <div class="form-group full-width">
             <label>Насловна слика (галерија на Почетној)</label>
             <div class="upload-row">
@@ -232,6 +250,13 @@ watch(selectedFacilityId, () => {
           <div class="form-group full-width">
             <label>Опис</label>
             <textarea v-model="facilityForm.description" rows="3" placeholder="Кратак опис објекта"></textarea>
+          </div>
+          <div class="form-group full-width translate-between">
+            <TranslateButton :source="facilityForm.description" :current="facilityForm.description_en" @translated="facilityForm.description_en = $event" />
+          </div>
+          <div class="form-group full-width">
+            <label>Description (EN)</label>
+            <textarea v-model="facilityForm.description_en" rows="3" placeholder="Short facility description"></textarea>
           </div>
         </div>
         <div class="form-actions">
@@ -279,6 +304,13 @@ watch(selectedFacilityId, () => {
               <input v-model="form.name" type="text" />
             </div>
             <div class="form-group">
+              <label class="label-with-translate">
+                Name (EN)
+                <TranslateButton :source="form.name" :current="form.name_en" @translated="form.name_en = $event" />
+              </label>
+              <input v-model="form.name_en" type="text" placeholder="Room name" />
+            </div>
+            <div class="form-group">
               <label>Капацитет (опис)</label>
               <input v-model="form.capacity" type="text" />
             </div>
@@ -304,8 +336,26 @@ watch(selectedFacilityId, () => {
               </div>
             </div>
             <div class="form-group full-width">
-              <label>Инфо о оброцима (meal_info)</label>
+              <label>Опис собе</label>
+              <textarea v-model="form.description" rows="2" placeholder="Кратак опис собе"></textarea>
+            </div>
+            <div class="form-group full-width translate-between">
+              <TranslateButton :source="form.description" :current="form.description_en" @translated="form.description_en = $event" />
+            </div>
+            <div class="form-group full-width">
+              <label>Description (EN)</label>
+              <textarea v-model="form.description_en" rows="2" placeholder="Short room description"></textarea>
+            </div>
+            <div class="form-group full-width">
+              <label>Инфо о оброцима</label>
               <textarea v-model="form.meal_info" rows="2" placeholder="npr. Doručak uključen u cenu"></textarea>
+            </div>
+            <div class="form-group full-width translate-between">
+              <TranslateButton :source="form.meal_info" :current="form.meal_info_en" @translated="form.meal_info_en = $event" />
+            </div>
+            <div class="form-group full-width">
+              <label>Meal info (EN)</label>
+              <textarea v-model="form.meal_info_en" rows="2" placeholder="e.g. Breakfast included in the price"></textarea>
             </div>
             <div class="form-group full-width">
               <label>Насловна слика собе</label>
@@ -563,6 +613,12 @@ watch(selectedFacilityId, () => {
   font-size: 0.85rem;
   margin-bottom: 6px;
   color: #555;
+}
+.form-group .label-with-translate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 .form-group input, .form-group textarea {
   width: 100%;

@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
+import TranslateButton from '../../components/admin/TranslateButton.vue'
 import api from '../../services/api'
 import { fmt } from '../../utils/dateFormat'
 
@@ -99,7 +100,10 @@ onMounted(() => fetchProjects())
             <input v-model="form.title" type="text" placeholder="Назив пројекта" />
           </div>
           <div class="form-group">
-            <label>Title (EN)</label>
+            <label class="label-with-translate">
+              Title (EN)
+              <TranslateButton :source="form.title" :current="form.title_en" @translated="form.title_en = $event" />
+            </label>
             <input v-model="form.title_en" type="text" placeholder="Project title" />
           </div>
           <div class="form-group">
@@ -115,6 +119,9 @@ onMounted(() => fetchProjects())
           <div class="form-group full-width">
             <label>Опис</label>
             <textarea v-model="form.description" rows="3" placeholder="Кратак опис пројекта"></textarea>
+          </div>
+          <div class="form-group full-width translate-between">
+            <TranslateButton :source="form.description" :current="form.description_en" @translated="form.description_en = $event" />
           </div>
           <div class="form-group full-width">
             <label>Description (EN)</label>

@@ -27,7 +27,7 @@ async function adminLogin(req, res) {
 }
 
 async function translate(req, res) {
-  const { text, target_lang } = req.body || {};
+  const { text, target_lang, html } = req.body || {};
 
   if (!text || typeof text !== 'string') {
     return sendError(res, 400, 'Text is required');
@@ -42,16 +42,19 @@ async function translate(req, res) {
     ? 'https://api-free.deepl.com/v2/translate'
     : 'https://api.deepl.com/v2/translate';
 
+  const payload = {
+    text: [text],
+    target_lang: (target_lang || 'EN').toUpperCase()
+  };
+  if (html) payload.tag_handling = 'html';
+
   const deeplRes = await fetch(deeplUrl, {
     method: 'POST',
     headers: {
       Authorization: `DeepL-Auth-Key ${apiKey}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      text: [text],
-      target_lang: (target_lang || 'EN').toUpperCase()
-    })
+    body: JSON.stringify(payload)
   });
 
   const data = await deeplRes.json();

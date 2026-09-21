@@ -174,6 +174,7 @@ async function run() {
     await ensureColumn(conn, 'rooms', 'capacity_min', 'capacity_min INT NULL');
     await ensureColumn(conn, 'rooms', 'capacity_max', 'capacity_max INT NULL');
     await ensureColumn(conn, 'rooms', 'stay_tags', 'stay_tags JSON NULL');
+    await ensureColumn(conn, 'room_translations', 'meal_info', 'meal_info TEXT NULL');
 
     await ensureTable(
       conn,

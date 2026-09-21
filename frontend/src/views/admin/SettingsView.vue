@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
+import TranslateButton from '../../components/admin/TranslateButton.vue'
 import api from '../../services/api'
 
 const router = useRouter()
@@ -89,6 +90,11 @@ onMounted(fetchSettings)
           <label>{{ LABELS[key] || key }}</label>
           <div v-if="isBilingual(key)" class="bilingual-inputs">
             <input v-model="settings[key].value_sr" type="text" placeholder="Српски" />
+            <TranslateButton
+              :source="settings[key].value_sr"
+              :current="settings[key].value_en"
+              @translated="settings[key].value_en = $event"
+            />
             <input v-model="settings[key].value_en" type="text" placeholder="English" />
           </div>
           <input v-else v-model="settings[key].value_sr" type="text" placeholder="https://..." />
@@ -139,8 +145,9 @@ onMounted(fetchSettings)
 }
 .bilingual-inputs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr auto 1fr;
   gap: 10px;
+  align-items: center;
 }
 .form-actions { margin-top: 8px; }
 .save-btn {

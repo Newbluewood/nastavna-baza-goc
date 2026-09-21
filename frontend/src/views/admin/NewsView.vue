@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
+import TranslateButton from '../../components/admin/TranslateButton.vue'
 import api, { BASE_URL } from '../../services/api'
 
 const router = useRouter()
@@ -393,16 +394,25 @@ const submitNews = async () => {
           <div class="lang-col">
             <h3>Енглески (Превод)</h3>
             <div class="form-group">
-              <label>Title <span style="color:red">*обавезно</span></label>
-              <input type="text" v-model="form.title_en" required readonly class="translated-input">
+              <label class="label-with-translate">
+                Title <span style="color:red">*обавезно</span>
+                <TranslateButton :source="form.title" :current="form.title_en" @translated="form.title_en = $event" />
+              </label>
+              <input type="text" v-model="form.title_en" required class="translated-input">
             </div>
             <div class="form-group">
-              <label>Excerpt</label>
-              <textarea v-model="form.excerpt_en" rows="2" readonly class="translated-input"></textarea>
+              <label class="label-with-translate">
+                Excerpt
+                <TranslateButton :source="form.excerpt" :current="form.excerpt_en" @translated="form.excerpt_en = $event" />
+              </label>
+              <textarea v-model="form.excerpt_en" rows="2" class="translated-input"></textarea>
             </div>
             <div class="form-group">
-              <label>Content</label>
-              <textarea v-model="form.content_en" rows="6" readonly class="translated-input"></textarea>
+              <label class="label-with-translate">
+                Content
+                <TranslateButton :source="form.content" :current="form.content_en" @translated="form.content_en = $event" />
+              </label>
+              <textarea v-model="form.content_en" rows="6" class="translated-input"></textarea>
             </div>
 
             <div class="image-guidelines-card">

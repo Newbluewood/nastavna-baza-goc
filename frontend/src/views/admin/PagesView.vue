@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
 import HeroSlidesEditor from '../../components/admin/HeroSlidesEditor.vue'
+import TranslateButton from '../../components/admin/TranslateButton.vue'
 import api, { BASE_URL } from '../../services/api'
 
 const router = useRouter()
@@ -12,7 +13,7 @@ const isEditing = ref(false)
 const editingId = ref(null)
 const isUploading = ref(false)
 
-const form = ref({ slug: '', title: '', content: '', hero_image: '' })
+const form = ref({ slug: '', title: '', content: '', hero_image: '', title_en: '', content_en: '' })
 
 const CAROUSEL_SLUGS = ['pocetna', 'smestaj']
 const usesCarousel = (slug) => CAROUSEL_SLUGS.includes(slug)
@@ -62,7 +63,7 @@ const fetchPages = async () => {
 }
 
 const resetForm = () => {
-  form.value = { slug: '', title: '', content: '', hero_image: '' }
+  form.value = { slug: '', title: '', content: '', hero_image: '', title_en: '', content_en: '' }
   isEditing.value = false
   editingId.value = null
 }
@@ -70,7 +71,14 @@ const resetForm = () => {
 const startCreate = () => { resetForm(); isEditing.value = true }
 
 const startEdit = (page) => {
-  form.value = { slug: page.slug, title: page.title || '', content: page.content || '', hero_image: page.hero_image || '' }
+  form.value = {
+    slug: page.slug,
+    title: page.title || '',
+    content: page.content || '',
+    hero_image: page.hero_image || '',
+    title_en: page.title_en || '',
+    content_en: page.content_en || ''
+  }
   editingId.value = page.id
   isEditing.value = true
   if (page.slug === 'pocetna') fetchGalleryFacilities()
@@ -123,6 +131,13 @@ onMounted(() => fetchPages())
             <input v-model="form.title" type="text" placeholder="Наслов странице" />
           </div>
           <div class="form-group">
+            <label class="label-with-translate">
+              Title (EN)
+              <TranslateButton :source="form.title" :current="form.title_en" @translated="form.title_en = $event" />
+            </label>
+            <input v-model="form.title_en" type="text" placeholder="Page title" />
+          </div>
+          <div class="form-group">
             <label>
               <span class="red-star">*</span> Slug
               <span class="slug-hint"> (mora biti na latinici, bez slova sa kvačicama: š, č, ć, ž, đ. Primer: edukacija)</span>
@@ -157,8 +172,15 @@ onMounted(() => fetchPages())
             <img v-if="form.hero_image" :src="getImageUrl(form.hero_image)" alt="Hero preview" class="hero-preview-image">
           </div>
           <div class="form-group full-width">
-            <label>Садржај (HTML)</label>
+            <label>Садржај (HTML, СРП)</label>
             <textarea v-model="form.content" rows="12" placeholder="<h2>Наслов секције</h2><p>Текст...</p>"></textarea>
+          </div>
+          <div class="form-group full-width translate-between">
+            <TranslateButton html :source="form.content" :current="form.content_en" @translated="form.content_en = $event" />
+          </div>
+          <div class="form-group full-width">
+            <label>Content (HTML, EN)</label>
+            <textarea v-model="form.content_en" rows="12" placeholder="<h2>Section title</h2><p>Text...</p>"></textarea>
           </div>
         </div>
         <div v-if="form.content" class="content-preview">
