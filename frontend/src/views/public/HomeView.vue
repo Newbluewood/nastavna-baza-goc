@@ -39,7 +39,7 @@ const loadData = async () => {
     }
     
     // Fetch themes for highlights
-    const allThemes = await api.getThemes()
+    const allThemes = await api.getThemes(langStore.currentLang)
     themes.value = allThemes.slice(0, 3) // Show top 3
   } catch (error) {
     console.error("Error fetching data from API:", error)
