@@ -24,52 +24,95 @@ function makeFakeDb(initialRows = []) {
         );
         return [r ? [{ eur_spent: r.eur_spent }] : [], []];
       }
-      // Aggregate SUM(eur_spent)+SUM(request_count) over one user_key (snapshot).
-      if (
-        sql.includes(
-          'SELECT SUM(eur_spent) AS eur_spent, SUM(request_count) AS request_count'
-        )
-      ) {
-        const [mk, uk] = params;
-        const filtered = rows.filter(
-          (x) => x.month_key === mk && x.user_key === uk
-        );
-        const eur = filtered.reduce(
-          (a, r) => a + Number(r.eur_spent || 0),
-          0
-        );
-        const req = filtered.reduce(
-          (a, r) => a + Number(r.request_count || 0),
-          0
-        );
-        return [[{ eur_spent: eur, request_count: req }], []];
-      }
+      const sqlNorm = String(sql).replace(/\s+/g, ' ');
+
       // SUM(eur_spent) AS total, used by recordSpend to report back.
-      if (sql.includes('SUM(eur_spent) AS total')) {
+      if (sqlNorm.includes('SUM(eur_spent) AS total')) {
         const [mk, uk] = params;
         const total = rows
           .filter((x) => x.month_key === mk && x.user_key === uk)
           .reduce((a, r) => a + Number(r.eur_spent || 0), 0);
         return [[{ total }], []];
       }
-      // Top-users grouped select.
-      if (sql.includes('GROUP BY user_key')) {
+
+      const sumSpend = (filtered) => ({
+        eur_spent: filtered.reduce((a, r) => a + Number(r.eur_spent || 0), 0),
+        request_count: filtered.reduce(
+          (a, r) => a + Number(r.request_count || 0),
+          0
+        ),
+        tokens_input: filtered.reduce(
+          (a, r) => a + Number(r.tokens_input || 0),
+          0
+        ),
+        tokens_output: filtered.reduce(
+          (a, r) => a + Number(r.tokens_output || 0),
+          0
+        ),
+      });
+
+      if (sqlNorm.includes('FROM ai_budget_monthly') && sqlNorm.includes('SUM(')) {
         const [mk, uk] = params;
-        const grouped = {};
-        for (const r of rows) {
-          if (r.month_key === mk && r.user_key !== uk) {
+        const exclude = sqlNorm.includes('user_key <>');
+        const filtered = rows.filter((x) => {
+          if (x.month_key !== mk) return false;
+          return exclude ? x.user_key !== uk : x.user_key === uk;
+        });
+
+        if (sqlNorm.includes('GROUP BY user_key')) {
+          const grouped = {};
+          for (const r of filtered) {
             grouped[r.user_key] = grouped[r.user_key] || {
               user_key: r.user_key,
               eur_spent: 0,
               request_count: 0,
+              tokens_input: 0,
+              tokens_output: 0,
             };
             grouped[r.user_key].eur_spent += Number(r.eur_spent || 0);
             grouped[r.user_key].request_count += Number(r.request_count || 0);
+            grouped[r.user_key].tokens_input += Number(r.tokens_input || 0);
+            grouped[r.user_key].tokens_output += Number(r.tokens_output || 0);
           }
+          const out = Object.values(grouped)
+            .sort((a, b) => b.eur_spent - a.eur_spent)
+            .slice(0, 50);
+          return [out, []];
         }
-        const out = Object.values(grouped)
-          .sort((a, b) => b.eur_spent - a.eur_spent)
-          .slice(0, 10);
+
+        if (sqlNorm.includes('GROUP BY feature')) {
+          const grouped = {};
+          for (const r of filtered) {
+            grouped[r.feature] = grouped[r.feature] || {
+              feature: r.feature,
+              eur_spent: 0,
+              request_count: 0,
+              tokens_input: 0,
+              tokens_output: 0,
+            };
+            grouped[r.feature].eur_spent += Number(r.eur_spent || 0);
+            grouped[r.feature].request_count += Number(r.request_count || 0);
+            grouped[r.feature].tokens_input += Number(r.tokens_input || 0);
+            grouped[r.feature].tokens_output += Number(r.tokens_output || 0);
+          }
+          const out = Object.values(grouped).sort(
+            (a, b) => b.eur_spent - a.eur_spent
+          );
+          return [out, []];
+        }
+
+        return [[sumSpend(filtered)], []];
+      }
+
+      if (
+        sqlNorm.includes('FROM ai_budget_monthly') &&
+        sqlNorm.includes('SELECT user_key, feature')
+      ) {
+        const [mk, uk] = params;
+        const out = rows
+          .filter((x) => x.month_key === mk && x.user_key !== uk)
+          .sort((a, b) => Number(b.eur_spent || 0) - Number(a.eur_spent || 0))
+          .slice(0, 100);
         return [out, []];
       }
       // INSERT ... ON DUPLICATE KEY UPDATE.
@@ -332,14 +375,59 @@ describe('getUsageSnapshot', () => {
     expect(typeof snap.spent.globalPercent).toBe('number');
     expect(snap.spent.todayEur).toBeNull();
     expect(snap.spent.requestCount).toBe(3);
+    expect(snap.spent.tokensInput).toBe(100);
+    expect(snap.spent.tokensOutput).toBe(50);
+    expect(snap.spent.tokensTotal).toBe(150);
     expect(Array.isArray(snap.topUsers)).toBe(true);
     expect(snap.topUsers.length).toBe(2);
     for (const u of snap.topUsers) {
       expect(u).toHaveProperty('userKey');
       expect(u).toHaveProperty('eurSpent');
       expect(u).toHaveProperty('requestCount');
+      expect(u).toHaveProperty('tokensInput');
+      expect(u).toHaveProperty('tokensOutput');
     }
-    // Sorted by eurSpent desc.
+    // Sorted by eurSpent desc. Totals come from user rows, not __global__.
     expect(snap.topUsers[0].userKey).toBe('guest:1');
+    expect(snap.topUsers[0].tokensInput).toBe(80);
+    expect(snap.byFeature).toEqual([
+      expect.objectContaining({
+        feature: 'site_guide',
+        eurSpent: 1,
+        requestCount: 3,
+        tokensInput: 100,
+        tokensOutput: 50,
+      }),
+    ]);
+    expect(snap.rows.length).toBe(2);
+  });
+
+  it('sums agent user rows when there is no __global__ sentinel', async () => {
+    process.env.AI_USER_MONTHLY_BUDGET_EUR = '2';
+    process.env.AI_MONTHLY_BUDGET_EUR = '20';
+    const mk = currentMonthKey();
+    const fakeDb = makeFakeDb([
+      {
+        month_key: mk,
+        user_key: 'db-check-1',
+        feature: 'chat',
+        eur_spent: 0.024648,
+        request_count: 2,
+        tokens_input: 3368,
+        tokens_output: 1087,
+      },
+    ]);
+    jest.doMock('../../db', () => fakeDb);
+
+    const { getUsageSnapshot } = require('../../services/aiBudgetService');
+    const snap = await getUsageSnapshot();
+
+    expect(snap.spent.globalEur).toBeCloseTo(0.024648);
+    expect(snap.spent.requestCount).toBe(2);
+    expect(snap.spent.tokensInput).toBe(3368);
+    expect(snap.spent.tokensOutput).toBe(1087);
+    expect(snap.spent.tokensTotal).toBe(4455);
+    expect(snap.topUsers[0].userKey).toBe('db-check-1');
+    expect(snap.byFeature[0].feature).toBe('chat');
   });
 });

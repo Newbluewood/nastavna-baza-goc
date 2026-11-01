@@ -146,40 +146,89 @@ async function recordSpend({ userKey, feature, model, tokensIn, tokensOut }) {
   }
 }
 
+function num(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function mapSpendRow(row) {
+  const tokensInput = num(row.tokens_input);
+  const tokensOutput = num(row.tokens_output);
+  return {
+    eurSpent: num(row.eur_spent),
+    requestCount: num(row.request_count),
+    tokensInput,
+    tokensOutput,
+    tokensTotal: tokensInput + tokensOutput
+  };
+}
+
+const SPEND_SUM_SQL = `COALESCE(SUM(eur_spent), 0) AS eur_spent,
+            COALESCE(SUM(request_count), 0) AS request_count,
+            COALESCE(SUM(tokens_input), 0) AS tokens_input,
+            COALESCE(SUM(tokens_output), 0) AS tokens_output`;
+
 /**
  * Snapshot for the admin dashboard. Reads current month only.
+ *
+ * Totals come from real user rows (chat-agent UPSERTs per user_key / feature).
+ * The `__global__` sentinel is only a fallback for older site-side writes.
  *
  * @returns {Promise<{
  *   monthKey: string,
  *   caps: { globalEur: number, userEur: number },
- *   spent: { globalEur: number, globalPercent: number, todayEur: (number|null), requestCount: number },
- *   topUsers: Array<{ userKey: string, eurSpent: number, requestCount: number }>
+ *   spent: { globalEur: number, globalPercent: number, todayEur: (number|null), requestCount: number, tokensInput: number, tokensOutput: number, tokensTotal: number },
+ *   byFeature: Array<{ feature: string, eurSpent: number, requestCount: number, tokensInput: number, tokensOutput: number, tokensTotal: number }>,
+ *   topUsers: Array<{ userKey: string, eurSpent: number, requestCount: number, tokensInput: number, tokensOutput: number, tokensTotal: number }>,
+ *   rows: Array<{ userKey: string, feature: string, eurSpent: number, requestCount: number, tokensInput: number, tokensOutput: number, tokensTotal: number, updatedAt: (string|null) }>
  * }>}
  */
 async function getUsageSnapshot() {
   const monthKey = currentMonthKey();
 
-  const [globalRows] = await db.query(
-    `SELECT SUM(eur_spent) AS eur_spent, 
-            SUM(request_count) AS request_count,
-            SUM(tokens_input) AS tokens_input,
-            SUM(tokens_output) AS tokens_output
+  const [userAgg] = await db.query(
+    `SELECT ${SPEND_SUM_SQL}
        FROM ai_budget_monthly
-      WHERE month_key=? AND user_key=?`,
+      WHERE month_key=? AND user_key <> ?`,
     [monthKey, GLOBAL_USER_KEY]
   );
-  const globalEur = globalRows[0] && globalRows[0].eur_spent != null ? Number(globalRows[0].eur_spent) : 0;
-  const requestCount = globalRows[0] && globalRows[0].request_count != null ? Number(globalRows[0].request_count) : 0;
-  const tokensInput = globalRows[0] && globalRows[0].tokens_input != null ? Number(globalRows[0].tokens_input) : 0;
-  const tokensOutput = globalRows[0] && globalRows[0].tokens_output != null ? Number(globalRows[0].tokens_output) : 0;
+  let totals = mapSpendRow(userAgg[0] || {});
+
+  if (totals.eurSpent === 0 && totals.requestCount === 0 && totals.tokensInput === 0 && totals.tokensOutput === 0) {
+    const [globalRows] = await db.query(
+      `SELECT ${SPEND_SUM_SQL}
+         FROM ai_budget_monthly
+        WHERE month_key=? AND user_key=?`,
+      [monthKey, GLOBAL_USER_KEY]
+    );
+    totals = mapSpendRow(globalRows[0] || {});
+  }
 
   const [users] = await db.query(
-    `SELECT user_key, SUM(eur_spent) AS eur_spent, SUM(request_count) AS request_count
+    `SELECT user_key, ${SPEND_SUM_SQL}
        FROM ai_budget_monthly
       WHERE month_key=? AND user_key <> ?
       GROUP BY user_key
       ORDER BY eur_spent DESC
-      LIMIT 10`,
+      LIMIT 50`,
+    [monthKey, GLOBAL_USER_KEY]
+  );
+
+  const [features] = await db.query(
+    `SELECT feature, ${SPEND_SUM_SQL}
+       FROM ai_budget_monthly
+      WHERE month_key=? AND user_key <> ?
+      GROUP BY feature
+      ORDER BY eur_spent DESC`,
+    [monthKey, GLOBAL_USER_KEY]
+  );
+
+  const [detailRows] = await db.query(
+    `SELECT user_key, feature, tokens_input, tokens_output, eur_spent, request_count, updated_at
+       FROM ai_budget_monthly
+      WHERE month_key=? AND user_key <> ?
+      ORDER BY eur_spent DESC, request_count DESC
+      LIMIT 100`,
     [monthKey, GLOBAL_USER_KEY]
   );
 
@@ -187,17 +236,27 @@ async function getUsageSnapshot() {
     monthKey,
     caps: { globalEur: CAP_GLOBAL_EUR, userEur: CAP_USER_EUR },
     spent: {
-      globalEur,
-      globalPercent: CAP_GLOBAL_EUR > 0 ? Number(((globalEur / CAP_GLOBAL_EUR) * 100).toFixed(2)) : 0,
-      tokensInput,
-      tokensOutput,
+      globalEur: totals.eurSpent,
+      globalPercent: CAP_GLOBAL_EUR > 0 ? Number(((totals.eurSpent / CAP_GLOBAL_EUR) * 100).toFixed(2)) : 0,
+      tokensInput: totals.tokensInput,
+      tokensOutput: totals.tokensOutput,
+      tokensTotal: totals.tokensTotal,
       todayEur: null,
-      requestCount
+      requestCount: totals.requestCount
     },
+    byFeature: features.map((f) => ({
+      feature: f.feature,
+      ...mapSpendRow(f)
+    })),
     topUsers: users.map((u) => ({
       userKey: u.user_key,
-      eurSpent: Number(u.eur_spent),
-      requestCount: Number(u.request_count)
+      ...mapSpendRow(u)
+    })),
+    rows: detailRows.map((r) => ({
+      userKey: r.user_key,
+      feature: r.feature,
+      updatedAt: r.updated_at || null,
+      ...mapSpendRow(r)
     }))
   };
 }
