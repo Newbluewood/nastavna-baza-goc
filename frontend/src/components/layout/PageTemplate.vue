@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch, useSlots, Comment } from 'vue'
 import ImageLightbox from '../ui/ImageLightbox.vue'
 import { useLangStore } from '../../stores/lang'
 import { resolveMediaUrl, resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
@@ -14,6 +14,7 @@ const props = defineProps({
   isCarousel: { type: Boolean, default: false }
 })
 
+const slots = useSlots()
 const langStore = useLangStore()
 const currentSlide = ref(0)
 let slideTimer = null
@@ -26,6 +27,21 @@ const lightboxImages = computed(() => {
     .map((item) => resolveMediaUrl(item?.url))
     .filter((url) => url)
 })
+
+const hasTextContent = computed(() => !!String(props.textContent || '').trim())
+const hasSlotContent = computed(() => {
+  const nodes = slots.default?.() || []
+  return nodes.some((node) => {
+    if (node.type === Comment) return false
+    if (typeof node.type === 'symbol') return false
+    return true
+  })
+})
+const hasNews = computed(() => Array.isArray(props.news) && props.news.length > 0)
+const hasGallery = computed(() => Array.isArray(props.galleryItems) && props.galleryItems.length > 0)
+const showAfterHeroDivider = computed(() => (
+  hasTextContent.value || hasSlotContent.value || hasNews.value || hasGallery.value
+))
 
 const mediaSrc = (path) => resolveMediaUrlOrPlaceholder(path)
 
@@ -123,20 +139,19 @@ onUnmounted(() => {
       </div>
     </div>
     
-    <hr class="section-divider" />
-    
-    <!-- Glavni Tekst -->
-    <div class="text-content" v-if="textContent">
-      <p v-html="textContent"></p>
-    </div>
-    
-    <!-- Custom Page Content Slot -->
+    <!-- One divider after hero only when body content follows -->
+    <hr v-if="showAfterHeroDivider" class="section-divider" />
+
+    <!-- CMS intro text (HTML from admin). No wrapping <p> — content may already include block tags. -->
+    <div v-if="hasTextContent" class="text-content" v-html="textContent"></div>
+
+    <!-- Page-specific body (themes, contact blocks, FAQ, restaurants…) -->
     <slot></slot>
-    
-    <hr class="section-divider" v-if="news && news.length > 0" />
+
+    <hr v-if="hasNews" class="section-divider" />
 
     <!-- Najnovije Vesti (News sekcija) -->
-    <div v-if="news && news.length > 0" class="news-section">
+    <div v-if="hasNews" class="news-section">
       <h2 class="section-heading">{{ langStore.currentLang === 'sr' ? 'Актуелности' : 'News & Updates' }}</h2>
       
       <!-- GRID -->
@@ -165,10 +180,10 @@ onUnmounted(() => {
 
     </div>
     
-    <hr class="section-divider" v-if="galleryItems && galleryItems.length > 0" />
+    <hr v-if="hasGallery" class="section-divider" />
     
     <!-- Opšta Galerija -->
-    <div v-if="galleryItems && galleryItems.length > 0">
+    <div v-if="hasGallery">
       <h2 class="section-heading">{{ langStore.currentLang === 'sr' ? 'Галерија' : 'Gallery' }}</h2>
       <div :class="(gridType === 5) ? 'photo-grid-5' : 'photo-grid-6'">
         <a v-for="(item, index) in galleryItems" :key="index" href="#" @click.prevent="openLightbox(index)" class="gallery-item-link">

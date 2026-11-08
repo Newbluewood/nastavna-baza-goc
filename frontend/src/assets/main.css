@@ -394,10 +394,40 @@ a:hover {
   width: 100%;
 }
 .text-content {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 10px 20px 30px;
   color: var(--color-text);
   font-weight: 300;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.text-content > *:first-child {
+  margin-top: 0;
+}
+
+.text-content > *:last-child {
+  margin-bottom: 0;
+}
+
+.text-content h1,
+.text-content h2,
+.text-content h3 {
+  color: var(--color-nav);
+  font-weight: 600;
   line-height: 1.3;
-  font-size: 0.9rem;
+  margin: 1.4em 0 0.6em;
+}
+
+.text-content p {
+  margin: 0 0 1em;
+}
+
+.text-content ul,
+.text-content ol {
+  margin: 0 0 1em;
+  padding-left: 1.25em;
 }
 
 /* Sakrij <hr> tagove koji dolaze iz WordPress sadržaja */

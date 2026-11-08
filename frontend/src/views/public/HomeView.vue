@@ -90,7 +90,6 @@ watch(() => langStore.currentLang, loadData)
     :isCarousel="true"
   >
     <div class="themes-highlight" v-if="themes.length > 0">
-      <hr class="section-divider" />
       <h2 class="themes-heading">
         {{ langStore.currentLang === 'sr' ? 'Откријте Гоч' : 'Discover Goč' }}
       </h2>
@@ -116,8 +115,11 @@ watch(() => langStore.currentLang, loadData)
 </template>
 
 <style scoped>
+.themes-highlight {
+  margin-top: 10px;
+}
 .themes-heading {
-  margin: 30px 0 20px;
+  margin: 20px 0 20px;
   border-left: 4px solid var(--color-nav);
   padding-left: 10px;
 }
@@ -164,10 +166,5 @@ watch(() => langStore.currentLang, loadData)
 }
 .view-all-btn:hover {
   background: #332317;
-}
-.section-divider {
-  border: 0;
-  border-top: 1px solid var(--color-border);
-  margin: 40px 0;
 }
 </style>

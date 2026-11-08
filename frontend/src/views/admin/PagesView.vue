@@ -171,9 +171,12 @@ onMounted(() => fetchPages())
             </div>
             <img v-if="form.hero_image" :src="getImageUrl(form.hero_image)" alt="Hero preview" class="hero-preview-image">
           </div>
+          <!-- TODO(backlog): replace raw HTML textareas with a simple rich editor
+               (bold/italic/heading/subheading/lists) — see Moj_folder/BACKLOG_cms_rich_editor.md -->
           <div class="form-group full-width">
             <label>Садржај (HTML, СРП)</label>
             <textarea v-model="form.content" rows="12" placeholder="<h2>Наслов секције</h2><p>Текст...</p>"></textarea>
+            <p class="hint">Привремено се уноси HTML. Касније: једноставан едитор (наслов, подебљано, листа…).</p>
           </div>
           <div class="form-group full-width translate-between">
             <TranslateButton html :source="form.content" :current="form.content_en" @translated="form.content_en = $event" />
