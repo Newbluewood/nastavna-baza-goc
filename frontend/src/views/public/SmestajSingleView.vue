@@ -125,19 +125,21 @@ watch(
       </div>
     </div>
 
+    <hr class="section-divider" />
+
     <div class="content-wrap content-wrap--intro">
       <button class="back-link-btn" @click="router.push('/smestaj')">
         &#8592; {{ langStore.t('smestaj.backToAll') }}
       </button>
 
-      <div class="text-content" v-if="building.description" v-html="building.description"></div>
+      <div class="text-content text-content--flush" v-if="building.description" v-html="building.description"></div>
 
       <p class="facility-total-capacity">
         {{ langStore.t('smestaj.totalCapacity') }} {{ building.capacity || '-' }}
       </p>
     </div>
 
-    <hr class="section-divider section-divider--page" />
+    <hr class="section-divider" />
 
     <div class="content-wrap content-wrap--bottom">
       <h2 class="section-heading">

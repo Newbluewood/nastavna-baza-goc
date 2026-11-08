@@ -396,7 +396,7 @@ a:hover {
 .text-content {
   max-width: var(--content-max-width);
   margin: 0 auto;
-  padding: 10px 20px 30px;
+  padding: 12px 20px 16px;
   color: var(--color-text);
   font-weight: 300;
   line-height: 1.6;

@@ -142,11 +142,11 @@ watch(() => langStore.currentLang, () => {
       <button v-if="slides.length > 1" class="hero-nav-btn hero-nav-btn--next" @click="nextSlide">&#10095;</button>
     </div>
 
-    <div class="text-content content-wrap content-wrap--text" v-if="textContent">
-      <div v-html="textContent"></div>
-    </div>
+    <hr class="section-divider" />
 
-    <hr class="section-divider section-divider--page" />
+    <div v-if="textContent" class="text-content" v-html="textContent"></div>
+
+    <hr v-if="textContent" class="section-divider" />
 
     <div class="content-wrap">
       <h2 class="section-heading">
@@ -208,7 +208,7 @@ watch(() => langStore.currentLang, () => {
       </div>
     </div>
 
-    <hr class="section-divider section-divider--page" />
+    <hr class="section-divider" />
 
     <div class="content-wrap content-wrap--bottom">
       <h2 class="section-heading section-heading--tight">

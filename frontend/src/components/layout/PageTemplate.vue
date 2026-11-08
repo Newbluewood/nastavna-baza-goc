@@ -39,8 +39,9 @@ const hasSlotContent = computed(() => {
 })
 const hasNews = computed(() => Array.isArray(props.news) && props.news.length > 0)
 const hasGallery = computed(() => Array.isArray(props.galleryItems) && props.galleryItems.length > 0)
-const showAfterHeroDivider = computed(() => (
-  hasTextContent.value || hasSlotContent.value || hasNews.value || hasGallery.value
+/** Divider under intro text, before slot/news/gallery. */
+const showAfterTextDivider = computed(() => (
+  hasTextContent.value && (hasSlotContent.value || hasNews.value || hasGallery.value)
 ))
 
 const mediaSrc = (path) => resolveMediaUrlOrPlaceholder(path)
@@ -139,11 +140,14 @@ onUnmounted(() => {
       </div>
     </div>
     
-    <!-- One divider after hero only when body content follows -->
-    <hr v-if="showAfterHeroDivider" class="section-divider" />
+    <!-- Always keep the post-hero rule — it frames the page body. -->
+    <hr class="section-divider" />
 
     <!-- CMS intro text (HTML from admin). No wrapping <p> — content may already include block tags. -->
     <div v-if="hasTextContent" class="text-content" v-html="textContent"></div>
+
+    <!-- Under intro text, before slot / later sections -->
+    <hr v-if="showAfterTextDivider" class="section-divider" />
 
     <!-- Page-specific body (themes, contact blocks, FAQ, restaurants…) -->
     <slot></slot>
@@ -215,7 +219,7 @@ onUnmounted(() => {
   overflow: hidden;
   background: var(--c-green-6);
   border-radius: 0;
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .hero-placeholder-bg {
