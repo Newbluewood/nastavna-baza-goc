@@ -2,13 +2,8 @@
 import { ref, onMounted, watch } from 'vue'
 import { useLangStore } from '../../stores/lang'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
-import api, { BASE_URL } from '../../services/api'
-
-const getImageUrl = (path) => {
-  if (!path) return '/placeholder.jpg'
-  if (path.startsWith('http')) return path
-  return `${BASE_URL}${path}`
-}
+import api from '../../services/api'
+import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
 const langStore = useLangStore()
 const news = ref([])
@@ -54,7 +49,7 @@ watch(() => langStore.currentLang, loadAll)
       :title="pageData?.title"
       :textContent="pageData?.textContent"
       :news="news"
-      :slides="[{ image_url: getImageUrl(heroImage), title: pageData?.title }]"
+      :slides="[{ image_url: resolveMediaUrlOrPlaceholder(heroImage), title: pageData?.title }]"
       :gridType="4"
     />
   </div>

@@ -2,14 +2,9 @@
 import { ref, onMounted, watch } from 'vue'
 import { useLangStore } from '../../stores/lang'
 import { useSettingsStore } from '../../stores/settings'
-import api, { BASE_URL } from '../../services/api'
+import api from '../../services/api'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
-
-const getImageUrl = (path) => {
-  if (!path) return '/placeholder.jpg'
-  if (path.startsWith('http')) return path
-  return `${BASE_URL}${path}`
-}
+import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
 const langStore = useLangStore()
 const settingsStore = useSettingsStore()
@@ -60,7 +55,7 @@ const statusClass = (s) => ({
     :textContent="pageData?.content || ''"
     :slides="[{
       title: pageData?.title || (langStore.currentLang === 'sr' ? 'Контакт' : 'Contact'),
-      image_url: getImageUrl(pageData?.hero_image)
+      image_url: resolveMediaUrlOrPlaceholder(pageData?.hero_image)
     }]"
   >
     <div v-if="isLoading" class="loading-msg">
@@ -102,7 +97,7 @@ const statusClass = (s) => ({
         <div class="staff-grid">
           <div v-for="member in staff" :key="member.id" class="staff-card">
             <div class="staff-photo">
-              <img :src="member.photo_url || '/placeholder.jpg'" :alt="member.full_name" />
+              <img :src="resolveMediaUrlOrPlaceholder(member.photo_url)" :alt="member.full_name" />
             </div>
             <div class="staff-info">
               <strong>{{ member.full_name }}</strong>

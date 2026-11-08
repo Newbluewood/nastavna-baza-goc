@@ -22,11 +22,6 @@ const loadData = async () => {
     const data = await api.getHome(langStore.currentLang)
     console.log('Home API response:', data)
 
-    // Cached/transport failures sometimes arrive as HTTP 200 { error: "..." }.
-    if (!data || data.error) {
-      throw new Error(data?.error || 'Home payload missing')
-    }
-
     pageTitle.value = data.pageTitle || pageTitle.value
     textContent.value = data.textContent || textContent.value
     news.value = (data.news || []).map((item) => ({

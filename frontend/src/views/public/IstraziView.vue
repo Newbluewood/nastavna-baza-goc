@@ -1,13 +1,8 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useLangStore } from '../../stores/lang'
-import api, { BASE_URL } from '../../services/api'
-
-const getImageUrl = (path) => {
-  if (!path) return '/placeholder.jpg'
-  if (path.startsWith('http')) return path
-  return `${BASE_URL}${path}`
-}
+import api from '../../services/api'
+import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
 const langStore = useLangStore()
 const themes = ref([])
@@ -39,7 +34,7 @@ watch(() => langStore.currentLang, () => { fetchThemes(); fetchPageData() })
 
 <template>
   <div class="explore-page">
-    <div class="explore-hero" :style="{ backgroundImage: `url('${getImageUrl(pageData?.hero_image)}')`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }">
+    <div class="explore-hero" :style="{ backgroundImage: `url('${resolveMediaUrlOrPlaceholder(pageData?.hero_image)}')`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }">
       <div class="hero-overlay"></div>
       <div class="container hero-content">
         <h1>{{ pageData?.title || (langStore.currentLang === 'sr' ? 'Истражи Гоч' : 'Explore Goč') }}</h1>
@@ -56,7 +51,7 @@ watch(() => langStore.currentLang, () => { fetchThemes(); fetchPageData() })
         <div v-for="theme in themes" :key="theme.id" class="theme-card">
           <div class="theme-content">
             <div class="theme-icon-container">
-              <img :src="theme.icon || '/themes/flora.png'" class="theme-card-icon" />
+              <img :src="resolveMediaUrlOrPlaceholder(theme.icon || '/themes/flora.png')" class="theme-card-icon" />
             </div>
             <h3>{{ theme.name }}</h3>
             <p>{{ langStore.currentLang === 'sr' ? theme.excerpt_sr : theme.excerpt_en }}</p>

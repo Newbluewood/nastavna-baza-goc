@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useLangStore } from '../../stores/lang'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
 import api from '../../services/api'
+import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
 const route = useRoute()
 const langStore = useLangStore()
@@ -56,7 +57,7 @@ watch(() => langStore.currentLang, fetchTheme)
   <PageTemplate
     v-else-if="theme"
     :title="theme.name"
-    :slides="[{ image_url: theme.hero_image || '/explore-hero.png', title: theme.name }]"
+    :slides="[{ image_url: resolveMediaUrlOrPlaceholder(theme.hero_image || '/explore-hero.png'), title: theme.name }]"
   >
     <div class="theme-article" v-html="formattedArticle"></div>
     

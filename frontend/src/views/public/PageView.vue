@@ -3,13 +3,8 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useLangStore } from '../../stores/lang'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
-import api, { BASE_URL } from '../../services/api'
-
-const getImageUrl = (path) => {
-  if (!path) return '/placeholder.jpg'
-  if (path.startsWith('http')) return path
-  return `${BASE_URL}${path}`
-}
+import api from '../../services/api'
+import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
 const route = useRoute()
 const langStore = useLangStore()
@@ -19,8 +14,10 @@ const notFound = ref(false)
 
 const faqItems = ref([])
 
+const pageSlug = computed(() => route.meta.pageSlug || route.params.slug || '')
+
 const fetchPage = async () => {
-  const currentSlug = route.meta.pageSlug
+  const currentSlug = pageSlug.value
   if (!currentSlug) return
 
   isLoading.value = true
@@ -40,6 +37,8 @@ const fetchPage = async () => {
           isOpen: false
         }
       })
+    } else {
+      faqItems.value = []
     }
   } catch (err) {
     console.error('Error loading page:', err)
@@ -55,7 +54,7 @@ const toggleFaq = (index) => {
 
 onMounted(fetchPage)
 watch(() => langStore.currentLang, fetchPage)
-watch(() => route.meta.pageSlug, fetchPage)
+watch(pageSlug, fetchPage)
 </script>
 
 <template>
@@ -72,11 +71,11 @@ watch(() => route.meta.pageSlug, fetchPage)
   <PageTemplate
     v-else-if="pageData"
     :title="pageData.title"
-    :textContent="route.meta.pageSlug === 'faq' ? '' : (pageData.content || '')"
-    :slides="pageData.hero_image ? [{ image_url: getImageUrl(pageData.hero_image), title: pageData.title }] : []"
+    :textContent="pageSlug === 'faq' ? '' : (pageData.content || '')"
+    :slides="pageData.hero_image ? [{ image_url: resolveMediaUrlOrPlaceholder(pageData.hero_image), title: pageData.title }] : []"
   >
     <!-- FAQ Accordion -->
-    <div v-if="route.meta.pageSlug === 'faq'" class="faq-container">
+    <div v-if="pageSlug === 'faq'" class="faq-container">
       <div v-for="(item, index) in faqItems" :key="index" class="faq-item" :class="{ 'faq-open': item.isOpen }">
         <div class="faq-question" @click="toggleFaq(index)">
           <span>{{ item.question }}</span>

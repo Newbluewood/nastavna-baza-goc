@@ -1,14 +1,9 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useLangStore } from '../../stores/lang'
-import api, { BASE_URL } from '../../services/api'
+import api from '../../services/api'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
-
-const getImageUrl = (path) => {
-  if (!path) return '/placeholder.jpg'
-  if (path.startsWith('http')) return path
-  return `${BASE_URL}${path}`
-}
+import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
 const langStore = useLangStore()
 const restaurants = ref([])
@@ -66,7 +61,7 @@ watch(() => langStore.currentLang, () => { loadRestaurants(); loadPageData() })
 <template>
   <PageTemplate
     :title="pageData?.title || langStore.t('nav.restaurant')"
-    :slides="[{ image_url: getImageUrl(pageData?.hero_image), title: pageData?.title || langStore.t('nav.restaurant') }]"
+    :slides="[{ image_url: resolveMediaUrlOrPlaceholder(pageData?.hero_image), title: pageData?.title || langStore.t('nav.restaurant') }]"
   >
     <div class="restaurants-container">
       <div v-if="isLoading" class="loader-container">
@@ -77,7 +72,7 @@ watch(() => langStore.currentLang, () => { loadRestaurants(); loadPageData() })
       <div v-else class="restaurants-grid">
         <div v-for="res in restaurants" :key="res.id" class="restaurant-card" @click="openMenu(res)">
           <div class="card-image">
-            <img :src="getImageUrl(res.cover_image)" alt="Restaurant">
+            <img :src="resolveMediaUrlOrPlaceholder(res.cover_image)" alt="Restaurant">
             <div class="card-overlay">
                <span class="view-menu-badge">{{ langStore.currentLang === 'sr' ? 'ПОГЛЕДАЈ МЕНИ' : 'VIEW MENU' }}</span>
             </div>
