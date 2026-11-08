@@ -3,6 +3,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useLangStore } from '../../stores/lang'
 import ImageLightbox from '../../components/ui/ImageLightbox.vue'
+import PageLoading from '../../components/ui/PageLoading.vue'
 import api from '../../services/api'
 import { resolveMediaUrl, resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
@@ -33,22 +34,34 @@ const openLightbox = (index) => {
 
 const loadNews = async () => {
   isLoading.value = true
+  debugError.value = ''
   try {
-    newsItem.value = await api.getNewsItem(route.params.id, langStore.currentLang)
-    isLiked.value = !!localStorage.getItem(`liked_news_${newsItem.value.id}`)
-    
-    // Load all news to find neighbors
-    const newsList = await api.getNews(langStore.currentLang)
+    const [item, newsList] = await Promise.all([
+      api.getNewsItem(route.params.id, langStore.currentLang),
+      api.getNews(langStore.currentLang).catch((err) => {
+        console.error('Error loading news list:', err)
+        return []
+      }),
+    ])
+
+    newsItem.value = item
+    isLiked.value = !!localStorage.getItem(`liked_news_${item.id}`)
     allNews.value = newsList
-    const currentIndex = newsList.findIndex(n => n.id === newsItem.value.id || n.slug === newsItem.value.slug)
-    
+
+    const currentIndex = newsList.findIndex(
+      (n) => n.id === item.id || n.slug === item.slug
+    )
     if (currentIndex !== -1) {
       prevNews.value = currentIndex < newsList.length - 1 ? newsList[currentIndex + 1] : null
       nextNews.value = currentIndex > 0 ? newsList[currentIndex - 1] : null
+    } else {
+      prevNews.value = null
+      nextNews.value = null
     }
   } catch (err) {
-    debugError.value = err.message || JSON.stringify(err);
-    console.error("Error loading news", err)
+    newsItem.value = null
+    debugError.value = err.message || String(err)
+    console.error('Error loading news', err)
   } finally {
     isLoading.value = false
   }
@@ -90,16 +103,16 @@ watch(() => route.params.id, () => {
 </script>
 
 <template>
-  <div v-if="debugError" class="news-state news-state--error">
-    ГРЕШКА: {{ debugError }}
+  <PageLoading
+    v-if="isLoading"
+    :message="langStore.currentLang === 'sr' ? 'Учитавам вест...' : 'Loading news...'"
+  />
+
+  <div v-else-if="debugError" class="news-state news-state--error">
+    {{ langStore.currentLang === 'sr' ? 'Грешка при учитавању вести.' : 'Failed to load news.' }}
   </div>
 
-  <div v-if="isLoading && !debugError" class="news-state">
-    {{ langStore.currentLang === 'sr' ? 'Учитавам вест...' : 'Loading news...' }}
-    <br><small class="news-state-hint">Ако ово траје предуго, проверите конзолу (F12) или сервер.</small>
-  </div>
-
-  <div v-else-if="!newsItem && !debugError" class="news-state news-state--missing">
+  <div v-else-if="!newsItem" class="news-state news-state--missing">
     {{ langStore.currentLang === 'sr' ? 'Вест није пронађена.' : 'News not found.' }}
   </div>
 
@@ -181,9 +194,6 @@ watch(() => route.params.id, () => {
   min-height: auto;
 }
 .news-state--missing {
-  color: red;
-}
-.news-state-hint {
   color: red;
 }
 .news-hero {

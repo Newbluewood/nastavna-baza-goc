@@ -12,58 +12,66 @@ const news = ref([])
 const themes = ref([])
 const isLoading = ref(true)
 
-const pageTitle = ref("БАЗА ГОЧ")
-const textContent = ref("")
+const pageTitle = ref('БАЗА ГОЧ')
+const textContent = ref('')
 
 const langStore = useLangStore()
+
+const mapHomePayload = (data) => {
+  pageTitle.value = data.pageTitle || pageTitle.value
+  textContent.value = data.textContent || textContent.value
+
+  news.value = (data.news || []).map((item) => ({
+    ...item,
+    cover_image: resolveMediaUrlOrPlaceholder(item.cover_image),
+  }))
+
+  galleryItems.value = (data.facilities || []).map((facility) => ({
+    url: resolveMediaUrlOrPlaceholder(facility.cover_image || facility.image),
+    name: facility.name || facility.type || '',
+  }))
+
+  slides.value = (data.slides && data.slides.length > 0)
+    ? data.slides.map((slide) => ({
+        ...slide,
+        image_url: resolveMediaUrlOrPlaceholder(slide.image_url),
+      }))
+    : news.value.slice(0, 5).map((item) => ({
+        image_url: resolveMediaUrlOrPlaceholder(item.cover_image),
+        title: item.title || pageTitle.value,
+        subtitle: item.excerpt || '',
+      }))
+}
 
 const loadData = async () => {
   isLoading.value = true
   try {
-    const data = await api.getHome(langStore.currentLang)
-    console.log('Home API response:', data)
+    const [homeData, allThemes] = await Promise.all([
+      api.getHome(langStore.currentLang),
+      api.getThemes(langStore.currentLang).catch((err) => {
+        console.error('Error fetching themes:', err)
+        return []
+      }),
+    ])
 
-    pageTitle.value = data.pageTitle || pageTitle.value
-    textContent.value = data.textContent || textContent.value
-    news.value = (data.news || []).map((item) => ({
-      ...item,
-      cover_image: resolveMediaUrlOrPlaceholder(item.cover_image),
-    }))
-    galleryItems.value = (data.facilities || []).map((facility) => ({
-      url: resolveMediaUrlOrPlaceholder(facility.cover_image || facility.image),
-      name: facility.name || facility.type || '',
-    }))
-    slides.value = (data.slides && data.slides.length > 0)
-      ? data.slides.map((slide) => ({
-          ...slide,
-          image_url: resolveMediaUrlOrPlaceholder(slide.image_url),
-        }))
-      : news.value.slice(0, 5).map((item) => ({
-          image_url: resolveMediaUrlOrPlaceholder(item.cover_image),
-          title: item.title || pageTitle.value,
-          subtitle: item.excerpt || '',
-        }))
-    
-    // Fetch themes for highlights
-    const allThemes = await api.getThemes(langStore.currentLang)
-    themes.value = allThemes.slice(0, 3) // Show top 3
+    mapHomePayload(homeData)
+    themes.value = (allThemes || []).slice(0, 3)
   } catch (error) {
-    console.error("Error fetching data from API:", error)
+    console.error('Error fetching data from API:', error)
     textContent.value = langStore.currentLang === 'sr'
-      ? "<p>Подаци се тренутно учитавају са локалног бекенда...</p>"
-      : "<p>Data is currently loading from the local backend...</p>"
+      ? '<p>Подаци се тренутно учитавају са локалног бекенда...</p>'
+      : '<p>Data is currently loading from the local backend...</p>'
+    news.value = []
+    galleryItems.value = []
+    slides.value = []
+    themes.value = []
   } finally {
     isLoading.value = false
   }
 }
 
-onMounted(() => {
-  loadData()
-})
-
-watch(() => langStore.currentLang, () => {
-  loadData()
-})
+onMounted(loadData)
+watch(() => langStore.currentLang, loadData)
 </script>
 
 <template>
@@ -71,7 +79,8 @@ watch(() => langStore.currentLang, () => {
     v-if="isLoading"
     :message="langStore.currentLang === 'sr' ? 'Учитавам податке са сервера...' : 'Loading data from server...'"
   />
-  <PageTemplate v-else
+  <PageTemplate
+    v-else
     :title="pageTitle"
     :slides="slides"
     :textContent="textContent"
@@ -80,7 +89,6 @@ watch(() => langStore.currentLang, () => {
     :gridType="6"
     :isCarousel="true"
   >
-    <!-- Theme Highlights -->
     <div class="themes-highlight" v-if="themes.length > 0">
       <hr class="section-divider" />
       <h2 class="themes-heading">
@@ -89,7 +97,7 @@ watch(() => langStore.currentLang, () => {
       <div class="themes-mini-grid">
         <div v-for="theme in themes" :key="theme.id" class="theme-mini-card">
           <div class="mini-icon-container">
-             <img :src="resolveMediaUrlOrPlaceholder(theme.icon || '/themes/flora.png')" class="mini-card-icon" />
+            <img :src="resolveMediaUrlOrPlaceholder(theme.icon || '/themes/flora.png')" class="mini-card-icon" />
           </div>
           <h3>{{ theme.name }}</h3>
           <p>{{ langStore.currentLang === 'sr' ? theme.excerpt_sr : theme.excerpt_en }}</p>

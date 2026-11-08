@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import api from '../../services/api'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
+import PageLoading from '../../components/ui/PageLoading.vue'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
@@ -36,17 +37,14 @@ const closeMenu = () => {
 </script>
 
 <template>
+  <PageLoading v-if="isLoading" :message="langStore.t('common.loading')" />
   <PageTemplate
+    v-else
     :title="page?.title || langStore.t('nav.restaurant')"
     :slides="slides"
   >
     <div class="restaurants-container">
-      <div v-if="isLoading" class="loader-container">
-        <div class="spinner"></div>
-        <p>{{ langStore.t('common.loading') }}</p>
-      </div>
-      
-      <div v-else class="restaurants-grid">
+      <div class="restaurants-grid">
         <div v-for="res in restaurants" :key="res.id" class="restaurant-card" @click="openMenu(res)">
           <div class="card-image">
             <img :src="resolveMediaUrlOrPlaceholder(res.cover_image)" alt="Restaurant">
@@ -77,7 +75,7 @@ const closeMenu = () => {
               <p class="subtitle">{{ langStore.currentLang === 'sr' ? 'ДОМАЋИ СПЕЦИЈАЛИТЕТИ' : 'TRADITIONAL SPECIALTIES' }}</p>
             </div>
 
-            <div v-if="isMenuLoading" class="loader-container">
+            <div v-if="isMenuLoading" class="menu-loading">
               <div class="spinner"></div>
             </div>
 
@@ -114,12 +112,11 @@ const closeMenu = () => {
   padding: 40px 20px;
 }
 
-.loader-container {
+.menu-loading {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 100px 0;
+  padding: 40px 0;
 }
 
 .spinner {
