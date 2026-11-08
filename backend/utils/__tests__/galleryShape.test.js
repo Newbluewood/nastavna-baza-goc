@@ -57,3 +57,33 @@ describe('assertGalleryShape', () => {
     expect(() => assertGalleryShape([{ image_url: '' }])).toThrow();
   });
 });
+
+describe('facility/room hydrate contract', () => {
+  test('GROUP_CONCAT row becomes public gallery without gallery_urls', () => {
+    const facility = {
+      id: 7,
+      gallery_urls: '/uploads/a.jpg,placeholder.jpg,/uploads/b.jpg',
+    };
+    facility.gallery = parseConcatGallery(facility.gallery_urls);
+    delete facility.gallery_urls;
+
+    expect(facility).not.toHaveProperty('gallery_urls');
+    expect(facility.gallery).toEqual([
+      { image_url: '/uploads/a.jpg' },
+      { image_url: '/uploads/b.jpg' },
+    ]);
+    expect(assertGalleryShape(facility.gallery)).toBe(true);
+  });
+
+  test('room hydrate uses room_gallery_urls the same way', () => {
+    const room = {
+      id: 3,
+      room_gallery_urls: '/uploads/rooms/r1.jpg',
+    };
+    room.gallery = parseConcatGallery(room.room_gallery_urls);
+    delete room.room_gallery_urls;
+
+    expect(room).not.toHaveProperty('room_gallery_urls');
+    expect(assertGalleryShape(room.gallery, 'room gallery')).toBe(true);
+  });
+});

@@ -26,5 +26,6 @@ describe('mediaUrl', () => {
     expect(resolveMediaUrl('')).toBe('')
     expect(resolveMediaUrl(null)).toBe('')
     expect(resolveMediaUrlOrPlaceholder('')).toBe('/placeholder.jpg')
+    expect(resolveMediaUrlOrPlaceholder('/uploads/x.jpg')).toBe('http://127.0.0.1:3000/uploads/x.jpg')
   })
 })

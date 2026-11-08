@@ -42,4 +42,36 @@ describe('collectGalleryImages', () => {
       })
     ).toEqual(['http://127.0.0.1:3000/uploads/a.jpg'])
   })
+
+  test('public API facility shape [{ image_url }] resolves for lightbox', async () => {
+    const { collectGalleryImages } = await import('./galleryImages')
+    // Canonical /api/smestaj payload after parseConcatGallery
+    const facility = {
+      id: 1,
+      type: 'smestaj',
+      cover_image: '/uploads/facilities/cover.jpg',
+      gallery: [
+        { image_url: '/uploads/facilities/a.jpg' },
+        { image_url: '/uploads/facilities/b.jpg' },
+      ],
+    }
+    expect(collectGalleryImages(facility)).toEqual([
+      'http://127.0.0.1:3000/uploads/facilities/cover.jpg',
+      'http://127.0.0.1:3000/uploads/facilities/a.jpg',
+      'http://127.0.0.1:3000/uploads/facilities/b.jpg',
+    ])
+  })
+
+  test('keeps absolute gallery urls and skips null entries', async () => {
+    const { collectGalleryImages } = await import('./galleryImages')
+    expect(
+      collectGalleryImages({
+        cover_image: 'https://cdn.example/cover.jpg',
+        gallery: [null, { image_url: 'https://cdn.example/a.jpg' }, undefined],
+      })
+    ).toEqual([
+      'https://cdn.example/cover.jpg',
+      'https://cdn.example/a.jpg',
+    ])
+  })
 })

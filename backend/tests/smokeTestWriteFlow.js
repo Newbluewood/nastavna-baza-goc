@@ -1,5 +1,5 @@
 require('dotenv').config();
-const db = require('./db');
+const db = require('../db');
 
 const BASE_URL = process.env.SMOKE_BASE_URL || `http://127.0.0.1:${process.env.PORT || 3000}`;
 const ADMIN_USERNAME = process.env.ADMIN_SEED_USERNAME || 'admin';

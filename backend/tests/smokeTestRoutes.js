@@ -1,5 +1,5 @@
 require('dotenv').config();
-const db = require('./db');
+const db = require('../db');
 const bcrypt = require('bcryptjs');
 const { assertGalleryShape } = require('../utils/galleryShape');
 
