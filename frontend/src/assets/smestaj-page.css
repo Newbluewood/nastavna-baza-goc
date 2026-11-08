@@ -1,11 +1,5 @@
 /* Shared smestaj page shell (lista + detalj): layout, hero, headings. */
 
-.page-loading {
-  padding: 100px 20px;
-  text-align: center;
-  min-height: 50vh;
-}
-
 .content-wrap {
   max-width: var(--content-max-width);
   margin: 0 auto;

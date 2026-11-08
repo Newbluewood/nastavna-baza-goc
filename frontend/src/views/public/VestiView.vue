@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
+import PageLoading from '../../components/ui/PageLoading.vue'
 import api from '../../services/api'
 import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
@@ -14,9 +15,7 @@ const slides = computed(() => buildHeroSlide(page.value, langStore.t('nav.news')
 </script>
 
 <template>
-  <div v-if="isLoading" class="page-loading">
-    <p>{{ langStore.currentLang === 'sr' ? 'Учитавање...' : 'Loading...' }}</p>
-  </div>
+  <PageLoading v-if="isLoading" />
   <PageTemplate
     v-else
     :title="page?.title"
@@ -26,13 +25,3 @@ const slides = computed(() => buildHeroSlide(page.value, langStore.t('nav.news')
     :gridType="4"
   />
 </template>
-
-<style scoped>
-.page-loading {
-  text-align: center;
-  padding: 100px 20px;
-  color: #888;
-  font-size: 1.2rem;
-  min-height: 60vh;
-}
-</style>

@@ -2,6 +2,7 @@
 import { ref, onMounted, watch, onUnmounted } from 'vue'
 import { useLangStore } from '../../stores/lang'
 import ImageLightbox from '../../components/ui/ImageLightbox.vue'
+import PageLoading from '../../components/ui/PageLoading.vue'
 import { useRouter } from 'vue-router'
 import api from '../../services/api'
 import { collectGalleryImages } from '../../utils/galleryImages'
@@ -121,9 +122,7 @@ watch(() => langStore.currentLang, () => {
 </script>
 
 <template>
-  <div v-if="isLoading" class="page-loading">
-    {{ langStore.t('smestaj.loadingFacilities') }}
-  </div>
+  <PageLoading v-if="isLoading" :message="langStore.t('smestaj.loadingFacilities')" />
 
   <div v-else class="page-content">
     <div v-if="slides && slides.length > 0" class="hero-slider">

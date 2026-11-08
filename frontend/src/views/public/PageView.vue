@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
+import PageLoading from '../../components/ui/PageLoading.vue'
 import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
 const route = useRoute()
@@ -44,9 +45,7 @@ const toggleFaq = (index) => {
 </script>
 
 <template>
-  <div v-if="isLoading" class="page-loading">
-    <p>{{ langStore.currentLang === 'sr' ? 'Учитавам...' : 'Loading...' }}</p>
-  </div>
+  <PageLoading v-if="isLoading" />
   <div v-else-if="notFound" class="page-not-found">
     <div class="content-box">
       <div class="big-icon">🚧</div>
@@ -77,10 +76,6 @@ const toggleFaq = (index) => {
 </template>
 
 <style scoped>
-.page-loading {
-  display: flex; justify-content: center; align-items: center;
-  min-height: 60vh; color: #888; font-size: 1.1rem;
-}
 .page-not-found {
   display: flex; justify-content: center; align-items: center;
   min-height: 60vh; text-align: center; padding: 40px 20px;

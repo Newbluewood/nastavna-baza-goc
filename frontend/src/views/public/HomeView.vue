@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
+import PageLoading from '../../components/ui/PageLoading.vue'
 import { useLangStore } from '../../stores/lang'
 import api from '../../services/api'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
@@ -66,9 +67,10 @@ watch(() => langStore.currentLang, () => {
 </script>
 
 <template>
-  <div v-if="isLoading" class="page-loading">
-    {{ langStore.currentLang === 'sr' ? 'Учитавам податке са сервера...' : 'Loading data from server...' }}
-  </div>
+  <PageLoading
+    v-if="isLoading"
+    :message="langStore.currentLang === 'sr' ? 'Учитавам податке са сервера...' : 'Loading data from server...'"
+  />
   <PageTemplate v-else
     :title="pageTitle"
     :slides="slides"
@@ -87,7 +89,7 @@ watch(() => langStore.currentLang, () => {
       <div class="themes-mini-grid">
         <div v-for="theme in themes" :key="theme.id" class="theme-mini-card">
           <div class="mini-icon-container">
-             <img :src="theme.icon || '/themes/flora.png'" class="mini-card-icon" />
+             <img :src="resolveMediaUrlOrPlaceholder(theme.icon || '/themes/flora.png')" class="mini-card-icon" />
           </div>
           <h3>{{ theme.name }}</h3>
           <p>{{ langStore.currentLang === 'sr' ? theme.excerpt_sr : theme.excerpt_en }}</p>
@@ -106,11 +108,6 @@ watch(() => langStore.currentLang, () => {
 </template>
 
 <style scoped>
-.page-loading {
-  padding: 100px 20px;
-  text-align: center;
-  min-height: 50vh;
-}
 .themes-heading {
   margin: 30px 0 20px;
   border-left: 4px solid var(--color-nav);

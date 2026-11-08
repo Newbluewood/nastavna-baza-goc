@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useLangStore } from '../../stores/lang'
 import ImageLightbox from '../../components/ui/ImageLightbox.vue'
+import PageLoading from '../../components/ui/PageLoading.vue'
 import InquiryModal from '../../components/forms/InquiryModal.vue'
 import api from '../../services/api'
 import { collectGalleryImages } from '../../utils/galleryImages'
@@ -114,9 +115,7 @@ watch(
 </script>
 
 <template>
-  <div v-if="isLoading" class="page-loading">
-    {{ langStore.t('smestaj.loadingData') }}
-  </div>
+  <PageLoading v-if="isLoading" :message="langStore.t('smestaj.loadingData')" />
 
   <div v-else-if="building" class="page-content">
     <div class="hero-cover">

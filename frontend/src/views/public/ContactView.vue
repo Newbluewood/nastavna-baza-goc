@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useSettingsStore } from '../../stores/settings'
 import api from '../../services/api'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
+import PageLoading from '../../components/ui/PageLoading.vue'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
@@ -37,16 +38,14 @@ const statusClass = (s) => ({
 </script>
 
 <template>
+  <PageLoading v-if="isLoading" />
   <PageTemplate
+    v-else
     :title="contactTitle"
     :textContent="page?.content || ''"
     :slides="slides"
   >
-    <div v-if="isLoading" class="loading-msg">
-      {{ langStore.currentLang === 'sr' ? 'Учитавам...' : 'Loading...' }}
-    </div>
-
-    <div v-else class="contact-content">
+    <div class="contact-content">
       <!-- CONTACT INFO -->
       <section class="contact-info-section">
         <h2>{{ langStore.currentLang === 'sr' ? 'Информације' : 'Information' }}</h2>
@@ -110,13 +109,6 @@ const statusClass = (s) => ({
 </template>
 
 <style scoped>
-
-.loading-msg {
-  text-align: center;
-  padding: 60px 20px;
-  color: #999;
-}
-
 .contact-content {
   display: flex;
   flex-direction: column;

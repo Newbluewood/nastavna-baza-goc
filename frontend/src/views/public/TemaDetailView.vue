@@ -3,6 +3,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useLangStore } from '../../stores/lang'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
+import PageLoading from '../../components/ui/PageLoading.vue'
 import api from '../../services/api'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
@@ -49,10 +50,7 @@ watch(() => langStore.currentLang, fetchTheme)
 </script>
 
 <template>
-  <div v-if="isLoading" class="loading-state">
-    <div class="spinner"></div>
-    <p>{{ langStore.currentLang === 'sr' ? 'Учитавам...' : 'Loading...' }}</p>
-  </div>
+  <PageLoading v-if="isLoading" />
 
   <PageTemplate
     v-else-if="theme"
@@ -91,29 +89,6 @@ watch(() => langStore.currentLang, fetchTheme)
 </template>
 
 <style scoped>
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 60vh;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #cdac91;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 .theme-article {
   max-width: 1200px;
   margin: 0 auto;
