@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import ImageLightbox from '../ui/ImageLightbox.vue'
 import { useLangStore } from '../../stores/lang'
+import { resolveMediaUrl, resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
 const props = defineProps({
   title: { type: String, default: '' },
@@ -21,8 +22,12 @@ const SLIDE_DELAY_MS = 5000
 const lightboxOpen = ref(false)
 const lbIndex = ref(0)
 const lightboxImages = computed(() => {
-  return props.galleryItems.map(item => item.url).filter(url => url)
+  return props.galleryItems
+    .map((item) => resolveMediaUrl(item?.url))
+    .filter((url) => url)
 })
+
+const mediaSrc = (path) => resolveMediaUrlOrPlaceholder(path)
 
 const openLightbox = (index) => {
   lbIndex.value = index
@@ -89,33 +94,32 @@ onUnmounted(() => {
     
     <!-- Hero Slider -->
     <div v-if="slides && slides.length > 0" class="hero-slider">
-      <div v-for="(slide, index) in slides" :key="index" :style="{ 
-        opacity: index === currentSlide ? 1 : 0, 
-        zIndex: index === currentSlide ? 1 : 0,
-        pointerEvents: index === currentSlide ? 'auto' : 'none',
-        transition: 'opacity 0.8s ease', 
-        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' 
-      }">
-        <img :src="slide.image_url" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.65;" />
+      <div
+        v-for="(slide, index) in slides"
+        :key="index"
+        class="hero-slide"
+        :class="{ 'is-active': index === currentSlide }"
+      >
+        <img :src="mediaSrc(slide.image_url)" class="hero-slide-img" />
         <div class="slide-content">
-           <h1 style="margin: 0; color: var(--color-nav);">{{ slide.title }}</h1>
-           <p v-if="slide.subtitle" style="margin: 5px 0 0 0; color: var(--color-text);">{{ slide.subtitle }}</p>
-           <router-link v-if="slide.target_link" :to="slide.target_link" style="display: inline-block; margin-top: 10px; font-weight: bold; border-bottom: 2px solid var(--color-nav);">
+           <h1 class="slide-title">{{ slide.title }}</h1>
+           <p v-if="slide.subtitle" class="slide-subtitle">{{ slide.subtitle }}</p>
+           <router-link v-if="slide.target_link" :to="slide.target_link" class="slide-cta">
              {{ langStore.currentLang === 'sr' ? 'Сазнај више' : 'Learn more' }}
            </router-link>
         </div>
       </div>
       
       <!-- Kontrole za slajder -->
-      <button v-if="slides.length > 1" @click="prevSlide" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(205, 172, 145, 0.6); color: #fff; border: none; font-size: 1.5rem; cursor: pointer; border-radius: 0%; width: 30px; height: 40px;">&#10094;</button>
-      <button v-if="slides.length > 1" @click="nextSlide" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 10; background: rgba(205, 172, 145, 0.6); color: #fff; border: none; font-size: 1.5rem; cursor: pointer; border-radius: 0%; width: 30px; height: 40px;">&#10095;</button>
+      <button v-if="slides.length > 1" @click="prevSlide" class="hero-nav-btn hero-nav-btn--prev">&#10094;</button>
+      <button v-if="slides.length > 1" @click="nextSlide" class="hero-nav-btn hero-nav-btn--next">&#10095;</button>
     </div>
     
     <!-- Placeholder ako nema slajdera -->
     <div v-else-if="title" class="hero-slider hero-placeholder-bg">
-      <img src="/placeholder.jpg" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;" />
+      <img src="/placeholder.jpg" class="hero-slide-img hero-slide-img--strong" />
       <div class="slide-content">
-        <h1 style="margin: 0; color: var(--color-nav);">{{ title }}</h1>
+        <h1 class="slide-title">{{ title }}</h1>
       </div>
     </div>
     
@@ -132,29 +136,29 @@ onUnmounted(() => {
     <hr class="section-divider" v-if="news && news.length > 0" />
 
     <!-- Najnovije Vesti (News sekcija) -->
-    <div v-if="news && news.length > 0" class="news-section" style="margin: 30px 0;">
-      <h2 style="margin-bottom: 20px; border-left: 4px solid var(--color-nav); padding-left: 10px;">{{ langStore.currentLang === 'sr' ? 'Актуелности' : 'News & Updates' }}</h2>
+    <div v-if="news && news.length > 0" class="news-section">
+      <h2 class="section-heading">{{ langStore.currentLang === 'sr' ? 'Актуелности' : 'News & Updates' }}</h2>
       
       <!-- GRID -->
-      <div v-if="!isCarousel" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-        <div v-for="item in news" :key="item.id" class="news-card" style="position: relative; height: 320px; border: 1px solid var(--color-border); border-radius: 0; overflow: hidden; background: #fff; display: flex; flex-direction: column;">
-          <img v-if="item.cover_image" :src="item.cover_image" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; cursor: pointer; z-index: 0;" @click="openLightbox(0)" />
-          <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.88); padding: 15px; z-index: 1;">
-             <h3 style="margin-bottom: 5px; font-size: 1.1rem; color: var(--color-nav);">{{ item.title }}</h3>
-             <p style="font-size: 0.85rem; margin-bottom: 10px; color: var(--color-text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ item.excerpt }}</p>
-             <router-link :to="item.link || `/vesti/${item.slug || item.id}`" style="font-weight: bold; font-size: 0.85rem; display: inline-block; color: var(--color-nav); border-bottom: 1px solid var(--color-nav);">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
+      <div v-if="!isCarousel" class="news-grid">
+        <div v-for="item in news" :key="item.id" class="news-card">
+          <img v-if="item.cover_image" :src="mediaSrc(item.cover_image)" class="news-card-img" @click="openLightbox(0)" />
+          <div class="news-card-body">
+             <h3 class="news-card-title">{{ item.title }}</h3>
+             <p class="news-card-excerpt">{{ item.excerpt }}</p>
+             <router-link :to="item.link || `/vesti/${item.slug || item.id}`" class="news-card-link">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
           </div>
         </div>
       </div>
 
       <!-- CAROUSEL -->
       <div v-else class="news-carousel">
-        <div v-for="item in news" :key="item.id" class="news-card carousel-item" style="position: relative; flex: 0 0 calc(33.333% - 1rem); min-width: 250px; height: 320px; scroll-snap-align: start; border: 1px solid var(--color-border); border-radius: 0; overflow: hidden; background: #fff;">
-          <img v-if="item.cover_image" :src="item.cover_image" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;" />
-          <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.88); padding: 15px; z-index: 1;">
-             <h3 style="margin-bottom: 5px; font-size: 1.1rem; color: var(--color-nav);">{{ item.title }}</h3>
-             <p style="font-size: 0.85rem; margin-bottom: 10px; color: var(--color-text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ item.excerpt }}</p>
-             <router-link :to="item.link || `/vesti/${item.slug || item.id}`" style="font-weight: bold; font-size: 0.85rem; display: inline-block; color: var(--color-nav); border-bottom: 1px solid var(--color-nav);">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
+        <div v-for="item in news" :key="item.id" class="news-card carousel-item">
+          <img v-if="item.cover_image" :src="mediaSrc(item.cover_image)" class="news-card-img" />
+          <div class="news-card-body">
+             <h3 class="news-card-title">{{ item.title }}</h3>
+             <p class="news-card-excerpt">{{ item.excerpt }}</p>
+             <router-link :to="item.link || `/vesti/${item.slug || item.id}`" class="news-card-link">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
           </div>
         </div>
       </div>
@@ -165,12 +169,12 @@ onUnmounted(() => {
     
     <!-- Opšta Galerija -->
     <div v-if="galleryItems && galleryItems.length > 0">
-      <h2 style="margin-bottom: 20px; border-left: 4px solid var(--color-nav); padding-left: 10px;">{{ langStore.currentLang === 'sr' ? 'Галерија' : 'Gallery' }}</h2>
+      <h2 class="section-heading">{{ langStore.currentLang === 'sr' ? 'Галерија' : 'Gallery' }}</h2>
       <div :class="(gridType === 5) ? 'photo-grid-5' : 'photo-grid-6'">
-        <a v-for="(item, index) in galleryItems" :key="index" href="#" @click.prevent="openLightbox(index)" class="gallery-item-link" style="text-decoration:none; color:inherit; display: block; overflow: hidden; border-radius: 0;">
-          <div v-if="item.url" style="width: 100%; height: 150px; position: relative; cursor: pointer;">
-            <img :src="item.url" style="width: 100%; height: 100%; object-fit: cover;" />
-            <div v-if="item.name" style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.42); color: #fff; padding: 5px 10px; font-size: 0.8rem;">
+        <a v-for="(item, index) in galleryItems" :key="index" href="#" @click.prevent="openLightbox(index)" class="gallery-item-link">
+          <div v-if="item.url" class="gallery-thumb">
+            <img :src="mediaSrc(item.url)" class="gallery-thumb-img" />
+            <div v-if="item.name" class="gallery-thumb-caption">
               {{ item.name }}
             </div>
           </div>
@@ -189,7 +193,66 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Hero Slide Content - Desktop */
+.hero-slider {
+  position: relative;
+  width: 100%;
+  height: var(--hero-height);
+  overflow: hidden;
+  background: var(--c-green-6);
+  border-radius: 0;
+  margin-bottom: 20px;
+}
+
+.hero-placeholder-bg {
+  background: #332317;
+}
+
+.hero-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+.hero-slide.is-active {
+  opacity: 1;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.hero-slide-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.65;
+}
+
+.hero-slide-img--strong {
+  opacity: 0.7;
+}
+
+.hero-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background: rgba(205, 172, 145, 0.6);
+  color: #fff;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  width: 30px;
+  height: 40px;
+}
+
+.hero-nav-btn--prev { left: 10px; }
+.hero-nav-btn--next { right: 10px; }
+
 .slide-content {
   position: absolute;
   bottom: 40px;
@@ -203,21 +266,151 @@ onUnmounted(() => {
   border-left: 4px solid var(--color-nav);
 }
 
-/* Hero Slide Content - Mobilni */
-/* Hero Slider Base Styles */
-.hero-slider {
-  position: relative; 
-  width: 100%; 
-  height: var(--hero-height); 
-  overflow: hidden; 
-  background: var(--c-green-6); 
-  border-radius: 0; 
-  margin-bottom: 20px;
+.slide-title {
+  margin: 0;
+  color: var(--color-nav);
 }
 
-.hero-placeholder-bg {
-  background: #332317;
+.slide-subtitle {
+  margin: 5px 0 0;
+  color: var(--color-text);
 }
+
+.slide-cta {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: bold;
+  border-bottom: 2px solid var(--color-nav);
+}
+
+.section-heading {
+  margin-bottom: 20px;
+  border-left: 4px solid var(--color-nav);
+  padding-left: 10px;
+}
+
+.news-section {
+  margin: 30px 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.news-card {
+  position: relative;
+  height: 320px;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.news-carousel .news-card {
+  flex: 0 0 calc(33.333% - 1rem);
+  min-width: 250px;
+  scroll-snap-align: start;
+}
+
+.news-card-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  cursor: pointer;
+}
+
+.news-card-body {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 15px;
+  z-index: 1;
+}
+
+.news-card-title {
+  margin-bottom: 5px;
+  font-size: 1.1rem;
+  color: var(--color-nav);
+}
+
+.news-card-excerpt {
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+  color: var(--color-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.news-card-link {
+  font-weight: bold;
+  font-size: 0.85rem;
+  display: inline-block;
+  color: var(--color-nav);
+  border-bottom: 1px solid var(--color-nav);
+}
+
+.gallery-item-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  overflow: hidden;
+}
+
+.gallery-thumb {
+  width: 100%;
+  height: 150px;
+  position: relative;
+  cursor: pointer;
+}
+
+.gallery-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-thumb-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.42);
+  color: #fff;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+}
+
+.news-carousel {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  padding-bottom: 16px;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #cdac91 #f5f0eb;
+  -webkit-overflow-scrolling: touch;
+}
+
+.news-carousel::-webkit-scrollbar { height: 6px; }
+.news-carousel::-webkit-scrollbar-track { background: transparent; }
+.news-carousel::-webkit-scrollbar-thumb { background: #cdac91; border-radius: 3px; }
+.news-carousel::-webkit-scrollbar-thumb:hover { background: #9a714e; }
 
 @media (max-width: 1023px) {
   .hero-slider {
@@ -232,40 +425,16 @@ onUnmounted(() => {
     text-align: center;
     padding: 12px 20px;
   }
-  .slide-content h1 {
+  .slide-content h1,
+  .slide-title {
     font-size: 1.2rem;
   }
-  .slide-content a {
-    display: inline-block;
-    margin-top: 8px;
-  }
 }
-
-/* News Section — constrain so carousel can overflow-x */
-.news-section {
-  max-width: 100%;
-  overflow: hidden;          /* keeps section from growing wider than viewport */
-}
-
-/* News Carousel */
-.news-carousel {
-  display: flex;
-  gap: 1.5rem;
-  overflow-x: scroll;        /* always show scrollbar track */
-  overflow-y: hidden;
-  padding-bottom: 16px;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: #cdac91 #f5f0eb;
-  -webkit-overflow-scrolling: touch;
-}
-.news-carousel::-webkit-scrollbar { height: 6px; }
-.news-carousel::-webkit-scrollbar-track { background: transparent; }
-.news-carousel::-webkit-scrollbar-thumb { background: #cdac91; border-radius: 3px; }
-.news-carousel::-webkit-scrollbar-thumb:hover { background: #9a714e; }
 
 @media (max-width: 640px) {
-  .news-carousel .carousel-item { flex: 0 0 80vw !important; min-width: 0 !important; }
+  .news-carousel .carousel-item {
+    flex: 0 0 80vw;
+    min-width: 0;
+  }
 }
 </style>

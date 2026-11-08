@@ -15,12 +15,10 @@ const langStore = useLangStore()
 const building = ref(null)
 const isLoading = ref(true)
 
-// Za Lightbox
 const lightboxOpen = ref(false)
 const lbImages = ref([])
 const lbIndex = ref(0)
 
-// Za Inquiry Modal
 const inquiryOpen = ref(false)
 const selectedRoomId = ref(null)
 const selectedRoomName = ref("")
@@ -36,14 +34,14 @@ const amenityMapping = {
 }
 
 const getAmenities = (amenitiesArray) => {
-  if (!amenitiesArray || !Array.isArray(amenitiesArray)) return [];
-  return amenitiesArray.map(key => {
-     const data = amenityMapping[key]
-     if (!data) return { label: key, icon: '🔹' }
-     return {
-        label: langStore.currentLang === 'sr' ? data.sr : data.en,
-        icon: data.icon
-     }
+  if (!amenitiesArray || !Array.isArray(amenitiesArray)) return []
+  return amenitiesArray.map((key) => {
+    const data = amenityMapping[key]
+    if (!data) return { label: key, icon: '🔹' }
+    return {
+      label: langStore.currentLang === 'sr' ? data.sr : data.en,
+      icon: data.icon,
+    }
   })
 }
 
@@ -54,7 +52,6 @@ const loadData = async () => {
     openInquiryFromQuery()
   } catch (error) {
     console.error("Error fetching data from API:", error)
-    // Moze redirect ako ne postoji
     router.push('/smestaj')
   } finally {
     isLoading.value = false
@@ -117,43 +114,39 @@ watch(
 </script>
 
 <template>
-  <div v-if="isLoading" style="padding: 100px 20px; text-align: center; min-height: 50vh;">
+  <div v-if="isLoading" class="page-loading">
     {{ langStore.t('smestaj.loadingData') }}
   </div>
 
   <div v-else-if="building" class="page-content">
-    
-    <!-- Hero / Objekat Cover -->
-    <div class="hero-image" style="position: relative; width: 100%; height: 400px; overflow: hidden; background: #332317; margin-bottom: 20px;">
-        <img :src="resolveMediaUrlOrPlaceholder(building.cover_image)" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;" />
-        <div class="hero-content">
-           <h1 style="margin: 0; color: var(--color-nav);">{{ building.name }}</h1>
-        </div>
+    <div class="hero-cover">
+      <img :src="resolveMediaUrlOrPlaceholder(building.cover_image)" class="hero-cover-img" />
+      <div class="hero-content">
+        <h1 class="slide-title">{{ building.name }}</h1>
+      </div>
     </div>
 
-    <!-- Nazad na Smestaj dugme -->
-    <div style="max-width: var(--content-max-width); margin: 0 auto; padding: 0 20px 20px;">
-      <button @click="router.push('/smestaj')" style="background: transparent; border: none; cursor: pointer; color: var(--color-nav); font-weight: bold; font-size: 1rem; margin-bottom: 20px;">
+    <div class="content-wrap content-wrap--intro">
+      <button class="back-link-btn" @click="router.push('/smestaj')">
         &#8592; {{ langStore.t('smestaj.backToAll') }}
       </button>
 
       <div class="text-content" v-if="building.description" v-html="building.description"></div>
-      
-      <p style="margin-top:20px; font-weight: bold;">
+
+      <p class="facility-total-capacity">
         {{ langStore.t('smestaj.totalCapacity') }} {{ building.capacity || '-' }}
       </p>
     </div>
 
-    <hr class="section-divider" style="max-width: var(--content-max-width); margin: 40px auto; border-top: 2px solid var(--color-border); opacity: 0.5;"/>
+    <hr class="section-divider section-divider--page" />
 
-    <div style="max-width: var(--content-max-width); margin: 0 auto; padding: 0 20px 40px;">
-      <h2 style="margin-bottom: 30px; border-left: 4px solid var(--color-nav); padding-left: 10px;">
+    <div class="content-wrap content-wrap--bottom">
+      <h2 class="section-heading">
         {{ langStore.t('smestaj.roomsInFacility') }}
       </h2>
 
       <div v-if="building.rooms && building.rooms.length > 0" class="facilities-grid facilities-grid--rooms">
         <div v-for="room in building.rooms" :key="room.id" class="facility-card facility-card--landscape">
-          <!-- Slika Sobe -->
           <div class="facility-image-wrapper" @click="openGallery(room)">
             <img :src="resolveMediaUrlOrPlaceholder(room.cover_image)" class="facility-img" />
             <div class="img-overlay">
@@ -161,24 +154,21 @@ watch(
             </div>
           </div>
 
-          <!-- Sadržaj Sobe -->
           <div class="facility-info">
             <h3>{{ room.name }}</h3>
-            
-            <p class="capacity" style="margin-bottom: 5px;">
+
+            <p class="capacity capacity--tight">
               <strong>{{ langStore.t('smestaj.capacity') }}:</strong> {{ room.capacity || langStore.t('smestaj.notSpecified') }}
             </p>
-            
-            <!-- Amenities Badges -->
+
             <div v-if="room.amenities" class="amenities-container">
-               <span v-for="amenity in getAmenities(room.amenities)" :key="amenity.label" class="amenity-badge">
-                 {{ amenity.icon }} {{ amenity.label }}
-               </span>
+              <span v-for="amenity in getAmenities(room.amenities)" :key="amenity.label" class="amenity-badge">
+                {{ amenity.icon }} {{ amenity.label }}
+              </span>
             </div>
 
             <div class="description" v-html="room.description"></div>
 
-            <!-- Price Info -->
             <div class="price-info-block" v-if="room.price_base">
               <div class="price-main">
                 <span class="price-label">{{ langStore.t('smestaj.pricesFrom') }}:</span>
@@ -192,36 +182,35 @@ watch(
               <p v-if="room.meal_info" class="meal-disclaimer">{{ room.meal_info }}</p>
             </div>
 
-            <!-- Dugme za upit za SOBU -->
             <button @click="openInquiry(room)" class="inquiry-btn">
               ✉ {{ langStore.t('inquiry.sendInquiry') }}
             </button>
           </div>
 
-          <!-- Skica sobe -->
           <div v-if="room.floor_plan_image" class="facility-plan">
-             <h4>{{ langStore.t('smestaj.floorPlan') }}</h4>
-             <img :src="resolveMediaUrlOrPlaceholder(room.floor_plan_image)" alt="Plan" @click="openGallery({cover_image: room.floor_plan_image})" />
+            <h4>{{ langStore.t('smestaj.floorPlan') }}</h4>
+            <img
+              :src="resolveMediaUrlOrPlaceholder(room.floor_plan_image)"
+              alt="Plan"
+              @click="openGallery({ cover_image: room.floor_plan_image })"
+            />
           </div>
         </div>
       </div>
-      
-      <p v-else style="color: #666; font-style: italic;">
+
+      <p v-else class="empty-rooms-note">
         {{ langStore.t('smestaj.noRooms') }}
       </p>
-
     </div>
-
   </div>
 
-  <!-- Components -->
-  <ImageLightbox 
+  <ImageLightbox
     v-model:isOpen="lightboxOpen"
     :images="lbImages"
     :initialIndex="lbIndex"
   />
 
-  <InquiryModal 
+  <InquiryModal
     v-model:isOpen="inquiryOpen"
     :roomId="selectedRoomId"
     :roomName="selectedRoomName"
@@ -233,29 +222,7 @@ watch(
     :initialGuestPhone="typeof route.query.guestPhone === 'string' ? route.query.guestPhone : ''"
     :initialBoardType="typeof route.query.boardType === 'string' ? route.query.boardType : 'base'"
   />
-
 </template>
 
 <style src="../../assets/facility-cards.css"></style>
-<style scoped>
-.hero-content {
-  position: absolute;
-  bottom: 40px;
-  left: 40px;
-  background: rgba(255, 255, 255, 0.66);
-  padding: 15px 30px;
-  border-radius: 0;
-  max-width: calc(100% - 80px);
-}
-@media (max-width: 640px) {
-  .hero-content {
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 20px;
-    width: 85%;
-    max-width: 85%;
-    text-align: center;
-    padding: 12px 20px;
-  }
-}
-</style>
+<style src="../../assets/smestaj-page.css"></style>

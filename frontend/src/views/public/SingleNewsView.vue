@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useLangStore } from '../../stores/lang'
 import ImageLightbox from '../../components/ui/ImageLightbox.vue'
 import api from '../../services/api'
+import { resolveMediaUrl, resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
 const route = useRoute()
 const langStore = useLangStore()
@@ -18,8 +19,11 @@ const nextNews = ref(null)
 const lightboxOpen = ref(false)
 const lbIndex = ref(0)
 const lightboxImages = computed(() => {
-  if (!newsItem.value || !newsItem.value.gallery) return []
-  return newsItem.value.gallery.map(g => g.image_url)
+  const gallery = newsItem.value?.gallery
+  if (!Array.isArray(gallery)) return []
+  return gallery
+    .map((entry) => resolveMediaUrl(typeof entry === 'string' ? entry : entry?.image_url))
+    .filter(Boolean)
 })
 
 const openLightbox = (index) => {
@@ -86,16 +90,16 @@ watch(() => route.params.id, () => {
 </script>
 
 <template>
-  <div v-if="debugError" style="padding: 100px 20px; text-align: center; color: white; background: red; margin: 20px;">
+  <div v-if="debugError" class="news-state news-state--error">
     ГРЕШКА: {{ debugError }}
   </div>
 
-  <div v-if="isLoading && !debugError" style="padding: 100px 20px; text-align: center; min-height: 50vh;">
+  <div v-if="isLoading && !debugError" class="news-state">
     {{ langStore.currentLang === 'sr' ? 'Учитавам вест...' : 'Loading news...' }}
-    <br><small style="color:red">Ако ово траје предуго, проверите конзолу (F12) или сервер.</small>
+    <br><small class="news-state-hint">Ако ово траје предуго, проверите конзолу (F12) или сервер.</small>
   </div>
 
-  <div v-else-if="!newsItem && !debugError" style="padding: 100px 20px; text-align: center; min-height: 50vh; color: red;">
+  <div v-else-if="!newsItem && !debugError" class="news-state news-state--missing">
     {{ langStore.currentLang === 'sr' ? 'Вест није пронађена.' : 'News not found.' }}
   </div>
 
@@ -103,7 +107,7 @@ watch(() => route.params.id, () => {
     
     <!-- HERO SLIKA -->
     <div class="news-hero">
-      <img :src="newsItem.cover_image || '/news-hero.png'" class="hero-bg" />
+      <img :src="resolveMediaUrlOrPlaceholder(newsItem.cover_image || '/news-hero.png')" class="hero-bg" />
       <div class="hero-overlay"></div>
       <div class="hero-content glass-box">
         <h1>{{ newsItem.title }}</h1>
@@ -134,7 +138,7 @@ watch(() => route.params.id, () => {
             class="gallery-item"
             @click="openLightbox(idx)"
           >
-            <img :src="img.image_url" :alt="img.caption || 'Foto'" />
+            <img :src="resolveMediaUrlOrPlaceholder(img.image_url)" :alt="img.caption || 'Foto'" />
             <div v-if="img.caption" class="gallery-caption">{{ img.caption }}</div>
           </div>
         </div>
@@ -165,6 +169,23 @@ watch(() => route.params.id, () => {
 </template>
 
 <style scoped>
+.news-state {
+  padding: 100px 20px;
+  text-align: center;
+  min-height: 50vh;
+}
+.news-state--error {
+  color: #fff;
+  background: red;
+  margin: 20px;
+  min-height: auto;
+}
+.news-state--missing {
+  color: red;
+}
+.news-state-hint {
+  color: red;
+}
 .news-hero {
   position: relative;
   width: 100%;

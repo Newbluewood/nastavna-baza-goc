@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
 import { useLangStore } from '../../stores/lang'
 import api from '../../services/api'
+import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
 const galleryItems = ref([])
 const slides = ref([])
@@ -24,17 +25,23 @@ const loadData = async () => {
     if (data) {
       pageTitle.value = data.pageTitle || pageTitle.value
       textContent.value = data.textContent || textContent.value
-      news.value = data.news || []
-      galleryItems.value = (data.facilities || []).map(facility => ({
-        url: facility.cover_image || facility.image || '/placeholder.jpg',
-        name: facility.name || facility.type || ''
+      news.value = (data.news || []).map((item) => ({
+        ...item,
+        cover_image: resolveMediaUrlOrPlaceholder(item.cover_image),
+      }))
+      galleryItems.value = (data.facilities || []).map((facility) => ({
+        url: resolveMediaUrlOrPlaceholder(facility.cover_image || facility.image),
+        name: facility.name || facility.type || '',
       }))
       slides.value = (data.slides && data.slides.length > 0)
-        ? data.slides
-        : news.value.slice(0, 5).map(item => ({
-            image_url: item.cover_image || '/placeholder.jpg',
+        ? data.slides.map((slide) => ({
+            ...slide,
+            image_url: resolveMediaUrlOrPlaceholder(slide.image_url),
+          }))
+        : news.value.slice(0, 5).map((item) => ({
+            image_url: resolveMediaUrlOrPlaceholder(item.cover_image),
             title: item.title || pageTitle.value,
-            subtitle: item.excerpt || ''
+            subtitle: item.excerpt || '',
           }))
     }
     
@@ -61,7 +68,7 @@ watch(() => langStore.currentLang, () => {
 </script>
 
 <template>
-  <div v-if="isLoading" style="padding: 100px 20px; text-align: center; min-height: 50vh;">
+  <div v-if="isLoading" class="page-loading">
     {{ langStore.currentLang === 'sr' ? 'Учитавам податке са сервера...' : 'Loading data from server...' }}
   </div>
   <PageTemplate v-else
@@ -76,7 +83,7 @@ watch(() => langStore.currentLang, () => {
     <!-- Theme Highlights -->
     <div class="themes-highlight" v-if="themes.length > 0">
       <hr class="section-divider" />
-      <h2 style="margin: 30px 0 20px; border-left: 4px solid var(--color-nav); padding-left: 10px;">
+      <h2 class="themes-heading">
         {{ langStore.currentLang === 'sr' ? 'Откријте Гоч' : 'Discover Goč' }}
       </h2>
       <div class="themes-mini-grid">
@@ -91,7 +98,7 @@ watch(() => langStore.currentLang, () => {
           </router-link>
         </div>
       </div>
-      <div style="text-align: center; margin-top: 30px;">
+      <div class="themes-footer">
         <router-link to="/istrazi" class="view-all-btn">
           {{ langStore.currentLang === 'sr' ? 'Погледај све теме' : 'View all themes' }}
         </router-link>
@@ -101,6 +108,20 @@ watch(() => langStore.currentLang, () => {
 </template>
 
 <style scoped>
+.page-loading {
+  padding: 100px 20px;
+  text-align: center;
+  min-height: 50vh;
+}
+.themes-heading {
+  margin: 30px 0 20px;
+  border-left: 4px solid var(--color-nav);
+  padding-left: 10px;
+}
+.themes-footer {
+  text-align: center;
+  margin-top: 30px;
+}
 .themes-mini-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
