@@ -28,19 +28,43 @@ const lightboxImages = computed(() => {
     .filter((url) => url)
 })
 
-const hasTextContent = computed(() => !!String(props.textContent || '').trim())
-const hasSlotContent = computed(() => {
-  const nodes = slots.default?.() || []
+/**
+ * Page chrome rule (single source of truth):
+ *   hero → always divider → content bands
+ * Bands in order: lead → text → main(slot) → news → gallery
+ * A divider is inserted automatically *between* consecutive visible bands.
+ * Views must NOT hand-roll page-level <hr class="section-divider">.
+ * Rare in-slot splits use <SectionDivider /> only.
+ */
+const slotHasContent = (name) => {
+  const nodes = (name === 'default' ? slots.default?.() : slots[name]?.()) || []
   return nodes.some((node) => {
     if (node.type === Comment) return false
     if (typeof node.type === 'symbol') return false
     return true
   })
-})
+}
+
+const hasLead = computed(() => slotHasContent('lead'))
+const hasTextContent = computed(() => !!String(props.textContent || '').trim())
+const hasMain = computed(() => slotHasContent('default'))
 const hasNews = computed(() => Array.isArray(props.news) && props.news.length > 0)
 const hasGallery = computed(() => Array.isArray(props.galleryItems) && props.galleryItems.length > 0)
-/** Divider under intro text only before the page slot (not before built-in news/gallery). */
-const showAfterTextDivider = computed(() => hasTextContent.value && hasSlotContent.value)
+
+const visibleBands = computed(() => {
+  const bands = []
+  if (hasLead.value) bands.push('lead')
+  if (hasTextContent.value) bands.push('text')
+  if (hasMain.value) bands.push('main')
+  if (hasNews.value) bands.push('news')
+  if (hasGallery.value) bands.push('gallery')
+  return bands
+})
+
+const dividerBefore = (band) => {
+  const index = visibleBands.value.indexOf(band)
+  return index > 0
+}
 
 const mediaSrc = (path) => resolveMediaUrlOrPlaceholder(path)
 
@@ -138,25 +162,25 @@ onUnmounted(() => {
       </div>
     </div>
     
-    <!-- Always keep the post-hero rule — it frames the page body. -->
+    <!-- Always: post-hero rule -->
     <hr class="section-divider" />
 
-    <!-- CMS intro text (HTML from admin). No wrapping <p> — content may already include block tags. -->
+    <!-- Band: lead (back link, short meta…) -->
+    <slot v-if="hasLead" name="lead" />
+
+    <!-- Band: CMS / entity intro HTML -->
+    <hr v-if="dividerBefore('text')" class="section-divider" />
     <div v-if="hasTextContent" class="text-content" v-html="textContent"></div>
 
-    <!-- Under intro text, before slot / later sections -->
-    <hr v-if="showAfterTextDivider" class="section-divider" />
+    <!-- Band: main page body -->
+    <hr v-if="dividerBefore('main')" class="section-divider" />
+    <slot />
 
-    <!-- Page-specific body (themes, contact blocks, FAQ, restaurants…) -->
-    <slot></slot>
-
-    <hr v-if="hasNews" class="section-divider" />
-
-    <!-- Najnovije Vesti (News sekcija) -->
+    <!-- Band: news -->
+    <hr v-if="dividerBefore('news')" class="section-divider" />
     <div v-if="hasNews" class="news-section">
       <h2 class="section-heading">{{ langStore.currentLang === 'sr' ? 'Актуелности' : 'News & Updates' }}</h2>
       
-      <!-- GRID -->
       <div v-if="!isCarousel" class="news-grid">
         <div v-for="item in news" :key="item.id" class="news-card">
           <img v-if="item.cover_image" :src="mediaSrc(item.cover_image)" class="news-card-img" @click="openLightbox(0)" />
@@ -168,7 +192,6 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- CAROUSEL -->
       <div v-else class="news-carousel">
         <div v-for="item in news" :key="item.id" class="news-card carousel-item">
           <img v-if="item.cover_image" :src="mediaSrc(item.cover_image)" class="news-card-img" />
@@ -179,12 +202,10 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
-
     </div>
-    
-    <hr v-if="hasGallery" class="section-divider" />
-    
-    <!-- Opšta Galerija -->
+
+    <!-- Band: gallery -->
+    <hr v-if="dividerBefore('gallery')" class="section-divider" />
     <div v-if="hasGallery">
       <h2 class="section-heading">{{ langStore.currentLang === 'sr' ? 'Галерија' : 'Gallery' }}</h2>
       <div :class="(gridType === 5) ? 'photo-grid-5' : 'photo-grid-6'">

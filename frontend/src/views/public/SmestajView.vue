@@ -1,8 +1,10 @@
 <script setup>
-import { ref, onMounted, watch, onUnmounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useLangStore } from '../../stores/lang'
-import ImageLightbox from '../../components/ui/ImageLightbox.vue'
+import PageTemplate from '../../components/layout/PageTemplate.vue'
 import PageLoading from '../../components/ui/PageLoading.vue'
+import SectionDivider from '../../components/ui/SectionDivider.vue'
+import ImageLightbox from '../../components/ui/ImageLightbox.vue'
 import { useRouter } from 'vue-router'
 import api from '../../services/api'
 import { collectGalleryImages } from '../../utils/galleryImages'
@@ -13,14 +15,10 @@ const slides = ref([])
 const facilities = ref([])
 const isLoading = ref(true)
 
-const pageTitle = ref("Смештај")
-const textContent = ref("")
+const pageTitle = ref('Смештај')
+const textContent = ref('')
 
 const langStore = useLangStore()
-
-const currentSlide = ref(0)
-let slideTimer = null
-const SLIDE_DELAY_MS = 5000
 
 const lightboxOpen = ref(false)
 const lbImages = ref([])
@@ -46,50 +44,9 @@ const loadData = async () => {
           }))
     }
   } catch (error) {
-    console.error("Error fetching data from API:", error)
+    console.error('Error fetching data from API:', error)
   } finally {
     isLoading.value = false
-    if (currentSlide.value >= slides.value.length) {
-      currentSlide.value = 0
-    }
-    scheduleNextSlide()
-  }
-}
-
-const nextSlide = () => {
-  if (slides.value.length > 0) {
-    currentSlide.value = (currentSlide.value + 1) % slides.value.length
-  }
-}
-
-const prevSlide = () => {
-  if (slides.value.length > 0) {
-    currentSlide.value = (currentSlide.value - 1 + slides.value.length) % slides.value.length
-  }
-}
-
-const stopAutoSlide = () => {
-  if (slideTimer) {
-    clearTimeout(slideTimer)
-    slideTimer = null
-  }
-}
-
-const scheduleNextSlide = () => {
-  stopAutoSlide()
-  if (slides.value.length <= 1) return
-
-  slideTimer = setTimeout(() => {
-    nextSlide()
-    scheduleNextSlide()
-  }, SLIDE_DELAY_MS)
-}
-
-const handleVisibilityChange = () => {
-  if (document.hidden) {
-    stopAutoSlide()
-  } else {
-    scheduleNextSlide()
   }
 }
 
@@ -106,15 +63,7 @@ const viewRooms = (facility) => {
   router.push(`/smestaj/${facility.id}`)
 }
 
-onMounted(() => {
-  document.addEventListener('visibilitychange', handleVisibilityChange)
-  loadData()
-})
-
-onUnmounted(() => {
-  stopAutoSlide()
-  document.removeEventListener('visibilitychange', handleVisibilityChange)
-})
+onMounted(loadData)
 
 watch(() => langStore.currentLang, () => {
   loadData()
@@ -124,30 +73,12 @@ watch(() => langStore.currentLang, () => {
 <template>
   <PageLoading v-if="isLoading" :message="langStore.t('smestaj.loadingFacilities')" />
 
-  <div v-else class="page-content">
-    <div v-if="slides && slides.length > 0" class="hero-slider">
-      <div
-        v-for="(slide, index) in slides"
-        :key="index"
-        class="hero-slide"
-        :class="{ 'is-active': index === currentSlide }"
-      >
-        <img :src="resolveMediaUrlOrPlaceholder(slide.image_url)" class="hero-slide-img" />
-        <div class="slide-content">
-          <h1 class="slide-title">{{ slide.title || pageTitle }}</h1>
-          <p v-if="slide.subtitle" class="slide-subtitle">{{ slide.subtitle }}</p>
-        </div>
-      </div>
-      <button v-if="slides.length > 1" class="hero-nav-btn hero-nav-btn--prev" @click="prevSlide">&#10094;</button>
-      <button v-if="slides.length > 1" class="hero-nav-btn hero-nav-btn--next" @click="nextSlide">&#10095;</button>
-    </div>
-
-    <hr class="section-divider" />
-
-    <div v-if="textContent" class="text-content" v-html="textContent"></div>
-
-    <hr v-if="textContent" class="section-divider" />
-
+  <PageTemplate
+    v-else
+    :title="pageTitle"
+    :slides="slides"
+    :text-content="textContent"
+  >
     <div class="content-wrap">
       <h2 class="section-heading">
         {{ langStore.t('smestaj.capacities') }}
@@ -208,7 +139,7 @@ watch(() => langStore.currentLang, () => {
       </div>
     </div>
 
-    <hr class="section-divider" />
+    <SectionDivider />
 
     <div class="content-wrap content-wrap--bottom">
       <h2 class="section-heading section-heading--tight">
@@ -225,7 +156,7 @@ watch(() => langStore.currentLang, () => {
         ></iframe>
       </div>
     </div>
-  </div>
+  </PageTemplate>
 
   <ImageLightbox
     v-model:isOpen="lightboxOpen"

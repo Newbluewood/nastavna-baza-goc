@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useLangStore } from '../../stores/lang'
-import ImageLightbox from '../../components/ui/ImageLightbox.vue'
+import PageTemplate from '../../components/layout/PageTemplate.vue'
 import PageLoading from '../../components/ui/PageLoading.vue'
+import ImageLightbox from '../../components/ui/ImageLightbox.vue'
 import InquiryModal from '../../components/forms/InquiryModal.vue'
 import api from '../../services/api'
 import { collectGalleryImages } from '../../utils/galleryImages'
@@ -22,7 +23,7 @@ const lbIndex = ref(0)
 
 const inquiryOpen = ref(false)
 const selectedRoomId = ref(null)
-const selectedRoomName = ref("")
+const selectedRoomName = ref('')
 const queryInquiryHandled = ref(false)
 
 const amenityMapping = {
@@ -33,6 +34,14 @@ const amenityMapping = {
   klima: { sr: 'Клима', en: 'AC', icon: '❄️' },
   kupatilo: { sr: 'Сопствено купатило', en: 'Private Bathroom', icon: '🚿' }
 }
+
+const slides = computed(() => {
+  if (!building.value) return []
+  return [{
+    image_url: resolveMediaUrlOrPlaceholder(building.value.cover_image),
+    title: building.value.name,
+  }]
+})
 
 const getAmenities = (amenitiesArray) => {
   if (!amenitiesArray || !Array.isArray(amenitiesArray)) return []
@@ -52,7 +61,7 @@ const loadData = async () => {
     building.value = await api.getFacility(route.params.id, langStore.currentLang)
     openInquiryFromQuery()
   } catch (error) {
-    console.error("Error fetching data from API:", error)
+    console.error('Error fetching data from API:', error)
     router.push('/smestaj')
   } finally {
     isLoading.value = false
@@ -117,31 +126,25 @@ watch(
 <template>
   <PageLoading v-if="isLoading" :message="langStore.t('smestaj.loadingData')" />
 
-  <div v-else-if="building" class="page-content">
-    <div class="hero-cover">
-      <img :src="resolveMediaUrlOrPlaceholder(building.cover_image)" class="hero-cover-img" />
-      <div class="hero-content">
-        <h1 class="slide-title">{{ building.name }}</h1>
+  <PageTemplate
+    v-else-if="building"
+    :title="building.name"
+    :slides="slides"
+    :text-content="building.description || ''"
+  >
+    <template #lead>
+      <div class="content-wrap content-wrap--intro">
+        <button class="back-link-btn" @click="router.push('/smestaj')">
+          &#8592; {{ langStore.t('smestaj.backToAll') }}
+        </button>
       </div>
-    </div>
+    </template>
 
-    <hr class="section-divider" />
-
-    <div class="content-wrap content-wrap--intro">
-      <button class="back-link-btn" @click="router.push('/smestaj')">
-        &#8592; {{ langStore.t('smestaj.backToAll') }}
-      </button>
-
-      <div class="text-content text-content--flush" v-if="building.description" v-html="building.description"></div>
-
+    <div class="content-wrap content-wrap--bottom">
       <p class="facility-total-capacity">
         {{ langStore.t('smestaj.totalCapacity') }} {{ building.capacity || '-' }}
       </p>
-    </div>
 
-    <hr class="section-divider" />
-
-    <div class="content-wrap content-wrap--bottom">
       <h2 class="section-heading">
         {{ langStore.t('smestaj.roomsInFacility') }}
       </h2>
@@ -203,7 +206,7 @@ watch(
         {{ langStore.t('smestaj.noRooms') }}
       </p>
     </div>
-  </div>
+  </PageTemplate>
 
   <ImageLightbox
     v-model:isOpen="lightboxOpen"
