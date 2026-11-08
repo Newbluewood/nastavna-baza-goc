@@ -39,10 +39,8 @@ const hasSlotContent = computed(() => {
 })
 const hasNews = computed(() => Array.isArray(props.news) && props.news.length > 0)
 const hasGallery = computed(() => Array.isArray(props.galleryItems) && props.galleryItems.length > 0)
-/** Divider under intro text, before slot/news/gallery. */
-const showAfterTextDivider = computed(() => (
-  hasTextContent.value && (hasSlotContent.value || hasNews.value || hasGallery.value)
-))
+/** Divider under intro text only before the page slot (not before built-in news/gallery). */
+const showAfterTextDivider = computed(() => hasTextContent.value && hasSlotContent.value)
 
 const mediaSrc = (path) => resolveMediaUrlOrPlaceholder(path)
 
