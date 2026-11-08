@@ -21,29 +21,32 @@ const loadData = async () => {
   try {
     const data = await api.getHome(langStore.currentLang)
     console.log('Home API response:', data)
-    
-    if (data) {
-      pageTitle.value = data.pageTitle || pageTitle.value
-      textContent.value = data.textContent || textContent.value
-      news.value = (data.news || []).map((item) => ({
-        ...item,
-        cover_image: resolveMediaUrlOrPlaceholder(item.cover_image),
-      }))
-      galleryItems.value = (data.facilities || []).map((facility) => ({
-        url: resolveMediaUrlOrPlaceholder(facility.cover_image || facility.image),
-        name: facility.name || facility.type || '',
-      }))
-      slides.value = (data.slides && data.slides.length > 0)
-        ? data.slides.map((slide) => ({
-            ...slide,
-            image_url: resolveMediaUrlOrPlaceholder(slide.image_url),
-          }))
-        : news.value.slice(0, 5).map((item) => ({
-            image_url: resolveMediaUrlOrPlaceholder(item.cover_image),
-            title: item.title || pageTitle.value,
-            subtitle: item.excerpt || '',
-          }))
+
+    // Cached/transport failures sometimes arrive as HTTP 200 { error: "..." }.
+    if (!data || data.error) {
+      throw new Error(data?.error || 'Home payload missing')
     }
+
+    pageTitle.value = data.pageTitle || pageTitle.value
+    textContent.value = data.textContent || textContent.value
+    news.value = (data.news || []).map((item) => ({
+      ...item,
+      cover_image: resolveMediaUrlOrPlaceholder(item.cover_image),
+    }))
+    galleryItems.value = (data.facilities || []).map((facility) => ({
+      url: resolveMediaUrlOrPlaceholder(facility.cover_image || facility.image),
+      name: facility.name || facility.type || '',
+    }))
+    slides.value = (data.slides && data.slides.length > 0)
+      ? data.slides.map((slide) => ({
+          ...slide,
+          image_url: resolveMediaUrlOrPlaceholder(slide.image_url),
+        }))
+      : news.value.slice(0, 5).map((item) => ({
+          image_url: resolveMediaUrlOrPlaceholder(item.cover_image),
+          title: item.title || pageTitle.value,
+          subtitle: item.excerpt || '',
+        }))
     
     // Fetch themes for highlights
     const allThemes = await api.getThemes(langStore.currentLang)
