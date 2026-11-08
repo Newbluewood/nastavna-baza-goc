@@ -1,6 +1,7 @@
 require('dotenv').config();
 const db = require('./db');
 const bcrypt = require('bcryptjs');
+const { assertGalleryShape } = require('../utils/galleryShape');
 
 const BASE_URL = process.env.SMOKE_BASE_URL || `http://127.0.0.1:${process.env.PORT || 3000}`;
 const ADMIN_USERNAME = process.env.ADMIN_SEED_USERNAME || 'admin';
@@ -54,21 +55,38 @@ async function run() {
 
   const homeRes = await request('/api/home');
   assert(homeRes.ok, 'GET /api/home failed');
+  for (const facility of homeRes.body?.facilities || []) {
+    assertGalleryShape(facility.gallery || [], `home facility ${facility.id} gallery`);
+  }
+  for (const newsItem of homeRes.body?.news || []) {
+    assertGalleryShape(newsItem.gallery || [], `home news ${newsItem.id} gallery`);
+  }
   steps.push(['GET /api/home', homeRes.status]);
 
   const facilitiesRes = await request('/api/smestaj');
   assert(facilitiesRes.ok, 'GET /api/smestaj failed');
-  assert(Array.isArray(facilitiesRes.body), 'GET /api/smestaj did not return an array');
+  const facilitiesList = Array.isArray(facilitiesRes.body)
+    ? facilitiesRes.body
+    : (facilitiesRes.body?.facilities || []);
+  assert(Array.isArray(facilitiesList), 'GET /api/smestaj missing facilities array');
   assert(
-    facilitiesRes.body.every((f) => f.type === 'smestaj'),
+    facilitiesList.every((f) => f.type === 'smestaj'),
     'GET /api/smestaj returned non-smestaj facility'
   );
+  for (const facility of facilitiesList) {
+    assertGalleryShape(facility.gallery || [], `facility ${facility.id} gallery`);
+  }
   steps.push(['GET /api/smestaj', facilitiesRes.status]);
 
-  const firstFacility = facilitiesRes.body[0];
+  const firstFacility = facilitiesList[0];
   if (firstFacility) {
     const facilityRes = await request(`/api/smestaj/${firstFacility.id}`);
     assert(facilityRes.ok, 'GET /api/smestaj/:id failed');
+    assertGalleryShape(facilityRes.body.gallery || [], `facility detail ${firstFacility.id} gallery`);
+    for (const room of facilityRes.body.rooms || []) {
+      assertGalleryShape(room.gallery || [], `room ${room.id} gallery`);
+      assert(Array.isArray(room.amenities), `room ${room.id} amenities must be array`);
+    }
     steps.push(['GET /api/smestaj/:id', facilityRes.status]);
 
     const firstRoom = facilityRes.body.rooms?.[0];

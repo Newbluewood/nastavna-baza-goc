@@ -1,6 +1,7 @@
 const { createInquiryWithGuest } = require('../services/inquiryService');
 const { sendError } = require('../utils/response');
 const { normalizeJsonArray } = require('../utils/jsonArray');
+const { parseConcatGallery } = require('../utils/galleryShape');
 const { getForecastForUpcomingDays } = require('../services/weatherService');
 const fs = require('fs').promises;
 const path = require('path');
@@ -17,27 +18,6 @@ const BADGE_TRANSLATIONS = {
   'Башта': 'Garden',
   'Повољан смештај': 'Affordable accommodation'
 };
-
-function isPlaceholderMediaUrl(url) {
-  if (!url) return true;
-  const normalized = String(url).trim().toLowerCase();
-  if (!normalized) return true;
-  return (
-    normalized === '/placeholder.jpg' ||
-    normalized === 'placeholder.jpg' ||
-    normalized.endsWith('/placeholder.jpg')
-  );
-}
-
-/** GROUP_CONCAT urls → [{ image_url }] (isti oblik kao getSingleNews / admin). */
-function parseConcatGallery(concatValue) {
-  if (!concatValue) return [];
-  return String(concatValue)
-    .split(',')
-    .map((url) => url.trim())
-    .filter((url) => url && !isPlaceholderMediaUrl(url))
-    .map((image_url) => ({ image_url }));
-}
 
 function localizeCapacity(value, lang) {
   if (!value || lang !== 'en') return value;
