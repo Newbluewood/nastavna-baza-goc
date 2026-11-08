@@ -9,15 +9,25 @@ const props = defineProps({
 
 const emit = defineEmits(['update:isOpen'])
 const currentIndex = ref(props.initialIndex)
+const broken = ref(new Set())
 
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     currentIndex.value = props.initialIndex;
+    broken.value = new Set();
     document.body.style.overflow = 'hidden';
   } else {
     document.body.style.overflow = '';
   }
 })
+
+const onImageError = () => {
+  const url = props.images?.[currentIndex.value]
+  if (!url) return
+  const next = new Set(broken.value)
+  next.add(url)
+  broken.value = next
+}
 
 const close = () => {
   emit('update:isOpen', false)
@@ -59,7 +69,15 @@ onUnmounted(() => {
       <button class="nav-btn prev" @click="prev" v-if="currentIndex > 0">&#10094;</button>
       
       <div class="image-wrapper" @click.stop>
-        <img :src="images[currentIndex]" :key="images[currentIndex]" />
+        <img
+          :src="images[currentIndex]"
+          :key="images[currentIndex]"
+          alt=""
+          @error="onImageError"
+        />
+        <p v-if="broken.has(images[currentIndex])" class="lightbox-missing">
+          Slika nije dostupna
+        </p>
       </div>
       
       <button class="nav-btn next" @click="next" v-if="currentIndex < images.length - 1">&#10095;</button>
@@ -94,12 +112,24 @@ onUnmounted(() => {
   height: 80%;
   position: relative;
 }
+.image-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 .image-wrapper img {
   max-height: 80vh;
   max-width: 100%;
   object-fit: contain;
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   animation: fadeIn 0.3s ease;
+}
+.lightbox-missing {
+  margin-top: 12px;
+  color: #ddd;
+  font-size: 0.95rem;
 }
 .nav-btn {
   background: rgba(255,255,255,0.1);

@@ -1,5 +1,6 @@
 const { createInquiryWithGuest } = require('../services/inquiryService');
 const { sendError } = require('../utils/response');
+const { normalizeJsonArray } = require('../utils/jsonArray');
 const { getForecastForUpcomingDays } = require('../services/weatherService');
 const fs = require('fs').promises;
 const path = require('path');
@@ -17,16 +18,25 @@ const BADGE_TRANSLATIONS = {
   'Повољан смештај': 'Affordable accommodation'
 };
 
-function normalizeJsonArray(value) {
-  if (!value) return [];
-  if (Array.isArray(value)) return value;
+function isPlaceholderMediaUrl(url) {
+  if (!url) return true;
+  const normalized = String(url).trim().toLowerCase();
+  if (!normalized) return true;
+  return (
+    normalized === '/placeholder.jpg' ||
+    normalized === 'placeholder.jpg' ||
+    normalized.endsWith('/placeholder.jpg')
+  );
+}
 
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+/** GROUP_CONCAT urls → [{ image_url }] (isti oblik kao getSingleNews / admin). */
+function parseConcatGallery(concatValue) {
+  if (!concatValue) return [];
+  return String(concatValue)
+    .split(',')
+    .map((url) => url.trim())
+    .filter((url) => url && !isPlaceholderMediaUrl(url))
+    .map((image_url) => ({ image_url }));
 }
 
 function localizeCapacity(value, lang) {
@@ -59,33 +69,74 @@ function localizeFacility(facility, lang) {
 
 function localizeRoom(room, lang) {
   room.capacity = localizeCapacity(room.capacity, lang);
+  room.amenities = normalizeJsonArray(room.amenities);
   return room;
+}
+
+function toLangParam(lang) {
+  return lang === 'sr' ? '__none__' : lang;
+}
+
+function hydrateFacilityRow(facility, lang) {
+  facility.gallery = parseConcatGallery(facility.gallery_urls);
+  delete facility.gallery_urls;
+  return localizeFacility(facility, lang);
+}
+
+function hydrateRoomRow(room, lang) {
+  room.gallery = parseConcatGallery(room.room_gallery_urls);
+  delete room.room_gallery_urls;
+  return localizeRoom(room, lang);
+}
+
+/**
+ * Shared facilities SELECT + gallery/localize hydrate.
+ * whereSql / orderBy are internal constants only (not request input).
+ */
+async function queryFacilities(db, {
+  lang,
+  whereSql = "f.type = 'smestaj'",
+  whereParams = [],
+  includeMinPrice = false,
+  orderBy = 'f.id',
+  limit = null,
+} = {}) {
+  const langParam = toLangParam(lang);
+  const minPriceSelect = includeMinPrice
+    ? ', (SELECT MIN(price_base) FROM rooms WHERE facility_id = f.id AND price_base > 0) AS min_price'
+    : '';
+  const limitSql = Number.isFinite(limit) ? ' LIMIT ?' : '';
+  const params = [langParam, ...whereParams];
+  if (Number.isFinite(limit)) params.push(limit);
+
+  const [rows] = await db.query(`
+    SELECT f.id, f.type,
+      COALESCE(ft.name, f.name) AS name,
+      COALESCE(ft.description, f.description) AS description,
+      f.capacity, f.latitude, f.longitude, f.cover_image, f.floor_plan_image, f.location_badges
+      ${minPriceSelect},
+      GROUP_CONCAT(mg.image_url) AS gallery_urls
+    FROM facilities f
+    LEFT JOIN facility_translations ft ON f.id = ft.entity_id AND ft.lang = ?
+    LEFT JOIN media_gallery mg ON mg.entity_id = f.id AND mg.entity_type = 'facility'
+    WHERE ${whereSql}
+    GROUP BY f.id
+    ORDER BY ${orderBy}${limitSql}
+  `, params);
+
+  rows.forEach((facility) => hydrateFacilityRow(facility, lang));
+  return rows;
 }
 
 async function getHome(req, res) {
   const db = req.app.locals.db;
   const lang = req.query.lang || 'sr';
-  const langParam = lang === 'sr' ? '__none__' : lang;
+  const langParam = toLangParam(lang);
 
-  const [facilities] = await db.query(`
-    SELECT f.id, f.type,
-      COALESCE(ft.name, f.name) AS name,
-      COALESCE(ft.description, f.description) AS description,
-      f.capacity, f.latitude, f.longitude, f.cover_image, f.floor_plan_image, f.location_badges,
-      GROUP_CONCAT(mg.image_url) as gallery_urls
-    FROM facilities f
-    LEFT JOIN facility_translations ft ON f.id = ft.entity_id AND ft.lang = ?
-    LEFT JOIN media_gallery mg ON mg.entity_id = f.id AND mg.entity_type = 'facility'
-    WHERE f.type = 'smestaj'
-    GROUP BY f.id
-    ORDER BY f.id
-    LIMIT 6
-  `, [langParam]);
-
-  facilities.forEach(facility => {
-    facility.gallery = facility.gallery_urls ? facility.gallery_urls.split(',') : [];
-    delete facility.gallery_urls;
-    localizeFacility(facility, lang);
+  const facilities = await queryFacilities(db, {
+    lang,
+    whereSql: "f.type = 'smestaj'",
+    limit: 6,
   });
 
   const [news] = await db.query(`
@@ -104,7 +155,7 @@ async function getHome(req, res) {
   `, [langParam]);
 
   news.forEach(item => {
-    item.gallery = item.gallery_urls ? item.gallery_urls.split(',') : [];
+    item.gallery = parseConcatGallery(item.gallery_urls);
     delete item.gallery_urls;
   });
 
@@ -147,27 +198,12 @@ async function getHome(req, res) {
 async function getFacilities(req, res) {
   const db = req.app.locals.db;
   const lang = req.query.lang || 'sr';
-  const langParam = lang === 'sr' ? '__none__' : lang;
+  const langParam = toLangParam(lang);
 
-  const [facilities] = await db.query(`
-    SELECT f.id, f.type,
-      COALESCE(ft.name, f.name) AS name,
-      COALESCE(ft.description, f.description) AS description,
-      f.capacity, f.latitude, f.longitude, f.cover_image, f.floor_plan_image, f.location_badges,
-      (SELECT MIN(price_base) FROM rooms WHERE facility_id = f.id AND price_base > 0) as min_price,
-      GROUP_CONCAT(mg.image_url) as gallery_urls
-    FROM facilities f
-    LEFT JOIN facility_translations ft ON f.id = ft.entity_id AND ft.lang = ?
-    LEFT JOIN media_gallery mg ON mg.entity_id = f.id AND mg.entity_type = 'facility'
-    WHERE f.type = 'smestaj'
-    GROUP BY f.id
-    ORDER BY f.id
-  `, [langParam]);
-
-  facilities.forEach(facility => {
-    facility.gallery = facility.gallery_urls ? facility.gallery_urls.split(',') : [];
-    delete facility.gallery_urls;
-    localizeFacility(facility, lang);
+  const facilities = await queryFacilities(db, {
+    lang,
+    whereSql: "f.type = 'smestaj'",
+    includeMinPrice: true,
   });
 
   const [pages] = await db.query(`SELECT COALESCE(pt.title, p.title) AS title, COALESCE(pt.content, p.content) AS content FROM pages p LEFT JOIN page_translations pt ON p.id = pt.entity_id AND pt.lang = ? WHERE p.slug = 'smestaj' LIMIT 1`, [langParam]);
@@ -198,70 +234,37 @@ async function getFacility(req, res) {
   const db = req.app.locals.db;
   const facilityId = req.params.id;
   const lang = req.query.lang || 'sr';
-  const langParam = lang === 'sr' ? '__none__' : lang;
+  const langParam = toLangParam(lang);
 
-  const [facilities] = await db.query(`
-    SELECT f.id, f.type,
-      COALESCE(ft.name, f.name) AS name,
-      COALESCE(ft.description, f.description) AS description,
-      f.capacity, f.latitude, f.longitude, f.cover_image, f.floor_plan_image, f.location_badges,
-      GROUP_CONCAT(mg.image_url) as gallery_urls
-    FROM facilities f
-    LEFT JOIN facility_translations ft ON f.id = ft.entity_id AND ft.lang = ?
-    LEFT JOIN media_gallery mg ON mg.entity_id = f.id AND mg.entity_type = 'facility'
-    WHERE f.id = ?
-    GROUP BY f.id
-  `, [langParam, facilityId]);
+  const facilities = await queryFacilities(db, {
+    lang,
+    whereSql: 'f.id = ?',
+    whereParams: [facilityId],
+  });
 
   if (facilities.length === 0) {
     return sendError(res, 404, 'Facility not found');
   }
 
   const facility = facilities[0];
-  facility.gallery = facility.gallery_urls ? facility.gallery_urls.split(',') : [];
-  delete facility.gallery_urls;
-  localizeFacility(facility, lang);
 
-  const roomsSqlWithMeal = `
+  // For non-sr: use translated meal_info only (do not fall back to Serbian text).
+  const [rooms] = await db.query(`
     SELECT r.id, r.facility_id,
       COALESCE(rt.name, r.name) AS name,
       COALESCE(rt.description, r.description) AS description,
       r.capacity, r.cover_image, r.floor_plan_image, r.amenities,
       r.price_base, r.price_half_board, r.price_full_board,
-      COALESCE(rt.meal_info, r.meal_info) AS meal_info,
-      GROUP_CONCAT(mg.image_url) as room_gallery_urls
+      CASE WHEN ? = '__none__' THEN r.meal_info ELSE rt.meal_info END AS meal_info,
+      GROUP_CONCAT(mg.image_url) AS room_gallery_urls
     FROM rooms r
     LEFT JOIN room_translations rt ON r.id = rt.entity_id AND rt.lang = ?
     LEFT JOIN media_gallery mg ON mg.entity_id = r.id AND mg.entity_type = 'room'
     WHERE r.facility_id = ?
     GROUP BY r.id
-  `;
-  const roomsSqlWithoutMeal = `
-    SELECT r.id, r.facility_id,
-      COALESCE(rt.name, r.name) AS name,
-      COALESCE(rt.description, r.description) AS description,
-      r.capacity, r.cover_image, r.floor_plan_image, r.amenities,
-      r.price_base, r.price_half_board, r.price_full_board, r.meal_info,
-      GROUP_CONCAT(mg.image_url) as room_gallery_urls
-    FROM rooms r
-    LEFT JOIN room_translations rt ON r.id = rt.entity_id AND rt.lang = ?
-    LEFT JOIN media_gallery mg ON mg.entity_id = r.id AND mg.entity_type = 'room'
-    WHERE r.facility_id = ?
-    GROUP BY r.id
-  `;
-  let rooms;
-  try {
-    [rooms] = await db.query(roomsSqlWithMeal, [langParam, facilityId]);
-  } catch (err) {
-    if (err.code !== 'ER_BAD_FIELD_ERROR') throw err;
-    [rooms] = await db.query(roomsSqlWithoutMeal, [langParam, facilityId]);
-  }
+  `, [langParam, langParam, facilityId]);
 
-  rooms.forEach(room => {
-    room.gallery = room.room_gallery_urls ? room.room_gallery_urls.split(',') : [];
-    delete room.room_gallery_urls;
-    localizeRoom(room, lang);
-  });
+  rooms.forEach((room) => hydrateRoomRow(room, lang));
 
   facility.rooms = rooms;
   res.json(facility);

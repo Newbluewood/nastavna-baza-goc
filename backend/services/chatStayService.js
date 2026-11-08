@@ -1,16 +1,5 @@
 const { getForecastForDate } = require('./weatherService');
-
-function normalizeJsonArray(value) {
-  if (!value) return [];
-  if (Array.isArray(value)) return value;
-
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
+const { normalizeJsonArray } = require('../utils/jsonArray');
 
 function parseCapacityRange(label, minValue, maxValue) {
   const fallbackText = String(label || '');

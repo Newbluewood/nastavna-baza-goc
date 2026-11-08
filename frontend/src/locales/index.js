@@ -59,6 +59,24 @@ export default {
       boardHalf: 'Полупансион',
       boardFull: 'Пун пансион'
     },
+    smestaj: {
+      loadingFacilities: 'Учитавам објекте...',
+      loadingData: 'Учитавам податке...',
+      capacities: 'Смештајни капацитети',
+      viewGallery: 'Погледај галерију',
+      capacity: 'Капацитет',
+      notSpecified: 'Није наведено',
+      pricesFrom: 'Цене од',
+      viewRooms: 'Погледај Собе',
+      openMap: 'Отвори Мапу',
+      floorPlan: 'План собе',
+      location: 'Локација',
+      backToAll: 'Назад на све објекте',
+      totalCapacity: 'Укупан капацитет:',
+      roomsInFacility: 'Собе у овом објекту',
+      perNightPerson: '/ ноћ по особи',
+      noRooms: 'Тренутно нема унетих соба за овај објекат.'
+    },
     assistant: {
       modeBooking: 'Резервација',
       modeGuide: 'Водич',
@@ -132,6 +150,24 @@ export default {
       boardBase: 'Overnight only',
       boardHalf: 'Half Board',
       boardFull: 'Full Board'
+    },
+    smestaj: {
+      loadingFacilities: 'Loading facilities...',
+      loadingData: 'Loading data...',
+      capacities: 'Accommodation Capacities',
+      viewGallery: 'View Gallery',
+      capacity: 'Capacity',
+      notSpecified: 'N/A',
+      pricesFrom: 'Prices from',
+      viewRooms: 'View Rooms',
+      openMap: 'Open Map',
+      floorPlan: 'Floor Plan',
+      location: 'Location',
+      backToAll: 'Back to all facilities',
+      totalCapacity: 'Total capacity:',
+      roomsInFacility: 'Rooms in this facility',
+      perNightPerson: '/ night per person',
+      noRooms: 'There are no rooms listed for this facility at the moment.'
     },
     assistant: {
       modeBooking: 'Booking',

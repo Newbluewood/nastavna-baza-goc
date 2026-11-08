@@ -369,13 +369,7 @@ async function upsertEnTranslation(db, table, entityId, fields) {
     );
   };
 
-  try {
-    await write(fields);
-  } catch (err) {
-    if (err.code !== 'ER_BAD_FIELD_ERROR' || !('meal_info' in fields)) throw err;
-    const { meal_info, ...rest } = fields;
-    await write(rest);
-  }
+  await write(fields);
 }
 
 async function getFacilities(req, res) {
@@ -408,6 +402,16 @@ async function updateFacility(req, res) {
   res.json({ message: 'Facility updated' });
 }
 
+function isPlaceholderMediaUrl(url) {
+  const normalized = String(url || '').trim().toLowerCase();
+  if (!normalized) return true;
+  return (
+    normalized === '/placeholder.jpg' ||
+    normalized === 'placeholder.jpg' ||
+    normalized.endsWith('/placeholder.jpg')
+  );
+}
+
 function sanitizeGalleryItems(items) {
   if (!Array.isArray(items)) return [];
   return items
@@ -416,33 +420,19 @@ function sanitizeGalleryItems(items) {
       caption: String(item?.caption || '').trim(),
       sort_order: Number.isFinite(Number(item?.sort_order)) ? Number(item.sort_order) : index + 1
     }))
-    .filter((item) => item.image_url)
+    .filter((item) => item.image_url && !isPlaceholderMediaUrl(item.image_url))
     .slice(0, 20);
 }
 
 async function getRoomsByFacility(req, res) {
   const db = req.app.locals.db;
-  const sqlWithMeal = `
+  const [rooms] = await db.query(`
     SELECT r.*, rt.name AS name_en, rt.description AS description_en, rt.meal_info AS meal_info_en
     FROM rooms r
     LEFT JOIN room_translations rt ON r.id = rt.entity_id AND rt.lang = 'en'
     WHERE r.facility_id = ?
     ORDER BY r.id ASC
-  `;
-  const sqlWithoutMeal = `
-    SELECT r.*, rt.name AS name_en, rt.description AS description_en
-    FROM rooms r
-    LEFT JOIN room_translations rt ON r.id = rt.entity_id AND rt.lang = 'en'
-    WHERE r.facility_id = ?
-    ORDER BY r.id ASC
-  `;
-  let rooms;
-  try {
-    [rooms] = await db.query(sqlWithMeal, [req.params.id]);
-  } catch (err) {
-    if (err.code !== 'ER_BAD_FIELD_ERROR') throw err;
-    [rooms] = await db.query(sqlWithoutMeal, [req.params.id]);
-  }
+  `, [req.params.id]);
   const [gallery] = await db.query(
     "SELECT id, entity_id, image_url, caption, sort_order FROM media_gallery WHERE entity_type = 'room' AND entity_id IN (?) ORDER BY sort_order ASC, id ASC",
     [rooms.length ? rooms.map(r => r.id) : [0]]

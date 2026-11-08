@@ -4,6 +4,8 @@ import { useLangStore } from '../../stores/lang'
 import ImageLightbox from '../../components/ui/ImageLightbox.vue'
 import { useRouter } from 'vue-router'
 import api from '../../services/api'
+import { collectGalleryImages } from '../../utils/galleryImages'
+import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
 const router = useRouter()
 const slides = ref([])
@@ -42,7 +44,7 @@ const loadData = async () => {
       slides.value = (data.slides && data.slides.length > 0)
         ? data.slides
         : facilities.value.slice(0, 5).map(facility => ({
-            image_url: facility.cover_image || facility.gallery?.[0]?.image_url || '/placeholder.jpg',
+            image_url: resolveMediaUrlOrPlaceholder(facility.cover_image || facility.gallery?.[0]?.image_url),
             title: facility.name || pageTitle.value,
             subtitle: facility.capacity || facility.type || ''
           }))
@@ -95,13 +97,8 @@ const handleVisibilityChange = () => {
 }
 
 const openGallery = (facility) => {
-  // Spoji cover_image + media gallery slike
-  const imgs = []
-  if (facility.cover_image) imgs.push(facility.cover_image)
-  if (facility.gallery && facility.gallery.length) {
-    facility.gallery.forEach(g => imgs.push(g.image_url))
-  }
-  if (imgs.length === 0) return;
+  const imgs = collectGalleryImages(facility)
+  if (imgs.length === 0) return
 
   lbImages.value = imgs
   lbIndex.value = 0
@@ -129,14 +126,14 @@ watch(() => langStore.currentLang, () => {
 
 <template>
   <div v-if="isLoading" style="padding: 100px 20px; text-align: center; min-height: 50vh;">
-    {{ langStore.currentLang === 'sr' ? 'Учитавам објекте...' : 'Loading facilities...' }}
+    {{ langStore.t('smestaj.loadingFacilities') }}
   </div>
 
   <div v-else class="page-content">
     <!-- Hero Slider -->
     <div v-if="slides && slides.length > 0" class="hero-slider">
       <div v-for="(slide, index) in slides" :key="index" :style="{ opacity: index === currentSlide ? 1 : 0, transition: 'opacity 0.8s ease', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }">
-        <img :src="slide.image_url" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.65;" />
+        <img :src="resolveMediaUrlOrPlaceholder(slide.image_url)" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.65;" />
         <div class="slide-content">
            <h1 style="margin: 0; color: var(--color-nav);">{{ slide.title || pageTitle }}</h1>
            <p v-if="slide.subtitle" style="margin: 5px 0 0 0; color: var(--color-text);">{{ slide.subtitle }}</p>
@@ -156,16 +153,16 @@ watch(() => langStore.currentLang, () => {
     <!-- Facilities List -->
     <div style="max-width: var(--content-max-width); margin: 0 auto; padding: 0 20px;">
       <h2 style="margin-bottom: 30px; border-left: 4px solid var(--color-nav); padding-left: 10px;">
-        {{ langStore.currentLang === 'sr' ? 'Смештајни капацитети' : 'Accommodation Capacities' }}
+        {{ langStore.t('smestaj.capacities') }}
       </h2>
 
-      <div class="facilities-grid">
-        <div v-for="facility in facilities" :key="facility.id" class="facility-card">
+      <div class="facilities-grid facilities-grid--cards">
+        <div v-for="facility in facilities" :key="facility.id" class="facility-card facility-card--portrait">
           <!-- Slika objekta -->
           <div class="facility-image-wrapper" @click="openGallery(facility)">
-            <img :src="facility.cover_image || '/placeholder.jpg'" class="facility-img" />
+            <img :src="resolveMediaUrlOrPlaceholder(facility.cover_image)" class="facility-img" />
             <div class="img-overlay">
-              <span>📷 {{ langStore.currentLang === 'sr' ? 'Погледај галерију' : 'View Gallery' }}</span>
+              <span>📷 {{ langStore.t('smestaj.viewGallery') }}</span>
             </div>
           </div>
 
@@ -179,12 +176,12 @@ watch(() => langStore.currentLang, () => {
             </div>
 
             <p class="capacity">
-              <strong>{{ langStore.currentLang === 'sr' ? 'Капацитет' : 'Capacity' }}:</strong> {{ facility.capacity || (langStore.currentLang === 'sr' ? 'Није наведено' : 'N/A') }}
+              <strong>{{ langStore.t('smestaj.capacity') }}:</strong> {{ facility.capacity || langStore.t('smestaj.notSpecified') }}
             </p>
 
             <!-- Starting Price Badge -->
             <div v-if="facility.min_price" class="min-price-tag">
-               <span class="from-text">{{ langStore.currentLang === 'sr' ? 'Цене од' : 'Prices from' }}</span>
+               <span class="from-text">{{ langStore.t('smestaj.pricesFrom') }}</span>
                <span class="price-val">{{ facility.min_price }} RSD</span>
             </div>
 
@@ -194,7 +191,7 @@ watch(() => langStore.currentLang, () => {
             <div class="actions-row">
               <!-- Dugme za pregled soba -->
               <button @click="viewRooms(facility)" class="inquiry-btn">
-                {{ langStore.currentLang === 'sr' ? 'Погледај Собе' : 'View Rooms' }}
+                {{ langStore.t('smestaj.viewRooms') }}
               </button>
 
               <!-- Link ka mapi -->
@@ -202,15 +199,15 @@ watch(() => langStore.currentLang, () => {
                  :href="'https://www.google.com/maps/search/?api=1&query=' + facility.latitude + ',' + facility.longitude" 
                  target="_blank" 
                  class="map-btn">
-                {{ langStore.currentLang === 'sr' ? 'Отвори Мапу' : 'Open Map' }}
+                {{ langStore.t('smestaj.openMap') }}
               </a>
             </div>
           </div>
 
           <!-- Skica / Osnova (sutra prebacena) -->
           <div v-if="facility.floor_plan_image" class="facility-plan">
-             <h4>{{ langStore.currentLang === 'sr' ? 'План собе' : 'Floor Plan' }}</h4>
-             <img :src="facility.floor_plan_image" alt="Plan" @click="openGallery({cover_image: facility.floor_plan_image})" />
+             <h4>{{ langStore.t('smestaj.floorPlan') }}</h4>
+             <img :src="resolveMediaUrlOrPlaceholder(facility.floor_plan_image)" alt="Plan" @click="openGallery({cover_image: facility.floor_plan_image})" />
           </div>
         </div>
       </div>
@@ -221,7 +218,7 @@ watch(() => langStore.currentLang, () => {
     <!-- Google Map Embed -->
     <div style="max-width: var(--content-max-width); margin: 0 auto; padding: 0 20px 40px;">
       <h2 style="margin-bottom: 20px; border-left: 4px solid var(--color-nav); padding-left: 10px;">
-        {{ langStore.currentLang === 'sr' ? 'Локација' : 'Location' }}
+        {{ langStore.t('smestaj.location') }}
       </h2>
       <div class="map-container">
         <!-- Zamenjeno sa ispravnim iframe kodom za mapu umesto linka -->
@@ -240,13 +237,14 @@ watch(() => langStore.currentLang, () => {
 
 </template>
 
+<style src="../../assets/facility-cards.css"></style>
 <style scoped>
 .hero-slider {
-  position: relative; 
-  width: 100%; 
-  height: var(--hero-height); 
-  overflow: hidden; 
-  background: var(--c-green-6); 
+  position: relative;
+  width: 100%;
+  height: var(--hero-height);
+  overflow: hidden;
+  background: var(--c-green-6);
   margin-bottom: 20px;
 }
 
@@ -254,76 +252,6 @@ watch(() => langStore.currentLang, () => {
   .hero-slider {
     height: var(--hero-height-mobile);
   }
-}
-
-.facilities-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 30px;
-}
-
-.facility-card {
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: 0; /* oštro */
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-}
-
-.facility-image-wrapper {
-  position: relative;
-  cursor: pointer;
-  overflow: hidden;
-  height: 250px; /* Fiksna visina slike za grid */
-  flex-shrink: 0;
-}
-
-.facility-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s;
-}
-.facility-image-wrapper:hover .facility-img {
-  transform: scale(1.05);
-}
-
-.img-overlay {
-  position: absolute;
-  bottom: 0; left: 0; width: 100%;
-  background: rgba(0,0,0,0.6);
-  color: #fff;
-  padding: 10px;
-  text-align: center;
-  font-weight: bold;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-.facility-image-wrapper:hover .img-overlay {
-  opacity: 1;
-}
-
-.facility-info {
-  padding: 25px;
-  display: flex;
-  flex-direction: column;
-  flex: 1; /* Zauzima sav preostali prostor izmedju slike i dna kartice */
-}
-
-.facility-info h3 {
-  margin-top: 0;
-  font-size: 1.5rem;
-  color: var(--color-nav);
-  margin-bottom: 10px;
-}
-
-.capacity {
-  margin-top: 0;
-  font-size: 0.95rem;
-  color: #555;
-  margin-bottom: 15px;
 }
 
 .location-badges-row {
@@ -340,8 +268,7 @@ watch(() => langStore.currentLang, () => {
   font-weight: 500;
   border-radius: 0;
 }
- 
-/* PRICE TAG STYLES */
+
 .min-price-tag {
   display: flex;
   flex-direction: column;
@@ -366,7 +293,7 @@ watch(() => langStore.currentLang, () => {
 .actions-row {
   display: flex;
   gap: 15px;
-  margin-top: auto; 
+  margin-top: auto;
   align-items: center;
 }
 .map-btn {
@@ -380,63 +307,12 @@ watch(() => langStore.currentLang, () => {
   opacity: 0.7;
 }
 
-.description {
-  flex: 1;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  margin-bottom: 20px;
-  color: var(--color-text);
-}
-
-.inquiry-btn {
-  background: var(--color-nav);
-  color: #fff;
-  border: none;
-  padding: 12px 20px;
-  font-size: 1rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.3s;
-  border-radius: 0;
-}
-.inquiry-btn:hover {
-  background: var(--c-green-5);
-  color: #fff;
-}
-
-.facility-plan {
-  grid-column: 1 / -1;
-  border-top: 1px solid var(--color-border);
-  padding: 20px;
-  background: #f9f9f9;
-}
-.facility-plan h4 {
-  margin-top: 0;
-  color: #555;
-}
-.facility-plan img {
-  max-width: 100%;
-  max-height: 250px;
-  object-fit: contain;
-  cursor: pointer;
-  border: 1px solid var(--color-border);
-}
-
 .map-container {
   width: 100%;
   height: 450px;
   background: #eaeaea;
 }
 
-/* Responsivnost */
-@media (max-width: 768px) {
-  .facilities-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Hero Slide Content */
 .slide-content {
   position: absolute;
   bottom: 40px;
