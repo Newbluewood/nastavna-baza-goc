@@ -1,4 +1,6 @@
 const { sendError } = require('../../utils/response');
+const { replaceEntityGallery } = require('../../utils/galleryShape');
+const { addNavForNewPage, syncNavLabelsForPage } = require('../../services/navSync');
 
 // --- PROJECTS ---
 
@@ -155,6 +157,12 @@ async function createPage(req, res) {
       [result.insertId, 'en', title_en || null, content_en || null]
     );
   }
+  await addNavForNewPage(db, {
+    pageId: result.insertId,
+    slug,
+    title,
+    titleEn: title_en || null,
+  });
   res.json({ message: 'Page created', pageId: result.insertId });
 }
 
@@ -175,6 +183,12 @@ async function updatePage(req, res) {
      ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content)`,
     [req.params.id, title_en || null, content_en || null]
   );
+  const [pageRows] = await db.query('SELECT slug FROM pages WHERE id = ?', [req.params.id]);
+  await syncNavLabelsForPage(db, req.params.id, {
+    title,
+    titleEn: title_en || null,
+    slug: pageRows[0]?.slug || null,
+  });
   res.json({ message: 'Page updated' });
 }
 
@@ -402,28 +416,6 @@ async function updateFacility(req, res) {
   res.json({ message: 'Facility updated' });
 }
 
-function isPlaceholderMediaUrl(url) {
-  const normalized = String(url || '').trim().toLowerCase();
-  if (!normalized) return true;
-  return (
-    normalized === '/placeholder.jpg' ||
-    normalized === 'placeholder.jpg' ||
-    normalized.endsWith('/placeholder.jpg')
-  );
-}
-
-function sanitizeGalleryItems(items) {
-  if (!Array.isArray(items)) return [];
-  return items
-    .map((item, index) => ({
-      image_url: String(item?.image_url || '').trim(),
-      caption: String(item?.caption || '').trim(),
-      sort_order: Number.isFinite(Number(item?.sort_order)) ? Number(item.sort_order) : index + 1
-    }))
-    .filter((item) => item.image_url && !isPlaceholderMediaUrl(item.image_url))
-    .slice(0, 20);
-}
-
 async function getRoomsByFacility(req, res) {
   const db = req.app.locals.db;
   const [rooms] = await db.query(`
@@ -474,14 +466,7 @@ async function updateRoom(req, res) {
   });
 
   if (gallery !== undefined) {
-    await db.query("DELETE FROM media_gallery WHERE entity_type = 'room' AND entity_id = ?", [req.params.id]);
-    const sanitized = sanitizeGalleryItems(gallery);
-    for (const item of sanitized) {
-      await db.query(
-        'INSERT INTO media_gallery (entity_type, entity_id, image_url, caption, sort_order) VALUES (?, ?, ?, ?, ?)',
-        ['room', req.params.id, item.image_url, item.caption || null, item.sort_order]
-      );
-    }
+    await replaceEntityGallery(db, 'room', req.params.id, gallery);
   }
 
   res.json({ message: 'Room updated' });

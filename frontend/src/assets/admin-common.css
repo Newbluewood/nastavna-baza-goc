@@ -92,16 +92,40 @@
 }
 .data-table td {
   padding: 12px 14px; border-bottom: 1px solid #f0ebe5;
-  font-size: 0.9rem; color: #444; vertical-align: top;
+  font-size: 0.9rem; color: #444; vertical-align: middle;
 }
 .data-table tr:hover { background: #fdfaf7; }
 .table-wrapper { overflow-x: auto; }
 
-/* Action buttons inside tables */
-.actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+/* Action buttons inside tables — flex on a wrapper div, never on <td> (breaks row borders). */
+.actions-cell {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+td.actions-cell {
+  display: table-cell;
+  white-space: nowrap;
+}
+td.actions-cell .action-btn + .action-btn {
+  margin-left: 6px;
+}
 .action-btn {
-  padding: 6px 12px; border: none; cursor: pointer;
-  font-size: 0.8rem; font-weight: bold; transition: opacity 0.2s; white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 12px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: bold;
+  line-height: 1;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .action-btn:hover { opacity: 0.8; }

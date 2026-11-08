@@ -5,7 +5,8 @@ const router = useRouter()
 const route = useRoute()
 
 // Proveri da li je ruta "pod gradnjom" (ima rute ali komponenta nije implementirana)
-const underConstructionPaths = ['/kontakt', '/o-nama', '/projekti', '/istrazivanje', '/edukacija']
+// Only paths that are NOT live routes in router (live: /kontakt, /edukacija, /istrazivanje).
+const underConstructionPaths = ['/o-nama', '/projekti']
 const isUnderConstruction = underConstructionPaths.some(p => route.path.startsWith(p))
 </script>
 

@@ -1,14 +1,16 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { sendError } = require('../../utils/response');
+
+const uploadsDir = path.join(__dirname, '../../public/uploads');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const dir = 'public/uploads';
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
     }
-    cb(null, dir);
+    cb(null, uploadsDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -33,12 +35,13 @@ const upload = multer({
 async function uploadImage(req, res) {
   upload(req, res, function (err) {
     if (err instanceof multer.MulterError) {
-      return res.status(400).json({ error: 'Multer error: ' + err.message });
-    } else if (err) {
-      return res.status(400).json({ error: err.message });
+      return sendError(res, 400, 'Multer error: ' + err.message);
+    }
+    if (err) {
+      return sendError(res, 400, err.message);
     }
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      return sendError(res, 400, 'No file uploaded');
     }
     const imageUrl = `/uploads/${req.file.filename}`;
     res.json({ imageUrl });

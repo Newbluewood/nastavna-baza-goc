@@ -335,9 +335,95 @@ async function run() {
       `CREATE INDEX ${q('idx_ai_budget_month_feature')} ON ${q('ai_budget_monthly')} (${q('month_key')}, ${q('feature')})`
     );
 
+    await ensureTable(
+      conn,
+      'nav_items',
+      `
+      CREATE TABLE ${q('nav_items')} (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        label_sr VARCHAR(150) NOT NULL,
+        label_en VARCHAR(150) NULL,
+        path VARCHAR(255) NOT NULL,
+        sort_order INT NOT NULL DEFAULT 0,
+        is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+        page_id INT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_nav_items_path (path),
+        CONSTRAINT fk_nav_items_page_id FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
+      )
+      `
+    );
+
+    await seedNavItems(conn);
+
     console.log('Migration plan finished successfully.');
   } finally {
     await conn.end();
+  }
+}
+
+async function seedNavItems(conn) {
+  const hasTable = await tableExists(conn, 'nav_items');
+  if (!hasTable) return;
+
+  const [existing] = await conn.query(`SELECT COUNT(*) AS c FROM ${q('nav_items')}`);
+  if (existing[0].c > 0) {
+    console.log('SKIP: nav_items already seeded');
+    return;
+  }
+
+  const { pathForPageSlug } = require('./utils/navPaths');
+
+  const core = [
+    { slug: 'pocetna', label_sr: 'ПОЧЕТНА', label_en: 'HOME', sort_order: 10 },
+    { slug: 'smestaj', label_sr: 'СМЕШТАЈ', label_en: 'ACCOMMODATION', sort_order: 20 },
+    { slug: 'restoran', label_sr: 'РЕСТОРАН', label_en: 'RESTAURANT', sort_order: 30 },
+    { slug: 'vesti', label_sr: 'ВЕСТИ', label_en: 'NEWS', sort_order: 40 },
+    { slug: 'istrazi', label_sr: 'ИСТРАЖИ ГОЧ', label_en: 'EXPLORE GOČ', sort_order: 80 },
+    { slug: 'kontakt', label_sr: 'КОНТАКТ', label_en: 'CONTACT', sort_order: 90 },
+  ];
+
+  for (const item of core) {
+    const path = pathForPageSlug(item.slug);
+    let pageIdSql = 'NULL';
+    const hasPagesTable = await tableExists(conn, 'pages');
+    if (hasPagesTable) {
+      const [pageRows] = await conn.query(
+        `SELECT id FROM ${q('pages')} WHERE slug = ${conn.escape(item.slug)} LIMIT 1`
+      );
+      if (pageRows.length) pageIdSql = String(pageRows[0].id);
+    }
+    await executeOrPrint(
+      conn,
+      `INSERT INTO ${q('nav_items')} (label_sr, label_en, path, sort_order, is_enabled, page_id)
+       VALUES (${conn.escape(item.label_sr)}, ${conn.escape(item.label_en)}, ${conn.escape(path)}, ${item.sort_order}, TRUE, ${pageIdSql})`,
+      `seed nav_items ${path}`
+    );
+  }
+
+  const hasPages = await tableExists(conn, 'pages');
+  if (!hasPages) return;
+
+  const [pages] = await conn.query(
+    `SELECT p.id, p.slug, p.title, pt.title AS title_en
+     FROM ${q('pages')} p
+     LEFT JOIN ${q('page_translations')} pt ON pt.entity_id = p.id AND pt.lang = 'en'
+     WHERE p.slug NOT IN ('pocetna', 'smestaj', 'restoran', 'vesti', 'istrazi', 'kontakt')
+     ORDER BY p.id ASC`
+  );
+
+  let order = 50;
+  for (const page of pages) {
+    const path = pathForPageSlug(page.slug);
+    const labelEn = page.title_en ? conn.escape(page.title_en) : 'NULL';
+    await executeOrPrint(
+      conn,
+      `INSERT INTO ${q('nav_items')} (label_sr, label_en, path, sort_order, is_enabled, page_id)
+       VALUES (${conn.escape(page.title)}, ${labelEn}, ${conn.escape(path)}, ${order}, TRUE, ${page.id})`,
+      `seed nav_items page ${page.slug}`
+    );
+    order += 5;
   }
 }
 

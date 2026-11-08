@@ -6,17 +6,13 @@ const {
   getHome, getFacilities, getFacility, getRoomAvailability,
   submitInquiry, getNewsList, getSingleNews, likeNews,
   getWeatherForecast, getContactPage, getThemes, getThemeDetail,
-  getRestaurantsPublic, getRestaurantMenu, getPageBySlug, getSiteSettings
+  getRestaurantsPublic, getRestaurantMenu, getPageBySlug, getNav, getSiteSettings
 } = require('../controllers/publicController');
 const cacheMiddleware = require('../middleware/cacheMiddleware');
 
 const router = express.Router();
 
-console.log('Public routes loaded');
-
-// Test route
 router.get('/test', (req, res) => {
-  console.log('Test route called at', new Date());
   res.json({ message: 'Test successful', timestamp: new Date() });
 });
 
@@ -37,6 +33,7 @@ router.get('/themes',                         cacheMiddleware(CACHE_TTL), asyncH
 router.get('/themes/:id',                     cacheMiddleware(CACHE_TTL), asyncHandler(getThemeDetail));
 router.get('/restorani',                      cacheMiddleware(CACHE_TTL), asyncHandler(getRestaurantsPublic));
 router.get('/restorani/:id/meni',             cacheMiddleware(CACHE_TTL), asyncHandler(getRestaurantMenu));
+router.get('/nav',                            cacheMiddleware(CACHE_TTL), asyncHandler(getNav));
 router.get('/stranica/:slug',                 cacheMiddleware(CACHE_TTL), asyncHandler(getPageBySlug));
 router.get('/settings',                       cacheMiddleware(CACHE_TTL), asyncHandler(getSiteSettings));
 

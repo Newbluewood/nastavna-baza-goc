@@ -1,4 +1,5 @@
 const { sendError } = require('../../utils/response');
+const { replaceEntityGallery } = require('../../utils/galleryShape');
 
 // Shared SELECT for news with translations
 const NEWS_BASE_SELECT = `
@@ -8,30 +9,8 @@ const NEWS_BASE_SELECT = `
   LEFT JOIN news_translations nt ON nt.entity_id = n.id AND nt.lang = 'en'
 `;
 
-function sanitizeGalleryItems(items) {
-  if (!Array.isArray(items)) return [];
-  return items
-    .map((item, index) => ({
-      image_url: String(item?.image_url || '').trim(),
-      caption: String(item?.caption || '').trim(),
-      sort_order: Number.isFinite(Number(item?.sort_order)) ? Number(item.sort_order) : index + 1
-    }))
-    .filter((item) => item.image_url)
-    .slice(0, 20);
-}
-
 async function replaceNewsGallery(connection, newsId, galleryItems) {
-  await connection.query(
-    "DELETE FROM media_gallery WHERE entity_type = 'news' AND entity_id = ?",
-    [newsId]
-  );
-  const sanitized = sanitizeGalleryItems(galleryItems);
-  for (const item of sanitized) {
-    await connection.query(
-      'INSERT INTO media_gallery (entity_type, entity_id, image_url, caption, sort_order) VALUES (?, ?, ?, ?, ?)',
-      ['news', newsId, item.image_url, item.caption || null, item.sort_order]
-    );
-  }
+  await replaceEntityGallery(connection, 'news', newsId, galleryItems);
 }
 
 async function getAdminNews(req, res) {

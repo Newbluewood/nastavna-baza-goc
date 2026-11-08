@@ -41,7 +41,7 @@ defineExpose({ sidebarOpen })
     <h2>CMS Panel</h2>
     <nav>
       <router-link to="/admin/vesti">Вести</router-link>
-      <router-link to="/admin/stranice">Странице</router-link>
+      <router-link to="/admin/stranice">Странице и мени</router-link>
       <router-link to="/admin/osoblje">Особље</router-link>
       <router-link to="/admin/projekti">Пројекти</router-link>
       <router-link to="/admin/ai">AI Потрошња</router-link>

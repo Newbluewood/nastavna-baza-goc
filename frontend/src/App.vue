@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router'
 import { useLangStore } from './stores/lang'
 import { useGuestStore } from './stores/guest'
 import { useChatStore } from './stores/chat'
 import { useSettingsStore } from './stores/settings'
+import { useNavStore } from './stores/nav'
 import AgentChatWidget from './components/ui/AgentChatWidget.vue'
 import InquiryModal from './components/forms/InquiryModal.vue'
 
@@ -13,11 +14,32 @@ const langStore = useLangStore()
 const guestStore = useGuestStore()
 const chatStore = useChatStore()
 const settingsStore = useSettingsStore()
+const navStore = useNavStore()
 const route = useRoute()
 const router = useRouter()
 
-onMounted(() => settingsStore.fetch(langStore.currentLang))
-watch(() => langStore.currentLang, (lang) => settingsStore.fetch(lang))
+/** Entire public menu from nav_items (GET /api/nav). */
+const navItems = computed(() =>
+  navStore.items.map((item) => ({
+    key: item.id,
+    to: item.path,
+    label: item.label,
+  }))
+)
+
+const loadShell = (lang) => {
+  settingsStore.fetch(lang)
+  navStore.fetch(lang)
+}
+
+const onWindowFocus = () => navStore.fetch(langStore.currentLang)
+
+onMounted(() => {
+  loadShell(langStore.currentLang)
+  window.addEventListener('focus', onWindowFocus)
+})
+watch(() => langStore.currentLang, (lang) => loadShell(lang))
+onUnmounted(() => window.removeEventListener('focus', onWindowFocus))
 
 const inquiryModalOpen = computed({
   get: () => chatStore.inquiryModal.open,
@@ -67,41 +89,12 @@ const handleGuestNav = () => {
           <span></span>
         </div>
         <nav class="main-nav" :class="{ 'is-open': isMenuOpen }">
-          <router-link to="/" class="nav-link" @click="closeMenu">
-            <span class="nav-bold">{{ langStore.t('nav.home') }}</span>
-          </router-link>
-          <span class="nav-sep">|</span>
-          <router-link to="/smestaj" class="nav-link" @click="closeMenu">
-            <span class="nav-bold">{{ langStore.t('nav.accommodation') }}</span>
-          </router-link>
-          <span class="nav-sep">|</span>
-          <router-link to="/restoran" class="nav-link" @click="closeMenu">
-            <span class="nav-bold">{{ langStore.t('nav.restaurant') }}</span>
-          </router-link>
-          <span class="nav-sep">|</span>
-          <router-link to="/vesti" class="nav-link" @click="closeMenu">
-            <span class="nav-bold">{{ langStore.t('nav.news') }}</span>
-          </router-link>
-          <span class="nav-sep">|</span>
-          <router-link to="/edukacija" class="nav-link" @click="closeMenu">
-            <span class="nav-bold">{{ langStore.t('nav.education') }}</span>
-          </router-link>
-          <span class="nav-sep">|</span>
-          <router-link to="/istrazivanje" class="nav-link" @click="closeMenu">
-            <span class="nav-bold">{{ langStore.t('nav.research') }}</span>
-          </router-link>
-          <span class="nav-sep">|</span>
-          <router-link to="/istrazi" class="nav-link" @click="closeMenu">
-            <span class="nav-bold">{{ langStore.t('nav.explore') }}</span>
-          </router-link>
-          <span class="nav-sep">|</span>
-          <router-link to="/faq" class="nav-link" @click="closeMenu">
-            <span class="nav-bold">{{ langStore.t('nav.faq') }}</span>
-          </router-link>
-          <span class="nav-sep">|</span>
-          <router-link to="/kontakt" class="nav-link" @click="closeMenu">
-            <span class="nav-bold">{{ langStore.t('nav.contact') }}</span>
-          </router-link>
+          <template v-for="(item, index) in navItems" :key="item.key">
+            <span v-if="index > 0" class="nav-sep">|</span>
+            <router-link :to="item.to" class="nav-link" @click="closeMenu">
+              <span class="nav-bold">{{ item.label }}</span>
+            </router-link>
+          </template>
         </nav>
       </div>
     </header>

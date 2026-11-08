@@ -2,6 +2,7 @@ const {
   isPlaceholderMediaUrl,
   parseConcatGallery,
   assertGalleryShape,
+  sanitizeGalleryItems,
 } = require('../galleryShape');
 
 describe('isPlaceholderMediaUrl', () => {
@@ -55,6 +56,27 @@ describe('assertGalleryShape', () => {
     expect(() => assertGalleryShape(['/uploads/a.jpg'])).toThrow();
     expect(() => assertGalleryShape([{ url: '/uploads/a.jpg' }])).toThrow();
     expect(() => assertGalleryShape([{ image_url: '' }])).toThrow();
+  });
+});
+
+describe('sanitizeGalleryItems', () => {
+  test('normalizes captions/sort_order and drops placeholders', () => {
+    expect(
+      sanitizeGalleryItems([
+        { image_url: '/uploads/a.jpg', caption: 'A' },
+        { image_url: 'placeholder.jpg' },
+        { image_url: '  /uploads/b.jpg  ' },
+        null,
+      ])
+    ).toEqual([
+      { image_url: '/uploads/a.jpg', caption: 'A', sort_order: 1 },
+      { image_url: '/uploads/b.jpg', caption: '', sort_order: 3 },
+    ]);
+  });
+
+  test('returns [] for non-arrays', () => {
+    expect(sanitizeGalleryItems(null)).toEqual([]);
+    expect(sanitizeGalleryItems(undefined)).toEqual([]);
   });
 });
 

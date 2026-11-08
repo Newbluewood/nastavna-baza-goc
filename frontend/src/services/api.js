@@ -112,6 +112,39 @@ class ApiService {
     return this.request(`/api/stranica/${slug}?lang=${lang}`);
   }
 
+  async getNav(lang = 'sr') {
+    return this.request(`/api/nav?lang=${lang}`);
+  }
+
+  async getAdminNav() {
+    return this.request('/api/admin/nav');
+  }
+
+  async updateNavItem(id, data) {
+    return this.request(`/api/admin/nav/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async createNavItem(data) {
+    return this.request('/api/admin/nav', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteNavItem(id) {
+    return this.request(`/api/admin/nav/${id}`, { method: 'DELETE' });
+  }
+
+  async reorderNav(ids) {
+    return this.request('/api/admin/nav/reorder', {
+      method: 'PUT',
+      body: JSON.stringify({ ids }),
+    });
+  }
+
   async getThemes(lang = 'sr') {
     return this.request(`/api/themes?lang=${lang}`);
   }

@@ -2,6 +2,7 @@ const express = require('express');
 const asyncHandler = require('../middleware/asyncHandler');
 const { adminAuthMiddleware } = require('../middleware/auth');
 const { validateRequest, schemas } = require('../middleware/validation');
+const invalidatePublicCacheOnWrite = require('../middleware/invalidatePublicCache');
 const {
 	getInquiries,
 	getInquiryActivity,
@@ -52,10 +53,18 @@ const {
 	getMenuItems,
 	createMenuItem,
 	updateMenuItem,
-	deleteMenuItem
+	deleteMenuItem,
+	getAdminNav,
+	updateNavItem,
+	createNavItem,
+	deleteNavItem,
+	reorderNav
 } = require('../controllers/admin');
 
 const router = express.Router();
+
+// Successful admin writes clear the public GET cache (TTL fallback remains).
+router.use(invalidatePublicCacheOnWrite);
 
 router.get('/inquiries',           adminAuthMiddleware,                                      asyncHandler(getInquiries));
 router.get('/inquiries/:id/activity', adminAuthMiddleware,                                   asyncHandler(getInquiryActivity));
@@ -89,6 +98,13 @@ router.get('/pages/:id',           adminAuthMiddleware,                         
 router.post('/pages',              adminAuthMiddleware,                                      asyncHandler(createPage));
 router.put('/pages/:id',           adminAuthMiddleware,                                      asyncHandler(updatePage));
 router.delete('/pages/:id',        adminAuthMiddleware,                                      asyncHandler(deletePage));
+
+// Public header menu (nav_items)
+router.get('/nav',                 adminAuthMiddleware,                                      asyncHandler(getAdminNav));
+router.post('/nav',                adminAuthMiddleware,                                      asyncHandler(createNavItem));
+router.put('/nav/reorder',         adminAuthMiddleware,                                      asyncHandler(reorderNav));
+router.put('/nav/:id',             adminAuthMiddleware,                                      asyncHandler(updateNavItem));
+router.delete('/nav/:id',          adminAuthMiddleware,                                      asyncHandler(deleteNavItem));
 
 // Themes CRUD (Istraži Goč)
 router.get('/themes',              adminAuthMiddleware,                                      asyncHandler(getThemes));

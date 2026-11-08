@@ -554,7 +554,7 @@ async function getPageBySlug(req, res) {
   const db = req.app.locals.db;
   const slug = req.params.slug;
   const lang = req.query.lang || 'sr';
-  const langParam = lang === 'sr' ? 'sr' : 'en';
+  const langParam = toLangParam(lang);
 
   try {
     const [rows] = await db.query(`
@@ -577,6 +577,22 @@ async function getPageBySlug(req, res) {
   }
 }
 
+/** Public header menu — single source: nav_items (enabled only). */
+async function getNav(req, res) {
+  const db = req.app.locals.db;
+  const lang = req.query.lang === 'en' ? 'en' : 'sr';
+
+  const [rows] = await db.query(`
+    SELECT id, path, sort_order,
+           CASE WHEN ? = 'en' THEN COALESCE(NULLIF(label_en, ''), label_sr) ELSE label_sr END AS label
+    FROM nav_items
+    WHERE is_enabled = TRUE
+    ORDER BY sort_order ASC, id ASC
+  `, [lang]);
+
+  res.json(rows);
+}
+
 module.exports = {
   getHome,
   getFacilities,
@@ -593,5 +609,6 @@ module.exports = {
   getRestaurantsPublic,
   getRestaurantMenu,
   getSiteSettings,
-  getPageBySlug
+  getPageBySlug,
+  getNav
 };

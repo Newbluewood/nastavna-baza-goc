@@ -11,6 +11,7 @@ const roomMapController   = require('./roomMapController');
 const systemController    = require('./systemController');
 const uploadController    = require('./uploadController');
 const restaurantController = require('./restaurantController');
+const navController = require('./navController');
 
 module.exports = {
   ...inquiryController,
@@ -20,5 +21,6 @@ module.exports = {
   ...roomMapController,
   ...systemController,
   ...uploadController,
-  ...restaurantController
+  ...restaurantController,
+  ...navController,
 };

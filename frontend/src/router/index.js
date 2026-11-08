@@ -22,6 +22,7 @@ import ResetPasswordView from '../views/guest/ResetPasswordView.vue'
 import AdminLoginView from '../views/admin/LoginView.vue'
 import AdminNewsView from '../views/admin/NewsView.vue'
 import AdminPagesView from '../views/admin/PagesView.vue'
+import AdminNavView from '../views/admin/NavView.vue'
 import AdminProjectsView from '../views/admin/ProjectsView.vue'
 import AdminStaffView from '../views/admin/StaffView.vue'
 import AdminReservationsView from '../views/admin/ReservationsView.vue'
@@ -61,6 +62,7 @@ const router = createRouter({
     { path: '/admin/login', name: 'admin-login', component: AdminLoginView },
     { path: '/admin/vesti', name: 'admin-news', component: AdminNewsView, meta: { requiresAuth: true } },
     { path: '/admin/stranice', name: 'admin-pages', component: AdminPagesView, meta: { requiresAuth: true } },
+    { path: '/admin/meni', name: 'admin-nav', component: AdminNavView, meta: { requiresAuth: true } },
     { path: '/admin/projekti', name: 'admin-projects', component: AdminProjectsView, meta: { requiresAuth: true } },
     { path: '/admin/osoblje', name: 'admin-staff', component: AdminStaffView, meta: { requiresAuth: true } },
     { path: '/admin/rezervacije', name: 'admin-reservations', component: AdminReservationsView, meta: { requiresAuth: true } },
