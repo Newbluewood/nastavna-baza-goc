@@ -1,60 +1,46 @@
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useLangStore } from '../../stores/lang'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
-import api from '../../services/api'
-import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
+import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
 const route = useRoute()
-const langStore = useLangStore()
-const pageData = ref(null)
-const isLoading = ref(true)
-const notFound = ref(false)
-
+const pageSlug = computed(() => route.meta.pageSlug || route.params.slug || '')
 const faqItems = ref([])
 
-const pageSlug = computed(() => route.meta.pageSlug || route.params.slug || '')
+const { page, isLoading, notFound, langStore } = useCmsPage(pageSlug, { required: true })
 
-const fetchPage = async () => {
-  const currentSlug = pageSlug.value
-  if (!currentSlug) return
+const slides = computed(() => (
+  page.value?.hero_image
+    ? buildHeroSlide(page.value)
+    : []
+))
 
-  isLoading.value = true
-  notFound.value = false
-  try {
-    const data = await api.getPageBySlug(currentSlug, langStore.currentLang)
-    pageData.value = data
-    
-    // Parse FAQ if it's faq page
-    if (currentSlug === 'faq' && data.content) {
-      const parts = data.content.split('### ').filter(p => p.trim())
-      faqItems.value = parts.map(p => {
-        const lines = p.split('\n')
+watch(
+  () => [pageSlug.value, page.value?.content],
+  ([slug, content]) => {
+    if (slug !== 'faq' || !content) {
+      faqItems.value = []
+      return
+    }
+    faqItems.value = String(content)
+      .split('### ')
+      .filter((part) => part.trim())
+      .map((part) => {
+        const lines = part.split('\n')
         return {
           question: lines[0].trim(),
           answer: lines.slice(1).join('\n').trim(),
-          isOpen: false
+          isOpen: false,
         }
       })
-    } else {
-      faqItems.value = []
-    }
-  } catch (err) {
-    console.error('Error loading page:', err)
-    notFound.value = true
-  } finally {
-    isLoading.value = false
-  }
-}
+  },
+  { immediate: true }
+)
 
 const toggleFaq = (index) => {
   faqItems.value[index].isOpen = !faqItems.value[index].isOpen
 }
-
-onMounted(fetchPage)
-watch(() => langStore.currentLang, fetchPage)
-watch(pageSlug, fetchPage)
 </script>
 
 <template>
@@ -69,12 +55,11 @@ watch(pageSlug, fetchPage)
     </div>
   </div>
   <PageTemplate
-    v-else-if="pageData"
-    :title="pageData.title"
-    :textContent="pageSlug === 'faq' ? '' : (pageData.content || '')"
-    :slides="pageData.hero_image ? [{ image_url: resolveMediaUrlOrPlaceholder(pageData.hero_image), title: pageData.title }] : []"
+    v-else-if="page"
+    :title="page.title"
+    :textContent="pageSlug === 'faq' ? '' : (page.content || '')"
+    :slides="slides"
   >
-    <!-- FAQ Accordion -->
     <div v-if="pageSlug === 'faq'" class="faq-container">
       <div v-for="(item, index) in faqItems" :key="index" class="faq-item" :class="{ 'faq-open': item.isOpen }">
         <div class="faq-question" @click="toggleFaq(index)">
@@ -105,7 +90,6 @@ watch(pageSlug, fetchPage)
 .page-not-found h1 { color: #332317; margin-bottom: 10px; }
 .page-not-found p { color: #888; line-height: 1.6; }
 
-/* FAQ Styles */
 .faq-container {
   max-width: 800px;
   margin: 0 auto 40px;
@@ -141,8 +125,6 @@ watch(pageSlug, fetchPage)
   color: #666;
   line-height: 1.6;
 }
-
-/* Transitions */
 .faq-slide-enter-active, .faq-slide-leave-active {
   transition: max-height 0.3s ease, opacity 0.3s ease;
   max-height: 200px;

@@ -1,46 +1,26 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { useLangStore } from '../../stores/lang'
+import { ref, computed } from 'vue'
 import api from '../../services/api'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
+import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
-const langStore = useLangStore()
-const restaurants = ref([])
-const isLoading = ref(true)
+const { page, extra, isLoading, langStore } = useCmsPage('restoran', {
+  loadExtra: (lang) => api.getRestaurantsPublic(lang),
+})
+
+const restaurants = computed(() => extra.value || [])
+const slides = computed(() => buildHeroSlide(page.value, langStore.t('nav.restaurant')))
 const selectedRestaurant = ref(null)
 const menu = ref(null)
 const isMenuLoading = ref(false)
-const pageData = ref(null)
-
-const loadRestaurants = async () => {
-  isLoading.value = true
-  try {
-    const data = await api.getRestaurantsPublic(langStore.currentLang)
-    restaurants.value = data
-  } catch (err) {
-    console.error('Error loading restaurants:', err)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const loadPageData = async () => {
-  try {
-    pageData.value = await api.getPageBySlug('restoran', langStore.currentLang)
-  } catch (err) {
-    console.error('Error loading page data:', err)
-  }
-}
 
 const openMenu = async (restaurant) => {
   selectedRestaurant.value = restaurant
   isMenuLoading.value = true
-  // Spusti skrol na vrh modala ili onemogući skrol tela
   document.body.style.overflow = 'hidden'
   try {
-    const data = await api.getRestaurantMenu(restaurant.id, langStore.currentLang)
-    menu.value = data
+    menu.value = await api.getRestaurantMenu(restaurant.id, langStore.currentLang)
   } catch (err) {
     console.error('Error loading menu:', err)
   } finally {
@@ -53,15 +33,12 @@ const closeMenu = () => {
   menu.value = null
   document.body.style.overflow = 'auto'
 }
-
-onMounted(() => { loadRestaurants(); loadPageData() })
-watch(() => langStore.currentLang, () => { loadRestaurants(); loadPageData() })
 </script>
 
 <template>
   <PageTemplate
-    :title="pageData?.title || langStore.t('nav.restaurant')"
-    :slides="[{ image_url: resolveMediaUrlOrPlaceholder(pageData?.hero_image), title: pageData?.title || langStore.t('nav.restaurant') }]"
+    :title="page?.title || langStore.t('nav.restaurant')"
+    :slides="slides"
   >
     <div class="restaurants-container">
       <div v-if="isLoading" class="loader-container">

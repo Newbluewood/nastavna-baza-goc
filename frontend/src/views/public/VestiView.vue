@@ -1,65 +1,34 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { useLangStore } from '../../stores/lang'
+import { computed } from 'vue'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
 import api from '../../services/api'
-import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
+import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
-const langStore = useLangStore()
-const news = ref([])
-const isLoading = ref(true)
-const pageData = ref(null)
+const { page, extra, isLoading, langStore } = useCmsPage('vesti', {
+  loadExtra: (lang) => api.getNews(lang),
+  fallbackPage: (store) => ({ title: store.t('nav.news'), content: '', hero_image: null }),
+})
 
-const heroImage = ref(null)
-
-const fetchNews = async () => {
-  isLoading.value = true
-  try {
-    news.value = await api.getNews(langStore.currentLang)
-  } catch (err) {
-    console.error('Greška pri učitavanju vesti:', err)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const fetchPageData = async () => {
-  try {
-    const data = await api.getPageBySlug('vesti', langStore.currentLang)
-    pageData.value = { title: data.title, textContent: data.content || '' }
-    heroImage.value = data.hero_image
-  } catch (err) {
-    console.error('Greška pri učitavanju sadržaja strane:', err)
-    pageData.value = { title: langStore.t('nav.news'), textContent: '' }
-  }
-}
-
-const loadAll = () => {
-  fetchNews()
-  fetchPageData()
-}
-
-onMounted(loadAll)
-watch(() => langStore.currentLang, loadAll)
+const news = computed(() => extra.value || [])
+const slides = computed(() => buildHeroSlide(page.value, langStore.t('nav.news')))
 </script>
 
 <template>
-  <div class="vesti-page" v-if="!isLoading">
-    <PageTemplate 
-      :title="pageData?.title"
-      :textContent="pageData?.textContent"
-      :news="news"
-      :slides="[{ image_url: resolveMediaUrlOrPlaceholder(heroImage), title: pageData?.title }]"
-      :gridType="4"
-    />
+  <div v-if="isLoading" class="page-loading">
+    <p>{{ langStore.currentLang === 'sr' ? 'Учитавање...' : 'Loading...' }}</p>
   </div>
-  <div v-else class="loading-state">
-     <p>{{ langStore.currentLang === 'sr' ? 'Учитавање...' : 'Loading...' }}</p>
-  </div>
+  <PageTemplate
+    v-else
+    :title="page?.title"
+    :textContent="page?.content || ''"
+    :news="news"
+    :slides="slides"
+    :gridType="4"
+  />
 </template>
 
 <style scoped>
-.loading-state {
+.page-loading {
   text-align: center;
   padding: 100px 20px;
   color: #888;

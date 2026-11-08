@@ -1,44 +1,31 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { useLangStore } from '../../stores/lang'
+import { computed } from 'vue'
 import api from '../../services/api'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
+import { useCmsPage } from '../../composables/useCmsPage'
 
-const langStore = useLangStore()
-const themes = ref([])
-const isLoading = ref(true)
-const pageData = ref(null)
+const exploreFallback = (store) => ({
+  title: store.currentLang === 'sr' ? 'Истражи Гоч' : 'Explore Goč',
+  content: '',
+  hero_image: null,
+})
 
-const fetchThemes = async () => {
-  isLoading.value = true
-  try {
-    themes.value = await api.getThemes(langStore.currentLang)
-  } catch (err) {
-    console.error('Error fetching themes:', err)
-  } finally {
-    isLoading.value = false
-  }
-}
+const { page, extra, isLoading, langStore } = useCmsPage('istrazi', {
+  loadExtra: (lang) => api.getThemes(lang),
+  fallbackPage: exploreFallback,
+})
 
-const fetchPageData = async () => {
-  try {
-    pageData.value = await api.getPageBySlug('istrazi', langStore.currentLang)
-  } catch (err) {
-    console.error('Error loading page data:', err)
-  }
-}
-
-onMounted(() => { fetchThemes(); fetchPageData() })
-watch(() => langStore.currentLang, () => { fetchThemes(); fetchPageData() })
+const themes = computed(() => extra.value || [])
+const pageTitle = computed(() => page.value?.title || exploreFallback(langStore).title)
 </script>
 
 <template>
   <div class="explore-page">
-    <div class="explore-hero" :style="{ backgroundImage: `url('${resolveMediaUrlOrPlaceholder(pageData?.hero_image)}')`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }">
+    <div class="explore-hero" :style="{ backgroundImage: `url('${resolveMediaUrlOrPlaceholder(page?.hero_image)}')`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }">
       <div class="hero-overlay"></div>
       <div class="container hero-content">
-        <h1>{{ pageData?.title || (langStore.currentLang === 'sr' ? 'Истражи Гоч' : 'Explore Goč') }}</h1>
-        <div v-if="pageData?.content" v-html="pageData.content"></div>
+        <h1>{{ pageTitle }}</h1>
+        <div v-if="page?.content" v-html="page.content"></div>
       </div>
     </div>
 

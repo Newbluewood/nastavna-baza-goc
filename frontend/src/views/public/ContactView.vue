@@ -1,40 +1,27 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { useLangStore } from '../../stores/lang'
+import { computed } from 'vue'
 import { useSettingsStore } from '../../stores/settings'
 import api from '../../services/api'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
+import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
-const langStore = useLangStore()
 const settingsStore = useSettingsStore()
-const staff = ref([])
-const projects = ref([])
-const isLoading = ref(true)
-const pageData = ref(null)
+const contactFallback = (store) => ({
+  title: store.currentLang === 'sr' ? 'Контакт' : 'Contact',
+  content: '',
+  hero_image: null,
+})
 
-const loadContact = async () => {
-  try {
-    const data = await api.getContactPage(langStore.currentLang)
-    staff.value = data.staff || []
-    projects.value = data.projects || []
-  } catch (err) {
-    console.error('Error loading contact page:', err)
-  } finally {
-    isLoading.value = false
-  }
-}
+const { page, extra, isLoading, langStore } = useCmsPage('kontakt', {
+  loadExtra: (lang) => api.getContactPage(lang),
+  fallbackPage: contactFallback,
+})
 
-const loadPageData = async () => {
-  try {
-    pageData.value = await api.getPageBySlug('kontakt', langStore.currentLang)
-  } catch (err) {
-    console.error('Error loading page data:', err)
-  }
-}
-
-onMounted(() => { loadContact(); loadPageData() })
-watch(() => langStore.currentLang, () => { loadContact(); loadPageData() })
+const staff = computed(() => extra.value?.staff || [])
+const projects = computed(() => extra.value?.projects || [])
+const contactTitle = computed(() => page.value?.title || contactFallback(langStore).title)
+const slides = computed(() => buildHeroSlide(page.value, contactTitle.value))
 
 const statusLabel = (s) => ({
   активан: langStore.currentLang === 'sr' ? 'Активан' : 'Active',
@@ -51,12 +38,9 @@ const statusClass = (s) => ({
 
 <template>
   <PageTemplate
-    :title="pageData?.title || (langStore.currentLang === 'sr' ? 'Контакт' : 'Contact')"
-    :textContent="pageData?.content || ''"
-    :slides="[{
-      title: pageData?.title || (langStore.currentLang === 'sr' ? 'Контакт' : 'Contact'),
-      image_url: resolveMediaUrlOrPlaceholder(pageData?.hero_image)
-    }]"
+    :title="contactTitle"
+    :textContent="page?.content || ''"
+    :slides="slides"
   >
     <div v-if="isLoading" class="loading-msg">
       {{ langStore.currentLang === 'sr' ? 'Учитавам...' : 'Loading...' }}
