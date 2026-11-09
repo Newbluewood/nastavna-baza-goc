@@ -116,6 +116,10 @@ class ApiService {
     return this.request(`/api/nav?lang=${lang}`);
   }
 
+  async getHealth() {
+    return this.request('/api/health', { authMode: 'none' });
+  }
+
   async getAdminNav() {
     return this.request('/api/admin/nav');
   }
@@ -446,6 +450,23 @@ class ApiService {
   // Admin — AI Usage
   async getAdminAiUsage() {
     return this.request('/api/admin/ai/usage');
+  }
+
+  // Admin — Chat analytics (site guide top / miss)
+  async getAdminChatAnalyticsTop({ days = 30, limit = 15 } = {}) {
+    const params = new URLSearchParams({
+      days: String(days),
+      limit: String(limit)
+    });
+    return this.request(`/api/admin/chat-analytics/top?${params}`);
+  }
+
+  async getAdminChatAnalyticsMiss({ days = 30, limit = 15 } = {}) {
+    const params = new URLSearchParams({
+      days: String(days),
+      limit: String(limit)
+    });
+    return this.request(`/api/admin/chat-analytics/miss?${params}`);
   }
 
   // Admin — Cache

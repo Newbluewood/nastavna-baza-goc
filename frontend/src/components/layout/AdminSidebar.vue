@@ -14,6 +14,7 @@ const adminLinks = [
   { name: 'admin-pages', label: 'Странице и мени' },
   { name: 'admin-staff', label: 'Особље' },
   { name: 'admin-projects', label: 'Пројекти' },
+  { name: 'admin-stats', label: 'Статистике сајта' },
   { name: 'admin-ai', label: 'AI Потрошња' },
   { name: 'admin-restaurant', label: 'Ресторан' },
   { name: 'admin-themes', label: 'Теме (Истражи Гоч)' },

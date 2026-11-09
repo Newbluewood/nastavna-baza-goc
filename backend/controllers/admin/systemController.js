@@ -1,8 +1,44 @@
 const chatMetricsService = require('../../services/chatMetricsService');
+const chatAnalyticsService = require('../../services/chatAnalyticsService');
 
 async function getChatMetrics(req, res) {
   const snapshot = chatMetricsService.getSnapshot();
   return res.json(snapshot);
+}
+
+async function getChatAnalyticsTop(req, res) {
+  const days = req.query.days;
+  const limit = req.query.limit;
+  const [items, summary] = await Promise.all([
+    chatAnalyticsService.getTopQueries({ days, limit }),
+    chatAnalyticsService.getAnalyticsSummary({ days })
+  ]);
+  return res.json({
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    days: chatAnalyticsService.parseDays(days),
+    limit: chatAnalyticsService.parseLimit(limit),
+    summary,
+    items
+  });
+}
+
+async function getChatAnalyticsMiss(req, res) {
+  const days = req.query.days;
+  const limit = req.query.limit;
+  const [items, summary] = await Promise.all([
+    chatAnalyticsService.getMissQueries({ days, limit }),
+    chatAnalyticsService.getAnalyticsSummary({ days })
+  ]);
+  return res.json({
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    days: chatAnalyticsService.parseDays(days),
+    limit: chatAnalyticsService.parseLimit(limit),
+    missConfidenceMax: chatAnalyticsService.missConfidenceMax(),
+    summary,
+    items
+  });
 }
 
 async function getAiUsage(req, res) {
@@ -45,4 +81,11 @@ async function purgeCache(req, res) {
   res.json({ message: 'Cache successfully purged' });
 }
 
-module.exports = { getChatMetrics, getAiUsage, seedSiteKbNow, purgeCache };
+module.exports = {
+  getChatMetrics,
+  getChatAnalyticsTop,
+  getChatAnalyticsMiss,
+  getAiUsage,
+  seedSiteKbNow,
+  purgeCache
+};

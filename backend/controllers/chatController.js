@@ -119,9 +119,11 @@ async function reserveStayChat(req, res) {
 async function siteGuideTurn(req, res) {
   const { composeSiteGuideTurn } = require('../services/siteGuideService');
   const { validateAssistantTurn, makeFallbackAssistantTurn } = require('../services/assistantTurnSchema');
+  const { recordSiteGuideQuery } = require('../services/chatAnalyticsService');
   const body = req.body || {};
   const message = String(body.message || '').trim();
   const lang = body.lang === 'en' ? 'en' : 'sr';
+  const sessionId = body.session_id || body.sessionId || null;
 
   if (!message) {
     return res.status(400).json({ error: 'message is required' });
@@ -140,8 +142,26 @@ async function siteGuideTurn(req, res) {
     validateAssistantTurn(turn);
   } catch (err) {
     console.error('[siteGuideTurn] invalid turn produced:', err.message);
-    return res.status(200).json(makeFallbackAssistantTurn({ lang, reason: 'invalid_turn' }));
+    const fallback = makeFallbackAssistantTurn({ lang, reason: 'invalid_turn' });
+    // Best-effort analytics; never blocks the response.
+    void recordSiteGuideQuery({
+      question: message,
+      lang,
+      turn: fallback,
+      sessionId,
+      userKey
+    });
+    return res.status(200).json(fallback);
   }
+
+  // Best-effort analytics; never blocks the response.
+  void recordSiteGuideQuery({
+    question: message,
+    lang,
+    turn,
+    sessionId,
+    userKey
+  });
 
   return res.status(200).json(turn);
 }

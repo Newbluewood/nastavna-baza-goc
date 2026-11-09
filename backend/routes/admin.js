@@ -17,6 +17,8 @@ const {
 	addVoucher,
 	getRoomMap,
 	getChatMetrics,
+	getChatAnalyticsTop,
+	getChatAnalyticsMiss,
 	getAiUsage,
 	seedSiteKbNow,
 	getProjects,
@@ -80,6 +82,8 @@ router.get('/guests',              adminAuthMiddleware,                         
 router.post('/guests/:id/vouchers', adminAuthMiddleware,                                     asyncHandler(addVoucher));
 router.get('/room-map',            adminAuthMiddleware,                                      asyncHandler(getRoomMap));
 router.get('/chat-metrics',        adminAuthMiddleware,                                      asyncHandler(getChatMetrics));
+router.get('/chat-analytics/top',  adminAuthMiddleware,                                      asyncHandler(getChatAnalyticsTop));
+router.get('/chat-analytics/miss', adminAuthMiddleware,                                      asyncHandler(getChatAnalyticsMiss));
 router.get('/ai/usage',            adminAuthMiddleware,                                      asyncHandler(getAiUsage));
 router.post('/ai/seed-site-kb',    adminAuthMiddleware,                                      asyncHandler(seedSiteKbNow));
 // Projects CRUD

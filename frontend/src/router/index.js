@@ -168,6 +168,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/admin/statistike',
+      name: 'admin-stats',
+      component: () => import('../views/admin/SiteStatsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/admin/ai',
       name: 'admin-ai',
       component: () => import('../views/admin/AiUsageView.vue'),

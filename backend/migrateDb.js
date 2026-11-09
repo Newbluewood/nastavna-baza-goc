@@ -362,6 +362,33 @@ async function run() {
 
     await ensureTable(
       conn,
+      'chat_query_events',
+      `
+      CREATE TABLE ${q('chat_query_events')} (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        feature VARCHAR(32) NOT NULL DEFAULT 'site_guide',
+        question TEXT NOT NULL,
+        question_norm VARCHAR(512) NOT NULL,
+        question_hash CHAR(64) NOT NULL,
+        lang VARCHAR(8) NULL,
+        outcome ENUM('hit','miss','fallback','skip') NOT NULL,
+        confidence DECIMAL(5,4) NULL,
+        top_score DECIMAL(5,4) NULL,
+        reason VARCHAR(64) NULL,
+        source VARCHAR(64) NULL,
+        session_id VARCHAR(64) NULL,
+        user_key VARCHAR(64) NULL,
+        meta JSON NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_cqe_created (created_at),
+        INDEX idx_cqe_outcome_created (outcome, created_at),
+        INDEX idx_cqe_hash_created (question_hash, created_at)
+      )
+      `
+    );
+
+    await ensureTable(
+      conn,
       'nav_items',
       `
       CREATE TABLE ${q('nav_items')} (

@@ -8,6 +8,11 @@ const router = useRouter()
 const data = ref(null)
 const isLoading = ref(true)
 const error = ref('')
+const analyticsDays = ref(30)
+const analyticsTop = ref(null)
+const analyticsMiss = ref(null)
+const analyticsError = ref('')
+const analyticsLoading = ref(false)
 let refreshTimer = null
 
 const numberFmt = new Intl.NumberFormat('sr-RS')
@@ -20,6 +25,8 @@ const spentPct = computed(() => {
   return cap > 0 ? (spentEur.value / cap) * 100 : 0
 })
 
+const analyticsSummary = computed(() => analyticsTop.value?.summary || analyticsMiss.value?.summary || null)
+
 const hasRuntimeMetrics = computed(() => {
   const m = data.value?.metrics
   if (!m) return false
@@ -29,6 +36,25 @@ const hasRuntimeMetrics = computed(() => {
   const hasEstimates = Object.values(estimates).some((v) => Number(v) > 0)
   return hasTotals || hasEstimates || (Array.isArray(m.recent) && m.recent.length > 0)
 })
+
+const fetchAnalytics = async () => {
+  analyticsLoading.value = true
+  try {
+    const opts = { days: analyticsDays.value, limit: 15 }
+    const [top, miss] = await Promise.all([
+      api.getAdminChatAnalyticsTop(opts),
+      api.getAdminChatAnalyticsMiss(opts)
+    ])
+    analyticsTop.value = top
+    analyticsMiss.value = miss
+    analyticsError.value = ''
+  } catch (err) {
+    if (err.status === 401) { router.push({ name: 'admin-login' }); return }
+    analyticsError.value = err.message || 'Greška pri učitavanju chat analitike'
+  } finally {
+    analyticsLoading.value = false
+  }
+}
 
 const fetchUsage = async () => {
   if (!data.value) isLoading.value = true
@@ -41,6 +67,7 @@ const fetchUsage = async () => {
   } finally {
     isLoading.value = false
   }
+  await fetchAnalytics()
 }
 
 const startTimer = () => {
@@ -108,6 +135,18 @@ const formatUpdatedAt = (v) => {
   const d = new Date(v)
   if (Number.isNaN(d.getTime())) return String(v)
   return d.toLocaleString('sr-RS')
+}
+
+const formatConfidence = (v) => {
+  if (v === null || v === undefined || v === '') return '—'
+  const n = Number(v)
+  if (Number.isNaN(n)) return '—'
+  return `${(n * 100).toFixed(0)}%`
+}
+
+const setAnalyticsDays = (days) => {
+  analyticsDays.value = days
+  fetchAnalytics()
 }
 </script>
 
@@ -183,6 +222,128 @@ const formatUpdatedAt = (v) => {
             Лимит по кориснику: {{ toFixedEur(budget.caps.userEur) }} EUR.
             Износ је у EUR, како га агент уписује — widget га не приказује.
           </p>
+        </section>
+
+        <section class="card analytics-card">
+          <div class="card-head">
+            <h2 class="card-title">Chat agent — top / miss</h2>
+            <div class="days-pills">
+              <button
+                v-for="d in [7, 30, 90]"
+                :key="`d-${d}`"
+                type="button"
+                class="day-pill"
+                :class="{ active: analyticsDays === d }"
+                :disabled="analyticsLoading"
+                @click="setAnalyticsDays(d)"
+              >
+                {{ d }}д
+              </button>
+            </div>
+          </div>
+          <p class="muted analytics-hint">
+            Питања из <code>site-guide-turn</code>, груписана по нормализованом тексту.
+            Miss = нема поготка или ниска поузданост (&lt; {{ formatConfidence(analyticsMiss?.missConfidenceMax ?? 0.35) }}).
+          </p>
+
+          <p v-if="analyticsError" class="error-banner">{{ analyticsError }}</p>
+
+          <div v-if="analyticsSummary" class="stat-grid analytics-stats">
+            <div class="stat">
+              <span class="stat-label">Укупно</span>
+              <span class="stat-value">{{ formatTokens(analyticsSummary.total) }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Hit</span>
+              <span class="stat-value">{{ formatTokens(analyticsSummary.hits) }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Miss</span>
+              <span class="stat-value miss">{{ formatTokens(analyticsSummary.misses) }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Fallback</span>
+              <span class="stat-value">{{ formatTokens(analyticsSummary.fallbacks) }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Skip</span>
+              <span class="stat-value">{{ formatTokens(analyticsSummary.skips) }}</span>
+            </div>
+          </div>
+
+          <div class="analytics-grid">
+            <div>
+              <h3 class="sub-title">Најчешћа питања</h3>
+              <div
+                v-if="analyticsLoading && !analyticsTop"
+                class="empty-msg small"
+              >
+                Учитавам...
+              </div>
+              <div
+                v-else-if="!(analyticsTop?.items || []).length"
+                class="empty-msg small"
+              >
+                Још нема забележених питања.
+              </div>
+              <div v-else class="table-wrapper">
+                <table class="data-table compact">
+                  <thead>
+                    <tr>
+                      <th>Питање</th>
+                      <th>Број</th>
+                      <th>Miss</th>
+                      <th>Поузданост</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in analyticsTop.items" :key="`top-${item.question_hash}`">
+                      <td class="question-cell">{{ item.sample_question || item.question_norm }}</td>
+                      <td>{{ formatTokens(item.ask_count) }}</td>
+                      <td>{{ formatTokens(item.miss_count) }}</td>
+                      <td>{{ formatConfidence(item.avg_confidence) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="sub-title">Miss — допунити KB</h3>
+              <div
+                v-if="analyticsLoading && !analyticsMiss"
+                class="empty-msg small"
+              >
+                Учитавам...
+              </div>
+              <div
+                v-else-if="!(analyticsMiss?.items || []).length"
+                class="empty-msg small"
+              >
+                Нема miss упита у овом периоду.
+              </div>
+              <div v-else class="table-wrapper">
+                <table class="data-table compact">
+                  <thead>
+                    <tr>
+                      <th>Питање</th>
+                      <th>Број</th>
+                      <th>Разлог</th>
+                      <th>Последњи</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in analyticsMiss.items" :key="`miss-${item.question_hash}`">
+                      <td class="question-cell">{{ item.sample_question || item.question_norm }}</td>
+                      <td>{{ formatTokens(item.miss_count) }}</td>
+                      <td><code>{{ item.last_reason || '—' }}</code></td>
+                      <td class="muted">{{ formatUpdatedAt(item.last_asked_at) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section class="card">
@@ -491,6 +652,62 @@ const formatUpdatedAt = (v) => {
 }
 
 .empty-msg.small { padding: 16px; }
+
+.analytics-card { border-left-color: #6d4c41; }
+.analytics-hint { margin: 0 0 14px 0; font-size: 0.88rem; line-height: 1.45; }
+.analytics-hint code {
+  background: #f5f0ea;
+  padding: 1px 6px;
+  font-size: 0.85em;
+}
+.analytics-stats { margin-top: 0; }
+.stat-value.miss { color: #c62828; }
+.days-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.day-pill {
+  background: #f5f3f0;
+  color: #332317;
+  border: 1px solid #cdac91;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+.day-pill.active {
+  background: #332317;
+  color: #fff;
+  border-color: #332317;
+}
+.day-pill:disabled { opacity: 0.6; cursor: wait; }
+.sub-title {
+  margin: 0 0 10px 0;
+  color: #332317;
+  font-size: 0.95rem;
+}
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+.question-cell {
+  max-width: 280px;
+  word-break: break-word;
+}
+.data-table.compact th,
+.data-table.compact td {
+  padding: 8px 10px;
+  font-size: 0.88rem;
+}
+
+@media (min-width: 960px) {
+  .analytics-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+}
 
 @media (min-width: 769px) {
   .mobile-topbar { display: none; }
