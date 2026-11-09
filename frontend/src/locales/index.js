@@ -248,7 +248,8 @@ export default {
       otherOptions: 'Ili ipak izaberite drugi smeštaj',
       lookingForRoom: 'Tražimo odgovarajuću sobu…',
       typing: 'Agent kuca...',
-      inputPlaceholder: 'Pitajte me bilo šta u vezi Nastavne baze Goč...'
+      inputPlaceholder: 'Pitajte me bilo šta u vezi Nastavne baze Goč...',
+      privacyHint: 'Ne šaljite JMBG, pasoš ni broj kartice. Za rezervaciju dovoljni su ime, email i telefon.'
     }
   },
   en: {
@@ -500,7 +501,8 @@ export default {
       otherOptions: 'Or choose different accommodation',
       lookingForRoom: 'Looking for matching rooms…',
       typing: 'Agent is typing...',
-      inputPlaceholder: 'Ask me anything about Teaching Base Goč...'
+      inputPlaceholder: 'Ask me anything about Teaching Base Goč...',
+      privacyHint: 'Do not send national ID, passport, or card numbers. Name, email, and phone are enough to book.'
     }
   }
 };

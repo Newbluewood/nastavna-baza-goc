@@ -294,6 +294,7 @@ onMounted(async () => {
       </div>
 
       <div class="chat-input-area">
+        <p class="privacy-hint">{{ langStore.t('assistant.privacyHint') }}</p>
         <div class="input-wrapper">
           <input 
             v-model="inputMessage" 
@@ -963,9 +964,16 @@ onMounted(async () => {
 }
 
 .chat-input-area {
-  padding: 1rem 1.25rem;
+  padding: 0.65rem 1.25rem 1rem;
   background: #ffffff;
   border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.privacy-hint {
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #8a7f76;
 }
 
 .input-wrapper {

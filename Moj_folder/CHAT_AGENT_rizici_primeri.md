@@ -96,7 +96,7 @@ Gost: „Zovem se Marko Marković, JMBG …, email marko@…, doći ću sa decom
 Model to vidi; može ući i u logove providera / tvoje logove.
 
 ### Hardening
-Upozorenje u UI („ne šaljite JMBG/pasoš“); redakcija pre LLM; kraća istorija; ugovor/politika; AI opcioni.
+Upozorenje u UI + redakcija pre LLM + kraća istorija (−6) + persona zabrana — **urađeno**. Formalna privacy stranica / AI-opcioni toggle ostaju opciono.
 
 ### Uticaj na FE
 Skoro nikakav tehnički; pravni/reputacioni.
