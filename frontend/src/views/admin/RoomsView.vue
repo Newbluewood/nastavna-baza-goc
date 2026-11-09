@@ -3,7 +3,8 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
 import TranslateButton from '../../components/admin/TranslateButton.vue'
-import api, { BASE_URL } from '../../services/api'
+import api from '../../services/api'
+import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
 const router = useRouter()
 const facilities = ref([])
@@ -22,13 +23,7 @@ const selectedFacility = computed(() => facilities.value.find(f => f.id === sele
 const TYPE_LABELS = { smestaj: 'Смештај', restoran: 'Ресторан' }
 const typeLabel = (type) => TYPE_LABELS[type] || type
 
-const getImageUrl = (url) => {
-  if (!url) return '/placeholder.jpg'
-  if (url.startsWith('http')) return url
-  const base = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL
-  const path = url.startsWith('/') ? url : `/${url}`
-  return `${base}${path}`
-}
+const getImageUrl = resolveMediaUrlOrPlaceholder
 
 const startEditFacility = () => {
   if (!selectedFacility.value) return

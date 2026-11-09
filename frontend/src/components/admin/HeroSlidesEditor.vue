@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import api, { BASE_URL } from '../../services/api'
+import api from '../../services/api'
+import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 import TranslateButton from './TranslateButton.vue'
 
 const props = defineProps({
@@ -16,13 +17,7 @@ const slides = ref([])
 const emptyForm = () => ({ title: '', subtitle: '', title_en: '', subtitle_en: '', image_url: '', target_link: '', display_order: 0 })
 const form = ref(emptyForm())
 
-const getImageUrl = (url) => {
-  if (!url) return '/placeholder.jpg'
-  if (url.startsWith('http')) return url
-  const base = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL
-  const path = url.startsWith('/') ? url : `/${url}`
-  return `${base}${path}`
-}
+const getImageUrl = resolveMediaUrlOrPlaceholder
 
 const fetchSlides = async () => {
   isLoading.value = true

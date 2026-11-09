@@ -77,6 +77,13 @@ export default {
       perNightPerson: '/ ноћ по особи',
       noRooms: 'Тренутно нема унетих соба за овај објекат.'
     },
+    home: {
+      loading: 'Учитавам податке са сервера...',
+      loadFallback: '<p>Подаци се тренутно учитавају са локалног бекенда...</p>',
+      discoverGoc: 'Откријте Гоч',
+      readMore: 'Опширније',
+      viewAllThemes: 'Погледај све теме'
+    },
     assistant: {
       modeBooking: 'Резервација',
       modeGuide: 'Водич',
@@ -168,6 +175,13 @@ export default {
       roomsInFacility: 'Rooms in this facility',
       perNightPerson: '/ night per person',
       noRooms: 'There are no rooms listed for this facility at the moment.'
+    },
+    home: {
+      loading: 'Loading data from server...',
+      loadFallback: '<p>Data is currently loading from the local backend...</p>',
+      discoverGoc: 'Discover Goč',
+      readMore: 'Read more',
+      viewAllThemes: 'View all themes'
     },
     assistant: {
       modeBooking: 'Booking',

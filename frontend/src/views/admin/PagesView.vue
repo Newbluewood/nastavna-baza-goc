@@ -5,7 +5,8 @@ import AdminLayout from '../../components/layout/AdminLayout.vue'
 import HeroSlidesEditor from '../../components/admin/HeroSlidesEditor.vue'
 import RichTextEditor from '../../components/admin/RichTextEditor.vue'
 import TranslateButton from '../../components/admin/TranslateButton.vue'
-import api, { BASE_URL } from '../../services/api'
+import api from '../../services/api'
+import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 import { publicPathForSlug, isModulePageSlug } from '../../utils/pageRoutes'
 
 const router = useRouter()
@@ -32,13 +33,7 @@ const fetchGalleryFacilities = async () => {
   }
 }
 
-const getImageUrl = (url) => {
-  if (!url) return '/placeholder.jpg'
-  if (url.startsWith('http')) return url
-  const base = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL
-  const path = url.startsWith('/') ? url : `/${url}`
-  return `${base}${path}`
-}
+const getImageUrl = resolveMediaUrlOrPlaceholder
 
 const findNavForPage = (page) => {
   const byId = navItems.value.find((n) => n.page_id === page.id)

@@ -15,7 +15,7 @@ const isUploading = ref(false)
 
 const form = ref({ full_name: '', role: '', role_en: '', contact_email: '', photo_url: '' })
 
-const getImageUrl = (url) => resolveStaffPhotoUrl(url)
+const getImageUrl = resolveStaffPhotoUrl
 
 const fetchStaff = async () => {
   isLoading.value = true

@@ -59,9 +59,7 @@ const loadData = async () => {
     themes.value = (allThemes || []).slice(0, 3)
   } catch (error) {
     console.error('Error fetching data from API:', error)
-    textContent.value = langStore.currentLang === 'sr'
-      ? '<p>Подаци се тренутно учитавају са локалног бекенда...</p>'
-      : '<p>Data is currently loading from the local backend...</p>'
+    textContent.value = langStore.t('home.loadFallback')
     news.value = []
     galleryItems.value = []
     slides.value = []
@@ -78,7 +76,7 @@ watch(() => langStore.currentLang, loadData)
 <template>
   <PageLoading
     v-if="isLoading"
-    :message="langStore.currentLang === 'sr' ? 'Учитавам податке са сервера...' : 'Loading data from server...'"
+    :message="langStore.t('home.loading')"
   />
   <PageTemplate
     v-else
@@ -92,7 +90,7 @@ watch(() => langStore.currentLang, loadData)
   >
     <div class="themes-highlight" v-if="themes.length > 0">
       <h2 class="themes-heading">
-        {{ langStore.currentLang === 'sr' ? 'Откријте Гоч' : 'Discover Goč' }}
+        {{ langStore.t('home.discoverGoc') }}
       </h2>
       <div class="themes-mini-grid">
         <div v-for="theme in themes" :key="theme.id" class="theme-mini-card">
@@ -102,13 +100,13 @@ watch(() => langStore.currentLang, loadData)
           <h3>{{ theme.name }}</h3>
           <p>{{ langStore.currentLang === 'sr' ? theme.excerpt_sr : theme.excerpt_en }}</p>
           <router-link :to="themeLocationSafe(theme)" class="mini-link">
-            {{ langStore.currentLang === 'sr' ? 'Опширније' : 'Read more' }} &rarr;
+            {{ langStore.t('home.readMore') }} &rarr;
           </router-link>
         </div>
       </div>
       <div class="themes-footer">
         <router-link :to="{ name: 'istrazi' }" class="view-all-btn">
-          {{ langStore.currentLang === 'sr' ? 'Погледај све теме' : 'View all themes' }}
+          {{ langStore.t('home.viewAllThemes') }}
         </router-link>
       </div>
     </div>

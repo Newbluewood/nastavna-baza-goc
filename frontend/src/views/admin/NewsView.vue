@@ -4,7 +4,8 @@ import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
 import TranslateButton from '../../components/admin/TranslateButton.vue'
 import RichTextEditor from '../../components/admin/RichTextEditor.vue'
-import api, { BASE_URL } from '../../services/api'
+import api from '../../services/api'
+import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
 const router = useRouter()
 const newsList = ref([])
@@ -15,13 +16,7 @@ const isUploading = ref(false)
 const aiBusy = ref(false)
 const aiStatusLoading = ref(true)
 
-const getImageUrl = (url) => {
-  if (!url || url === '/placeholder.jpg') return '/placeholder.jpg'
-  if (url.startsWith('http')) return url
-  const base = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
-  const path = url.startsWith('/') ? url : `/${url}`;
-  return `${base}${path}`
-}
+const getImageUrl = resolveMediaUrlOrPlaceholder
 
 const handleCoverUpload = async (event) => {
   const file = event.target.files[0]

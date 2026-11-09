@@ -3,7 +3,7 @@ import { ref, watch, nextTick, onMounted } from 'vue';
 import { useChatStore } from '../../stores/chat';
 import { useGuestStore } from '../../stores/guest';
 import { useLangStore } from '../../stores/lang';
-import { marked } from 'marked';
+import { renderSafeMarkdown } from '../../utils/safeMarkdown';
 
 const chatStore = useChatStore();
 const guestStore = useGuestStore();
@@ -22,10 +22,7 @@ watch(() => chatStore.messages.length, () => {
   scrollToBottom();
 });
 
-const renderMarkdown = (text) => {
-  if (!text) return '';
-  return marked.parse(text);
-};
+const renderMarkdown = (text) => renderSafeMarkdown(text);
 
 const confirmReservation = async (msg) => {
   await chatStore.confirmReservation(msg);
