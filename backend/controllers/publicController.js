@@ -501,25 +501,36 @@ async function getRestaurantsPublic(req, res) {
 async function getRestaurantMenu(req, res) {
   const db = req.app.locals.db;
   const restaurantId = req.params.id;
-  const lang = req.query.lang || 'sr';
-  const langParam = lang === 'sr' ? 'sr' : 'en';
+  const lang = req.query.lang === 'en' ? 'en' : 'sr';
 
   try {
-    let [rows] = await db.query(`
-      SELECT id, price, name, description, category
-      FROM restaurant_menu_items
-      WHERE attraction_id = ? AND lang = ?
-      ORDER BY category, sort_order ASC
-    `, [restaurantId, langParam]);
-
-    if (rows.length === 0 && langParam !== 'sr') {
-      [rows] = await db.query(`
-        SELECT id, price, name, description, category
-        FROM restaurant_menu_items
-        WHERE attraction_id = ? AND lang = 'sr'
-        ORDER BY category, sort_order ASC
-      `, [restaurantId]);
-    }
+    // SR rows define the full menu. EN only overlays translated fields when present,
+    // so a partial EN set no longer returns a shorter menu.
+    const [rows] = lang === 'en'
+      ? await db.query(`
+          SELECT
+            sr.id,
+            sr.price,
+            sr.sort_order,
+            COALESCE(NULLIF(en.name, ''), sr.name) AS name,
+            COALESCE(NULLIF(en.description, ''), sr.description) AS description,
+            COALESCE(NULLIF(en.category, ''), sr.category) AS category
+          FROM restaurant_menu_items sr
+          LEFT JOIN restaurant_menu_items en
+            ON en.attraction_id = sr.attraction_id
+           AND en.lang = 'en'
+           AND en.sort_order = sr.sort_order
+          WHERE sr.attraction_id = ?
+            AND sr.lang = 'sr'
+          ORDER BY category, sr.sort_order ASC, sr.id ASC
+        `, [restaurantId])
+      : await db.query(`
+          SELECT id, price, sort_order, name, description, category
+          FROM restaurant_menu_items
+          WHERE attraction_id = ?
+            AND lang = 'sr'
+          ORDER BY category, sort_order ASC, id ASC
+        `, [restaurantId]);
 
     // Group by category
     const menu = rows.reduce((acc, item) => {
@@ -528,7 +539,7 @@ async function getRestaurantMenu(req, res) {
       acc[cat].push(item);
       return acc;
     }, {});
-    
+
     res.json(menu);
   } catch (error) {
     console.error('Error fetching restaurant menu:', error);
