@@ -4,7 +4,7 @@ import { useSettingsStore } from '../../stores/settings'
 import api from '../../services/api'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
 import PageLoading from '../../components/ui/PageLoading.vue'
-import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
+import { resolveStaffPhotoUrl } from '../../utils/mediaUrl'
 import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
 const settingsStore = useSettingsStore()
@@ -80,7 +80,7 @@ const statusClass = (s) => ({
         <div class="staff-grid">
           <div v-for="member in staff" :key="member.id" class="staff-card">
             <div class="staff-photo">
-              <img :src="resolveMediaUrlOrPlaceholder(member.photo_url)" :alt="member.full_name" />
+              <img :src="resolveStaffPhotoUrl(member.photo_url)" :alt="member.full_name" />
             </div>
             <div class="staff-info">
               <strong>{{ member.full_name }}</strong>

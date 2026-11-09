@@ -3,7 +3,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
 import TranslateButton from '../../components/admin/TranslateButton.vue'
-import api, { BASE_URL } from '../../services/api'
+import api from '../../services/api'
+import { resolveStaffPhotoUrl } from '../../utils/mediaUrl'
 
 const router = useRouter()
 const staff = ref([])
@@ -14,14 +15,7 @@ const isUploading = ref(false)
 
 const form = ref({ full_name: '', role: '', role_en: '', contact_email: '', photo_url: '' })
 
-const getImageUrl = (url) => {
-  if (!url || url.includes('placeholder-staff')) return '/placeholder-staff.png'
-  if (url.startsWith('http')) return url
-  // Ensure we don't double slash if BASE_URL ends with /
-  const base = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
-  const path = url.startsWith('/') ? url : `/${url}`;
-  return `${base}${path}`
-}
+const getImageUrl = (url) => resolveStaffPhotoUrl(url)
 
 const fetchStaff = async () => {
   isLoading.value = true

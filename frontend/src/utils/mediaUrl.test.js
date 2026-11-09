@@ -28,4 +28,12 @@ describe('mediaUrl', () => {
     expect(resolveMediaUrlOrPlaceholder('')).toBe('/placeholder.jpg')
     expect(resolveMediaUrlOrPlaceholder('/uploads/x.jpg')).toBe('http://127.0.0.1:3000/uploads/x.jpg')
   })
+
+  test('staff photos keep FE placeholder on site origin', async () => {
+    const { resolveStaffPhotoUrl, STAFF_PLACEHOLDER } = await import('./mediaUrl')
+    expect(resolveStaffPhotoUrl('')).toBe(STAFF_PLACEHOLDER)
+    expect(resolveStaffPhotoUrl('/placeholder-staff.svg')).toBe(STAFF_PLACEHOLDER)
+    expect(resolveStaffPhotoUrl('/placeholder-staff.png')).toBe(STAFF_PLACEHOLDER)
+    expect(resolveStaffPhotoUrl('/uploads/staff/a.jpg')).toBe('http://127.0.0.1:3000/uploads/staff/a.jpg')
+  })
 })
