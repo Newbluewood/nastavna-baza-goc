@@ -3,6 +3,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
 import TranslateButton from '../../components/admin/TranslateButton.vue'
+import AdminReservationModal from '../../components/admin/AdminReservationModal.vue'
 import api from '../../services/api'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
@@ -13,6 +14,20 @@ const selectedFacilityId = ref(null)
 const isLoading = ref(false)
 const isSaving = ref(false)
 const editingRoom = ref(null)
+const reservationModalOpen = ref(false)
+const reservationRoom = ref(null)
+
+const openReservationModal = (room) => {
+  reservationRoom.value = room
+  reservationModalOpen.value = true
+}
+
+const onReservationCreated = (result) => {
+  alert(
+    `Rezervacija kreirana (#${result.inquiryId}).` +
+      (result.created_by_admin_username ? `\nAdmin: ${result.created_by_admin_username}` : '')
+  )
+}
 
 const isEditingFacility = ref(false)
 const isUploadingCover = ref(false)
@@ -287,6 +302,7 @@ watch(selectedFacilityId, () => {
             <p v-if="room.meal_info" class="meal-info-text">🍴 {{ room.meal_info }}</p>
           </div>
           <div class="room-actions">
+            <button class="reserve-btn" @click="openReservationModal(room)">Резервиши</button>
             <button class="edit-btn" @click="startEdit(room)">Уреди податке</button>
           </div>
         </div>
@@ -396,6 +412,13 @@ watch(selectedFacilityId, () => {
     </div>
 
     <div v-else class="empty-msg">Нема дефинисаних соба за овај објекат.</div>
+
+    <AdminReservationModal
+      v-model:isOpen="reservationModalOpen"
+      :room="reservationRoom"
+      :facility-name="selectedFacility?.name || ''"
+      @created="onReservationCreated"
+    />
   </AdminLayout>
 </template>
 
@@ -574,6 +597,24 @@ watch(selectedFacilityId, () => {
   border-left: 3px solid #cdac91;
 }
 
+.room-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+.reserve-btn {
+  background: #27ae60;
+  border: 1px solid #27ae60;
+  color: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+.reserve-btn:hover {
+  background: #219150;
+}
 .edit-btn {
   background: transparent;
   border: 1px solid #cdac91;

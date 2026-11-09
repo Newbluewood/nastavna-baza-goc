@@ -102,6 +102,17 @@ const schemas = {
   inquiryStatus: {
     status: { required: true }
   },
+  adminReservation: {
+    sender_name: { required: true, min: 2, max: 120 },
+    email: { required: true, type: 'email' },
+    phone: { required: false, max: 40 },
+    message: { required: false, max: 2000 },
+    target_room_id: { required: true },
+    check_in: { required: true },
+    check_out: { required: true },
+    board_type: { required: false },
+    send_email: { required: false }
+  },
   passwordReset: {
     email: { required: true, type: 'email' }
   },

@@ -258,6 +258,13 @@ class ApiService {
     return this.request('/api/admin/inquiries');
   }
 
+  async createAdminReservation(payload) {
+    return this.request('/api/admin/reservations', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
   async getInquiryActivity(id) {
     return this.request(`/api/admin/inquiries/${id}/activity`);
   }

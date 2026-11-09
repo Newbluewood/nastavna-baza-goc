@@ -134,6 +134,7 @@ const statusCounts = computed(() => ({
   obradjeno: inquiries.value.filter(i => i.status === 'obradjeno').length,
   odbijeno: inquiries.value.filter(i => i.status === 'odbijeno').length,
   otkazano: inquiries.value.filter(i => i.status === 'otkazano').length,
+  isteklo: inquiries.value.filter(i => i.status === 'isteklo').length,
 }))
 
 const fixedViews = [
@@ -198,6 +199,12 @@ const changeStatus = async (inquiry, newStatus) => {
       alert(`Termin je u međuvremenu zauzet i ovaj upit je automatski odbijen.\n${err.data.error || ''}`)
       return
     }
+    if (err.status === 409 && err.data?.autoExpired) {
+      const idx = inquiries.value.findIndex(i => i.id === inquiry.id)
+      if (idx !== -1) inquiries.value[idx].status = err.data.newStatus || 'isteklo'
+      alert(err.data.error || 'Upit je istekao.')
+      return
+    }
     alert(`Greška pri promeni statusa:\n${err.data?.error || err.message}`)
   } finally {
     actionLoading.value = null
@@ -209,9 +216,30 @@ const formatDate = (dateStr) => {
   return new Date(dateStr).toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-const STATUS_LABELS = { novo: '🔔 Novo', obradjeno: '✅ Odobreno', odbijeno: '❌ Odbijeno', otkazano: '🚫 Otkazano' }
-const STATUS_CLASSES = { novo: 'badge-novo', obradjeno: 'badge-ok', odbijeno: 'badge-bad', otkazano: 'badge-cancel' }
-const STATUS_SHORT = { novo: 'Novo', obradjeno: 'Odobreno', odbijeno: 'Odbijeno', otkazano: 'Otkazano', pending: 'Pending', confirmed: 'Confirmed', cancelled: 'Cancelled' }
+const STATUS_LABELS = {
+  novo: '🔔 Novo',
+  obradjeno: '✅ Odobreno',
+  odbijeno: '❌ Odbijeno',
+  otkazano: '🚫 Otkazano',
+  isteklo: '⌛ Isteklo',
+}
+const STATUS_CLASSES = {
+  novo: 'badge-novo',
+  obradjeno: 'badge-ok',
+  odbijeno: 'badge-bad',
+  otkazano: 'badge-cancel',
+  isteklo: 'badge-expired',
+}
+const STATUS_SHORT = {
+  novo: 'Novo',
+  obradjeno: 'Odobreno',
+  odbijeno: 'Odbijeno',
+  otkazano: 'Otkazano',
+  isteklo: 'Isteklo',
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  cancelled: 'Cancelled',
+}
 
 const statusLabel = (s) => STATUS_LABELS[s] || s
 const statusClass = (s) => STATUS_CLASSES[s] || ''
@@ -282,7 +310,7 @@ const assignLoyaltyVoucher = async (inquiry) => {
           @click="filterStatus = key"
         >
           <span class="card-count">{{ count }}</span>
-          <span class="card-label">{{ { sve: 'Сви', novo: 'Нови', obradjeno: 'Одобрени', odbijeno: 'Одбијени', otkazano: 'Отказани' }[key] }}</span>
+          <span class="card-label">{{ { sve: 'Сви', novo: 'Нови', obradjeno: 'Одобрени', odbijeno: 'Одбијени', otkazano: 'Отказани', isteklo: 'Истекли' }[key] }}</span>
         </div>
       </div>
 
@@ -353,6 +381,9 @@ const assignLoyaltyVoucher = async (inquiry) => {
                 <td>
                   <strong>{{ inq.sender_name }}</strong>
                   <p v-if="inq.message" class="msg-preview">{{ inq.message.slice(0, 60) }}{{ inq.message.length > 60 ? '...' : '' }}</p>
+                  <div v-if="inq.source === 'admin_cms'" class="cms-badge" :title="'CMS rezervacija'">
+                    CMS · {{ inq.created_by_admin_username || 'admin' }}
+                  </div>
                   <div v-if="hasRejectionHistory(inq)" class="history-hint" :title="`Ukupno upita: ${inq.guest_total_inquiries}`">
                     ⚠️ Ranije odbijan: {{ inq.guest_rejected_inquiries }}x
                     <span class="crm-tip">CRM hint: razmotri vaučer/popust</span>
@@ -379,7 +410,7 @@ const assignLoyaltyVoucher = async (inquiry) => {
                 <td class="muted">{{ fmt(inq.created_at) }}</td>
                 <td>
                   <span class="status-badge" :class="statusClass(inq.status)">{{ statusLabel(inq.status) }}</span>
-                  <div v-if="inq.status === 'odbijeno' && inq.rejection_reason" class="reject-reason">
+                  <div v-if="['odbijeno', 'isteklo'].includes(inq.status) && inq.rejection_reason" class="reject-reason">
                     {{ inq.rejection_reason }}
                   </div>
                 </td>
@@ -604,6 +635,16 @@ const assignLoyaltyVoucher = async (inquiry) => {
   font-size: 0.72rem;
   color: #b06500;
 }
+.cms-badge {
+  margin-top: 6px;
+  display: inline-block;
+  background: #e8f5e9;
+  border-left: 3px solid #27ae60;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  color: #1e7e46;
+  font-weight: 600;
+}
 .facility-tag {
   display: inline-block;
   background: #f1ece7;
@@ -637,6 +678,8 @@ const assignLoyaltyVoucher = async (inquiry) => {
 .badge-ok { background: #e8f5e9; color: #27ae60; }
 .badge-bad { background: #fce4ec; color: #c0392b; }
 .badge-cancel { background: #eceff1; color: #607d8b; }
+.badge-expired { background: #f3e5f5; color: #7b1fa2; }
+.card-isteklo .card-count { color: #7b1fa2; }
 
 /* ACTION BUTTONS */
 

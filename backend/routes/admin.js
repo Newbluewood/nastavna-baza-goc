@@ -7,6 +7,7 @@ const {
 	getInquiries,
 	getInquiryActivity,
 	updateInquiryStatus,
+	createAdminReservation,
 	createNews,
 	getAdminNews,
 	getAdminNewsById,
@@ -69,6 +70,7 @@ router.use(invalidatePublicCacheOnWrite);
 router.get('/inquiries',           adminAuthMiddleware,                                      asyncHandler(getInquiries));
 router.get('/inquiries/:id/activity', adminAuthMiddleware,                                   asyncHandler(getInquiryActivity));
 router.post('/inquiries/:id/status', adminAuthMiddleware, validateRequest(schemas.inquiryStatus), asyncHandler(updateInquiryStatus));
+router.post('/reservations',       adminAuthMiddleware, validateRequest(schemas.adminReservation), asyncHandler(createAdminReservation));
 router.get('/news',                adminAuthMiddleware,                                      asyncHandler(getAdminNews));
 router.get('/news/:id',            adminAuthMiddleware,                                      asyncHandler(getAdminNewsById));
 router.post('/news',               adminAuthMiddleware, validateRequest(schemas.news),        asyncHandler(createNews));

@@ -3,8 +3,15 @@ module.exports = {
     NEW: 'novo',
     APPROVED: 'obradjeno',
     REJECTED: 'odbijeno',
-    CANCELLED: 'otkazano'
+    CANCELLED: 'otkazano',
+    EXPIRED: 'isteklo'
   },
+  INQUIRY_SOURCE: {
+    WEB: 'web',
+    ADMIN_CMS: 'admin_cms'
+  },
+  /** Pending (novo) inquiries older than this many days auto-expire. */
+  INQUIRY_PENDING_MAX_DAYS: Number(process.env.INQUIRY_PENDING_MAX_DAYS) || 14,
   LANGUAGES: {
     SERBIAN: 'sr',
     ENGLISH: 'en'

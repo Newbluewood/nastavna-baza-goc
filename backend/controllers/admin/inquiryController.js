@@ -1,9 +1,17 @@
 const { INQUIRY_STATUS } = require('../../config/constants');
 const emailService = require('../../services/emailService');
 const { sendError } = require('../../utils/response');
+const { expireStaleInquiries } = require('../../services/inquiryExpiryService');
+const { createAdminConfirmedReservation } = require('../../services/adminReservationService');
 
 async function getInquiries(req, res) {
   const db = req.app.locals.db;
+
+  try {
+    await expireStaleInquiries(db);
+  } catch (expireErr) {
+    console.warn('[getInquiries] expireStaleInquiries:', expireErr.message);
+  }
 
   const [inquiries] = await db.query(`
     SELECT i.*, g.name as guest_name, g.email as guest_email, g.vouchers AS guest_vouchers,
@@ -127,6 +135,28 @@ async function updateInquiryStatus(req, res) {
 
     const inquiry = inquiries[0];
 
+    if (inquiry.status === INQUIRY_STATUS.EXPIRED) {
+      await connection.rollback();
+      return sendError(res, 400, 'Inquiry already expired');
+    }
+
+    if (status === INQUIRY_STATUS.APPROVED && inquiry.check_in) {
+      const checkIn = String(inquiry.check_in).slice(0, 10);
+      const today = new Date().toISOString().slice(0, 10);
+      if (checkIn < today) {
+        await connection.query(
+          'UPDATE inquiries SET status = ?, rejection_reason = ? WHERE id = ?',
+          [INQUIRY_STATUS.EXPIRED, 'Automatski isteklo: datum dolaska je prošao.', inquiryId]
+        );
+        await connection.commit();
+        return res.status(409).json({
+          error: 'Datum dolaska je prošao — upit je označen kao istekao.',
+          autoExpired: true,
+          newStatus: INQUIRY_STATUS.EXPIRED,
+        });
+      }
+    }
+
     const rejectDueToRoomConflict = async (reasonText) => {
       await connection.query(
         'UPDATE inquiries SET status = ?, rejection_reason = ? WHERE id = ?',
@@ -247,4 +277,42 @@ async function updateInquiryStatus(req, res) {
   }
 }
 
-module.exports = { getInquiries, getInquiryActivity, updateInquiryStatus };
+async function createAdminReservation(req, res) {
+  const db = req.app.locals.db;
+  const body = req.validated || req.body || {};
+
+  try {
+    const result = await createAdminConfirmedReservation(db, {
+      sender_name: body.sender_name,
+      email: body.email,
+      phone: body.phone,
+      message: body.message,
+      target_room_id: Number(body.target_room_id),
+      check_in: body.check_in,
+      check_out: body.check_out,
+      board_type: body.board_type || 'base',
+      send_email: body.send_email !== false,
+      adminId: req.user?.id || null,
+      adminUsername: req.user?.username || null,
+    });
+
+    res.status(201).json({
+      message: 'Reservation created',
+      ...result,
+      created_by_admin_username: req.user?.username || null,
+    });
+  } catch (error) {
+    if (error.code === 'VALIDATION') {
+      return sendError(res, 400, error.message);
+    }
+    if (error.code === 'ROOM_UNAVAILABLE') {
+      return res.status(409).json({ error: error.message, code: error.code });
+    }
+    if (error.code === 'NOT_FOUND') {
+      return sendError(res, 404, error.message);
+    }
+    throw error;
+  }
+}
+
+module.exports = { getInquiries, getInquiryActivity, updateInquiryStatus, createAdminReservation };

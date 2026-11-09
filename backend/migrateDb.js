@@ -163,6 +163,23 @@ async function run() {
     await ensureColumn(conn, 'guests', 'vouchers', 'vouchers JSON NULL');
 
     await ensureColumn(conn, 'inquiries', 'guest_id', 'guest_id INT NULL');
+    await ensureColumn(conn, 'inquiries', 'source', "source VARCHAR(32) NOT NULL DEFAULT 'web'");
+    await ensureColumn(conn, 'inquiries', 'created_by_admin_id', 'created_by_admin_id INT NULL');
+    await ensureColumn(conn, 'inquiries', 'created_by_admin_username', 'created_by_admin_username VARCHAR(100) NULL');
+    // Expand status enum for auto-expired pending inquiries
+    {
+      const [statusCols] = await conn.query("SHOW COLUMNS FROM inquiries LIKE 'status'")
+      const statusType = String(statusCols[0]?.Type || '')
+      if (statusType.includes("'isteklo'")) {
+        console.log('SKIP: inquiries.status already includes isteklo')
+      } else {
+        await executeOrPrint(
+          conn,
+          `ALTER TABLE ${q('inquiries')} MODIFY COLUMN ${q('status')} ENUM('novo','obradjeno','odbijeno','otkazano','isteklo') NOT NULL DEFAULT 'novo'`,
+          'alter inquiries.status enum (+isteklo)'
+        )
+      }
+    }
     await ensureColumn(conn, 'reservations', 'guest_id', 'guest_id INT NULL');
     await ensureColumn(conn, 'reservations', 'cancel_token', 'cancel_token VARCHAR(32) NULL');
     await ensureColumn(conn, 'reservations', 'inquiry_id', 'inquiry_id INT NULL');
