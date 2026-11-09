@@ -5,7 +5,7 @@ import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
-import { initPosthog, capturePageview } from './analytics/posthog'
+import { initPosthog, syncPosthogRoute } from './analytics/posthog'
 
 initPosthog()
 
@@ -15,7 +15,7 @@ app.use(createPinia())
 app.use(router)
 
 router.afterEach((to) => {
-  capturePageview(to)
+  syncPosthogRoute(to)
 })
 
 app.mount('#app')
