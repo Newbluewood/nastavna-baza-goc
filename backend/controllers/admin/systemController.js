@@ -1,5 +1,6 @@
 const chatMetricsService = require('../../services/chatMetricsService');
 const chatAnalyticsService = require('../../services/chatAnalyticsService');
+const posthogStatsService = require('../../services/posthogStatsService');
 
 async function getChatMetrics(req, res) {
   const snapshot = chatMetricsService.getSnapshot();
@@ -38,6 +39,28 @@ async function getChatAnalyticsMiss(req, res) {
     missConfidenceMax: chatAnalyticsService.missConfidenceMax(),
     summary,
     items
+  });
+}
+
+async function getSiteStats(req, res) {
+  const days = req.query.days;
+  const [posthog, ragTop, ragMiss, ragSummary] = await Promise.all([
+    posthogStatsService.getSiteStats({ days }),
+    chatAnalyticsService.getTopQueries({ days, limit: 8 }).catch(() => []),
+    chatAnalyticsService.getMissQueries({ days, limit: 8 }).catch(() => []),
+    chatAnalyticsService.getAnalyticsSummary({ days }).catch(() => null)
+  ]);
+
+  return res.json({
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    days: posthogStatsService.parseDays(days),
+    posthog,
+    rag: {
+      summary: ragSummary,
+      top: ragTop,
+      miss: ragMiss
+    }
   });
 }
 
@@ -85,6 +108,7 @@ module.exports = {
   getChatMetrics,
   getChatAnalyticsTop,
   getChatAnalyticsMiss,
+  getSiteStats,
   getAiUsage,
   seedSiteKbNow,
   purgeCache

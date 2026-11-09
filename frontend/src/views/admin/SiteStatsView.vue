@@ -7,7 +7,7 @@ import api from '../../services/api'
 const router = useRouter()
 const numberFmt = new Intl.NumberFormat('sr-RS')
 
-/** Demo dataset — zameniti realnim API-jem kad bude spreman. */
+/** Fallback dok PostHog personal key nije podešen ili nema eventa. */
 const DEMO = {
   periodLabel: 'последњих 30 дана (демо)',
   kpis: [
@@ -61,14 +61,54 @@ const DEMO = {
   ],
 }
 
-const liveTop = ref([])
-const liveMiss = ref([])
-const liveSummary = ref(null)
-const liveError = ref('')
-const liveLoading = ref(false)
+const analyticsDays = ref(30)
+const loading = ref(false)
+const error = ref('')
+const payload = ref(null)
+
+const posthog = computed(() => payload.value?.posthog || null)
+const isLive = computed(() => Boolean(posthog.value?.live))
+const ragSummary = computed(() => payload.value?.rag?.summary || null)
+const liveTop = computed(() => payload.value?.rag?.top || [])
+const liveMiss = computed(() => payload.value?.rag?.miss || [])
+
+const kpis = computed(() => {
+  if (!isLive.value) return DEMO.kpis
+  const base = Array.isArray(posthog.value?.kpis) ? [...posthog.value.kpis] : []
+  const ragTotal = Number(ragSummary.value?.total || 0)
+  base.splice(2, 0, {
+    key: 'rag',
+    label: 'RAG упити',
+    value: ragTotal,
+    delta: `${analyticsDays.value}д`
+  })
+  return base
+})
+
+const trafficByDay = computed(() =>
+  isLive.value && posthog.value?.trafficByDay?.length
+    ? posthog.value.trafficByDay
+    : DEMO.trafficByDay
+)
+
+const geo = computed(() =>
+  isLive.value && posthog.value?.geo?.length ? posthog.value.geo : DEMO.geo
+)
+
+const topPages = computed(() =>
+  isLive.value && posthog.value?.topPages?.length
+    ? posthog.value.topPages
+    : DEMO.topPages
+)
+
+const topRooms = computed(() =>
+  isLive.value && posthog.value?.topRooms?.length
+    ? posthog.value.topRooms
+    : DEMO.topRooms
+)
 
 const maxTraffic = computed(() =>
-  Math.max(...DEMO.trafficByDay.map((d) => d.visits), 1)
+  Math.max(...trafficByDay.value.map((d) => Number(d.visits) || 0), 1)
 )
 
 const formatNum = (v) => {
@@ -76,31 +116,37 @@ const formatNum = (v) => {
   return String(v)
 }
 
-const barWidth = (visits) => `${Math.round((visits / maxTraffic.value) * 100)}%`
+const barWidth = (visits) => `${Math.round((Number(visits) / maxTraffic.value) * 100)}%`
 
-const fetchLiveChat = async () => {
-  liveLoading.value = true
+const statusLabel = computed(() => {
+  if (loading.value) return 'Учитавам...'
+  if (isLive.value) return 'LIVE · PostHog'
+  if (posthog.value?.error) return `Демо · ${posthog.value.error}`
+  return 'Демо подаци'
+})
+
+const fetchStats = async () => {
+  loading.value = true
   try {
-    const [top, miss] = await Promise.all([
-      api.getAdminChatAnalyticsTop({ days: 30, limit: 8 }),
-      api.getAdminChatAnalyticsMiss({ days: 30, limit: 8 }),
-    ])
-    liveTop.value = top?.items || []
-    liveMiss.value = miss?.items || []
-    liveSummary.value = top?.summary || miss?.summary || null
-    liveError.value = ''
+    payload.value = await api.getAdminSiteStats({ days: analyticsDays.value })
+    error.value = ''
   } catch (err) {
     if (err.status === 401) {
       router.push({ name: 'admin-login' })
       return
     }
-    liveError.value = err.message || 'Live chat аналитика није доступна'
+    error.value = err.message || 'Грешка при учитавању статистике'
   } finally {
-    liveLoading.value = false
+    loading.value = false
   }
 }
 
-onMounted(fetchLiveChat)
+const setDays = (days) => {
+  analyticsDays.value = days
+  fetchStats()
+}
+
+onMounted(fetchStats)
 </script>
 
 <template>
@@ -109,34 +155,53 @@ onMounted(fetchLiveChat)
       <div>
         <h1>Статистике сајта</h1>
         <p class="subtitle">
-          Преглед посета, соба и RAG питања.
-          <span class="demo-pill">ДЕМО ПОДАЦИ</span>
-          — замењују се правим када аналитика буде повезана.
+          Посете из PostHog-а + RAG top/miss из базе.
+          <span class="status-pill" :class="{ live: isLive }">{{ statusLabel }}</span>
         </p>
       </div>
-      <button class="refresh-btn" type="button" :disabled="liveLoading" @click="fetchLiveChat">
-        {{ liveLoading ? 'Учитавам...' : 'Освежи live RAG' }}
-      </button>
+      <div class="header-actions">
+        <div class="days-pills">
+          <button
+            v-for="d in [7, 30, 90]"
+            :key="`d-${d}`"
+            type="button"
+            class="day-pill"
+            :class="{ active: analyticsDays === d }"
+            :disabled="loading"
+            @click="setDays(d)"
+          >
+            {{ d }}д
+          </button>
+        </div>
+        <button class="refresh-btn" type="button" :disabled="loading" @click="fetchStats">
+          {{ loading ? 'Учитавам...' : 'Освежи' }}
+        </button>
+      </div>
     </div>
 
-    <p class="demo-banner">
-      Приказани KPI, географија, странице и собе су <strong>лажни (dummy)</strong> ради прегледа UI-а.
-      Chat top/miss испод може да покаже реалне податке ако их има у <code>chat_query_events</code>.
+    <p v-if="!isLive" class="demo-banner">
+      Приказују се <strong>демо</strong> бројке док PostHog personal key / project ID
+      не буду у backend <code>.env</code>
+      (<code>POSTHOG_PERSONAL_API_KEY</code>, <code>POSTHOG_PROJECT_ID</code>,
+      <code>POSTHOG_HOST=https://eu.posthog.com</code>).
+      <span v-if="posthog?.error"> Грешка: {{ posthog.error }}</span>
     </p>
 
+    <p v-if="error" class="error-banner">{{ error }}</p>
+
     <section class="kpi-grid">
-      <div v-for="kpi in DEMO.kpis" :key="kpi.key" class="kpi-card">
+      <div v-for="kpi in kpis" :key="kpi.key" class="kpi-card">
         <span class="kpi-label">{{ kpi.label }}</span>
         <span class="kpi-value">{{ formatNum(kpi.value) }}</span>
-        <span class="kpi-delta">{{ kpi.delta }} · {{ DEMO.periodLabel }}</span>
+        <span class="kpi-delta">{{ kpi.delta }}</span>
       </div>
     </section>
 
     <div class="two-col">
       <section class="card">
-        <h2 class="card-title">Посећеност (недеља) — демо</h2>
+        <h2 class="card-title">Посећеност ({{ isLive ? '7 дана' : 'недеља · демо' }})</h2>
         <div class="bars">
-          <div v-for="d in DEMO.trafficByDay" :key="d.day" class="bar-row">
+          <div v-for="(d, i) in trafficByDay" :key="`${d.day}-${i}`" class="bar-row">
             <span class="bar-label">{{ d.day }}</span>
             <div class="bar-track">
               <div class="bar-fill" :style="{ width: barWidth(d.visits) }"></div>
@@ -147,14 +212,14 @@ onMounted(fetchLiveChat)
       </section>
 
       <section class="card">
-        <h2 class="card-title">Географија посетилаца — демо</h2>
+        <h2 class="card-title">Географија {{ isLive ? '' : '— демо' }}</h2>
         <ul class="geo-list">
-          <li v-for="g in DEMO.geo" :key="g.country">
-            <span class="geo-name">{{ g.flag }} {{ g.country }}</span>
+          <li v-for="g in geo" :key="g.country">
+            <span class="geo-name">{{ g.flag || '🌍' }} {{ g.country }}</span>
             <div class="geo-track">
-              <div class="geo-fill" :style="{ width: `${g.pct}%` }"></div>
+              <div class="geo-fill" :style="{ width: `${g.pct || 0}%` }"></div>
             </div>
-            <span class="geo-pct">{{ g.pct }}%</span>
+            <span class="geo-pct">{{ g.pct || 0 }}%</span>
           </li>
         </ul>
       </section>
@@ -162,7 +227,7 @@ onMounted(fetchLiveChat)
 
     <div class="two-col">
       <section class="card">
-        <h2 class="card-title">Најгледаније странице — демо</h2>
+        <h2 class="card-title">Најгледаније странице {{ isLive ? '' : '— демо' }}</h2>
         <table class="data-table compact">
           <thead>
             <tr>
@@ -171,7 +236,7 @@ onMounted(fetchLiveChat)
             </tr>
           </thead>
           <tbody>
-            <tr v-for="p in DEMO.topPages" :key="p.path">
+            <tr v-for="p in topPages" :key="p.path">
               <td><code>{{ p.path }}</code></td>
               <td>{{ formatNum(p.views) }}</td>
             </tr>
@@ -180,20 +245,18 @@ onMounted(fetchLiveChat)
       </section>
 
       <section class="card">
-        <h2 class="card-title">Најтраженије собе — демо</h2>
+        <h2 class="card-title">Најгледанији смештај {{ isLive ? '' : '— демо' }}</h2>
         <table class="data-table compact">
           <thead>
             <tr>
-              <th>Соба</th>
-              <th>Кликови</th>
-              <th>Упити</th>
+              <th>Соба / објекат</th>
+              <th>Прегледи</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="r in DEMO.topRooms" :key="r.name">
+            <tr v-for="r in topRooms" :key="r.name">
               <td>{{ r.name }}</td>
               <td>{{ formatNum(r.clicks) }}</td>
-              <td>{{ formatNum(r.inquiries) }}</td>
             </tr>
           </tbody>
         </table>
@@ -203,13 +266,12 @@ onMounted(fetchLiveChat)
     <section class="card">
       <div class="card-head">
         <h2 class="card-title">RAG / chat agent</h2>
-        <span v-if="liveSummary" class="live-pill">
-          live: {{ formatNum(liveSummary.total) }} упита
-          (miss {{ formatNum(liveSummary.misses) }})
+        <span v-if="ragSummary" class="live-pill">
+          live: {{ formatNum(ragSummary.total) }} упита
+          (miss {{ formatNum(ragSummary.misses) }})
         </span>
         <span v-else class="demo-pill small">демо fallback</span>
       </div>
-      <p v-if="liveError" class="error-banner">{{ liveError }}</p>
 
       <div class="two-col inner">
         <div>
@@ -271,7 +333,7 @@ onMounted(fetchLiveChat)
 </template>
 
 <style scoped>
-.demo-pill {
+.status-pill {
   display: inline-block;
   margin-left: 8px;
   padding: 2px 8px;
@@ -282,6 +344,20 @@ onMounted(fetchLiveChat)
   font-weight: 700;
   letter-spacing: 0.4px;
   vertical-align: middle;
+}
+.status-pill.live {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-color: #a5d6a7;
+}
+.demo-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffcc80;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 .demo-pill.small { margin-left: 0; }
 .live-pill {
@@ -306,6 +382,28 @@ onMounted(fetchLiveChat)
   padding: 1px 6px;
   font-size: 0.85em;
 }
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.days-pills { display: flex; gap: 6px; }
+.day-pill {
+  background: #f5f3f0;
+  color: #332317;
+  border: 1px solid #cdac91;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+.day-pill.active {
+  background: #332317;
+  color: #fff;
+  border-color: #332317;
+}
+.day-pill:disabled { opacity: 0.6; cursor: wait; }
 
 .kpi-grid {
   display: grid;
@@ -411,7 +509,7 @@ onMounted(fetchLiveChat)
 }
 .geo-list li {
   display: grid;
-  grid-template-columns: 120px 1fr 44px;
+  grid-template-columns: minmax(110px, 140px) 1fr 44px;
   gap: 10px;
   align-items: center;
 }

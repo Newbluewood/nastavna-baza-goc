@@ -469,6 +469,11 @@ class ApiService {
     return this.request(`/api/admin/chat-analytics/miss?${params}`);
   }
 
+  async getAdminSiteStats({ days = 30 } = {}) {
+    const params = new URLSearchParams({ days: String(days) });
+    return this.request(`/api/admin/site-stats?${params}`);
+  }
+
   // Admin — Cache
   async purgeCache() {
     return this.request('/api/admin/system/purge-cache', { method: 'POST' });
