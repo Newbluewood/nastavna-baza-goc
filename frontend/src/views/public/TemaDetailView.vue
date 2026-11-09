@@ -33,19 +33,22 @@ const fetchTheme = async () => {
   }
 }
 
+const looksLikeHtml = (value) => /<[a-z][\s\S]*>/i.test(String(value || ''))
+
 const formattedArticle = computed(() => {
   if (!theme.value) return ''
   const raw = langStore.currentLang === 'sr' ? theme.value.article_sr : theme.value.article_en
   if (!raw) return ''
-  
-  // Split by double newlines or single newlines that look like paragraphs
-  // And also handle the * list items
+
+  // TipTap / CMS HTML — render as-is. Legacy plain text keeps the old formatter.
+  if (looksLikeHtml(raw)) return raw
+
   return raw
     .split(/\n\s*\n/)
-    .map(para => {
+    .map((para) => {
       if (para.includes('* ')) {
-        const items = para.split(/\n\* /).filter(i => i.trim())
-        const listItems = items.map(item => `<li>${item.replace('* ', '').trim()}</li>`).join('')
+        const items = para.split(/\n\* /).filter((i) => i.trim())
+        const listItems = items.map((item) => `<li>${item.replace('* ', '').trim()}</li>`).join('')
         return `<ul>${listItems}</ul>`
       }
       return `<p>${para.trim().replace(/\n/g, '<br>')}</p>`

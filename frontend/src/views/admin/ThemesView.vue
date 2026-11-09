@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
 import TranslateButton from '../../components/admin/TranslateButton.vue'
+import RichTextEditor from '../../components/admin/RichTextEditor.vue'
 import api, { BASE_URL } from '../../services/api'
 
 const router = useRouter()
@@ -187,14 +188,14 @@ onMounted(() => fetchThemes())
         </div>
         <div class="form-group full-width">
           <label>Чланак (СРП)</label>
-          <textarea v-model="form.article_sr" rows="8" placeholder="Текст чланка на српском"></textarea>
+          <RichTextEditor v-model="form.article_sr" placeholder="Текст чланка на српском" />
         </div>
         <div class="form-group full-width translate-between">
           <TranslateButton :source="form.article_sr" :current="form.article_en" @translated="form.article_en = $event" />
         </div>
         <div class="form-group full-width">
           <label>Article (EN)</label>
-          <textarea v-model="form.article_en" rows="8" placeholder="Article text in English"></textarea>
+          <RichTextEditor v-model="form.article_en" placeholder="Article text in English" />
         </div>
       </div>
       <div class="form-actions">

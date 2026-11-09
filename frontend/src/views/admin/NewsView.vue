@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
 import TranslateButton from '../../components/admin/TranslateButton.vue'
+import RichTextEditor from '../../components/admin/RichTextEditor.vue'
 import api, { BASE_URL } from '../../services/api'
 
 const router = useRouter()
@@ -315,7 +316,7 @@ const submitNews = async () => {
             </div>
             <div class="form-group">
               <label>Садржај</label>
-              <textarea v-model="form.content" rows="6"></textarea>
+              <RichTextEditor v-model="form.content" placeholder="Текст вести..." />
             </div>
 
             <div class="gallery-editor">
@@ -412,7 +413,7 @@ const submitNews = async () => {
                 Content
                 <TranslateButton :source="form.content" :current="form.content_en" @translated="form.content_en = $event" />
               </label>
-              <textarea v-model="form.content_en" rows="6" class="translated-input"></textarea>
+              <RichTextEditor v-model="form.content_en" placeholder="News content..." />
             </div>
 
             <div class="image-guidelines-card">

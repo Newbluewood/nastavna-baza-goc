@@ -189,7 +189,13 @@ onUnmounted(() => {
       
       <div v-if="!isCarousel" class="news-grid">
         <div v-for="item in news" :key="item.id" class="news-card">
-          <img v-if="item.cover_image" :src="mediaSrc(item.cover_image)" class="news-card-img" @click="openLightbox(0)" />
+          <router-link
+            v-if="item.cover_image"
+            :to="resolveLink(item.link) || newsLocationSafe(item)"
+            class="news-card-img-link"
+          >
+            <img :src="mediaSrc(item.cover_image)" class="news-card-img" alt="" />
+          </router-link>
           <div class="news-card-body">
              <h3 class="news-card-title">{{ item.title }}</h3>
              <p class="news-card-excerpt">{{ item.excerpt }}</p>
@@ -200,7 +206,13 @@ onUnmounted(() => {
 
       <div v-else class="news-carousel">
         <div v-for="item in news" :key="item.id" class="news-card carousel-item">
-          <img v-if="item.cover_image" :src="mediaSrc(item.cover_image)" class="news-card-img" />
+          <router-link
+            v-if="item.cover_image"
+            :to="resolveLink(item.link) || newsLocationSafe(item)"
+            class="news-card-img-link"
+          >
+            <img :src="mediaSrc(item.cover_image)" class="news-card-img" alt="" />
+          </router-link>
           <div class="news-card-body">
              <h3 class="news-card-title">{{ item.title }}</h3>
              <p class="news-card-excerpt">{{ item.excerpt }}</p>
@@ -362,15 +374,18 @@ onUnmounted(() => {
   scroll-snap-align: start;
 }
 
-.news-card-img {
+.news-card-img-link {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
+  z-index: 0;
+  display: block;
+}
+
+.news-card-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  z-index: 0;
-  cursor: pointer;
+  display: block;
 }
 
 .news-card-body {
