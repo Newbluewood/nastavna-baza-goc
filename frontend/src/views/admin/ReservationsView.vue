@@ -21,7 +21,7 @@ const fetchInquiries = async () => {
   try {
     inquiries.value = await api.getInquiries()
   } catch (err) {
-    if (err.status === 401) { router.push('/admin/login'); return }
+    if (err.status === 401) { router.push({ name: 'admin-login' }); return }
     console.error('Greška pri učitavanju upita:', err)
   } finally {
     isLoading.value = false
@@ -37,7 +37,7 @@ onMounted(() => {
   }
 })
 
-const handleLogout = () => { api.logout(); router.push('/admin/login') }
+const handleLogout = () => { api.logout(); router.push({ name: 'admin-login' }) }
 
 const parseVouchers = (inquiry) => {
   if (!inquiry?.guest_vouchers) return []

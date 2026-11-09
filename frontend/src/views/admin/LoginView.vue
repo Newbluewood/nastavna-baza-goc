@@ -14,7 +14,7 @@ const handleLogin = async () => {
   isLoading.value = true
   try {
     await api.adminLogin({ username: username.value, password: password.value })
-    router.push('/admin/vesti')
+    router.push({ name: 'admin-news' })
   } catch (err) {
     errorMsg.value = err.data?.error || 'Погрешни подаци'
   } finally {

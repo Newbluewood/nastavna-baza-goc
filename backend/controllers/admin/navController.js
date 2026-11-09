@@ -1,8 +1,9 @@
 const { sendError } = require('../../utils/response');
-const { renumberAll, ensureModuleNavItems } = require('../../services/navSync');
+const { renumberAll, ensureModuleNavItems, normalizeStranicaNavPaths } = require('../../services/navSync');
 
 async function getAdminNav(req, res) {
   const db = req.app.locals.db;
+  await normalizeStranicaNavPaths(db);
   await ensureModuleNavItems(db);
   const [rows] = await db.query(`
     SELECT n.id, n.label_sr, n.label_en, n.path, n.sort_order, n.is_enabled, n.page_id,

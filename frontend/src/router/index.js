@@ -1,89 +1,226 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { isReservedPageSlug } from '../utils/pageRoutes'
 
-// Public site
-import HomeView from '../views/public/HomeView.vue'
-import SmestajView from '../views/public/SmestajView.vue'
-import SmestajSingleView from '../views/public/SmestajSingleView.vue'
-import VestiView from '../views/public/VestiView.vue'
-import SingleNewsView from '../views/public/SingleNewsView.vue'
-import ContactView from '../views/public/ContactView.vue'
-import PageView from '../views/public/PageView.vue'
-import CancelView from '../views/public/CancelView.vue'
-import NotFoundView from '../views/public/NotFoundView.vue'
-import IstraziView from '../views/public/IstraziView.vue'
-import TemaDetailView from '../views/public/TemaDetailView.vue'
-
-// Guest (user)
-import GuestLoginView from '../views/guest/LoginView.vue'
-import GuestDashboardView from '../views/guest/DashboardView.vue'
-import ResetPasswordView from '../views/guest/ResetPasswordView.vue'
-
-// Admin
-import AdminLoginView from '../views/admin/LoginView.vue'
-import AdminNewsView from '../views/admin/NewsView.vue'
-import AdminPagesView from '../views/admin/PagesView.vue'
-import AdminNavView from '../views/admin/NavView.vue'
-import AdminProjectsView from '../views/admin/ProjectsView.vue'
-import AdminStaffView from '../views/admin/StaffView.vue'
-import AdminReservationsView from '../views/admin/ReservationsView.vue'
-import AdminGuestsView from '../views/admin/GuestsView.vue'
-import AdminRoomMapView from '../views/admin/RoomMapView.vue'
-import AdminRoomsView from '../views/admin/RoomsView.vue'
-import AdminAiUsageView from '../views/admin/AiUsageView.vue'
-import AdminRestaurantView from '../views/admin/RestaurantView.vue'
-import AdminSettingsView from '../views/admin/SettingsView.vue'
-import AdminThemesView from '../views/admin/ThemesView.vue'
+/**
+ * Vue Router 4 style (Vue School):
+ * - named routes
+ * - lazy-loaded page components
+ * - dynamic :slug + props: true (or props fn)
+ * - linkActiveClass / linkExactActiveClass
+ */
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  linkActiveClass: 'router-link-active',
+  linkExactActiveClass: 'router-link-exact-active',
   routes: [
     // --- Public ---
-    { path: '/', name: 'home', component: HomeView },
-    { path: '/smestaj', name: 'smestaj', component: SmestajView },
-    { path: '/smestaj/:id', name: 'smestaj-single', component: SmestajSingleView },
-    { path: '/restoran', name: 'restoran', component: () => import('../views/public/RestoranView.vue') },
-    { path: '/vesti', name: 'vesti', component: VestiView },
-    { path: '/vesti/:id', name: 'single-news', component: SingleNewsView },
-    { path: '/kontakt', name: 'kontakt', component: ContactView },
-    { path: '/edukacija', name: 'edukacija', component: PageView, meta: { pageSlug: 'edukacija' } },
-    { path: '/istrazivanje', name: 'istrazivanje', component: PageView, meta: { pageSlug: 'istrazivanje' } },
-    { path: '/faq', name: 'faq', component: PageView, meta: { pageSlug: 'faq' } },
-    { path: '/stranica/:slug', name: 'page', component: PageView },
-    { path: '/istrazi', name: 'istrazi', component: IstraziView },
-    { path: '/istrazi/:id', name: 'tema-detail', component: TemaDetailView },
-    { path: '/cancel/:token', name: 'cancel', component: CancelView },
+    {
+      path: '/',
+      name: 'home',
+      component: () => import('../views/public/HomeView.vue'),
+    },
+    {
+      path: '/smestaj',
+      name: 'smestaj',
+      component: () => import('../views/public/SmestajView.vue'),
+    },
+    {
+      path: '/smestaj/:slug',
+      name: 'smestaj-single',
+      component: () => import('../views/public/SmestajSingleView.vue'),
+      props: true,
+    },
+    {
+      path: '/restoran',
+      name: 'restoran',
+      component: () => import('../views/public/RestoranView.vue'),
+    },
+    {
+      path: '/vesti',
+      name: 'vesti',
+      component: () => import('../views/public/VestiView.vue'),
+    },
+    {
+      path: '/vesti/:slug',
+      name: 'single-news',
+      component: () => import('../views/public/SingleNewsView.vue'),
+      props: true,
+    },
+    {
+      path: '/kontakt',
+      name: 'kontakt',
+      component: () => import('../views/public/ContactView.vue'),
+    },
+    {
+      path: '/edukacija',
+      name: 'edukacija',
+      component: () => import('../views/public/PageView.vue'),
+      props: () => ({ slug: 'edukacija' }),
+    },
+    {
+      path: '/istrazivanje',
+      name: 'istrazivanje',
+      component: () => import('../views/public/PageView.vue'),
+      props: () => ({ slug: 'istrazivanje' }),
+    },
+    {
+      path: '/faq',
+      name: 'faq',
+      component: () => import('../views/public/PageView.vue'),
+      props: () => ({ slug: 'faq' }),
+    },
+    {
+      path: '/istrazi',
+      name: 'istrazi',
+      component: () => import('../views/public/IstraziView.vue'),
+    },
+    {
+      path: '/istrazi/:slug',
+      name: 'tema-detail',
+      component: () => import('../views/public/TemaDetailView.vue'),
+      props: true,
+    },
+    {
+      path: '/cancel/:token',
+      name: 'cancel',
+      component: () => import('../views/public/CancelView.vue'),
+      props: true,
+    },
 
     // --- Guest ---
-    { path: '/prijava', name: 'prijava', component: GuestLoginView },
-    { path: '/moj-nalog', name: 'moj-nalog', component: GuestDashboardView, meta: { requiresGuestAuth: true } },
-    { path: '/reset-lozinka/:token', name: 'reset-lozinka', component: ResetPasswordView },
+    {
+      path: '/prijava',
+      name: 'prijava',
+      component: () => import('../views/guest/LoginView.vue'),
+    },
+    {
+      path: '/moj-nalog',
+      name: 'moj-nalog',
+      component: () => import('../views/guest/DashboardView.vue'),
+      meta: { requiresGuestAuth: true },
+    },
+    {
+      path: '/reset-lozinka/:token',
+      name: 'reset-lozinka',
+      component: () => import('../views/guest/ResetPasswordView.vue'),
+      props: true,
+    },
 
     // --- Admin ---
-    { path: '/admin/login', name: 'admin-login', component: AdminLoginView },
-    { path: '/admin/vesti', name: 'admin-news', component: AdminNewsView, meta: { requiresAuth: true } },
-    { path: '/admin/stranice', name: 'admin-pages', component: AdminPagesView, meta: { requiresAuth: true } },
-    { path: '/admin/meni', name: 'admin-nav', component: AdminNavView, meta: { requiresAuth: true } },
-    { path: '/admin/projekti', name: 'admin-projects', component: AdminProjectsView, meta: { requiresAuth: true } },
-    { path: '/admin/osoblje', name: 'admin-staff', component: AdminStaffView, meta: { requiresAuth: true } },
-    { path: '/admin/rezervacije', name: 'admin-reservations', component: AdminReservationsView, meta: { requiresAuth: true } },
-    { path: '/admin/gosti', name: 'admin-guests', component: AdminGuestsView, meta: { requiresAuth: true } },
-    { path: '/admin/mapa-soba', name: 'admin-room-map', component: AdminRoomMapView, meta: { requiresAuth: true } },
-    { path: '/admin/sobe', name: 'admin-rooms', component: AdminRoomsView, meta: { requiresAuth: true } },
-    { path: '/admin/ai', name: 'admin-ai', component: AdminAiUsageView, meta: { requiresAuth: true } },
-    { path: '/admin/restoran', name: 'admin-restaurant', component: AdminRestaurantView, meta: { requiresAuth: true } },
-    { path: '/admin/podesavanja', name: 'admin-settings', component: AdminSettingsView, meta: { requiresAuth: true } },
-    { path: '/admin/teme', name: 'admin-themes', component: AdminThemesView, meta: { requiresAuth: true } },
+    {
+      path: '/admin/login',
+      name: 'admin-login',
+      component: () => import('../views/admin/LoginView.vue'),
+    },
+    {
+      path: '/admin/vesti',
+      name: 'admin-news',
+      component: () => import('../views/admin/NewsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/stranice',
+      name: 'admin-pages',
+      component: () => import('../views/admin/PagesView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/meni',
+      name: 'admin-nav',
+      component: () => import('../views/admin/NavView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/projekti',
+      name: 'admin-projects',
+      component: () => import('../views/admin/ProjectsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/osoblje',
+      name: 'admin-staff',
+      component: () => import('../views/admin/StaffView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/rezervacije',
+      name: 'admin-reservations',
+      component: () => import('../views/admin/ReservationsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/gosti',
+      name: 'admin-guests',
+      component: () => import('../views/admin/GuestsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/mapa-soba',
+      name: 'admin-room-map',
+      component: () => import('../views/admin/RoomMapView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/sobe',
+      name: 'admin-rooms',
+      component: () => import('../views/admin/RoomsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/ai',
+      name: 'admin-ai',
+      component: () => import('../views/admin/AiUsageView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/restoran',
+      name: 'admin-restaurant',
+      component: () => import('../views/admin/RestaurantView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/podesavanja',
+      name: 'admin-settings',
+      component: () => import('../views/admin/SettingsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/teme',
+      name: 'admin-themes',
+      component: () => import('../views/admin/ThemesView.vue'),
+      meta: { requiresAuth: true },
+    },
 
-    // --- Fallback ---
-    { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView }
+    // Legacy CMS prefix → short /{slug}
+    {
+      path: '/stranica/:slug',
+      redirect: (to) => ({ name: 'page', params: { slug: to.params.slug } }),
+    },
+    {
+      path: '/:slug',
+      name: 'page',
+      component: () => import('../views/public/PageView.vue'),
+      props: true,
+      beforeEnter: (to) => {
+        const slug = String(to.params.slug || '')
+        if (isReservedPageSlug(slug)) {
+          return { name: 'not-found', params: { pathMatch: [slug] }, replace: true }
+        }
+        return true
+      },
+    },
+
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/public/NotFoundView.vue'),
+    },
   ],
   scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) {
-      return savedPosition
-    } else {
-      return { top: 0 }
-    }
-  }
+    if (savedPosition) return savedPosition
+    return { top: 0 }
+  },
 })
 
 router.beforeEach((to) => {

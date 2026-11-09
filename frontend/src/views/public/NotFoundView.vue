@@ -1,42 +1,25 @@
 <script setup>
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const route = useRoute()
-
-// Proveri da li je ruta "pod gradnjom" (ima rute ali komponenta nije implementirana)
-// Only paths that are NOT live routes in router (live: /kontakt, /edukacija, /istrazivanje).
-const underConstructionPaths = ['/o-nama', '/projekti']
-const isUnderConstruction = underConstructionPaths.some(p => route.path.startsWith(p))
 </script>
 
 <template>
   <div class="not-found-page">
     <div class="content-box">
-
-      <!-- Ikonica / Ilustracija -->
       <div class="icon-area">
-        <div v-if="isUnderConstruction" class="big-icon">🚧</div>
-        <div v-else class="big-icon">404</div>
+        <div class="big-icon">404</div>
       </div>
 
-      <!-- Naslov -->
-      <h1 v-if="isUnderConstruction">Страница је у изградњи</h1>
-      <h1 v-else>Страница није пронађена</h1>
+      <h1>Страница није пронађена</h1>
 
-      <!-- Opis -->
-      <p v-if="isUnderConstruction">
-        Ова секција је тренутно у припреми.<br>
-        Ускоро ће бити доступна. Хвала на стрпљењу.
-      </p>
-      <p v-else>
+      <p>
         Страница коју тражите не постоји или је премештена.<br>
         Проверите адресу или се вратите на почетну страну.
       </p>
 
-      <!-- Akcije -->
       <div class="actions">
-        <button class="btn-primary" @click="router.push('/')">
+        <button class="btn-primary" @click="router.push({ name: 'home' })">
           ← Почетна страна
         </button>
         <button class="btn-secondary" @click="router.back()">
@@ -44,13 +27,11 @@ const isUnderConstruction = underConstructionPaths.some(p => route.path.startsWi
         </button>
       </div>
 
-      <!-- Korisni linkovi -->
       <div class="quick-links">
         <span>Или посетите:</span>
-        <router-link to="/smestaj">Смештај</router-link>
-        <router-link to="/vesti">Вести</router-link>
+        <router-link :to="{ name: 'smestaj' }">Смештај</router-link>
+        <router-link :to="{ name: 'vesti' }">Вести</router-link>
       </div>
-
     </div>
   </div>
 </template>
@@ -62,96 +43,54 @@ const isUnderConstruction = underConstructionPaths.some(p => route.path.startsWi
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  background: #fff;
+  background: linear-gradient(180deg, #fdfaf7 0%, #f5f0ea 100%);
 }
-
 .content-box {
   text-align: center;
-  max-width: 520px;
-  width: 100%;
+  max-width: 480px;
 }
-
-.icon-area {
-  margin-bottom: 30px;
-}
-
 .big-icon {
-  font-size: 5rem;
-  line-height: 1;
-  color: var(--color-nav, #332317);
-  font-weight: 900;
-  letter-spacing: -2px;
-  /* Tanki dekorativni underline */
-  display: inline-block;
-  border-bottom: 4px solid #cdac91;
-  padding-bottom: 10px;
+  font-size: 4rem;
+  font-weight: 800;
+  color: #cdac91;
+  letter-spacing: 4px;
+  margin-bottom: 16px;
 }
-
 h1 {
-  font-size: 1.8rem;
-  color: var(--color-nav, #332317);
-  margin: 0 0 15px 0;
+  color: #332317;
+  font-size: 1.6rem;
+  margin: 0 0 12px;
 }
-
 p {
-  color: #777;
-  font-size: 1rem;
-  line-height: 1.7;
-  margin: 0 0 35px 0;
+  color: #67462e;
+  line-height: 1.6;
+  margin: 0 0 24px;
 }
-
 .actions {
   display: flex;
+  gap: 12px;
   justify-content: center;
-  gap: 15px;
   flex-wrap: wrap;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
 }
-
-.btn-primary {
-  background: var(--color-nav, #332317);
-  color: #fff;
+.btn-primary, .btn-secondary {
   border: none;
-  padding: 12px 24px;
-  font-size: 0.95rem;
-  font-weight: bold;
+  padding: 10px 18px;
   cursor: pointer;
-  border-radius: 0;
-  transition: opacity 0.2s;
+  font-weight: 700;
+  font-size: 0.9rem;
 }
-.btn-primary:hover { opacity: 0.85; }
-
-.btn-secondary {
-  background: transparent;
-  color: var(--color-nav, #332317);
-  border: 2px solid var(--color-nav, #332317);
-  padding: 10px 22px;
-  font-size: 0.95rem;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 0;
-  transition: all 0.2s;
-}
-.btn-secondary:hover {
-  background: var(--color-nav, #332317);
-  color: #fff;
-}
-
+.btn-primary { background: #332317; color: #cdac91; }
+.btn-secondary { background: #f5f0ea; color: #332317; border: 1px solid #cdac91; }
 .quick-links {
   display: flex;
-  align-items: center;
+  gap: 12px;
   justify-content: center;
-  gap: 15px;
-  font-size: 0.9rem;
-  color: #aaa;
+  align-items: center;
   flex-wrap: wrap;
+  font-size: 0.88rem;
+  color: #999;
 }
-.quick-links a {
-  color: #cdac91;
-  text-decoration: none;
-  font-weight: bold;
-  border-bottom: 1px solid #cdac91;
-  padding-bottom: 2px;
-}
-.quick-links a:hover { color: var(--color-nav, #332317); border-color: var(--color-nav, #332317); }
+.quick-links a { color: #9a714e; font-weight: 600; text-decoration: none; }
+.quick-links a:hover { text-decoration: underline; }
 </style>

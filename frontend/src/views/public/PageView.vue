@@ -1,12 +1,14 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
-import { useRoute } from 'vue-router'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
 import PageLoading from '../../components/ui/PageLoading.vue'
 import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
-const route = useRoute()
-const pageSlug = computed(() => route.meta.pageSlug || route.params.slug || '')
+const props = defineProps({
+  slug: { type: String, default: '' },
+})
+
+const pageSlug = computed(() => props.slug || '')
 const faqItems = ref([])
 
 const { page, isLoading, notFound, langStore } = useCmsPage(pageSlug, { required: true })

@@ -1,5 +1,9 @@
 const { sendError } = require('../../utils/response');
 const { addNavForNewPage, syncNavLabelsForPage } = require('../../services/navSync');
+const {
+  isValidPageSlugFormat,
+  isReservedPageSlug,
+} = require('../../utils/navPaths');
 
 async function getPages(req, res) {
   const db = req.app.locals.db;
@@ -24,10 +28,26 @@ async function getPageById(req, res) {
   res.json(rows[0]);
 }
 
+function validateNewSlug(slugRaw) {
+  const slug = String(slugRaw || '').trim().toLowerCase();
+  if (!slug) return { error: 'Slug and title are required' };
+  if (!isValidPageSlugFormat(slug)) {
+    return { error: 'Slug must be lowercase latin letters, numbers and hyphens (e.g. o-nama)' };
+  }
+  if (isReservedPageSlug(slug)) {
+    return { error: 'This slug is reserved by the application' };
+  }
+  return { slug };
+}
+
 async function createPage(req, res) {
   const db = req.app.locals.db;
-  const { slug, title, content, hero_image, title_en, content_en } = req.body;
-  if (!slug || !title) return sendError(res, 400, 'Slug and title are required');
+  const { title, content, hero_image, title_en, content_en } = req.body;
+  if (!title) return sendError(res, 400, 'Slug and title are required');
+
+  const checked = validateNewSlug(req.body.slug);
+  if (checked.error) return sendError(res, 400, checked.error);
+  const { slug } = checked;
 
   const [existing] = await db.query('SELECT id FROM pages WHERE slug = ?', [slug]);
   if (existing.length) return sendError(res, 409, 'Page with this slug already exists');

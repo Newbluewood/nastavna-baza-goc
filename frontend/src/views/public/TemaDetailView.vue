@@ -1,13 +1,18 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useLangStore } from '../../stores/lang'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
 import PageLoading from '../../components/ui/PageLoading.vue'
 import api from '../../services/api'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
+import { locationFromPath } from '../../utils/publicPaths'
 
-const route = useRoute()
+const props = defineProps({
+  slug: { type: String, required: true },
+})
+
+const router = useRouter()
 const langStore = useLangStore()
 const theme = ref(null)
 const isLoading = ref(true)
@@ -15,8 +20,12 @@ const isLoading = ref(true)
 const fetchTheme = async () => {
   isLoading.value = true
   try {
-    const data = await api.getThemeDetail(route.params.id, langStore.currentLang)
+    const key = props.slug
+    const data = await api.getThemeDetail(key, langStore.currentLang)
     theme.value = data
+    if (data?.slug && String(key) !== data.slug) {
+      router.replace({ name: 'tema-detail', params: { slug: data.slug } })
+    }
   } catch (err) {
     console.error('Error fetching theme detail:', err)
   } finally {
@@ -45,7 +54,7 @@ const formattedArticle = computed(() => {
 })
 
 onMounted(fetchTheme)
-watch(() => route.params.id, fetchTheme)
+watch(() => props.slug, fetchTheme)
 watch(() => langStore.currentLang, fetchTheme)
 </script>
 
@@ -73,7 +82,7 @@ watch(() => langStore.currentLang, fetchTheme)
           <router-link 
             v-for="cta in theme.ctas" 
             :key="cta.route" 
-            :to="cta.route" 
+            :to="locationFromPath(cta.route)" 
             class="cta-button"
           >
             {{ langStore.currentLang === 'sr' ? cta.label.sr : cta.label.en }}
@@ -81,7 +90,7 @@ watch(() => langStore.currentLang, fetchTheme)
         </div>
 
         <div class="back-link">
-          <router-link to="/istrazi">&larr; {{ langStore.currentLang === 'sr' ? 'Назад на истраживање' : 'Back to exploration' }}</router-link>
+          <router-link :to="{ name: 'istrazi' }">&larr; {{ langStore.currentLang === 'sr' ? 'Назад на истраживање' : 'Back to exploration' }}</router-link>
         </div>
       </div>
     </div>

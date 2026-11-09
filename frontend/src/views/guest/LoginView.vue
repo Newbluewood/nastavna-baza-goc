@@ -28,7 +28,7 @@ const handleLogin = async () => {
   try {
     await guestStore.login(email.value, password.value)
     const redirectPath = typeof route.query.redirect === 'string' ? route.query.redirect : ''
-    router.push(redirectPath && redirectPath.startsWith('/') ? redirectPath : '/moj-nalog')
+    router.push(redirectPath && redirectPath.startsWith('/') ? redirectPath : { name: 'moj-nalog' })
   } catch (e) {
     error.value = e.message
   } finally {

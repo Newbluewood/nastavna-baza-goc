@@ -9,6 +9,7 @@ import { useRouter } from 'vue-router'
 import api from '../../services/api'
 import { collectGalleryImages } from '../../utils/galleryImages'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
+import { facilityLocationSafe } from '../../utils/publicPaths'
 
 const router = useRouter()
 const slides = ref([])
@@ -60,7 +61,7 @@ const openGallery = (facility) => {
 }
 
 const viewRooms = (facility) => {
-  router.push(`/smestaj/${facility.id}`)
+  router.push(facilityLocationSafe(facility))
 }
 
 onMounted(loadData)

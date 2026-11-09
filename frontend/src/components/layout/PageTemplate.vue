@@ -3,6 +3,12 @@ import { ref, onMounted, onUnmounted, computed, watch, useSlots, Comment } from 
 import ImageLightbox from '../ui/ImageLightbox.vue'
 import { useLangStore } from '../../stores/lang'
 import { resolveMediaUrl, resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
+import { newsLocationSafe, locationFromPath } from '../../utils/publicPaths'
+
+const resolveLink = (link) => {
+  if (!link) return null
+  return typeof link === 'string' ? locationFromPath(link) : link
+}
 
 const props = defineProps({
   title: { type: String, default: '' },
@@ -143,7 +149,7 @@ onUnmounted(() => {
         <div class="slide-content">
            <h1 class="slide-title">{{ slide.title }}</h1>
            <p v-if="slide.subtitle" class="slide-subtitle">{{ slide.subtitle }}</p>
-           <router-link v-if="slide.target_link" :to="slide.target_link" class="slide-cta">
+           <router-link v-if="slide.target_link" :to="resolveLink(slide.target_link)" class="slide-cta">
              {{ langStore.currentLang === 'sr' ? 'Сазнај више' : 'Learn more' }}
            </router-link>
         </div>
@@ -187,7 +193,7 @@ onUnmounted(() => {
           <div class="news-card-body">
              <h3 class="news-card-title">{{ item.title }}</h3>
              <p class="news-card-excerpt">{{ item.excerpt }}</p>
-             <router-link :to="item.link || `/vesti/${item.slug || item.id}`" class="news-card-link">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
+             <router-link :to="resolveLink(item.link) || newsLocationSafe(item)" class="news-card-link">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
           </div>
         </div>
       </div>
@@ -198,7 +204,7 @@ onUnmounted(() => {
           <div class="news-card-body">
              <h3 class="news-card-title">{{ item.title }}</h3>
              <p class="news-card-excerpt">{{ item.excerpt }}</p>
-             <router-link :to="item.link || `/vesti/${item.slug || item.id}`" class="news-card-link">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
+             <router-link :to="resolveLink(item.link) || newsLocationSafe(item)" class="news-card-link">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
           </div>
         </div>
       </div>

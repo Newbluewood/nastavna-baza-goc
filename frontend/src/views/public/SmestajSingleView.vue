@@ -10,6 +10,10 @@ import api from '../../services/api'
 import { collectGalleryImages } from '../../utils/galleryImages'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
 
+const props = defineProps({
+  slug: { type: String, required: true },
+})
+
 const route = useRoute()
 const router = useRouter()
 const langStore = useLangStore()
@@ -58,11 +62,20 @@ const getAmenities = (amenitiesArray) => {
 const loadData = async () => {
   isLoading.value = true
   try {
-    building.value = await api.getFacility(route.params.id, langStore.currentLang)
+    const key = props.slug
+    building.value = await api.getFacility(key, langStore.currentLang)
+    // Canonical URL: /smestaj/{slug} (redirect old /smestaj/1 bookmarks)
+    if (building.value?.slug && String(key) !== building.value.slug) {
+      router.replace({
+        name: 'smestaj-single',
+        params: { slug: building.value.slug },
+        query: route.query,
+      })
+    }
     openInquiryFromQuery()
   } catch (error) {
     console.error('Error fetching data from API:', error)
-    router.push('/smestaj')
+    router.push({ name: 'smestaj' })
   } finally {
     isLoading.value = false
   }
@@ -115,7 +128,15 @@ watch(() => langStore.currentLang, () => {
 })
 
 watch(
-  () => [route.query.openInquiry, route.query.roomId, route.params.id],
+  () => props.slug,
+  () => {
+    queryInquiryHandled.value = false
+    loadData()
+  }
+)
+
+watch(
+  () => [route.query.openInquiry, route.query.roomId],
   () => {
     queryInquiryHandled.value = false
     openInquiryFromQuery()
@@ -134,7 +155,7 @@ watch(
   >
     <template #lead>
       <div class="content-wrap content-wrap--intro">
-        <button class="back-link-btn" @click="router.push('/smestaj')">
+        <button class="back-link-btn" @click="router.push({ name: 'smestaj' })">
           &#8592; {{ langStore.t('smestaj.backToAll') }}
         </button>
       </div>

@@ -77,8 +77,8 @@ class ApiService {
     return this.request(`/api/smestaj?lang=${lang}`);
   }
 
-  async getFacility(id, lang = 'sr') {
-    return this.request(`/api/smestaj/${id}?lang=${lang}`);
+  async getFacility(idOrSlug, lang = 'sr') {
+    return this.request(`/api/smestaj/${encodeURIComponent(idOrSlug)}?lang=${lang}`);
   }
 
   async checkAvailability(roomId, startDate, endDate) {
@@ -100,8 +100,8 @@ class ApiService {
     return this.request(`/api/news?lang=${lang}`);
   }
 
-  async getNewsItem(id, lang = 'sr') {
-    return this.request(`/api/news/${id}?lang=${lang}`);
+  async getNewsItem(slugOrId, lang = 'sr') {
+    return this.request(`/api/news/${encodeURIComponent(slugOrId)}?lang=${lang}`);
   }
 
   async getContactPage(lang = 'sr') {
@@ -149,8 +149,8 @@ class ApiService {
     return this.request(`/api/themes?lang=${lang}`);
   }
 
-  async getThemeDetail(id, lang = 'sr') {
-    return this.request(`/api/themes/${id}?lang=${lang}`);
+  async getThemeDetail(slugOrId, lang = 'sr') {
+    return this.request(`/api/themes/${encodeURIComponent(slugOrId)}?lang=${lang}`);
   }
 
   async getRestaurantsPublic(lang = 'sr') {
@@ -219,8 +219,8 @@ class ApiService {
     });
   }
 
-  async likeNews(id) {
-    return this.request(`/api/news/${id}/like`, {
+  async likeNews(slugOrId) {
+    return this.request(`/api/news/${encodeURIComponent(slugOrId)}/like`, {
       method: 'POST'
     });
   }

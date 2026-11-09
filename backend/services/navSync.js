@@ -12,6 +12,31 @@ async function renumberAll(db) {
   }
 }
 
+/** Rewrite legacy /stranica/{slug} menu paths to /{slug}. */
+async function normalizeStranicaNavPaths(db) {
+  const [rows] = await db.query(
+    "SELECT id, path FROM nav_items WHERE path LIKE '/stranica/%'"
+  );
+  if (!rows.length) return;
+
+  for (const row of rows) {
+    const slug = String(row.path).replace(/^\/stranica\//, '');
+    if (!slug) continue;
+    const next = pathForPageSlug(slug);
+    if (next === row.path) continue;
+    try {
+      await db.query('UPDATE nav_items SET path = ? WHERE id = ?', [next, row.id]);
+    } catch (err) {
+      // Unique collision: keep existing short path row, drop legacy duplicate.
+      if (err && err.code === 'ER_DUP_ENTRY') {
+        await db.query('DELETE FROM nav_items WHERE id = ?', [row.id]);
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 /**
  * Ensure module shells (restoran, vesti, …) have nav rows with correct short paths + page_id.
  * Fixes older DBs where seed used short paths but admin matched /stranica/:slug.
@@ -128,5 +153,6 @@ module.exports = {
   addNavForNewPage,
   syncNavLabelsForPage,
   ensureModuleNavItems,
+  normalizeStranicaNavPaths,
   renumberAll,
 };

@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
 import HeroSlidesEditor from '../../components/admin/HeroSlidesEditor.vue'
+import RichTextEditor from '../../components/admin/RichTextEditor.vue'
 import TranslateButton from '../../components/admin/TranslateButton.vue'
 import api, { BASE_URL } from '../../services/api'
 import { publicPathForSlug, isModulePageSlug } from '../../utils/pageRoutes'
@@ -84,7 +85,7 @@ const loadAll = async () => {
     navItems.value = navRows || []
   } catch (err) {
     if (err.status === 401 || err.status === 403) {
-      router.push('/admin/login')
+      router.push({ name: 'admin-login' })
       return
     }
     console.error('Failed to load pages/nav:', err)
@@ -222,7 +223,7 @@ onMounted(loadAll)
         <div class="form-group">
           <label>
             <span class="red-star">*</span> Slug
-            <span class="slug-hint"> (latinica, bez š/č/ć/ž/đ. Primer: o-nama → URL /stranica/o-nama)</span>
+            <span class="slug-hint"> (latinica a-z, brojevi, crtica. Primer: o-nama → URL /o-nama)</span>
           </label>
           <input v-model="form.slug" type="text" placeholder="npr. o-nama" :disabled="!!editingId" />
           <p v-if="form.slug" class="hint">Javni URL: <code>{{ publicPathForSlug(form.slug) }}</code></p>
@@ -233,7 +234,7 @@ onMounted(loadAll)
           <label>Галерија (секција испод тема на Почетној)</label>
           <p class="gallery-hint">
             Слике у овој секцији су насловне слике смештајних објеката, не посебна галерија.
-            Уређују се у <router-link to="/admin/sobe">Уређивање соба</router-link>.
+            Уређују се у <router-link :to="{ name: 'admin-rooms' }">Уређивање соба</router-link>.
           </p>
           <div class="gallery-preview-strip">
             <div v-for="f in galleryFacilities" :key="f.id" class="gallery-preview-item">
@@ -254,15 +255,15 @@ onMounted(loadAll)
           <img v-if="form.hero_image" :src="getImageUrl(form.hero_image)" alt="Hero preview" class="hero-preview-image">
         </div>
         <div class="form-group full-width">
-          <label>Садржај (HTML, СРП)</label>
-          <textarea v-model="form.content" rows="12" placeholder="<h2>Наслов секције</h2><p>Текст...</p>"></textarea>
+          <label>Садржај (СРП)</label>
+          <RichTextEditor v-model="form.content" placeholder="Текст странице..." />
         </div>
         <div class="form-group full-width translate-between">
           <TranslateButton html :source="form.content" :current="form.content_en" @translated="form.content_en = $event" />
         </div>
         <div class="form-group full-width">
-          <label>Content (HTML, EN)</label>
-          <textarea v-model="form.content_en" rows="12" placeholder="<h2>Section title</h2><p>Text...</p>"></textarea>
+          <label>Content (EN)</label>
+          <RichTextEditor v-model="form.content_en" placeholder="Page content..." />
         </div>
       </div>
       <div v-if="form.content" class="content-preview">

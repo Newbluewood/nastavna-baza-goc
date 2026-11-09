@@ -89,6 +89,14 @@ async function run() {
     }
     steps.push(['GET /api/smestaj/:id', facilityRes.status]);
 
+    if (firstFacility.slug || facilityRes.body?.slug) {
+      const slug = firstFacility.slug || facilityRes.body.slug;
+      const bySlug = await request(`/api/smestaj/${slug}`);
+      assert(bySlug.ok, 'GET /api/smestaj/:slug failed');
+      assert(bySlug.body?.id === firstFacility.id, 'GET /api/smestaj/:slug returned wrong facility');
+      steps.push(['GET /api/smestaj/:slug', bySlug.status]);
+    }
+
     const firstRoom = facilityRes.body.rooms?.[0];
     if (firstRoom) {
       const availabilityListRes = await request(`/api/rooms/${firstRoom.id}/availability`);

@@ -147,7 +147,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="header-actions">
-          <router-link to="/smestaj" class="reserve-link" @click="chatStore.isOpen = false">
+          <router-link :to="{ name: 'smestaj' }" class="reserve-link" @click="chatStore.isOpen = false">
             {{ langStore.currentLang === 'sr' ? 'Pogledaj smeštaj' : 'View accommodation' }}
           </router-link>
           <button class="clear-btn" @click="chatStore.clearHistory()" :title="langStore.currentLang === 'sr' ? 'Započni novi razgovor' : 'Start new conversation'">

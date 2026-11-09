@@ -13,7 +13,7 @@
         <div v-if="newAccount" class="info-box account-box">
           <div class="info-box-title">🔑 {{ langStore.t('inquiry.accountCreated') }}</div>
           <p>{{ langStore.t('inquiry.accountCreatedDesc') }}</p>
-          <router-link to="/prijava" class="btn-account" @click="close">
+          <router-link :to="{ name: 'prijava' }" class="btn-account" @click="close">
             {{ langStore.t('inquiry.loginBtn') }}
           </router-link>
         </div>
@@ -22,7 +22,7 @@
         <div v-else class="info-box account-box existing">
           <div class="info-box-title">👤 {{ langStore.t('inquiry.trackStatus') }}</div>
           <p>{{ langStore.t('inquiry.trackStatusDesc') }}</p>
-          <router-link to="/moj-nalog" class="btn-account" @click="close">
+          <router-link :to="{ name: 'moj-nalog' }" class="btn-account" @click="close">
             {{ langStore.t('inquiry.myAccountBtn') }}
           </router-link>
         </div>

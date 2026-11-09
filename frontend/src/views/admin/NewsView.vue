@@ -90,7 +90,7 @@ const fetchNews = async () => {
   try {
     newsList.value = await api.getAdminNews()
   } catch (err) {
-    if (err.status === 401) { router.push('/admin/login'); return }
+    if (err.status === 401) { router.push({ name: 'admin-login' }); return }
     console.error('Failed to load news:', err)
   }
 }
@@ -139,7 +139,7 @@ const startEdit = async (news) => {
     aiPanelOpen.value = false
     isCreating.value = true
   } catch (err) {
-    if (err.status === 401) router.push('/admin/login')
+    if (err.status === 401) router.push({ name: 'admin-login' })
   } finally {
     isLoading.value = false
   }
@@ -197,7 +197,7 @@ const callAi = async (path, payload) => {
       body: JSON.stringify(payload)
     })
   } catch (err) {
-    if (err.status === 401 || err.status === 403) { router.push('/admin/login'); return null }
+    if (err.status === 401 || err.status === 403) { router.push({ name: 'admin-login' }); return null }
     throw err
   }
 }

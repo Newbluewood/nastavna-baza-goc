@@ -1,11 +1,14 @@
 <script setup>
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import api from '../../services/api'
 
-const route = useRoute()
+const props = defineProps({
+  token: { type: String, required: true },
+})
+
 const router = useRouter()
-const token = route.params.token
+const token = props.token
 
 const newPassword = ref('')
 const confirm = ref('')
@@ -27,7 +30,7 @@ const handleReset = async () => {
   try {
     await api.resetPassword(token, newPassword.value)
     success.value = true
-    setTimeout(() => router.push('/prijava'), 3000)
+    setTimeout(() => router.push({ name: 'prijava' }), 3000)
   } catch (e) {
     error.value = e.data?.error || 'Greška pri postavljanju lozinke.'
   } finally {

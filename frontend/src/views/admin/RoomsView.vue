@@ -95,7 +95,7 @@ const fetchFacilities = async () => {
       selectedFacilityId.value = facilities.value[0].id
     }
   } catch (err) {
-    if (err.status === 401) router.push('/admin/login')
+    if (err.status === 401) router.push({ name: 'admin-login' })
   }
 }
 

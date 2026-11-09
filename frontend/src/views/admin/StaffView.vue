@@ -22,7 +22,7 @@ const fetchStaff = async () => {
   try {
     staff.value = await api.getAdminStaff()
   } catch (err) {
-    if (err.status === 401 || err.status === 403) { router.push('/admin/login'); return }
+    if (err.status === 401 || err.status === 403) { router.push({ name: 'admin-login' }); return }
     console.error('Failed to load staff:', err)
   } finally {
     isLoading.value = false

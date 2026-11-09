@@ -33,7 +33,7 @@ const fetchThemes = async () => {
   try {
     themes.value = await api.getAdminThemes()
   } catch (err) {
-    if (err.status === 401 || err.status === 403) { router.push('/admin/login'); return }
+    if (err.status === 401 || err.status === 403) { router.push({ name: 'admin-login' }); return }
     console.error('Failed to load themes:', err)
   } finally {
     isLoading.value = false

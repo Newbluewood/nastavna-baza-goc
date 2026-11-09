@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 import { useLangStore } from './stores/lang'
 import { useGuestStore } from './stores/guest'
 import { useChatStore } from './stores/chat'
@@ -8,8 +8,8 @@ import { useSettingsStore } from './stores/settings'
 import { useNavStore } from './stores/nav'
 import AgentChatWidget from './components/ui/AgentChatWidget.vue'
 import InquiryModal from './components/forms/InquiryModal.vue'
+import AppNavigation from './components/layout/AppNavigation.vue'
 
-const isMenuOpen = ref(false)
 const langStore = useLangStore()
 const guestStore = useGuestStore()
 const chatStore = useChatStore()
@@ -17,15 +17,6 @@ const settingsStore = useSettingsStore()
 const navStore = useNavStore()
 const route = useRoute()
 const router = useRouter()
-
-/** Entire public menu from nav_items (GET /api/nav). */
-const navItems = computed(() =>
-  navStore.items.map((item) => ({
-    key: item.id,
-    to: item.path,
-    label: item.label,
-  }))
-)
 
 const loadShell = (lang) => {
   settingsStore.fetch(lang)
@@ -46,17 +37,11 @@ const inquiryModalOpen = computed({
   set: (value) => { chatStore.inquiryModal.open = value },
 })
 
-const isAdminRoute = computed(() => {
-  return route.path.startsWith('/admin')
-})
-
-const toggleMenu = () => { isMenuOpen.value = !isMenuOpen.value }
-const closeMenu = () => { isMenuOpen.value = false }
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
 const handleGuestNav = () => {
-  closeMenu()
-  if (guestStore.isLoggedIn) router.push('/moj-nalog')
-  else router.push('/prijava')
+  if (guestStore.isLoggedIn) router.push({ name: 'moj-nalog' })
+  else router.push({ name: 'prijava' })
 }
 </script>
 
@@ -65,13 +50,13 @@ const handleGuestNav = () => {
     <header class="header">
       <div class="header-top">
         <div class="logo">
-          <router-link to="/">
+          <router-link :to="{ name: 'home' }">
             <img src="/logo.svg" alt="Univerzitet u Beogradu - Šumarski fakultet" class="site-logo" />
           </router-link>
         </div>
         <div class="header-right">
           <div class="language-switch">
-            <a href="#" :class="{ active: langStore.currentLang === 'en' }" @click.prevent="langStore.setLang('en')">ENG</a> | 
+            <a href="#" :class="{ active: langStore.currentLang === 'en' }" @click.prevent="langStore.setLang('en')">ENG</a> |
             <a href="#" :class="{ active: langStore.currentLang === 'sr' }" @click.prevent="langStore.setLang('sr')">СРП</a>
           </div>
           <button class="guest-btn" @click="handleGuestNav" :title="guestStore.isLoggedIn ? guestStore.guest?.name : 'Prijava'">
@@ -82,21 +67,7 @@ const handleGuestNav = () => {
           </button>
         </div>
       </div>
-      <div class="header-nav">
-        <div class="burger-toggle" @click="toggleMenu">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-        <nav class="main-nav" :class="{ 'is-open': isMenuOpen }">
-          <template v-for="(item, index) in navItems" :key="item.key">
-            <span v-if="index > 0" class="nav-sep">|</span>
-            <router-link :to="item.to" class="nav-link" @click="closeMenu">
-              <span class="nav-bold">{{ item.label }}</span>
-            </router-link>
-          </template>
-        </nav>
-      </div>
+      <AppNavigation />
     </header>
 
     <main class="content">

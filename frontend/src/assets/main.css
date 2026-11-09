@@ -172,7 +172,8 @@ a:hover {
   transition: all 0.3s ease;
 }
 
-.nav-link.router-link-active,
+.nav-link.router-link-exact-active,
+.nav-link.router-link-active:not(.is-home-link),
 .nav-link:hover {
   border: 1px solid var(--color-border);
 }

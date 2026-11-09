@@ -95,12 +95,12 @@ const loadReservations = async () => {
 }
 
 onMounted(async () => {
-  if (!guestStore.isLoggedIn) { router.push('/prijava'); return }
+  if (!guestStore.isLoggedIn) { router.push({ name: 'prijava' }); return }
   await guestStore.fetchMe()
   try {
     await loadReservations()
   } catch {
-    guestStore.logout(); router.push('/prijava')
+    guestStore.logout(); router.push({ name: 'prijava' })
   } finally {
     isLoading.value = false
   }
@@ -201,7 +201,7 @@ const changePassword = async () => {
   }
 }
 
-const handleLogout = () => { guestStore.logout(); router.push('/') }
+const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) }
 </script>
 
 <template>
@@ -239,7 +239,7 @@ const handleLogout = () => { guestStore.logout(); router.push('/') }
 
         <div v-else-if="reservations.length === 0" class="empty-state">
           <p>Немате резервација.</p>
-          <router-link to="/smestaj" class="btn-primary-sm">Погледај смештај →</router-link>
+          <router-link :to="{ name: 'smestaj' }" class="btn-primary-sm">Погледај смештај →</router-link>
         </div>
 
         <div v-else class="res-list">
@@ -327,7 +327,7 @@ const handleLogout = () => { guestStore.logout(); router.push('/') }
             <h3>Препорука за следећи обилазак</h3>
             <p>Нови Студенац је реновиран! Изненадите се погледом на језеро уз промотивни смештај.</p>
           </div>
-          <router-link to="/smestaj" class="btn-primary-sm" style="border-radius:0;">Погледај</router-link>
+          <router-link :to="{ name: 'smestaj' }" class="btn-primary-sm" style="border-radius:0;">Погледај</router-link>
         </div>
       </div>
 

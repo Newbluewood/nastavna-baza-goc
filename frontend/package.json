@@ -11,6 +11,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@tiptap/extension-link": "^3.33.0",
+    "@tiptap/pm": "^3.33.0",
+    "@tiptap/starter-kit": "^3.33.0",
+    "@tiptap/vue-3": "^3.33.0",
     "@vuepic/vue-datepicker": "^12.1.0",
     "marked": "^18.0.2",
     "pinia": "^3.0.4",

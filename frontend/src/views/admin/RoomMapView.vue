@@ -33,7 +33,7 @@ async function fetchRoomMap() {
     const data = await api.getRoomMap(selectedDate.value)
     facilities.value = data.facilities || []
   } catch (err) {
-    if (err.status === 401) { router.push('/admin/login'); return }
+    if (err.status === 401) { router.push({ name: 'admin-login' }); return }
     console.error('Greška pri učitavanju mape:', err)
   } finally {
     isLoading.value = false

@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 onMounted(() => {
-  router.replace('/admin/stranice')
+  router.replace({ name: 'admin-pages' })
 })
 </script>
 

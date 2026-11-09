@@ -36,7 +36,7 @@ const fetchUsage = async () => {
     data.value = await api.getAdminAiUsage()
     error.value = ''
   } catch (err) {
-    if (err.status === 401) { router.push('/admin/login'); return }
+    if (err.status === 401) { router.push({ name: 'admin-login' }); return }
     error.value = err.message || 'Greška pri učitavanju AI potrošnje'
   } finally {
     isLoading.value = false

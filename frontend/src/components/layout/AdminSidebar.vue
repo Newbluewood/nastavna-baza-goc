@@ -9,9 +9,27 @@ const sidebarOpen = ref(false)
 const smestajOpen = ref(true)
 const isPurging = ref(false)
 
+const adminLinks = [
+  { name: 'admin-news', label: 'Вести' },
+  { name: 'admin-pages', label: 'Странице и мени' },
+  { name: 'admin-staff', label: 'Особље' },
+  { name: 'admin-projects', label: 'Пројекти' },
+  { name: 'admin-ai', label: 'AI Потрошња' },
+  { name: 'admin-restaurant', label: 'Ресторан' },
+  { name: 'admin-themes', label: 'Теме (Истражи Гоч)' },
+  { name: 'admin-settings', label: 'Подешавања' },
+]
+
+const smestajLinks = [
+  { name: 'admin-reservations', label: 'Упити / Резервације' },
+  { name: 'admin-guests', label: 'Гости и CRM' },
+  { name: 'admin-room-map', label: 'Мапа Соба' },
+  { name: 'admin-rooms', label: 'Уређивање соба' },
+]
+
 function handleLogout() {
   api.logout()
-  router.push('/admin/login')
+  router.push({ name: 'admin-login' })
 }
 
 const handlePurgeCache = async () => {
@@ -27,7 +45,7 @@ const handlePurgeCache = async () => {
   }
 }
 
-const isSmestajActive = () => ['/admin/rezervacije', '/admin/gosti', '/admin/mapa-soba', '/admin/sobe'].some(p => route.path.startsWith(p))
+const isSmestajActive = () => smestajLinks.some((link) => route.name === link.name)
 
 defineExpose({ sidebarOpen })
 </script>
@@ -40,24 +58,26 @@ defineExpose({ sidebarOpen })
   <aside class="sidebar" :class="{ 'sidebar-open': sidebarOpen }">
     <h2>CMS Panel</h2>
     <nav>
-      <router-link to="/admin/vesti">Вести</router-link>
-      <router-link to="/admin/stranice">Странице и мени</router-link>
-      <router-link to="/admin/osoblje">Особље</router-link>
-      <router-link to="/admin/projekti">Пројекти</router-link>
-      <router-link to="/admin/ai">AI Потрошња</router-link>
-      <router-link to="/admin/restoran">Ресторан</router-link>
-      <router-link to="/admin/teme">Теме (Истражи Гоч)</router-link>
-      <router-link to="/admin/podesavanja">Подешавања</router-link>
+      <router-link
+        v-for="link in adminLinks"
+        :key="link.name"
+        :to="{ name: link.name }"
+      >
+        {{ link.label }}
+      </router-link>
 
       <!-- Смештај група -->
       <button class="nav-group-toggle" :class="{ 'group-active': isSmestajActive() }" @click="smestajOpen = !smestajOpen">
         Смештај <span class="toggle-arrow">{{ smestajOpen ? '▾' : '▸' }}</span>
       </button>
       <div v-show="smestajOpen" class="nav-group-items">
-        <router-link to="/admin/rezervacije">Упити / Резервације</router-link>
-        <router-link to="/admin/gosti">Гости и CRM</router-link>
-        <router-link to="/admin/mapa-soba">Мапа Соба</router-link>
-        <router-link to="/admin/sobe">Уређивање соба</router-link>
+        <router-link
+          v-for="link in smestajLinks"
+          :key="link.name"
+          :to="{ name: link.name }"
+        >
+          {{ link.label }}
+        </router-link>
       </div>
     </nav>
     <div class="sidebar-actions">

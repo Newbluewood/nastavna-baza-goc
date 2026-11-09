@@ -1,13 +1,18 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useLangStore } from '../../stores/lang'
 import ImageLightbox from '../../components/ui/ImageLightbox.vue'
 import PageLoading from '../../components/ui/PageLoading.vue'
 import api from '../../services/api'
 import { resolveMediaUrl, resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
+import { newsLocationSafe } from '../../utils/publicPaths'
 
-const route = useRoute()
+const props = defineProps({
+  slug: { type: String, required: true },
+})
+
+const router = useRouter()
 const langStore = useLangStore()
 const newsItem = ref(null)
 const isLoading = ref(true)
@@ -36,8 +41,9 @@ const loadNews = async () => {
   isLoading.value = true
   debugError.value = ''
   try {
+    const key = props.slug
     const [item, newsList] = await Promise.all([
-      api.getNewsItem(route.params.id, langStore.currentLang),
+      api.getNewsItem(key, langStore.currentLang),
       api.getNews(langStore.currentLang).catch((err) => {
         console.error('Error loading news list:', err)
         return []
@@ -45,6 +51,9 @@ const loadNews = async () => {
     ])
 
     newsItem.value = item
+    if (item?.slug && String(key) !== item.slug) {
+      router.replace({ name: 'single-news', params: { slug: item.slug } })
+    }
     isLiked.value = !!localStorage.getItem(`liked_news_${item.id}`)
     allNews.value = newsList
 
@@ -97,7 +106,7 @@ watch(() => langStore.currentLang, () => {
   loadNews()
 })
 
-watch(() => route.params.id, () => {
+watch(() => props.slug, () => {
   loadNews()
 })
 </script>
@@ -159,13 +168,13 @@ watch(() => route.params.id, () => {
       
       <!-- NAVIGACIJA -->
       <div class="news-navigation">
-        <router-link :to="`/vesti/${prevNews.slug || prevNews.id}`" v-if="prevNews" class="nav-btn prev">
+        <router-link :to="newsLocationSafe(prevNews)" v-if="prevNews" class="nav-btn prev">
           &larr; {{ langStore.currentLang === 'sr' ? 'Претходна' : 'Previous' }}
         </router-link>
-        <router-link to="/vesti" class="nav-btn all">
+        <router-link :to="{ name: 'vesti' }" class="nav-btn all">
           {{ langStore.currentLang === 'sr' ? 'Све вести' : 'All news' }}
         </router-link>
-        <router-link :to="`/vesti/${nextNews.slug || nextNews.id}`" v-if="nextNews" class="nav-btn next">
+        <router-link :to="newsLocationSafe(nextNews)" v-if="nextNews" class="nav-btn next">
           {{ langStore.currentLang === 'sr' ? 'Следећа' : 'Next' }} &rarr;
         </router-link>
       </div>

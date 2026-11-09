@@ -5,6 +5,7 @@ import PageLoading from '../../components/ui/PageLoading.vue'
 import { useLangStore } from '../../stores/lang'
 import api from '../../services/api'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
+import { themeLocationSafe } from '../../utils/publicPaths'
 
 const galleryItems = ref([])
 const slides = ref([])
@@ -100,13 +101,13 @@ watch(() => langStore.currentLang, loadData)
           </div>
           <h3>{{ theme.name }}</h3>
           <p>{{ langStore.currentLang === 'sr' ? theme.excerpt_sr : theme.excerpt_en }}</p>
-          <router-link :to="`/istrazi/${theme.id}`" class="mini-link">
+          <router-link :to="themeLocationSafe(theme)" class="mini-link">
             {{ langStore.currentLang === 'sr' ? 'Опширније' : 'Read more' }} &rarr;
           </router-link>
         </div>
       </div>
       <div class="themes-footer">
-        <router-link to="/istrazi" class="view-all-btn">
+        <router-link :to="{ name: 'istrazi' }" class="view-all-btn">
           {{ langStore.currentLang === 'sr' ? 'Погледај све теме' : 'View all themes' }}
         </router-link>
       </div>

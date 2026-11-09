@@ -90,7 +90,7 @@ async function queryFacilities(db, {
   if (Number.isFinite(limit)) params.push(limit);
 
   const [rows] = await db.query(`
-    SELECT f.id, f.type,
+    SELECT f.id, f.type, f.slug,
       COALESCE(ft.name, f.name) AS name,
       COALESCE(ft.description, f.description) AS description,
       f.capacity, f.latitude, f.longitude, f.cover_image, f.floor_plan_image, f.location_badges
@@ -212,14 +212,15 @@ async function getFacilities(req, res) {
 
 async function getFacility(req, res) {
   const db = req.app.locals.db;
-  const facilityId = req.params.id;
+  const key = String(req.params.id || '').trim();
   const lang = req.query.lang || 'sr';
   const langParam = toLangParam(lang);
 
+  const byId = /^\d+$/.test(key);
   const facilities = await queryFacilities(db, {
     lang,
-    whereSql: 'f.id = ?',
-    whereParams: [facilityId],
+    whereSql: byId ? 'f.id = ?' : 'f.slug = ?',
+    whereParams: [byId ? Number(key) : key],
   });
 
   if (facilities.length === 0) {
@@ -242,7 +243,7 @@ async function getFacility(req, res) {
     LEFT JOIN media_gallery mg ON mg.entity_id = r.id AND mg.entity_type = 'room'
     WHERE r.facility_id = ?
     GROUP BY r.id
-  `, [langParam, langParam, facilityId]);
+  `, [langParam, langParam, facility.id]);
 
   rooms.forEach((room) => hydrateRoomRow(room, lang));
 
@@ -412,7 +413,7 @@ async function getThemes(req, res) {
   const lang = req.query.lang === 'en' ? 'en' : 'sr';
   try {
     const [rows] = await db.query(`
-      SELECT t.slug as id, t.icon, t.hero_image, t.keywords,
+      SELECT t.id, t.slug, t.icon, t.hero_image, t.keywords,
              MAX(CASE WHEN tt.lang = ? THEN tt.name END) as name,
              MAX(CASE WHEN tt.lang = 'sr' THEN tt.name END) as name_sr,
              MAX(CASE WHEN tt.lang = 'sr' THEN tt.article END) as article_sr,
@@ -425,7 +426,8 @@ async function getThemes(req, res) {
 
     const themes = rows.map(t => ({
       id: t.id,
-      name: t.name || t.name_sr || t.id,
+      slug: t.slug,
+      name: t.name || t.name_sr || t.slug,
       icon: t.icon,
       keywords: Array.isArray(t.keywords) ? t.keywords : [],
       excerpt_sr: (t.article_sr || '').substring(0, 150) + '...',
@@ -443,18 +445,19 @@ async function getThemeDetail(req, res) {
   const db = req.app.locals.db;
   const lang = req.query.lang === 'en' ? 'en' : 'sr';
   try {
-    const themeId = req.params.id;
+    const key = String(req.params.id || '').trim();
+    const byId = /^\d+$/.test(key);
     const [rows] = await db.query(`
-      SELECT t.slug as id, t.icon, t.hero_image, t.keywords,
+      SELECT t.id, t.slug, t.icon, t.hero_image, t.keywords,
              MAX(CASE WHEN tt.lang = ? THEN tt.name END) as name,
              MAX(CASE WHEN tt.lang = 'sr' THEN tt.name END) as name_sr,
              MAX(CASE WHEN tt.lang = 'sr' THEN tt.article END) as article_sr,
              MAX(CASE WHEN tt.lang = 'en' THEN tt.article END) as article_en
       FROM themes t
       LEFT JOIN theme_translations tt ON t.id = tt.entity_id
-      WHERE t.slug = ?
+      WHERE ${byId ? 't.id = ?' : 't.slug = ?'}
       GROUP BY t.id
-    `, [lang, themeId]);
+    `, [lang, byId ? Number(key) : key]);
 
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Theme not found' });

@@ -45,7 +45,7 @@ const fetchSettings = async () => {
     rows.forEach(r => { map[r.setting_key] = { value_sr: r.value_sr || '', value_en: r.value_en || '' } })
     settings.value = map
   } catch (err) {
-    if (err.status === 401 || err.status === 403) { router.push('/admin/login'); return }
+    if (err.status === 401 || err.status === 403) { router.push({ name: 'admin-login' }); return }
     console.error('Failed to load settings:', err)
   } finally {
     isLoading.value = false

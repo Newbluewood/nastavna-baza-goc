@@ -47,7 +47,7 @@ const fetchRestaurants = async () => {
       setRestaurantForm(first)
     }
   } catch (err) {
-    if (err.status === 401) router.push('/admin/login')
+    if (err.status === 401) router.push({ name: 'admin-login' })
     console.error('Failed to load restaurants:', err)
   }
 }

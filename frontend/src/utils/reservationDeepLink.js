@@ -20,8 +20,10 @@ export function buildReservationRoute(action) {
   if (action.board_type && action.board_type !== 'base') query.boardType = action.board_type;
   if (action.target_room) query.roomName = action.target_room;
 
+  // Prefer slug when chat sends it; numeric id still works (detail page redirects to slug).
+  const facilityKey = action.facility_slug || action.facility_id;
   return {
-    path: `/smestaj/${action.facility_id}`,
+    path: `/smestaj/${facilityKey}`,
     query,
   };
 }

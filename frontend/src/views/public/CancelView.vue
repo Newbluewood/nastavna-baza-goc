@@ -1,12 +1,15 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import api from '../../services/api'
 import { fmt, daysUntil } from '../../utils/dateFormat'
 
-const route = useRoute()
+const props = defineProps({
+  token: { type: String, required: true },
+})
+
 const router = useRouter()
-const token = route.params.token
+const token = props.token
 
 const reservation = ref(null)
 const isLoading = ref(true)
@@ -53,7 +56,7 @@ const cancelReservation = async () => {
         <div class="big-icon">⚠️</div>
         <h2>Грешка</h2>
         <p>{{ error }}</p>
-        <button class="btn-primary" @click="router.push('/smestaj')">Погледај смештај</button>
+        <button class="btn-primary" @click="router.push({ name: 'smestaj' })">Погледај смештај</button>
       </div>
 
       <!-- Cancelled success -->
@@ -61,7 +64,7 @@ const cancelReservation = async () => {
         <div class="big-icon">✅</div>
         <h2>Резервација отказана</h2>
         <p>Ваша резервација је успешно отказана. Послали смо Вам потврду на е-пошту.</p>
-        <button class="btn-primary" @click="router.push('/smestaj')">Нова резервација</button>
+        <button class="btn-primary" @click="router.push({ name: 'smestaj' })">Нова резервација</button>
       </div>
 
       <!-- Reservation details -->
@@ -104,7 +107,7 @@ const cancelReservation = async () => {
             >
               {{ isCancelling ? 'Отказујем...' : '🚫 Откажи резервацију' }}
             </button>
-            <button class="btn-secondary" @click="router.push('/')">Задржи резервацију</button>
+            <button class="btn-secondary" @click="router.push({ name: 'home' })">Задржи резервацију</button>
           </div>
         </div>
       </div>

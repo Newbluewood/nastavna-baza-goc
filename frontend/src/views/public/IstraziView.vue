@@ -4,6 +4,7 @@ import PageTemplate from '../../components/layout/PageTemplate.vue'
 import PageLoading from '../../components/ui/PageLoading.vue'
 import api from '../../services/api'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
+import { themeLocationSafe } from '../../utils/publicPaths'
 import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
 const exploreFallback = (store) => ({
@@ -41,7 +42,7 @@ const slides = computed(() => buildHeroSlide(page.value, pageTitle.value))
           <div class="keywords">
             <span v-for="kw in theme.keywords" :key="kw" class="kw-tag">#{{ kw }}</span>
           </div>
-          <router-link :to="`/istrazi/${theme.id}`" class="read-more">
+          <router-link :to="themeLocationSafe(theme)" class="read-more">
             {{ langStore.currentLang === 'sr' ? 'Сазнај више' : 'Learn more' }} &rarr;
           </router-link>
         </div>

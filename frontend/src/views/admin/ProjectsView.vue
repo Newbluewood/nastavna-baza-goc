@@ -25,7 +25,7 @@ const fetchProjects = async () => {
   try {
     projects.value = await api.getAdminProjects()
   } catch (err) {
-    if (err.status === 401 || err.status === 403) { router.push('/admin/login'); return }
+    if (err.status === 401 || err.status === 403) { router.push({ name: 'admin-login' }); return }
     console.error('Failed to load projects:', err)
   } finally {
     isLoading.value = false

@@ -171,6 +171,14 @@ async function run() {
     await ensureColumn(conn, 'facilities', 'capacity_min', 'capacity_min INT NULL');
     await ensureColumn(conn, 'facilities', 'capacity_max', 'capacity_max INT NULL');
     await ensureColumn(conn, 'facilities', 'stay_tags', 'stay_tags JSON NULL');
+    await ensureColumn(conn, 'facilities', 'slug', 'slug VARCHAR(255) NULL');
+    await backfillFacilitySlugs(conn);
+    await ensureIndex(
+      conn,
+      'facilities',
+      'uq_facilities_slug',
+      `CREATE UNIQUE INDEX ${q('uq_facilities_slug')} ON ${q('facilities')} (${q('slug')})`
+    );
     await ensureColumn(conn, 'rooms', 'capacity_min', 'capacity_min INT NULL');
     await ensureColumn(conn, 'rooms', 'capacity_max', 'capacity_max INT NULL');
     await ensureColumn(conn, 'rooms', 'stay_tags', 'stay_tags JSON NULL');
@@ -360,6 +368,42 @@ async function run() {
     console.log('Migration plan finished successfully.');
   } finally {
     await conn.end();
+  }
+}
+
+async function backfillFacilitySlugs(conn) {
+  const hasTable = await tableExists(conn, 'facilities');
+  if (!hasTable) return;
+  if (!(await columnExists(conn, 'facilities', 'slug'))) return;
+
+  const { slugify } = require('./utils/slugify');
+  const [rows] = await conn.query(
+    `SELECT id, name, slug FROM ${q('facilities')} WHERE slug IS NULL OR slug = ''`
+  );
+  if (!rows.length) {
+    console.log('SKIP: facilities.slug already filled');
+    return;
+  }
+
+  const [usedRows] = await conn.query(
+    `SELECT slug FROM ${q('facilities')} WHERE slug IS NOT NULL AND slug != ''`
+  );
+  const used = new Set(usedRows.map((r) => r.slug));
+
+  for (const row of rows) {
+    let base = slugify(row.name, { fallback: `objekat-${row.id}` });
+    let candidate = base;
+    let n = 2;
+    while (used.has(candidate)) {
+      candidate = `${base}-${n}`;
+      n += 1;
+    }
+    used.add(candidate);
+    await executeOrPrint(
+      conn,
+      `UPDATE ${q('facilities')} SET slug = ${conn.escape(candidate)} WHERE id = ${row.id}`,
+      `backfill facility slug ${row.id} → ${candidate}`
+    );
   }
 }
 

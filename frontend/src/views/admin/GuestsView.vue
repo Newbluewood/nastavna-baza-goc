@@ -21,7 +21,7 @@ const fetchGuests = async () => {
   try {
     guests.value = await api.getGuests()
   } catch (err) {
-    if (err.status === 401) { router.push('/admin/login'); return }
+    if (err.status === 401) { router.push({ name: 'admin-login' }); return }
     console.error('Greška pri učitavanju gostiju:', err)
   } finally {
     isLoading.value = false
@@ -30,7 +30,7 @@ const fetchGuests = async () => {
 
 onMounted(() => { fetchGuests() })
 
-const handleLogout = () => { api.logout(); router.push('/admin/login') }
+const handleLogout = () => { api.logout(); router.push({ name: 'admin-login' }) }
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '—'
