@@ -6,6 +6,8 @@ const props = defineProps({
   isOpen: { type: Boolean, default: false },
   room: { type: Object, default: null },
   facilityName: { type: String, default: '' },
+  initialCheckIn: { type: String, default: '' },
+  initialCheckOut: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:isOpen', 'created'])
@@ -47,7 +49,10 @@ const resetForm = () => {
 watch(
   () => props.isOpen,
   (open) => {
-    if (open) resetForm()
+    if (!open) return
+    resetForm()
+    if (props.initialCheckIn) form.value.check_in = props.initialCheckIn
+    if (props.initialCheckOut) form.value.check_out = props.initialCheckOut
   }
 )
 

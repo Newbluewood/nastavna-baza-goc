@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
-
+import AdminReservationModal from '../../components/admin/AdminReservationModal.vue'
 import api from '../../services/api'
 
 const router = useRouter()
@@ -10,6 +10,10 @@ const isLoading = ref(false)
 const selectedDate = ref(new Date().toISOString().split('T')[0])
 const facilities = ref([])
 const tooltip = ref(null)
+
+const reservationModalOpen = ref(false)
+const reservationRoom = ref(null)
+const reservationFacilityName = ref('')
 
 const capacityFullLabels = {
   single: 'Једнокреветна',
@@ -25,6 +29,13 @@ function roomCapLabel(room) {
   return `${max}.${capShort[room.capacity_type] || 'више'}`
 }
 
+function addDaysYmd(ymd, days) {
+  const d = new Date(`${ymd}T12:00:00`)
+  d.setDate(d.getDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
+const reservationCheckOut = computed(() => addDaysYmd(selectedDate.value, 1))
 
 async function fetchRoomMap() {
   isLoading.value = true
@@ -54,6 +65,25 @@ function hideTooltip() {
   tooltip.value = null
 }
 
+function onRoomClick(event, room, facility) {
+  if (room.is_occupied) {
+    showTooltip(event, room)
+    return
+  }
+  hideTooltip()
+  reservationRoom.value = room
+  reservationFacilityName.value = facility?.name || ''
+  reservationModalOpen.value = true
+}
+
+function onReservationCreated(result) {
+  alert(
+    `Rezervacija kreirana (#${result.inquiryId}).` +
+      (result.created_by_admin_username ? `\nAdmin: ${result.created_by_admin_username}` : '')
+  )
+  fetchRoomMap()
+}
+
 function fmtDate(d) {
   if (!d) return '—'
   const raw = String(d).trim()
@@ -76,7 +106,7 @@ onMounted(() => fetchRoomMap())
       <div class="page-header">
         <div>
           <h1>Мапа Соба</h1>
-          <p class="subtitle">Преглед попуњености смештајних капацитета по датуму.</p>
+          <p class="subtitle">Преглед попуњености — клик на слободну собу отвара резервацију.</p>
         </div>
       </div>
 
@@ -114,6 +144,10 @@ onMounted(() => fetchRoomMap())
           <span class="legend-swatch occupied-swatch"></span>
           Заузето
         </span>
+        <span class="legend-item">
+          <span class="legend-swatch free-swatch"></span>
+          Слободно — клик = резервиши
+        </span>
       </div>
 
       <div v-if="isLoading" class="loading-msg">Учитавам...</div>
@@ -124,19 +158,21 @@ onMounted(() => fetchRoomMap())
           <h2 class="facility-name">{{ facility.name }}</h2>
           <div v-if="facility.rooms.length === 0" class="no-rooms">Нема регистрованих соба.</div>
           <div class="rooms-grid">
-            <div
+            <button
               v-for="(room, roomIndex) in facility.rooms"
               :key="room.id"
+              type="button"
               class="room-tile"
-              :class="[`type-${room.capacity_type}`, { 'is-occupied': room.is_occupied }]"
+              :class="[`type-${room.capacity_type}`, { 'is-occupied': room.is_occupied, 'is-free': !room.is_occupied }]"
+              :title="room.is_occupied ? room.name : `Резервиши: ${room.name}`"
               @mouseenter.stop="showTooltip($event, room)"
               @mouseleave="hideTooltip"
-              @click.stop="room.is_occupied && showTooltip($event, room)"
+              @click.stop="onRoomClick($event, room, facility)"
             >
               <span class="room-number">{{ roomIndex + 1 }}</span>
               <span class="room-type-label">{{ roomCapLabel(room) }}</span>
               <span v-if="room.is_occupied" class="occupied-icon">●</span>
-            </div>
+            </button>
           </div>
         </section>
       </div>
@@ -159,6 +195,15 @@ onMounted(() => fetchRoomMap())
         </template>
       </div>
     </Teleport>
+
+    <AdminReservationModal
+      v-model:isOpen="reservationModalOpen"
+      :room="reservationRoom"
+      :facility-name="reservationFacilityName"
+      :initial-check-in="selectedDate"
+      :initial-check-out="reservationCheckOut"
+      @created="onReservationCreated"
+    />
   </AdminLayout>
 </template>
 
@@ -243,6 +288,7 @@ onMounted(() => fetchRoomMap())
 .legend-swatch.type-triple  { background: #cdac91; }
 .legend-swatch.type-multi   { background: #a07050; }
 .legend-swatch.occupied-swatch { background: #fff; border: 2px solid #c0392b; }
+.legend-swatch.free-swatch { background: #fff; border: 2px solid #27ae60; }
 
 /* LOADING */
 
@@ -274,11 +320,14 @@ onMounted(() => fetchRoomMap())
   align-items: center;
   justify-content: center;
   border: 3px solid rgba(0,0,0,0.12);
-  cursor: default;
+  cursor: pointer;
   position: relative;
   transition: transform 0.1s, box-shadow 0.1s;
   user-select: none;
   gap: 0;
+  font: inherit;
+  padding: 0;
+  appearance: none;
 }
 .room-tile:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
@@ -288,10 +337,13 @@ onMounted(() => fetchRoomMap())
 .room-tile.type-triple { background: #cdac91; }
 .room-tile.type-multi  { background: #a07050; color: #fff; }
 
+.room-tile.is-free {
+  border-color: #27ae60;
+}
+
 /* OCCUPIED STATE */
 .room-tile.is-occupied {
   border: 4px solid #c0392b;
-  cursor: pointer;
 }
 .room-tile.is-occupied .occupied-icon {
   position: absolute;
