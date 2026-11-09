@@ -22,7 +22,10 @@ const forgotMsg = ref('')
 const forgotLoading = ref(false)
 
 const handleLogin = async () => {
-  if (!email.value || !password.value) { error.value = 'Unesite email i lozinku.'; return }
+  if (!email.value || !password.value) {
+    error.value = langStore.t('guest.enterEmailPassword')
+    return
+  }
   isLoading.value = true
   error.value = ''
   try {
@@ -37,14 +40,17 @@ const handleLogin = async () => {
 }
 
 const handleForgot = async () => {
-  if (!forgotEmail.value || !forgotPhone.value) { forgotMsg.value = 'Unesite email i telefon.'; return }
+  if (!forgotEmail.value || !forgotPhone.value) {
+    forgotMsg.value = langStore.t('guest.enterEmailPhone')
+    return
+  }
   forgotLoading.value = true
   forgotMsg.value = ''
   try {
     const data = await api.forgotPassword(forgotEmail.value)
-    forgotMsg.value = data.message || 'Link je poslat.'
+    forgotMsg.value = data.message || langStore.t('guest.linkSent')
   } catch {
-    forgotMsg.value = 'Greška. Pokušajte ponovo.'
+    forgotMsg.value = langStore.t('guest.forgotError')
   } finally {
     forgotLoading.value = false
   }
@@ -56,7 +62,7 @@ const handleForgot = async () => {
     <div class="login-box">
 
       <div class="brand-bar">
-        <span>{{ langStore.currentLang === 'sr' ? 'НАСТАВНА БАЗА ГОЧ' : 'TEACHING BASE GOC' }}</span>
+        <span>{{ langStore.t('guest.brand') }}</span>
       </div>
 
       <!-- Login forma -->
@@ -66,53 +72,53 @@ const handleForgot = async () => {
             <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
           </svg>
         </div>
-        <h1>{{ langStore.currentLang === 'sr' ? 'Пријава' : 'Login' }}</h1>
-        <p class="subtitle">{{ langStore.currentLang === 'sr' ? 'Пратите статус Ваших резервација' : 'Track your reservation status' }}</p>
+        <h1>{{ langStore.t('guest.loginTitle') }}</h1>
+        <p class="subtitle">{{ langStore.t('guest.loginSubtitle') }}</p>
 
         <div class="form-group">
-          <label>{{ langStore.currentLang === 'sr' ? 'Е-пошта' : 'Email' }}</label>
+          <label>{{ langStore.t('guest.email') }}</label>
           <input v-model="email" type="email" placeholder="ime@email.com" @keyup.enter="handleLogin" />
         </div>
         <div class="form-group">
-          <label>{{ langStore.currentLang === 'sr' ? 'Лозинка' : 'Password' }}</label>
+          <label>{{ langStore.t('guest.password') }}</label>
           <input v-model="password" type="password" placeholder="••••••••" @keyup.enter="handleLogin" />
         </div>
 
         <p v-if="error" class="error-msg">{{ error }}</p>
 
         <button class="btn-primary" @click="handleLogin" :disabled="isLoading">
-          <span v-if="isLoading">{{ langStore.currentLang === 'sr' ? 'Учитавам...' : 'Loading...' }}</span>
-          <span v-else>{{ langStore.currentLang === 'sr' ? 'ПРИЈАВИТЕ СЕ →' : 'LOG IN →' }}</span>
+          <span v-if="isLoading">{{ langStore.t('guest.loading') }}</span>
+          <span v-else>{{ langStore.t('guest.logIn') }}</span>
         </button>
 
-        <button class="btn-link" @click="showForgot = true">{{ langStore.currentLang === 'sr' ? 'Заборавили сте лозинку?' : 'Forgot password?' }}</button>
+        <button class="btn-link" @click="showForgot = true">{{ langStore.t('guest.forgotPassword') }}</button>
       </div>
 
       <!-- Forgot password forma -->
       <div v-else class="form-body">
-        <h1>{{ langStore.currentLang === 'sr' ? 'Ресет лозинке' : 'Reset Password' }}</h1>
-        <p class="subtitle">{{ langStore.currentLang === 'sr' ? 'Унесите email и телефон са регистрације' : 'Enter the email and phone from your registration' }}</p>
+        <h1>{{ langStore.t('guest.resetTitle') }}</h1>
+        <p class="subtitle">{{ langStore.t('guest.resetSubtitle') }}</p>
 
         <div class="form-group">
-          <label>{{ langStore.currentLang === 'sr' ? 'Е-пошта' : 'Email' }}</label>
+          <label>{{ langStore.t('guest.email') }}</label>
           <input v-model="forgotEmail" type="email" placeholder="ime@email.com" />
         </div>
         <div class="form-group">
-          <label>{{ langStore.currentLang === 'sr' ? 'Телефон' : 'Phone' }}</label>
+          <label>{{ langStore.t('guest.phone') }}</label>
           <input v-model="forgotPhone" type="tel" placeholder="+381 6x xxx xxxx" />
         </div>
 
         <p v-if="forgotMsg" class="info-msg">{{ forgotMsg }}</p>
 
         <button class="btn-primary" @click="handleForgot" :disabled="forgotLoading">
-          <span v-if="forgotLoading">{{ langStore.currentLang === 'sr' ? 'Шаљем...' : 'Sending...' }}</span>
-          <span v-else>{{ langStore.currentLang === 'sr' ? 'ПОШАЉИ ЛИНК →' : 'SEND LINK →' }}</span>
+          <span v-if="forgotLoading">{{ langStore.t('guest.sending') }}</span>
+          <span v-else>{{ langStore.t('guest.sendLink') }}</span>
         </button>
-        <button class="btn-link" @click="showForgot = false">{{ langStore.currentLang === 'sr' ? '← Назад на пријаву' : '← Back to Login' }}</button>
+        <button class="btn-link" @click="showForgot = false">{{ langStore.t('guest.backToLogin') }}</button>
       </div>
 
       <div class="footer-note">
-        {{ langStore.currentLang === 'sr' ? 'Немате налог? Аутоматски се креира при резервацији.' : "Don't have an account? It's automatically created upon your first reservation." }}
+        {{ langStore.t('guest.noAccountNote') }}
       </div>
     </div>
   </div>

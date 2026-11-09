@@ -59,11 +59,11 @@ const daysUntil = (d) => {
 }
 
 const statusLabel = (inq, res) => {
-  if (res && res.reservation_status === 'cancelled') return { text: 'Otkazano', cls: 'cancelled' }
-  if (inq === 'obradjeno' && res) return { text: 'Odobreno ✓', cls: 'approved' }
-  if (inq === 'odbijeno') return { text: 'Odbijeno', cls: 'rejected' }
-  if (inq === 'otkazano') return { text: 'Otkazano', cls: 'cancelled' }
-  return { text: 'U obradi...', cls: 'pending' }
+  if (res && res.reservation_status === 'cancelled') return { text: langStore.t('guest.statusCancelled'), cls: 'cancelled' }
+  if (inq === 'obradjeno' && res) return { text: langStore.t('guest.statusApproved'), cls: 'approved' }
+  if (inq === 'odbijeno') return { text: langStore.t('guest.statusRejected'), cls: 'rejected' }
+  if (inq === 'otkazano') return { text: langStore.t('guest.statusCancelled'), cls: 'cancelled' }
+  return { text: langStore.t('guest.statusPending'), cls: 'pending' }
 }
 
 const canModifyOrCancel = (row) => {
@@ -107,14 +107,14 @@ onMounted(async () => {
 })
 
 const cancelReservation = async (row) => {
-  if (!confirm('Da li ste sigurni da želite da otkažete rezervaciju?')) return
+  if (!confirm(langStore.t('guest.confirmCancel'))) return
   cancelError.value = ''
   cancellingId.value = row.inquiry_id
   try {
     await api.cancelReservation(row.cancel_token)
     await loadReservations()
   } catch (e) {
-    cancelError.value = e.data?.error || 'Greška pri otkazivanju.'
+    cancelError.value = e.data?.error || langStore.t('guest.cancelError')
   } finally {
     cancellingId.value = null
   }
@@ -122,10 +122,7 @@ const cancelReservation = async (row) => {
 
 const openChangeModal = (row) => {
   if (!canModifyDates(row)) {
-    alert(langStore.currentLang === 'sr'
-      ? 'Datume ne možete menjati za ovu rezervaciju jer je već otkazana ili odbijena.'
-      : 'You cannot change dates for this reservation as it has been cancelled or rejected.'
-    )
+    alert(langStore.t('guest.cannotChangeDates'))
     return
   }
   selectedReservation.value = row
@@ -143,7 +140,7 @@ const closeChangeModal = () => {
 
 const submitChangeDates = async () => {
   if (!selectedReservation.value || !modalDateRange.value || modalDateRange.value.length !== 2) {
-    modalError.value = 'Molimo izaberite datume za boravak'
+    modalError.value = langStore.t('guest.pickStayDates')
     return
   }
   modalError.value = ''
@@ -155,15 +152,12 @@ const submitChangeDates = async () => {
     dt2.setMinutes(dt2.getMinutes() - dt2.getTimezoneOffset())
     const checkIn = dt1.toISOString().split('T')[0]
     const checkOut = dt2.toISOString().split('T')[0]
+    const wasApproved = selectedReservation.value.inquiry_status === 'obradjeno'
 
     await api.updateReservationDates(selectedReservation.value.inquiry_id, checkIn, checkOut)
     await loadReservations()
     closeChangeModal()
-    const wasApproved = selectedReservation.value.inquiry_status === 'obradjeno'
-    alert(langStore.currentLang === 'sr'
-      ? (wasApproved ? 'Datumi su promenjeni. Administrator će pregledati nove termine.' : 'Datumi su promenjeni.')
-      : (wasApproved ? 'Dates changed. Admin will review new dates.' : 'Dates changed.')
-    )
+    alert(wasApproved ? langStore.t('guest.datesChangedReview') : langStore.t('guest.datesChanged'))
   } catch (err) {
     modalError.value = err.data?.error || err.message
   } finally {
@@ -172,13 +166,13 @@ const submitChangeDates = async () => {
 }
 
 const redeemVoucher = async (voucher) => {
-  if (!confirm(`Iskoristi vaučer "${voucher.title}"?\nUPOZORENJE: Potvrdite samo pred osobljem restorana ili recepcije!`)) return
+  if (!confirm(langStore.t('guest.redeemConfirm').replace('{title}', voucher.title))) return
   voucherLoading.value = voucher.id
   try {
     const data = await api.redeemVoucher(voucher.id)
     if (guestStore.guest) guestStore.guest.vouchers = data.vouchers
   } catch (err) {
-    alert('Greška: ' + err.message)
+    alert(langStore.t('common.error') + ': ' + err.message)
   } finally {
     voucherLoading.value = null
   }
@@ -186,13 +180,13 @@ const redeemVoucher = async (voucher) => {
 
 const changePassword = async () => {
   pwError.value = ''; pwSuccess.value = ''
-  if (!pwForm.value.current || !pwForm.value.new) { pwError.value = 'Popunite sva polja.'; return }
-  if (pwForm.value.new !== pwForm.value.confirm) { pwError.value = 'Nova lozinka i potvrda se ne poklapaju.'; return }
-  if (pwForm.value.new.length < 6) { pwError.value = 'Lozinka mora imati najmanje 6 znakova.'; return }
+  if (!pwForm.value.current || !pwForm.value.new) { pwError.value = langStore.t('guest.fillAllFields'); return }
+  if (pwForm.value.new !== pwForm.value.confirm) { pwError.value = langStore.t('guest.passwordMismatch'); return }
+  if (pwForm.value.new.length < 6) { pwError.value = langStore.t('guest.passwordTooShort'); return }
   pwLoading.value = true
   try {
     await api.updateGuestPassword({ currentPassword: pwForm.value.current, newPassword: pwForm.value.new })
-    pwSuccess.value = 'Lozinka uspešno promenjena!'
+    pwSuccess.value = langStore.t('guest.passwordChanged')
     pwForm.value = { current: '', new: '', confirm: '' }
   } catch (err) {
     pwError.value = err.data?.error || err.message
@@ -208,13 +202,13 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
   <div class="dashboard-page">
     <!-- Header -->
     <div class="dash-header">
-      <div class="dash-brand">НАСТАВНА БАЗА ГОЧ</div>
+      <div class="dash-brand">{{ langStore.t('guest.brand') }}</div>
       <div class="dash-user">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
         </svg>
         <span>{{ guestStore.guest?.name || '...' }}</span>
-        <button class="btn-logout" @click="handleLogout">Одјави се</button>
+        <button class="btn-logout" @click="handleLogout">{{ langStore.t('guest.logout') }}</button>
       </div>
     </div>
 
@@ -222,24 +216,24 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
       <!-- Tabs -->
       <div class="tabs">
         <button :class="['tab', activeTab === 'rezervacije' ? 'active' : '']" @click="activeTab = 'rezervacije'">
-          📋 Моје резервације
+          {{ langStore.t('guest.tabReservations') }}
         </button>
         <button :class="['tab', activeTab === 'vauceri' ? 'active' : '']" @click="activeTab = 'vauceri'">
           <span class="tab-badge" v-if="guestStore.guest?.vouchers && guestStore.guest.vouchers.length">{{ guestStore.guest.vouchers.filter(v=>v.status==='active').length || '' }}</span>
-          🎁 Моји Ваучери
+          {{ langStore.t('guest.tabVouchers') }}
         </button>
         <button :class="['tab', activeTab === 'lozinka' ? 'active' : '']" @click="activeTab = 'lozinka'">
-          🔒 Промена лозинке
+          {{ langStore.t('guest.tabPassword') }}
         </button>
       </div>
 
       <!-- Rezervacije tab -->
       <div v-if="activeTab === 'rezervacije'">
-        <div v-if="isLoading" class="loading">Учитавам резервације...</div>
+        <div v-if="isLoading" class="loading">{{ langStore.t('guest.loadingReservations') }}</div>
 
         <div v-else-if="reservations.length === 0" class="empty-state">
-          <p>Немате резервација.</p>
-          <router-link :to="{ name: 'smestaj' }" class="btn-primary-sm">Погледај смештај →</router-link>
+          <p>{{ langStore.t('guest.noReservations') }}</p>
+          <router-link :to="{ name: 'smestaj' }" class="btn-primary-sm">{{ langStore.t('guest.viewAccommodation') }}</router-link>
         </div>
 
         <div v-else class="res-list">
@@ -258,17 +252,17 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
 
             <div class="res-card-body">
               <div class="date-row">
-                <span>📅 Долазак: <strong>{{ fmt(row.check_in || row.res_start) }}</strong></span>
-                <span>📅 Одлазак: <strong>{{ fmt(row.check_out || row.res_end) }}</strong></span>
+                <span>{{ langStore.t('guest.arrival') }} <strong>{{ fmt(row.check_in || row.res_start) }}</strong></span>
+                <span>{{ langStore.t('guest.departure') }} <strong>{{ fmt(row.check_out || row.res_end) }}</strong></span>
               </div>
               <div class="date-row meta">
-                <span>Уpit: {{ new Date(row.created_at).toLocaleDateString('sr-RS') }}</span>
+                <span>{{ langStore.t('guest.inquiryOn') }} {{ new Date(row.created_at).toLocaleDateString('sr-RS') }}</span>
                 <span v-if="row.res_start && daysUntil(row.res_start) > 0">
-                  За {{ daysUntil(row.res_start) }} дана
+                  {{ langStore.t('guest.inDays').replace('{n}', daysUntil(row.res_start)) }}
                 </span>
               </div>
               <div v-if="row.inquiry_status === 'odbijeno' && row.rejection_reason" class="reject-reason">
-                <strong>Разлог одбијања:</strong> {{ row.rejection_reason }}
+                <strong>{{ langStore.t('guest.rejectionReason') }}</strong> {{ row.rejection_reason }}
               </div>
             </div>
 
@@ -285,24 +279,23 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
                     @click="cancelReservation(row)"
                     :disabled="cancellingId === row.inquiry_id"
                   >
-                    {{ cancellingId === row.inquiry_id ? 'Отказујем...' : '🚫 Откажи резервацију' }}
+                    {{ cancellingId === row.inquiry_id ? langStore.t('guest.cancelling') : langStore.t('guest.cancelReservation') }}
                   </button>
                   <button
                     class="btn-change"
                     @click="openChangeModal(row)"
                   >
-                    ✏️ Промени termine
+                    {{ langStore.t('guest.changeDates') }}
                   </button>
                 </div>
                 <span class="cancel-note">
-                  ✅ Бесплатно отказивање и промена до <strong>{{ cancelDeadline(row.res_start) }}</strong>
+                  {{ langStore.t('guest.freeCancelUntil') }} <strong>{{ cancelDeadline(row.res_start) }}</strong>
                 </span>
               </template>
               <template v-else>
                 <span class="cancel-icon">🔒</span>
                 <span class="cancel-blocked">
-                  Отказивање није могуће — рок је истекао {{ cancelDeadline(row.res_start) }}.
-                  За помоћ контактирајте нас.
+                  {{ langStore.t('guest.cancelBlocked').replace('{date}', cancelDeadline(row.res_start)) }}
                 </span>
               </template>
             </div>
@@ -313,9 +306,9 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
                 class="btn-change"
                 @click="openChangeModal(row)"
               >
-                ✏️ Промени termine
+                {{ langStore.t('guest.changeDates') }}
               </button>
-              <span class="change-note">Промена датума пре него што администратор преглед</span>
+              <span class="change-note">{{ langStore.t('guest.changeBeforeReview') }}</span>
             </div>
           </div>
         </div>
@@ -324,24 +317,24 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
         <div v-if="guestStore.guest?.vouchers?.length || reservations.length > 0" class="recommendation-box">
           <div class="rec-icon">🌲</div>
           <div class="rec-text">
-            <h3>Препорука за следећи обилазак</h3>
-            <p>Нови Студенац је реновиран! Изненадите се погледом на језеро уз промотивни смештај.</p>
+            <h3>{{ langStore.t('guest.recommendTitle') }}</h3>
+            <p>{{ langStore.t('guest.recommendText') }}</p>
           </div>
-          <router-link :to="{ name: 'smestaj' }" class="btn-primary-sm" style="border-radius:0;">Погледај</router-link>
+          <router-link :to="{ name: 'smestaj' }" class="btn-primary-sm" style="border-radius:0;">{{ langStore.t('guest.view') }}</router-link>
         </div>
       </div>
 
       <!-- Vauceri Tab -->
       <div v-if="activeTab === 'vauceri'">
         <div v-if="!guestStore.guest?.vouchers || guestStore.guest.vouchers.length === 0" class="empty-state">
-          <p>Тренутно немате доступних ваучера.</p>
-          <p class="muted" style="margin-top:10px;">Ваучери се додељују лојалним гостима и током специјалних акција.</p>
+          <p>{{ langStore.t('guest.noVouchers') }}</p>
+          <p class="muted" style="margin-top:10px;">{{ langStore.t('guest.vouchersHint') }}</p>
         </div>
         <div v-else class="vouchers-grid">
           <div v-for="voucher in guestStore.guest.vouchers" :key="voucher.id" :class="['voucher-card', voucher.status === 'redeemed' ? 'is-redeemed' : 'is-active']">
             <div class="v-header">
-              <span class="v-tag">EXCLUSIVE POKLON</span>
-              <span v-if="voucher.status === 'redeemed'" class="v-status">Искоришћено</span>
+              <span class="v-tag">{{ langStore.t('guest.exclusiveGift') }}</span>
+              <span v-if="voucher.status === 'redeemed'" class="v-status">{{ langStore.t('guest.redeemed') }}</span>
             </div>
             <h3>{{ voucher.title }}</h3>
             <p>{{ voucher.description }}</p>
@@ -349,10 +342,10 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
             <div class="v-footer">
               <span class="v-code">#{{ voucher.id.toUpperCase() }}</span>
               <button v-if="voucher.status === 'active'" class="btn-redeem" @click="redeemVoucher(voucher)" :disabled="voucherLoading === voucher.id">
-                 {{ voucherLoading === voucher.id ? 'Обрада...' : 'Искористи' }}
+                 {{ voucherLoading === voucher.id ? langStore.t('guest.processing') : langStore.t('guest.redeem') }}
               </button>
               <div v-if="voucher.status === 'redeemed'" class="redeem-stamp">
-                 ✅ Искоришћено: <br/>{{ new Date(voucher.redeemed_at).toLocaleString('sr-RS') }}
+                 {{ langStore.t('guest.redeemedAt') }} <br/>{{ new Date(voucher.redeemed_at).toLocaleString('sr-RS') }}
               </div>
             </div>
           </div>
@@ -361,23 +354,23 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
 
       <!-- Lozinka tab -->
       <div v-if="activeTab === 'lozinka'" class="pw-form">
-        <h2>Промена лозинке</h2>
+        <h2>{{ langStore.t('guest.changePasswordTitle') }}</h2>
         <div class="form-group">
-          <label>Тренутна лозинка</label>
+          <label>{{ langStore.t('guest.currentPassword') }}</label>
           <input v-model="pwForm.current" type="password" placeholder="••••••••" />
         </div>
         <div class="form-group">
-          <label>Нова лозинка</label>
-          <input v-model="pwForm.new" type="password" placeholder="Мин. 6 знакова" />
+          <label>{{ langStore.t('guest.newPassword') }}</label>
+          <input v-model="pwForm.new" type="password" :placeholder="langStore.t('guest.minChars')" />
         </div>
         <div class="form-group">
-          <label>Потврди нову лозинку</label>
+          <label>{{ langStore.t('guest.confirmPassword') }}</label>
           <input v-model="pwForm.confirm" type="password" placeholder="••••••••" />
         </div>
         <p v-if="pwError" class="error-msg">{{ pwError }}</p>
         <p v-if="pwSuccess" class="success-msg">{{ pwSuccess }}</p>
         <button class="btn-primary-full" @click="changePassword" :disabled="pwLoading">
-          {{ pwLoading ? 'Чувам...' : 'САЧУВАЈ НОВУ ЛОЗИНКУ' }}
+          {{ pwLoading ? langStore.t('guest.saving') : langStore.t('guest.savePassword') }}
         </button>
       </div>
     </div>
@@ -386,29 +379,29 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
     <div v-if="isModalOpen" class="modal-overlay" @click.self="closeChangeModal">
       <div class="modal-content">
         <button class="close-btn" @click="closeChangeModal">&times;</button>
-        <h2>Промени Termine</h2>
+        <h2>{{ langStore.t('guest.changeDatesTitle') }}</h2>
         <div v-if="selectedReservation" class="modal-info">
           <p><strong>{{ selectedReservation.facility_name }}</strong> / {{ selectedReservation.room_name }}</p>
-          <p>Тренутни датуми: {{ fmt(selectedReservation.check_in || selectedReservation.res_start) }} - {{ fmt(selectedReservation.check_out || selectedReservation.res_end) }}</p>
+          <p>{{ langStore.t('guest.currentDates') }} {{ fmt(selectedReservation.check_in || selectedReservation.res_start) }} - {{ fmt(selectedReservation.check_out || selectedReservation.res_end) }}</p>
         </div>
         <form @submit.prevent="submitChangeDates" style="display: flex; flex-direction: column; gap: 15px;">
           <div class="form-group">
-            <label>Нови датуми *</label>
+            <label>{{ langStore.t('guest.newDates') }}</label>
             <VueDatePicker 
               v-model="modalDateRange" 
               range 
               :enable-time-picker="false"
               :min-date="new Date()"
-              placeholder="Изаберите датуме"
+              :placeholder="langStore.t('guest.selectDates')"
               required
               auto-apply
             />
           </div>
           <p v-if="modalError" class="error-msg">{{ modalError }}</p>
           <button type="submit" class="btn-primary-full" :disabled="modalLoading">
-            {{ modalLoading ? 'Чувам...' : 'САЧУВАЈ НОВЕ ДАТУМЕ' }}
+            {{ modalLoading ? langStore.t('guest.saving') : langStore.t('guest.saveDates') }}
           </button>
-          <button type="button" class="btn-secondary" @click="closeChangeModal">Отпусти</button>
+          <button type="button" class="btn-secondary" @click="closeChangeModal">{{ langStore.t('guest.dismiss') }}</button>
         </form>
       </div>
     </div>
