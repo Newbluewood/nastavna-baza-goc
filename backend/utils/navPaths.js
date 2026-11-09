@@ -12,6 +12,16 @@ const SHORT_PAGE_PATHS = {
   faq: '/faq',
 };
 
+/** Short menu labels — never replace with CMS page title (e.g. "Nastavna baza Goč"). */
+const MODULE_NAV_LABELS = {
+  pocetna: { sr: 'НАСЛОВНА', en: 'HOME' },
+  smestaj: { sr: 'СМЕШТАЈ', en: 'ACCOMMODATION' },
+  restoran: { sr: 'РЕСТОРАН', en: 'RESTAURANT' },
+  vesti: { sr: 'ВЕСТИ', en: 'NEWS' },
+  istrazi: { sr: 'ИСТРАЖИ ГОЧ', en: 'EXPLORE GOČ' },
+  kontakt: { sr: 'КОНТАКТ', en: 'CONTACT' },
+};
+
 const MODULE_PAGE_SLUGS = new Set([
   'pocetna',
   'smestaj',
@@ -62,6 +72,7 @@ function isReservedPageSlug(slug) {
 
 module.exports = {
   SHORT_PAGE_PATHS,
+  MODULE_NAV_LABELS,
   MODULE_PAGE_SLUGS,
   RESERVED_PAGE_SLUGS,
   pathForPageSlug,

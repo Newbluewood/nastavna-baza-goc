@@ -1,7 +1,7 @@
 export default {
   sr: {
     nav: {
-      home: 'ПОЧЕТНА',
+      home: 'НАСЛОВНА',
       accommodation: 'СМЕШТАЈ',
       news: 'ВЕСТИ',
       education: 'ЕДУКАЦИЈА',

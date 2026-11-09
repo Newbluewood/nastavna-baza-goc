@@ -33,7 +33,8 @@ router.get('/themes',                         cacheMiddleware(CACHE_TTL), asyncH
 router.get('/themes/:id',                     cacheMiddleware(CACHE_TTL), asyncHandler(getThemeDetail));
 router.get('/restorani',                      cacheMiddleware(CACHE_TTL), asyncHandler(getRestaurantsPublic));
 router.get('/restorani/:id/meni',             cacheMiddleware(CACHE_TTL), asyncHandler(getRestaurantMenu));
-router.get('/nav',                            cacheMiddleware(CACHE_TTL), asyncHandler(getNav));
+// No cache: menu labels must reflect CMS/nav edits immediately (and home-label repairs).
+router.get('/nav',                            asyncHandler(getNav));
 router.get('/stranica/:slug',                 cacheMiddleware(CACHE_TTL), asyncHandler(getPageBySlug));
 router.get('/settings',                       cacheMiddleware(CACHE_TTL), asyncHandler(getSiteSettings));
 

@@ -364,6 +364,11 @@ async function run() {
     );
 
     await seedNavItems(conn);
+    if (await tableExists(conn, 'nav_items')) {
+      const { repairHomeNavLabel } = require('./services/navSync');
+      await repairHomeNavLabel(conn);
+      console.log('Checked home nav label (НАСЛОВНА)');
+    }
 
     console.log('Migration plan finished successfully.');
   } finally {
@@ -420,7 +425,7 @@ async function seedNavItems(conn) {
   const { pathForPageSlug } = require('./utils/navPaths');
 
   const core = [
-    { slug: 'pocetna', label_sr: 'ПОЧЕТНА', label_en: 'HOME', sort_order: 10 },
+    { slug: 'pocetna', label_sr: 'НАСЛОВНА', label_en: 'HOME', sort_order: 10 },
     { slug: 'smestaj', label_sr: 'СМЕШТАЈ', label_en: 'ACCOMMODATION', sort_order: 20 },
     { slug: 'restoran', label_sr: 'РЕСТОРАН', label_en: 'RESTAURANT', sort_order: 30 },
     { slug: 'vesti', label_sr: 'ВЕСТИ', label_en: 'NEWS', sort_order: 40 },

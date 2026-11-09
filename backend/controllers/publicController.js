@@ -584,6 +584,8 @@ async function getPageBySlug(req, res) {
 async function getNav(req, res) {
   const db = req.app.locals.db;
   const lang = req.query.lang === 'en' ? 'en' : 'sr';
+  const { repairHomeNavLabel } = require('../services/navSync');
+  await repairHomeNavLabel(db);
 
   const [rows] = await db.query(`
     SELECT id, path, sort_order,

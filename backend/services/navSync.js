@@ -2,6 +2,7 @@ const {
   pathForPageSlug,
   shouldAutoAddNavForSlug,
   MODULE_PAGE_SLUGS,
+  MODULE_NAV_LABELS,
   SHORT_PAGE_PATHS,
 } = require('../utils/navPaths');
 
@@ -74,12 +75,15 @@ async function ensureModuleNavItems(db) {
       continue;
     }
 
-    const labelEn = page.title_en && String(page.title_en).trim() ? String(page.title_en).trim() : null;
+    const defaults = MODULE_NAV_LABELS[page.slug] || {
+      sr: page.title || page.slug,
+      en: page.title_en || null,
+    };
     const sortSeed = SHORT_PAGE_PATHS[page.slug] ? 50 : 9999;
     await db.query(
       `INSERT INTO nav_items (label_sr, label_en, path, sort_order, is_enabled, page_id)
        VALUES (?, ?, ?, ?, TRUE, ?)`,
-      [page.title || page.slug, labelEn, path, sortSeed, page.id]
+      [defaults.sr, defaults.en, path, sortSeed, page.id]
     );
     changed = true;
   }
@@ -129,15 +133,19 @@ async function addNavForNewPage(db, { pageId, slug, title, titleEn = null }) {
   }
 }
 
-/** Keep menu label in sync when a linked page is renamed. */
+/**
+ * Keep menu label in sync when a linked CMS page is renamed.
+ * Module shells (pocetna, smestaj, …) keep short menu labels — page title ≠ nav label.
+ */
 async function syncNavLabelsForPage(db, pageId, { title, titleEn = null, slug = null }) {
+  if (slug && MODULE_PAGE_SLUGS.has(String(slug))) return;
+
   const en = titleEn && String(titleEn).trim() ? String(titleEn).trim() : null;
   await db.query(
     `UPDATE nav_items SET label_sr = ?, label_en = COALESCE(?, label_en) WHERE page_id = ?`,
     [title, en, pageId]
   );
 
-  // Module shells often have page_id NULL — still keep menu label in sync by path.
   if (slug) {
     const path = pathForPageSlug(slug);
     await db.query(
@@ -149,10 +157,36 @@ async function syncNavLabelsForPage(db, pageId, { title, titleEn = null, slug = 
   }
 }
 
+/** Restore home menu label if CMS page title leaked into nav_items. */
+async function repairHomeNavLabel(db) {
+  const home = MODULE_NAV_LABELS.pocetna;
+  const [rows] = await db.query(
+    "SELECT id, label_sr FROM nav_items WHERE path = '/' LIMIT 1"
+  );
+  if (!rows.length) return;
+
+  const current = String(rows[0].label_sr || '').trim();
+  if (current === home.sr) return;
+
+  // Page titles are long / multi-word; menu labels stay short (НАСЛОВНА).
+  const leaked =
+    /\s/.test(current) ||
+    current.length > 12 ||
+    current === 'ПОЧЕТНА' ||
+    current === 'Почетна';
+  if (!leaked) return;
+
+  await db.query(
+    'UPDATE nav_items SET label_sr = ?, label_en = ? WHERE path = ?',
+    [home.sr, home.en, '/']
+  );
+}
+
 module.exports = {
   addNavForNewPage,
   syncNavLabelsForPage,
   ensureModuleNavItems,
   normalizeStranicaNavPaths,
+  repairHomeNavLabel,
   renumberAll,
 };
