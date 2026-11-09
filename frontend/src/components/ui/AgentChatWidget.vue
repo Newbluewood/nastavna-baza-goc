@@ -4,12 +4,15 @@ import { useChatStore } from '../../stores/chat';
 import { useGuestStore } from '../../stores/guest';
 import { useLangStore } from '../../stores/lang';
 import { renderSafeMarkdown } from '../../utils/safeMarkdown';
+import messages from '../../locales';
 
 const chatStore = useChatStore();
 const guestStore = useGuestStore();
 const langStore = useLangStore();
 const inputMessage = ref('');
 const messagesContainer = ref(null);
+
+const greetingFor = (lang) => messages[lang]?.assistant?.greeting || '';
 
 const scrollToBottom = async () => {
   await nextTick();
@@ -53,14 +56,9 @@ function roomPriceLabel(msg, room) {
 }
 
 function boardLabel(boardType) {
-  if (langStore.currentLang === 'en') {
-    if (boardType === 'half') return 'Half board';
-    if (boardType === 'full') return 'Full board';
-    return 'Room only';
-  }
-  if (boardType === 'half') return 'Polupansion';
-  if (boardType === 'full') return 'Pun pansion';
-  return 'Samo noćenje';
+  if (boardType === 'half') return langStore.t('assistant.boardHalf');
+  if (boardType === 'full') return langStore.t('assistant.boardFull');
+  return langStore.t('assistant.boardBase');
 }
 
 const sendMessage = async () => {
@@ -72,14 +70,14 @@ const sendMessage = async () => {
   await chatStore.sendMessage(content);
 };
 
-const defaultGreetingSr = 'Zdravo! Ja sam vaš AI asistent za Nastavnu Bazu Goč. Kako mogu da vam pomognem danas?';
-const defaultGreetingEn = 'Hello! I am your AI assistant for Teaching Base Goč. How can I help you today?';
+const greetingSr = greetingFor('sr');
+const greetingEn = greetingFor('en');
 
 watch(() => langStore.currentLang, (newLang) => {
   if (chatStore.messages.length > 0) {
     const firstMsg = chatStore.messages[0];
-    if (firstMsg.role === 'assistant' && (firstMsg.content === defaultGreetingSr || firstMsg.content === defaultGreetingEn)) {
-      firstMsg.content = newLang === 'sr' ? defaultGreetingSr : defaultGreetingEn;
+    if (firstMsg.role === 'assistant' && (firstMsg.content === greetingSr || firstMsg.content === greetingEn)) {
+      firstMsg.content = greetingFor(newLang);
     }
   }
 });
@@ -101,7 +99,7 @@ onMounted(async () => {
 
   const loaded = await chatStore.loadHistory();
   if (!loaded && chatStore.messages.length === 0) {
-    chatStore.addMessage('assistant', langStore.currentLang === 'sr' ? defaultGreetingSr : defaultGreetingEn);
+    chatStore.addMessage('assistant', langStore.t('assistant.greeting'));
   }
   scrollToBottom();
 });
@@ -115,7 +113,7 @@ onMounted(async () => {
       class="agent-chat-toggle" 
       :class="{ 'is-open': chatStore.isOpen, 'hide-on-mobile-open': chatStore.isOpen }"
       @click="chatStore.toggleChat()"
-      aria-label="Toggle chat"
+      :aria-label="langStore.t('assistant.toggleChat')"
     >
       <div class="toggle-icon">
         <svg v-if="!chatStore.isOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -139,21 +137,21 @@ onMounted(async () => {
             </svg>
           </div>
           <div class="title-wrap">
-            <h3>{{ langStore.currentLang === 'sr' ? 'Goč AI Asistent' : 'Goč AI Assistant' }}</h3>
-            <span class="status">{{ langStore.currentLang === 'sr' ? 'Uvek na mreži' : 'Always online' }}</span>
+            <h3>{{ langStore.t('assistant.title') }}</h3>
+            <span class="status">{{ langStore.t('assistant.statusOnline') }}</span>
           </div>
         </div>
         <div class="header-actions">
           <router-link :to="{ name: 'smestaj' }" class="reserve-link" @click="chatStore.isOpen = false">
-            {{ langStore.currentLang === 'sr' ? 'Pogledaj smeštaj' : 'View accommodation' }}
+            {{ langStore.t('assistant.viewAccommodation') }}
           </router-link>
-          <button class="clear-btn" @click="chatStore.clearHistory()" :title="langStore.currentLang === 'sr' ? 'Započni novi razgovor' : 'Start new conversation'">
+          <button class="clear-btn" @click="chatStore.clearHistory()" :title="langStore.t('assistant.newConversation')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             </svg>
           </button>
-          <button class="close-panel-btn" @click="chatStore.isOpen = false" aria-label="Close chat">
+          <button class="close-panel-btn" @click="chatStore.isOpen = false" :aria-label="langStore.t('assistant.closeChat')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -184,41 +182,41 @@ onMounted(async () => {
                   <polyline points="17 21 17 13 7 13 7 21"></polyline>
                   <polyline points="7 3 7 8 15 8"></polyline>
                 </svg>
-                <h4>{{ langStore.currentLang === 'sr' ? 'Rezervacija smeštaja' : 'Stay reservation' }}</h4>
+                <h4>{{ langStore.t('assistant.reservationTitle') }}</h4>
               </div>
               <div class="ac-body">
                 <div class="ac-row">
-                  <span>{{ langStore.currentLang === 'sr' ? 'Odabrano:' : 'Selected:' }}</span>
-                  <strong>{{ msg.action.target_room || 'Vaš smeštaj' }}</strong>
+                  <span>{{ langStore.t('assistant.selected') }}</span>
+                  <strong>{{ msg.action.target_room || langStore.t('assistant.yourStay') }}</strong>
                 </div>
                 <div v-if="msg.action.check_in && msg.action.check_out" class="ac-row">
-                  <span>{{ langStore.currentLang === 'sr' ? 'Datumi:' : 'Dates:' }}</span>
+                  <span>{{ langStore.t('assistant.dates') }}</span>
                   <strong>{{ msg.action.check_in }} → {{ msg.action.check_out }}</strong>
                 </div>
                 <div v-if="msg.action.guest_name" class="ac-row">
-                  <span>{{ langStore.currentLang === 'sr' ? 'Gost:' : 'Guest:' }}</span>
+                  <span>{{ langStore.t('assistant.guest') }}</span>
                   <strong>{{ msg.action.guest_name }}</strong>
                 </div>
                 <div v-if="msg.action.board_type && msg.action.board_type !== 'base'" class="ac-row">
-                  <span>{{ langStore.currentLang === 'sr' ? 'Usluga:' : 'Board:' }}</span>
+                  <span>{{ langStore.t('assistant.board') }}</span>
                   <strong>{{ boardLabel(msg.action.board_type) }}</strong>
                 </div>
               </div>
               <div class="ac-success" v-if="msg.redirectedToSite">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                <span>{{ langStore.currentLang === 'sr' ? 'Forma je otvorena — pregledajte i pošaljite upit.' : 'Form opened — review and submit.' }}</span>
+                <span>{{ langStore.t('assistant.formOpened') }}</span>
               </div>
               <div class="ac-actions" v-else-if="msg.action.room_id">
                 <p class="ac-confirm-hint">
-                  {{ langStore.currentLang === 'sr' ? 'Pregledajte podatke i potvrdite da otvorite formu.' : 'Review details and confirm to open the form.' }}
+                  {{ langStore.t('assistant.confirmHint') }}
                 </p>
                 <button class="ac-btn primary" @click="confirmReservation(msg)">
-                  {{ langStore.currentLang === 'sr' ? 'Potvrdi' : 'Confirm' }}
+                  {{ langStore.t('assistant.confirm') }}
                 </button>
               </div>
               <div class="ac-room-picker" v-else-if="msg.needsRoomChoice && msg.roomCandidates?.length">
                 <p class="ac-picker-title">
-                  {{ langStore.currentLang === 'sr' ? 'Izaberite sobu za rezervaciju:' : 'Choose a room to book:' }}
+                  {{ langStore.t('assistant.chooseRoom') }}
                 </p>
                 <button
                   v-for="room in msg.roomCandidates"
@@ -232,19 +230,19 @@ onMounted(async () => {
                     <span v-if="room.capacity" class="ac-room-capacity">{{ room.capacity }}</span>
                     <span v-if="roomPriceLabel(msg, room)" class="ac-room-price">{{ roomPriceLabel(msg, room) }}</span>
                     <span v-if="room.available !== false" class="ac-room-badge">
-                      {{ langStore.currentLang === 'sr' ? 'Slobodno' : 'Available' }}
+                      {{ langStore.t('assistant.available') }}
                     </span>
                   </div>
                   <span class="ac-room-select-btn">
-                    {{ langStore.currentLang === 'sr' ? 'Odaberi' : 'Select' }}
+                    {{ langStore.t('assistant.select') }}
                   </span>
                 </button>
               </div>
               <div class="ac-alternatives" v-if="msg.action.room_id && msg.alternativeRooms?.length">
                 <button type="button" class="ac-alt-toggle" @click="toggleAlternatives(msg)">
                   {{ msg.showAlternatives
-                    ? (langStore.currentLang === 'sr' ? 'Sakrij druge opcije' : 'Hide other options')
-                    : (langStore.currentLang === 'sr' ? 'Ili ipak izaberite drugi smeštaj' : 'Or choose different accommodation') }}
+                    ? langStore.t('assistant.hideOptions')
+                    : langStore.t('assistant.otherOptions') }}
                 </button>
                 <div v-if="msg.showAlternatives" class="ac-alt-list">
                   <button
@@ -259,17 +257,17 @@ onMounted(async () => {
                       <span v-if="room.capacity" class="ac-room-capacity">{{ room.capacity }}</span>
                       <span v-if="roomPriceLabel(msg, room)" class="ac-room-price">{{ roomPriceLabel(msg, room) }}</span>
                       <span v-if="room.available !== false" class="ac-room-badge">
-                        {{ langStore.currentLang === 'sr' ? 'Slobodno' : 'Available' }}
+                        {{ langStore.t('assistant.available') }}
                       </span>
                     </div>
                     <span class="ac-room-select-btn">
-                      {{ langStore.currentLang === 'sr' ? 'Odaberi' : 'Select' }}
+                      {{ langStore.t('assistant.select') }}
                     </span>
                   </button>
                 </div>
               </div>
               <div class="ac-hint" v-else-if="!msg.action.room_id && !msg.needsRoomChoice">
-                <span>{{ langStore.currentLang === 'sr' ? 'Tražimo odgovarajuću sobu…' : 'Looking for matching rooms…' }}</span>
+                <span>{{ langStore.t('assistant.lookingForRoom') }}</span>
               </div>
             </div>
 
@@ -282,7 +280,7 @@ onMounted(async () => {
             <div class="typing-indicator">
               <span></span><span></span><span></span>
             </div>
-            <span class="loading-text">{{ langStore.currentLang === 'sr' ? 'Agent kuca...' : 'Agent is typing...' }}</span>
+            <span class="loading-text">{{ langStore.t('assistant.typing') }}</span>
           </div>
         </div>
 
@@ -301,7 +299,7 @@ onMounted(async () => {
           <input 
             v-model="inputMessage" 
             type="text" 
-            :placeholder="langStore.currentLang === 'sr' ? 'Pitajte me bilo šta u vezi Nastavne baze Goč...' : 'Ask me anything about Teaching Base Goč...'" 
+            :placeholder="langStore.t('assistant.inputPlaceholder')" 
             @keyup.enter="sendMessage"
             :disabled="chatStore.isLoading"
           />
