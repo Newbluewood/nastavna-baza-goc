@@ -9,7 +9,7 @@ import { useRouter } from 'vue-router'
 import api from '../../services/api'
 import { collectGalleryImages } from '../../utils/galleryImages'
 import { resolveMediaUrlOrPlaceholder } from '../../utils/mediaUrl'
-import { facilityLocationSafe } from '../../utils/publicPaths'
+import { facilityLocationSafe, facilityPublicPathSafe } from '../../utils/publicPaths'
 
 const router = useRouter()
 const slides = ref([])
@@ -36,13 +36,13 @@ const loadData = async () => {
       facilities.value = Array.isArray(data) ? data : (data.facilities || [])
       facilities.value = facilities.value.filter((facility) => facility.type === 'smestaj')
 
-      slides.value = (data.slides && data.slides.length > 0)
-        ? data.slides
-        : facilities.value.slice(0, 5).map((facility) => ({
-            image_url: resolveMediaUrlOrPlaceholder(facility.cover_image || facility.gallery?.[0]?.image_url),
-            title: facility.name || pageTitle.value,
-            subtitle: facility.capacity || facility.type || '',
-          }))
+      // Hero = slider svih objekata; CTA vodi na detalj (CMS /smestaj slide je ista stranica → mrtav link)
+      slides.value = facilities.value.map((facility) => ({
+        image_url: facility.cover_image || facility.gallery?.[0]?.image_url || '',
+        title: facility.name || pageTitle.value,
+        subtitle: facility.capacity || '',
+        target_link: facilityPublicPathSafe(facility),
+      }))
     }
   } catch (error) {
     console.error('Error fetching data from API:', error)

@@ -16,6 +16,22 @@ router.get('/test', (req, res) => {
   res.json({ message: 'Test successful', timestamp: new Date() });
 });
 
+// Liveness + DB readiness (used by FE cold-start gate)
+router.get('/health', async (req, res) => {
+  try {
+    await req.app.locals.db.query('SELECT 1');
+    res.json({ ok: true, db: true, ts: new Date().toISOString() });
+  } catch (error) {
+    console.error('[health] DB check failed:', error.code || error.message);
+    res.status(503).json({
+      ok: false,
+      db: false,
+      error: 'Database unavailable',
+      ts: new Date().toISOString()
+    });
+  }
+});
+
 // 5 minuta kesa za sve javne read-only endpointe
 const CACHE_TTL = 5 * 60 * 1000;
 

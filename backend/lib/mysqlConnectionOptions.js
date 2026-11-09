@@ -28,12 +28,18 @@ function getMysqlConnectionOptions(opts = {}) {
   if (rawUrl) {
     if (!rawUrl.startsWith('mysql://')) {
       console.warn('[mysqlConnectionOptions] Ignoring invalid DATABASE_URL (must start with mysql://); using DB_* vars.')
+    } else if (/mysql:\/\/USER:PASSWORD@HOST/i.test(rawUrl) || rawUrl.includes('@HOST:')) {
+      console.warn('[mysqlConnectionOptions] Ignoring placeholder DATABASE_URL; using DB_* vars.')
     } else {
     let u
     try {
       u = new URL(rawUrl)
     } catch (e) {
       console.warn(`[mysqlConnectionOptions] Ignoring invalid DATABASE_URL (${e.message}); using DB_* vars.`)
+      u = null
+    }
+    if (u && (!u.hostname || u.hostname === 'HOST' || u.username === 'USER')) {
+      console.warn('[mysqlConnectionOptions] Ignoring placeholder DATABASE_URL host/user; using DB_* vars.')
       u = null
     }
     if (u) {

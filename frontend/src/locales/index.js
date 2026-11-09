@@ -31,6 +31,14 @@ export default {
       view: 'Погледај',
       login: 'Пријава'
     },
+    coldStart: {
+      title: 'Сајт се учитава',
+      subtitle: 'Сервер је у cold start режиму (бесплатни Render). Молимо сачекајте — обично траје до 60 секунди.',
+      waiting: 'Чекамо сервер и базу… {n}/60 с',
+      timeoutTitle: 'Сервер још није спреман',
+      timeoutBody: 'Нисмо успели да успоставимо везу са сервером/базом у року од 60 секунди. Покушајте поново.',
+      retry: 'ПОКУШАЈ ПОНОВО'
+    },
     inquiry: {
       sent: 'Упит је послат!',
       expectResponse: 'Очекујте одговор у року од 24 сата.',
@@ -297,6 +305,14 @@ export default {
       edit: 'Edit',
       view: 'View',
       login: 'Login'
+    },
+    coldStart: {
+      title: 'Loading the site',
+      subtitle: 'The server is waking up from a cold start (free Render plan). Please wait — this can take up to 60 seconds.',
+      waiting: 'Waiting for server and database… {n}/60 s',
+      timeoutTitle: 'Server is not ready yet',
+      timeoutBody: 'We could not reach the server/database within 60 seconds. Please try again.',
+      retry: 'TRY AGAIN'
     },
     inquiry: {
       sent: 'Inquiry Sent!',

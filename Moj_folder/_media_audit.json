@@ -1,0 +1,297 @@
+﻿◇ injected env (65) from .env // tip: ⌘ suppress logs { quiet: true }
+node : [skip] SELECT cover_image FROM restaurants → ER_NO_SUCH_TABLE
+At line:1 char:1
++ node scripts/auditLocalMedia.js 2>&1 | Out-File -FilePath ..\Moj_fold ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([skip] SELECT c...R_NO_SUCH_TABLE:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[skip] SELECT image_url FROM menu_items → ER_NO_SUCH_TABLE
+[skip] SELECT cover_image FROM themes → ER_BAD_FIELD_ERROR
+[skip] SELECT image_url FROM themes → ER_BAD_FIELD_ERROR
+[skip] SELECT cover_image FROM pages → ER_BAD_FIELD_ERROR
+{
+  "summary": {
+    "dbRefs": 22,
+    "codeRefs": 4,
+    "backendPublicImages": 23,
+    "frontendPublicImages": 32,
+    "uploadFilesOnDisk": 0,
+    "usedLocalFiles": 23,
+    "orphanLocalFiles": 32,
+    "dbLocalPathsMissingOnDisk": 0,
+    "placeholderRefsInDb": 2
+  },
+  "placeholderRefsInDb": [
+    "/placeholder-staff.svg",
+    "/placeholder.jpg"
+  ],
+  "dbLocalPaths": [
+    "/images/pages/education.png",
+    "/images/pages/faq.png",
+    "/images/pages/istrazi.png",
+    "/images/pages/research.png",
+    "/images/pages/restoran.png",
+    "/images/pages/vesti.png",
+    "/placeholder-staff.svg",
+    "/placeholder.jpg"
+  ],
+  "orphanLocalFiles": [
+    {
+      "zone": "backend/public",
+      "url": "/images/explore-hero.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\images\\explore-hero.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/restaurants/pecenjara.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\images\\restaurants\\pecenjara.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/restaurants/piramida.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\images\\restaurants\\piramida.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/themes/accommodation.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\images\\themes\\accommodation.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/themes/hunting.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\images\\themes\\hunting.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/themes/landmarks.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\images\\themes\\landmarks.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/themes/trails.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\images\\themes\\trails.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/themes/accommodation.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\themes\\accommodation.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/themes/hunting.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\themes\\hunting.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/themes/landmarks.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\themes\\landmarks.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/themes/news.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\themes\\news.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/themes/students.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\themes\\students.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/themes/trails.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\backend\\public\\themes\\trails.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/buble-chat.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\buble-chat.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/explore-hero.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\explore-hero.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/favicon.svg",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\favicon.svg"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/icon.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\icon.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/restaurants/pecenjara.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\images\\restaurants\\pecenjara.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/restaurants/piramida.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\images\\restaurants\\piramida.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/themes/accommodation.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\images\\themes\\accommodation.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/themes/hunting.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\images\\themes\\hunting.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/themes/landmarks.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\images\\themes\\landmarks.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/themes/trails.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\images\\themes\\trails.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/logo-sf.svg",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\logo-sf.svg"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/logo.svg",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\logo.svg"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/news-hero.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\news-hero.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/themes/accommodation.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\themes\\accommodation.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/themes/hunting.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\themes\\hunting.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/themes/landmarks.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\themes\\landmarks.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/themes/news.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\themes\\news.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/themes/students.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\themes\\students.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/themes/trails.png",
+      "abs": "D:\\DesktopSSD\\Projekti\\baza-goc-priprema\\frontend\\public\\themes\\trails.png"
+    }
+  ],
+  "usedLocalSample": [
+    {
+      "zone": "backend/public",
+      "url": "/images/pages/education.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/pages/faq.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/pages/istrazi.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/pages/research.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/pages/restoran.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/pages/vesti.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/themes/flora.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/images/themes/staff.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/themes/flora.png"
+    },
+    {
+      "zone": "backend/public",
+      "url": "/themes/staff.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/pages/education.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/pages/faq.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/pages/istrazi.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/pages/research.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/pages/restoran.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/pages/vesti.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/themes/flora.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/images/themes/staff.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/placeholder-staff.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/placeholder-staff.svg"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/placeholder.jpg"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/themes/flora.png"
+    },
+    {
+      "zone": "frontend/public",
+      "url": "/themes/staff.png"
+    }
+  ],
+  "dbLocalMissing": [],
+  "uploadsOnDisk": []
+}
