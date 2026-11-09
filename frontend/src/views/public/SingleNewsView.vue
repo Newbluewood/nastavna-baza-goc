@@ -60,9 +60,10 @@ const loadNews = async () => {
     const currentIndex = newsList.findIndex(
       (n) => n.id === item.id || n.slug === item.slug
     )
+    // Same order as /vesti and home cards (created_at DESC): prev = earlier in list, next = later.
     if (currentIndex !== -1) {
-      prevNews.value = currentIndex < newsList.length - 1 ? newsList[currentIndex + 1] : null
-      nextNews.value = currentIndex > 0 ? newsList[currentIndex - 1] : null
+      prevNews.value = currentIndex > 0 ? newsList[currentIndex - 1] : null
+      nextNews.value = currentIndex < newsList.length - 1 ? newsList[currentIndex + 1] : null
     } else {
       prevNews.value = null
       nextNews.value = null
