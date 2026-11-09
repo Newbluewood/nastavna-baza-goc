@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import agentService from '../services/agentService';
 import { useLangStore } from './lang';
 import { useGuestStore } from './guest';
-import { canOpenSiteReservationForm } from '../utils/reservationDeepLink';
+import { canOpenSiteReservationForm, sanitizeChatAction } from '../utils/reservationDeepLink';
 
 const SESSION_KEY = 'goc_chat_session_id';
 
@@ -30,27 +30,8 @@ function getOrCreateSessionId() {
   return id;
 }
 
-function toIsoDate(value) {
-  if (!value) return '';
-  const s = String(value).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  const dmy = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
-  if (dmy) {
-    const [, dd, mm, yyyy] = dmy;
-    return `${yyyy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
-  }
-  return s;
-}
-
 function normalizeReservationAction(action) {
-  if (!action || action.type !== 'open_reservation_form') return action;
-  const normalized = { ...action };
-  if (!normalized.target_room && normalized.room_name) {
-    normalized.target_room = normalized.room_name;
-  }
-  normalized.check_in = toIsoDate(normalized.check_in);
-  normalized.check_out = toIsoDate(normalized.check_out);
-  return normalized;
+  return sanitizeChatAction(action);
 }
 
 function parseMeta(meta) {

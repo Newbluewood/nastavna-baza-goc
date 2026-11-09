@@ -27,8 +27,8 @@ Kad budemo **korake za deploy / produkcijski checklist**, uraditi ili eksplicitn
 | Prioritet | Stavka | Detalj |
 |-----------|--------|--------|
 | **P1** | Sanitize chat markdown | `marked` + `v-html` u `AgentChatWidget` → **DOMPurify** (XSS preko odgovora) — **urađeno** |
-| **P1** | Uži MySQL user za agenta | least privilege — **urađeno na Aiven** (`goc_agent`); ostaje: prebaciti Render chat-agent env na ovog usera (API ostaje full user). Skripta: `backend/scripts/createAgentDbUser.js` |
-| **P2** | Stroža `action` schema | whitelist tipova/polja na agentu + FE |
+| **P1** | Uži MySQL user za agenta | least privilege — **urađeno** (`goc_agent` na Aiven + Render chat-agent). Skripta: `backend/scripts/createAgentDbUser.js` |
+| **P2** | Stroža `action` schema | whitelist tipova/polja — **urađeno** (FE `sanitizeChatAction` + chat-agent `sanitizeReservationAction`) |
 | **P2** | Javni agent endpoint | rate/origin / budžet već delom; pojačati pre većeg saobraćaja |
 | **P2** | PII u LLM | UI upozorenje; politika; opciona redakcija |
 

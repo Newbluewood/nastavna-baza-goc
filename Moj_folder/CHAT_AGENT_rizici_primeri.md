@@ -54,8 +54,8 @@ Ako model posluša, widget može da pokaže karticu rezervacije i otvori modal s
 - korisnik tipično mora da klikne potvrdu  
 
 ### Šta hardening još radi
-- stroži schema na agentu pre SSE (whitelist polja, tipovi, opsezi datuma)  
-- FE: ignoriši nepoznate `action.type`; Number() + allowlist `board_type`  
+- stroži schema na agentu pre SSE — **urađeno** (`sanitizeReservationAction`)  
+- FE: ignoriši nepoznate `action.type`; Number() + allowlist `board_type` — **urađeno** (`sanitizeChatAction`)  
 - API: ne veruj FE-u za cene/sobe — proveri `room_id` postoji i slobodan  
 
 ### Uticaj na FE (tvoja briga)
