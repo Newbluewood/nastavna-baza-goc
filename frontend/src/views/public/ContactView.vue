@@ -9,7 +9,7 @@ import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
 const settingsStore = useSettingsStore()
 const contactFallback = (store) => ({
-  title: store.currentLang === 'sr' ? 'Контакт' : 'Contact',
+  title: store.t('contact.title'),
   content: '',
   hero_image: null,
 })
@@ -25,9 +25,9 @@ const contactTitle = computed(() => page.value?.title || contactFallback(langSto
 const slides = computed(() => buildHeroSlide(page.value, contactTitle.value))
 
 const statusLabel = (s) => ({
-  активан: langStore.currentLang === 'sr' ? 'Активан' : 'Active',
-  планиран: langStore.currentLang === 'sr' ? 'Планиран' : 'Planned',
-  завршен: langStore.currentLang === 'sr' ? 'Завршен' : 'Completed'
+  активан: langStore.t('contact.statusActive'),
+  планиран: langStore.t('contact.statusPlanned'),
+  завршен: langStore.t('contact.statusCompleted')
 }[s] || s)
 
 const statusClass = (s) => ({
@@ -48,26 +48,26 @@ const statusClass = (s) => ({
     <div class="contact-content">
       <!-- CONTACT INFO -->
       <section class="contact-info-section">
-        <h2>{{ langStore.currentLang === 'sr' ? 'Информације' : 'Information' }}</h2>
+        <h2>{{ langStore.t('contact.information') }}</h2>
         <div class="info-cards">
           <div class="info-card">
             <span class="info-icon">📍</span>
             <div>
-              <strong>{{ langStore.currentLang === 'sr' ? 'Адреса' : 'Address' }}</strong>
+              <strong>{{ langStore.t('contact.address') }}</strong>
               <p>{{ settingsStore.get('contact_address') }}</p>
             </div>
           </div>
           <div class="info-card">
             <span class="info-icon">📞</span>
             <div>
-              <strong>{{ langStore.currentLang === 'sr' ? 'Телефон' : 'Phone' }}</strong>
+              <strong>{{ langStore.t('contact.phone') }}</strong>
               <p><a :href="`tel:${settingsStore.get('contact_phone').replace(/\s+/g, '')}`">{{ settingsStore.get('contact_phone') }}</a></p>
             </div>
           </div>
           <div class="info-card">
             <span class="info-icon">✉️</span>
             <div>
-              <strong>{{ langStore.currentLang === 'sr' ? 'Е-маил' : 'Email' }}</strong>
+              <strong>{{ langStore.t('contact.email') }}</strong>
               <p><a :href="`mailto:${settingsStore.get('contact_email')}`">{{ settingsStore.get('contact_email') }}</a></p>
             </div>
           </div>
@@ -76,7 +76,7 @@ const statusClass = (s) => ({
 
       <!-- STAFF -->
       <section class="staff-section" v-if="staff.length">
-        <h2>{{ langStore.currentLang === 'sr' ? 'Наш тим' : 'Our Team' }}</h2>
+        <h2>{{ langStore.t('contact.ourTeam') }}</h2>
         <div class="staff-grid">
           <div v-for="member in staff" :key="member.id" class="staff-card">
             <div class="staff-photo">
@@ -93,7 +93,7 @@ const statusClass = (s) => ({
 
       <!-- PROJECTS -->
       <section class="projects-section" v-if="projects.length">
-        <h2>{{ langStore.currentLang === 'sr' ? 'Активни пројекти' : 'Active Projects' }}</h2>
+        <h2>{{ langStore.t('contact.activeProjects') }}</h2>
         <div class="projects-list">
           <div v-for="project in projects" :key="project.id" class="project-card">
             <div class="project-header">

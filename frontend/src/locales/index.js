@@ -84,6 +84,18 @@ export default {
       readMore: 'Опширније',
       viewAllThemes: 'Погледај све теме'
     },
+    contact: {
+      title: 'Контакт',
+      information: 'Информације',
+      address: 'Адреса',
+      phone: 'Телефон',
+      email: 'Е-маил',
+      ourTeam: 'Наш тим',
+      activeProjects: 'Активни пројекти',
+      statusActive: 'Активан',
+      statusPlanned: 'Планиран',
+      statusCompleted: 'Завршен'
+    },
     assistant: {
       modeBooking: 'Резервација',
       modeGuide: 'Водич',
@@ -182,6 +194,18 @@ export default {
       discoverGoc: 'Discover Goč',
       readMore: 'Read more',
       viewAllThemes: 'View all themes'
+    },
+    contact: {
+      title: 'Contact',
+      information: 'Information',
+      address: 'Address',
+      phone: 'Phone',
+      email: 'Email',
+      ourTeam: 'Our Team',
+      activeProjects: 'Active Projects',
+      statusActive: 'Active',
+      statusPlanned: 'Planned',
+      statusCompleted: 'Completed'
     },
     assistant: {
       modeBooking: 'Booking',
