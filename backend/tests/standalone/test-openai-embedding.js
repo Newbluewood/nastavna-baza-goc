@@ -1,13 +1,19 @@
 // test-openai-embedding.js
-// Run: node test-openai-embedding.js
-// Requires: npm install openai dotenv
+// Optional manual check (openai SDK removed from runtime deps).
+// Run: npm install openai dotenv && node tests/standalone/test-openai-embedding.js
 
-const { OpenAI } = require('openai');
 require('dotenv').config();
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 async function main() {
+  let OpenAI;
+  try {
+    ({ OpenAI } = require('openai'));
+  } catch {
+    console.error('Install optional peer first: npm install openai');
+    process.exit(1);
+  }
+
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const text = 'This is a test sentence for embedding.';
   try {
     const response = await openai.embeddings.create({

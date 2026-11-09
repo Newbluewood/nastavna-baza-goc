@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const { formatDate } = require('../utils/dateUtils');
+const logger = require('../utils/logger');
 
 const templatesDir = path.join(__dirname, '../email-templates');
 
@@ -23,7 +24,7 @@ const sendEmail = async (to, template) => {
   // Anti-spam / Fake email filter for tests
   const isFake = /example\.com|test|fake|invalid/i.test(to);
   if (isFake) {
-    console.log(`[EMAIL SKIP] Preskačem slanje na fiktivnu adresu: ${to}`);
+    logger.info(`[EMAIL SKIP] Preskačem slanje na fiktivnu adresu: ${to}`);
     return { ok: true, skipped: true };
   }
 
@@ -53,22 +54,22 @@ const sendEmail = async (to, template) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(`[EMAIL] Brevo API: Poslat na ${to}: ${data.messageId}`);
+        logger.info(`[EMAIL] Brevo API: Poslat na ${to}: ${data.messageId}`);
         return { ok: true, messageId: data.messageId };
       } else {
         const err = await response.json();
-        console.error(`[EMAIL] Brevo API greška:`, err);
+        logger.error(`[EMAIL] Brevo API greška:`, err);
         return { ok: false, error: JSON.stringify(err) };
       }
     } catch (err) {
-      console.error(`[EMAIL] Greška:`, err.message);
+      logger.error(`[EMAIL] Greška:`, err.message);
       return { ok: false, error: err.message };
     }
   }
 
   // SMTP fallback
   if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
-    console.log(`[EMAIL DEV MODE] To: ${to} | Subject: ${template.subject}`);
+    logger.info(`[EMAIL DEV MODE] To: ${to} | Subject: ${template.subject}`);
     return { ok: true, dev: true };
   }
 
@@ -87,10 +88,10 @@ const sendEmail = async (to, template) => {
       subject: template.subject,
       html: template.html
     });
-    console.log(`[EMAIL] SMTP: Poslat na ${to}: ${info.messageId}`);
+    logger.info(`[EMAIL] SMTP: Poslat na ${to}: ${info.messageId}`);
     return { ok: true, messageId: info.messageId };
   } catch (err) {
-    console.error(`[EMAIL] SMTP greška:`, err);
+    logger.error(`[EMAIL] SMTP greška:`, err);
     return { ok: false, error: err.message };
   }
 };

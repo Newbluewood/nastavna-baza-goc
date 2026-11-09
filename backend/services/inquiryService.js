@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const emailService = require('./emailService');
 const { INQUIRY_STATUS } = require('../config/constants');
+const logger = require('../utils/logger');
 
 function createLoginRequiredError(message = 'Guest account already exists and login is required.') {
   const error = new Error(message);
@@ -12,7 +13,7 @@ async function sendEmailSafely(label, fn) {
   try {
     await fn();
   } catch (error) {
-    console.warn(`[INQUIRY EMAIL] ${label} failed: ${error.message}`);
+    logger.warn(`[INQUIRY EMAIL] ${label} failed: ${error.message}`);
   }
 }
 
