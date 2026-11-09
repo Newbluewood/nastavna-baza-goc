@@ -76,7 +76,9 @@ Dok CNAME nema: ostaje Netlify URL — ne dirati.
 - [ ] `npm run db:snapshot` urađen i odložen  
 - [ ] Render disk na API za `uploads`  
 - [ ] `FRONTEND_URL` / `ALLOWED_ORIGINS` na API + agent  
-- [ ] Smoke: home, inquiry, mejl, guest login, chat  
+- [ ] Smoke API: `cd backend && npm run smoke:write-flow` (inquiry → admin → guest → cancel)  
+- [ ] Smoke rute: `npm run smoke:routes`  
+- [ ] Ručno: home, mejl (Brevo), chat widget  
 - [ ] Admin CMS login  
 
 ---
