@@ -150,7 +150,7 @@ onUnmounted(() => {
            <h1 class="slide-title">{{ slide.title }}</h1>
            <p v-if="slide.subtitle" class="slide-subtitle">{{ slide.subtitle }}</p>
            <router-link v-if="slide.target_link" :to="resolveLink(slide.target_link)" class="slide-cta">
-             {{ langStore.currentLang === 'sr' ? 'Сазнај више' : 'Learn more' }}
+             {{ langStore.t('explore.learnMore') }}
            </router-link>
         </div>
       </div>
@@ -185,7 +185,7 @@ onUnmounted(() => {
     <!-- Band: news -->
     <hr v-if="dividerBefore('news')" class="section-divider" />
     <div v-if="hasNews" class="news-section">
-      <h2 class="section-heading">{{ langStore.currentLang === 'sr' ? 'Актуелности' : 'News & Updates' }}</h2>
+      <h2 class="section-heading">{{ langStore.t('news.sectionHeading') }}</h2>
       
       <div v-if="!isCarousel" class="news-grid">
         <div v-for="item in news" :key="item.id" class="news-card">
@@ -199,7 +199,7 @@ onUnmounted(() => {
           <div class="news-card-body">
              <h3 class="news-card-title">{{ item.title }}</h3>
              <p class="news-card-excerpt">{{ item.excerpt }}</p>
-             <router-link :to="resolveLink(item.link) || newsLocationSafe(item)" class="news-card-link">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
+             <router-link :to="resolveLink(item.link) || newsLocationSafe(item)" class="news-card-link">{{ langStore.t('news.readMore') }} &rarr;</router-link>
           </div>
         </div>
       </div>
@@ -216,7 +216,7 @@ onUnmounted(() => {
           <div class="news-card-body">
              <h3 class="news-card-title">{{ item.title }}</h3>
              <p class="news-card-excerpt">{{ item.excerpt }}</p>
-             <router-link :to="resolveLink(item.link) || newsLocationSafe(item)" class="news-card-link">{{ langStore.currentLang === 'sr' ? 'Прочитај више' : 'Read more' }} &rarr;</router-link>
+             <router-link :to="resolveLink(item.link) || newsLocationSafe(item)" class="news-card-link">{{ langStore.t('news.readMore') }} &rarr;</router-link>
           </div>
         </div>
       </div>
@@ -225,7 +225,7 @@ onUnmounted(() => {
     <!-- Band: gallery -->
     <hr v-if="dividerBefore('gallery')" class="section-divider" />
     <div v-if="hasGallery">
-      <h2 class="section-heading">{{ langStore.currentLang === 'sr' ? 'Галерија' : 'Gallery' }}</h2>
+      <h2 class="section-heading">{{ langStore.t('news.gallery') }}</h2>
       <div :class="(gridType === 5) ? 'photo-grid-5' : 'photo-grid-6'">
         <a v-for="(item, index) in galleryItems" :key="index" href="#" @click.prevent="openLightbox(index)" class="gallery-item-link">
           <div v-if="item.url" class="gallery-thumb">

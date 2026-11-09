@@ -85,7 +85,7 @@ const handleLike = async () => {
   if (!newsItem.value) return
   const storageKey = `liked_news_${newsItem.value.id}`
   if (localStorage.getItem(storageKey)) {
-    alert(langStore.t('common.error') + ': ' + (langStore.currentLang === 'sr' ? "Већ сте лајковали ову вест!" : "You already liked this news!"))
+    alert(langStore.t('common.error') + ': ' + langStore.t('news.alreadyLiked'))
     return
   }
 
@@ -115,15 +115,15 @@ watch(() => props.slug, () => {
 <template>
   <PageLoading
     v-if="isLoading"
-    :message="langStore.currentLang === 'sr' ? 'Учитавам вест...' : 'Loading news...'"
+    :message="langStore.t('news.loading')"
   />
 
   <div v-else-if="debugError" class="news-state news-state--error">
-    {{ langStore.currentLang === 'sr' ? 'Грешка при учитавању вести.' : 'Failed to load news.' }}
+    {{ langStore.t('news.loadError') }}
   </div>
 
   <div v-else-if="!newsItem" class="news-state news-state--missing">
-    {{ langStore.currentLang === 'sr' ? 'Вест није пронађена.' : 'News not found.' }}
+    {{ langStore.t('news.notFound') }}
   </div>
 
   <div v-else class="single-news-page">
@@ -144,7 +144,7 @@ watch(() => props.slug, () => {
       
       <div class="like-section">
         <button class="like-btn" @click="handleLike" :class="{ 'liked': isLiked }">
-          👍 {{ langStore.currentLang === 'sr' ? 'Свиђа ми се' : 'Like' }} 
+          👍 {{ langStore.t('news.like') }}
           <span class="like-count">({{ newsItem.likes || 0 }})</span>
         </button>
       </div>
@@ -153,7 +153,7 @@ watch(() => props.slug, () => {
       
       <!-- GALERIJA -->
       <div v-if="newsItem.gallery && newsItem.gallery.length > 0" class="news-gallery">
-        <h2>{{ langStore.currentLang === 'sr' ? 'Галерија' : 'Gallery' }}</h2>
+        <h2>{{ langStore.t('news.gallery') }}</h2>
         <div class="photo-grid">
           <div 
             v-for="(img, idx) in newsItem.gallery" 
@@ -170,13 +170,13 @@ watch(() => props.slug, () => {
       <!-- NAVIGACIJA -->
       <div class="news-navigation">
         <router-link :to="newsLocationSafe(prevNews)" v-if="prevNews" class="nav-btn prev">
-          &larr; {{ langStore.currentLang === 'sr' ? 'Претходна' : 'Previous' }}
+          &larr; {{ langStore.t('news.previous') }}
         </router-link>
         <router-link :to="{ name: 'vesti' }" class="nav-btn all">
-          {{ langStore.currentLang === 'sr' ? 'Све вести' : 'All news' }}
+          {{ langStore.t('news.allNews') }}
         </router-link>
         <router-link :to="newsLocationSafe(nextNews)" v-if="nextNews" class="nav-btn next">
-          {{ langStore.currentLang === 'sr' ? 'Следећа' : 'Next' }} &rarr;
+          {{ langStore.t('news.next') }} &rarr;
         </router-link>
       </div>
     </div>

@@ -107,6 +107,19 @@ export default {
       keywords: 'Кључне речи:',
       backToExplore: 'Назад на истраживање'
     },
+    news: {
+      loading: 'Учитавам вест...',
+      loadError: 'Грешка при учитавању вести.',
+      notFound: 'Вест није пронађена.',
+      alreadyLiked: 'Већ сте лајковали ову вест!',
+      like: 'Свиђа ми се',
+      gallery: 'Галерија',
+      previous: 'Претходна',
+      next: 'Следећа',
+      allNews: 'Све вести',
+      sectionHeading: 'Актуелности',
+      readMore: 'Прочитај више'
+    },
     assistant: {
       modeBooking: 'Резервација',
       modeGuide: 'Водич',
@@ -228,6 +241,19 @@ export default {
       learnMore: 'Learn more',
       keywords: 'Keywords:',
       backToExplore: 'Back to exploration'
+    },
+    news: {
+      loading: 'Loading news...',
+      loadError: 'Failed to load news.',
+      notFound: 'News not found.',
+      alreadyLiked: 'You already liked this news!',
+      like: 'Like',
+      gallery: 'Gallery',
+      previous: 'Previous',
+      next: 'Next',
+      allNews: 'All news',
+      sectionHeading: 'News & Updates',
+      readMore: 'Read more'
     },
     assistant: {
       modeBooking: 'Booking',
