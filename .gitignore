@@ -4,6 +4,7 @@ node_modules/
 dist/
 dist-ssr/
 *.local
+backend/backups/
 
 # Editor directories and files
 .vscode/*

@@ -14,6 +14,7 @@
     "db:seed:presentation:dry": "node presentationDBmockData.js",
     "db:seed:presentation:run": "node presentationDBmockData.js --execute",
     "db:sanity": "node dbSanityCheck.js",
+    "db:snapshot": "node scripts/createDeploySnapshot.js",
     "smoke:routes": "node tests/smokeTestRoutes.js",
     "smoke:write-flow": "node tests/smokeTestWriteFlow.js",
     "smoke:all": "npm.cmd run smoke:routes && npm.cmd run smoke:write-flow",

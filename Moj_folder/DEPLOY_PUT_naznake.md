@@ -42,11 +42,42 @@ Kad budemo **korake za deploy / produkcijski checklist**, uraditi ili eksplicitn
 
 ## Naznaka: Ostalo na putu (već dogovoreno)
 
-- First-deploy snapshot (baza + `uploads`)  
-- Render persistent disk (ili S3 kasnije) — ne BLOB u MySQL  
-- Env: `FRONTEND_URL` / `ALLOWED_ORIGINS` posle CNAME  
+### 1) First-deploy snapshot — **skripta spremna**
+```bash
+cd backend
+npm run db:snapshot
+```
+Izlaz: `backend/backups/<timestamp>/` (`*.sql` + `uploads.zip` + `MANIFEST.txt`, **gitignored**).  
+Sačuvati van repoa (disk/cloud enkriptovano). Ponoviti pre većih migracija / go-live.
+
+### 2) Render persistent disk (API servis) — **ručno na Renderu**
+- Disk mount npr. `/opt/render/project/src/backend/public/uploads` (isti path koji Express servirа).  
+- Bez diska: novi deploy = gubitak lokalnih upload-a.  
+- Alternativa kasnije: S3/Blob; **ne** BLOB u MySQL.
+
+### 3) Env posle CNAME — **čekа IT / DNS**
+Kad poddomen živi (npr. `https://nastavnabazagoc.sfb.bg.ac.rs`):
+
+| Servis | Env | Akcija |
+|--------|-----|--------|
+| Site API (Render) | `FRONTEND_URL`, `ALLOWED_ORIGINS` | dodaj novi origin pored Netlify |
+| Chat-agent (Render) | `ALLOWED_ORIGINS` | isto |
+| Netlify FE | domain + `VITE_*` ako treba | CNAME / custom domain |
+
+Dok CNAME nema: ostaje Netlify URL — ne dirati.
+
+### 4) Još ugovor / operativa
 - Mesečno: infrastruktura vs tvoje održavanje (cenovnik)  
 - Exit / predaja pristupa u ugovoru  
+
+---
+
+## Go-live mini-check (posle CNAME)
+- [ ] `npm run db:snapshot` urađen i odložen  
+- [ ] Render disk na API za `uploads`  
+- [ ] `FRONTEND_URL` / `ALLOWED_ORIGINS` na API + agent  
+- [ ] Smoke: home, inquiry, mejl, guest login, chat  
+- [ ] Admin CMS login  
 
 ---
 
