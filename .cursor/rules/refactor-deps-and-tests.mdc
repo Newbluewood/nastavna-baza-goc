@@ -1,0 +1,18 @@
+---
+description: Before every refactor, map dependencies; after every change, run tests
+alwaysApply: true
+---
+
+# Refactor: dependencies first, tests after
+
+Before any refactor, cleanup, or structural change:
+
+1. Map callers/callees of every touched module (imports, routes, env vars, FE stores, deploy surfaces).
+2. Name what must not change (contracts, auth, reservation “hands”, public URLs).
+3. Prefer the smallest patch that preserves those contracts.
+
+After every such change (and before commit/push when asked):
+
+1. Run the nearest automated tests for the touched area (`frontend` Vitest, `backend` Jest/smoke, or project script that covers the change).
+2. If no test exists for a critical path you changed, add a minimal one or explicitly verify the live/local endpoint.
+3. Do not declare done on green assumptions—report what was run and the result.

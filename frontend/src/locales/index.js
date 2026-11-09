@@ -33,10 +33,10 @@ export default {
     },
     coldStart: {
       title: 'Сајт се учитава',
-      subtitle: 'Сервер је у cold start режиму (бесплатни Render). Молимо сачекајте — обично траје до 60 секунди.',
-      waiting: 'Чекамо сервер и базу… {n}/60 с',
+      subtitle: 'Сервер је у cold start режиму (бесплатни Render). Молимо сачекајте — обично траје до 45 секунди.',
+      waiting: 'Чекамо сервер и базу… {n}/45 с',
       timeoutTitle: 'Сервер још није спреман',
-      timeoutBody: 'Нисмо успели да успоставимо везу са сервером/базом у року од 60 секунди. Покушајте поново.',
+      timeoutBody: 'Нисмо успели да успоставимо везу са сервером/базом у року од 45 секунди. Покушајте поново.',
       retry: 'ПОКУШАЈ ПОНОВО'
     },
     inquiry: {
@@ -308,10 +308,10 @@ export default {
     },
     coldStart: {
       title: 'Loading the site',
-      subtitle: 'The server is waking up from a cold start (free Render plan). Please wait — this can take up to 60 seconds.',
-      waiting: 'Waiting for server and database… {n}/60 s',
+      subtitle: 'The server is waking up from a cold start (free Render plan). Please wait — this can take up to 45 seconds.',
+      waiting: 'Waiting for server and database… {n}/45 s',
       timeoutTitle: 'Server is not ready yet',
-      timeoutBody: 'We could not reach the server/database within 60 seconds. Please try again.',
+      timeoutBody: 'We could not reach the server/database within 45 seconds. Please try again.',
       retry: 'TRY AGAIN'
     },
     inquiry: {

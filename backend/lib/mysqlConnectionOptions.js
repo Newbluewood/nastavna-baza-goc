@@ -99,6 +99,9 @@ function getMysqlPoolOptions() {
     waitForConnections: true,
     connectionLimit: Number(process.env.DB_POOL_SIZE || 10),
     queueLimit: 0,
+    // Fail health/readiness instead of hanging forever on a dead DB/VPN path.
+    connectTimeout: Number(process.env.DB_CONNECT_TIMEOUT_MS || 5000),
+    enableKeepAlive: true,
   }
 }
 

@@ -16,18 +16,31 @@ router.get('/test', (req, res) => {
   res.json({ message: 'Test successful', timestamp: new Date() });
 });
 
-// Liveness + DB readiness (used by FE cold-start gate)
+// Liveness + DB readiness (used by FE cold-start gate).
+// Hard-cap the DB probe so a stuck MySQL never leaves the request open.
 router.get('/health', async (req, res) => {
+  const started = Date.now();
+  const timeoutMs = Number(process.env.HEALTH_DB_TIMEOUT_MS || 4000);
   try {
-    await req.app.locals.db.query('SELECT 1');
-    res.json({ ok: true, db: true, ts: new Date().toISOString() });
+    await Promise.race([
+      req.app.locals.db.query('SELECT 1'),
+      new Promise((_, reject) => {
+        setTimeout(() => {
+          const err = new Error(`DB health probe timed out after ${timeoutMs}ms`);
+          err.code = 'HEALTH_DB_TIMEOUT';
+          reject(err);
+        }, timeoutMs);
+      }),
+    ]);
+    res.json({ ok: true, db: true, ms: Date.now() - started, ts: new Date().toISOString() });
   } catch (error) {
     console.error('[health] DB check failed:', error.code || error.message);
     res.status(503).json({
       ok: false,
       db: false,
-      error: 'Database unavailable',
-      ts: new Date().toISOString()
+      error: error.code === 'HEALTH_DB_TIMEOUT' ? 'Database timeout' : 'Database unavailable',
+      ms: Date.now() - started,
+      ts: new Date().toISOString(),
     });
   }
 });

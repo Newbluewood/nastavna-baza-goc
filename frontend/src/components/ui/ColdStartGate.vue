@@ -11,9 +11,6 @@ const subtitle = computed(() => langStore.t('coldStart.subtitle'))
 const waiting = computed(() =>
   langStore.t('coldStart.waiting').replace('{n}', String(bootstrap.elapsedSec))
 )
-const timeoutTitle = computed(() => langStore.t('coldStart.timeoutTitle'))
-const timeoutBody = computed(() => langStore.t('coldStart.timeoutBody'))
-const retryLabel = computed(() => langStore.t('coldStart.retry'))
 </script>
 
 <template>
@@ -21,20 +18,10 @@ const retryLabel = computed(() => langStore.t('coldStart.retry'))
     <div class="cold-card">
       <img src="/logo.svg" alt="Наставна база Гоч" class="cold-logo" />
 
-      <template v-if="bootstrap.status === 'loading'">
-        <div class="spinner" aria-hidden="true" />
-        <h1>{{ title }}</h1>
-        <p class="lead">{{ subtitle }}</p>
-        <p class="meta">{{ waiting }}</p>
-      </template>
-
-      <template v-else>
-        <h1>{{ timeoutTitle }}</h1>
-        <p class="lead">{{ timeoutBody }}</p>
-        <button type="button" class="retry-btn" @click="bootstrap.retry()">
-          {{ retryLabel }}
-        </button>
-      </template>
+      <div class="spinner" aria-hidden="true" />
+      <h1>{{ title }}</h1>
+      <p class="lead">{{ subtitle }}</p>
+      <p class="meta">{{ waiting }}</p>
     </div>
   </div>
 </template>
@@ -102,18 +89,4 @@ h1 {
   font-size: 0.85rem;
 }
 
-.retry-btn {
-  margin-top: 8px;
-  background: #332317;
-  color: #cdac91;
-  border: none;
-  padding: 12px 22px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-}
-
-.retry-btn:hover {
-  opacity: 0.9;
-}
 </style>
