@@ -226,7 +226,7 @@ const setAnalyticsDays = (days) => {
 
         <section class="card analytics-card">
           <div class="card-head">
-            <h2 class="card-title">Chat agent — top / miss</h2>
+            <h2 class="card-title">Chat упити — најчешћа / без одговора</h2>
             <div class="days-pills">
               <button
                 v-for="d in [7, 30, 90]"
@@ -242,8 +242,8 @@ const setAnalyticsDays = (days) => {
             </div>
           </div>
           <p class="muted analytics-hint">
-            Питања из <code>site-guide-turn</code>, груписана по нормализованом тексту.
-            Miss = нема поготка или ниска поузданост (&lt; {{ formatConfidence(analyticsMiss?.missConfidenceMax ?? 0.35) }}).
+            Питања која су корисници поставили асистенту.
+            „Без одговора“ = нема доброг поготка или је ниска поузданост (&lt; {{ formatConfidence(analyticsMiss?.missConfidenceMax ?? 0.35) }}).
           </p>
 
           <p v-if="analyticsError" class="error-banner">{{ analyticsError }}</p>
@@ -258,7 +258,7 @@ const setAnalyticsDays = (days) => {
               <span class="stat-value">{{ formatTokens(analyticsSummary.hits) }}</span>
             </div>
             <div class="stat">
-              <span class="stat-label">Miss</span>
+              <span class="stat-label">Без одговора</span>
               <span class="stat-value miss">{{ formatTokens(analyticsSummary.misses) }}</span>
             </div>
             <div class="stat">
@@ -292,7 +292,7 @@ const setAnalyticsDays = (days) => {
                     <tr>
                       <th>Питање</th>
                       <th>Број</th>
-                      <th>Miss</th>
+                      <th>Без одг.</th>
                       <th>Поузданост</th>
                     </tr>
                   </thead>
@@ -309,7 +309,7 @@ const setAnalyticsDays = (days) => {
             </div>
 
             <div>
-              <h3 class="sub-title">Miss — допунити KB</h3>
+              <h3 class="sub-title">Без одговора — допунити знање</h3>
               <div
                 v-if="analyticsLoading && !analyticsMiss"
                 class="empty-msg small"

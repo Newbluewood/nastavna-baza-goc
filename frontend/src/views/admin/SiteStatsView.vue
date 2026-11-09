@@ -13,7 +13,7 @@ const DEMO = {
   kpis: [
     { key: 'visits', label: 'Јединствени посетиоци', value: 1842, delta: '+12%' },
     { key: 'views', label: 'Прегледи страница', value: 6310, delta: '+8%' },
-    { key: 'rag', label: 'RAG упити', value: 276, delta: '+21%' },
+    { key: 'rag', label: 'Chat упити', value: 276, delta: '+21%' },
     { key: 'topRoom', label: 'Најтраженија соба', value: 'Апартман Делукс', delta: '84 клика' },
     { key: 'dwell', label: 'Просечно задржавање', value: '2м 48с', delta: '+0:18' },
   ],
@@ -78,7 +78,7 @@ const kpis = computed(() => {
   const ragTotal = Number(ragSummary.value?.total || 0)
   base.splice(2, 0, {
     key: 'rag',
-    label: 'RAG упити',
+    label: 'Chat упити',
     value: ragTotal,
     delta: `${analyticsDays.value}д`
   })
@@ -155,7 +155,7 @@ onMounted(fetchStats)
       <div>
         <h1>Статистике сајта</h1>
         <p class="subtitle">
-          Посете из PostHog-а + RAG top/miss из базе.
+          Посете из PostHog-а + chat упити из базе.
           <span class="status-pill" :class="{ live: isLive }">{{ statusLabel }}</span>
         </p>
       </div>
@@ -265,10 +265,10 @@ onMounted(fetchStats)
 
     <section class="card">
       <div class="card-head">
-        <h2 class="card-title">RAG / chat agent</h2>
+        <h2 class="card-title">Chat упити</h2>
         <span v-if="ragSummary" class="live-pill">
           live: {{ formatNum(ragSummary.total) }} упита
-          (miss {{ formatNum(ragSummary.misses) }})
+          (без одговора {{ formatNum(ragSummary.misses) }})
         </span>
         <span v-else class="demo-pill small">демо fallback</span>
       </div>
@@ -301,7 +301,7 @@ onMounted(fetchStats)
         </div>
 
         <div>
-          <h3 class="sub-title">Miss — допунити KB</h3>
+          <h3 class="sub-title">Без одговора — допунити знање</h3>
           <table v-if="liveMiss.length" class="data-table compact">
             <thead>
               <tr><th>Питање</th><th>Разлог</th><th>Број</th></tr>
