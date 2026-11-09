@@ -177,10 +177,10 @@ const newAccount = ref(false)
 // Email validacija
 const emailError = ref('')
 const validateEmail = (email) => {
-  if (!email && !isGuestLoggedIn.value) return langStore.t('common.error') + ': ' + (langStore.currentLang === 'sr' ? 'Е-пошта је обавезна.' : 'Email is required.')
+  if (!email && !isGuestLoggedIn.value) return langStore.t('common.error') + ': ' + langStore.t('inquiry.emailRequired')
   if (!email && isGuestLoggedIn.value) return ''
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-  if (!re.test(email)) return langStore.t('common.error') + ': ' + (langStore.currentLang === 'sr' ? 'Унесите исправну е-пошту (нпр. ime@gmail.com)' : 'Enter a valid email (e.g. name@gmail.com)')
+  if (!re.test(email)) return langStore.t('common.error') + ': ' + langStore.t('inquiry.emailInvalid')
   return ''
 }
 
@@ -313,7 +313,7 @@ const submitForm = async () => {
        check_out = dt2.toISOString().split('T')[0];
     }
 
-    if (!check_in) throw new Error(langStore.t('common.error') + ': ' + (langStore.currentLang === 'sr' ? "Молимо вас изаберите дане у календару." : "Please select dates in the calendar."))
+    if (!check_in) throw new Error(langStore.t('common.error') + ': ' + langStore.t('inquiry.datesRequired'))
 
     const data = await api.submitInquiry({
       ...form.value,
@@ -338,9 +338,7 @@ const submitForm = async () => {
     
   } catch (err) {
     if (err.status === 409) {
-      error.value = langStore.currentLang === 'sr'
-        ? 'Соба није доступна за изабране датуме. Молимо вас изаберите друге датуме.'
-        : 'Room is not available for the selected dates. Please choose different dates.'
+      error.value = langStore.t('inquiry.roomUnavailable')
     } else {
       error.value = err.message
     }
