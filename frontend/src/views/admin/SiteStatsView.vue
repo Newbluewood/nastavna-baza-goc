@@ -13,7 +13,7 @@ const DEMO = {
   kpis: [
     { key: 'visits', label: 'Јединствени посетиоци', value: 1842, delta: '+12%' },
     { key: 'views', label: 'Прегледи страница', value: 6310, delta: '+8%' },
-    { key: 'rag', label: 'Chat упити', value: 276, delta: '+21%' },
+    { key: 'rag', label: 'Чет бот упити', value: 276, delta: '+21%' },
     { key: 'topRoom', label: 'Најтраженија соба', value: 'Апартман Делукс', delta: '84 клика' },
     { key: 'dwell', label: 'Просечно задржавање', value: '2м 48с', delta: '+0:18' },
   ],
@@ -78,7 +78,7 @@ const kpis = computed(() => {
   const ragTotal = Number(ragSummary.value?.total || 0)
   base.splice(2, 0, {
     key: 'rag',
-    label: 'Chat упити',
+    label: 'Чет бот упити',
     value: ragTotal,
     delta: `${analyticsDays.value}д`
   })
@@ -155,7 +155,7 @@ onMounted(fetchStats)
       <div>
         <h1>Статистике сајта</h1>
         <p class="subtitle">
-          Посете из PostHog-а + chat упити из базе.
+          Посете из PostHog-а + чет бот упити из базе.
           <span class="status-pill" :class="{ live: isLive }">{{ statusLabel }}</span>
         </p>
       </div>
@@ -265,7 +265,7 @@ onMounted(fetchStats)
 
     <section class="card">
       <div class="card-head">
-        <h2 class="card-title">Chat упити</h2>
+        <h2 class="card-title">Чет бот упити</h2>
         <span v-if="ragSummary" class="live-pill">
           live: {{ formatNum(ragSummary.total) }} упита
           (без одговора {{ formatNum(ragSummary.misses) }})

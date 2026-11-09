@@ -226,7 +226,7 @@ const setAnalyticsDays = (days) => {
 
         <section class="card analytics-card">
           <div class="card-head">
-            <h2 class="card-title">Chat упити — најчешћа / без одговора</h2>
+            <h2 class="card-title">Чет бот упити — најчешћа / без одговора</h2>
             <div class="days-pills">
               <button
                 v-for="d in [7, 30, 90]"
