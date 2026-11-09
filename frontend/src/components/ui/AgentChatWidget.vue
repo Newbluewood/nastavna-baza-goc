@@ -4,7 +4,6 @@ import { useChatStore } from '../../stores/chat';
 import { useGuestStore } from '../../stores/guest';
 import { useLangStore } from '../../stores/lang';
 import { renderSafeMarkdown } from '../../utils/safeMarkdown';
-import messages from '../../locales';
 
 const chatStore = useChatStore();
 const guestStore = useGuestStore();
@@ -12,7 +11,7 @@ const langStore = useLangStore();
 const inputMessage = ref('');
 const messagesContainer = ref(null);
 
-const greetingFor = (lang) => messages[lang]?.assistant?.greeting || '';
+const greetingFor = (lang) => langStore.tFor(lang, 'assistant.greeting');
 
 const scrollToBottom = async () => {
   await nextTick();
