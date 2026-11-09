@@ -78,7 +78,8 @@ Skripta u petlji šalje hiljade poruka „rezerviši sve sobe“ / jailbreak tek
 Rate limit, AI budget cap, graceful off.
 
 ### Hardening
-Origin allowlist (samo `nastavnabazagoc.sfb…` / netlify), stroži IP/rate, kapča posle N poruka, API key iz FE **nije** pravo rešenje (vidi se u browseru) — bolje server-side gate ili short-lived token sa site API-ja.
+Origin allowlist + burst/hourly rate — **urađeno** na chat-agentu (`ALLOWED_ORIGINS`, `requireAllowedOrigin`, `chatBurstLimiter`).  
+Još opciono kasnije: kapča posle N poruka; API key iz FE **nije** pravo rešenje — bolje short-lived token sa site API-ja.
 
 ### Uticaj na FE
 Indirect: sporiji/skuplji chat; ne lomi layout CMS-a.
