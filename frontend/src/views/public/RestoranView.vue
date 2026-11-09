@@ -49,7 +49,7 @@ const closeMenu = () => {
           <div class="card-image">
             <img :src="resolveMediaUrlOrPlaceholder(res.cover_image)" alt="Restaurant">
             <div class="card-overlay">
-               <span class="view-menu-badge">{{ langStore.currentLang === 'sr' ? 'ПОГЛЕДАЈ МЕНИ' : 'VIEW MENU' }}</span>
+               <span class="view-menu-badge">{{ langStore.t('restaurant.viewMenu') }}</span>
             </div>
           </div>
           <div class="card-content">
@@ -72,7 +72,7 @@ const closeMenu = () => {
             <div class="modal-header">
               <h2>{{ selectedRestaurant.name }}</h2>
               <div class="header-divider"></div>
-              <p class="subtitle">{{ langStore.currentLang === 'sr' ? 'ДОМАЋИ СПЕЦИЈАЛИТЕТИ' : 'TRADITIONAL SPECIALTIES' }}</p>
+              <p class="subtitle">{{ langStore.t('restaurant.specialties') }}</p>
             </div>
 
             <div v-if="isMenuLoading" class="menu-loading">
@@ -96,7 +96,7 @@ const closeMenu = () => {
             </div>
 
             <div class="modal-footer">
-               <p>{{ langStore.currentLang === 'sr' ? '* Све цене су изражене у РСД' : '* All prices are in RSD' }}</p>
+               <p>{{ langStore.t('restaurant.pricesInRsd') }}</p>
             </div>
           </div>
         </div>

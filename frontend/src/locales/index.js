@@ -96,6 +96,17 @@ export default {
       statusPlanned: 'Планиран',
       statusCompleted: 'Завршен'
     },
+    restaurant: {
+      viewMenu: 'ПОГЛЕДАЈ МЕНИ',
+      specialties: 'ДОМАЋИ СПЕЦИЈАЛИТЕТИ',
+      pricesInRsd: '* Све цене су изражене у РСД'
+    },
+    explore: {
+      title: 'Истражи Гоч',
+      learnMore: 'Сазнај више',
+      keywords: 'Кључне речи:',
+      backToExplore: 'Назад на истраживање'
+    },
     assistant: {
       modeBooking: 'Резервација',
       modeGuide: 'Водич',
@@ -206,6 +217,17 @@ export default {
       statusActive: 'Active',
       statusPlanned: 'Planned',
       statusCompleted: 'Completed'
+    },
+    restaurant: {
+      viewMenu: 'VIEW MENU',
+      specialties: 'TRADITIONAL SPECIALTIES',
+      pricesInRsd: '* All prices are in RSD'
+    },
+    explore: {
+      title: 'Explore Goč',
+      learnMore: 'Learn more',
+      keywords: 'Keywords:',
+      backToExplore: 'Back to exploration'
     },
     assistant: {
       modeBooking: 'Booking',

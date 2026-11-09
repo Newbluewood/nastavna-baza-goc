@@ -8,7 +8,7 @@ import { themeLocationSafe } from '../../utils/publicPaths'
 import { useCmsPage, buildHeroSlide } from '../../composables/useCmsPage'
 
 const exploreFallback = (store) => ({
-  title: store.currentLang === 'sr' ? 'Истражи Гоч' : 'Explore Goč',
+  title: store.t('explore.title'),
   content: '',
   hero_image: null,
 })
@@ -43,7 +43,7 @@ const slides = computed(() => buildHeroSlide(page.value, pageTitle.value))
             <span v-for="kw in theme.keywords" :key="kw" class="kw-tag">#{{ kw }}</span>
           </div>
           <router-link :to="themeLocationSafe(theme)" class="read-more">
-            {{ langStore.currentLang === 'sr' ? 'Сазнај више' : 'Learn more' }} &rarr;
+            {{ langStore.t('explore.learnMore') }} &rarr;
           </router-link>
         </div>
       </div>

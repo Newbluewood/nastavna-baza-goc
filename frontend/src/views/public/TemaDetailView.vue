@@ -76,7 +76,7 @@ watch(() => langStore.currentLang, fetchTheme)
       <div class="container">
         <div class="meta-box">
           <div class="keywords">
-            <strong>{{ langStore.currentLang === 'sr' ? 'Кључне речи:' : 'Keywords:' }}</strong>
+            <strong>{{ langStore.t('explore.keywords') }}</strong>
             <span v-for="kw in theme.keywords" :key="kw" class="tag">#{{ kw }}</span>
           </div>
         </div>
@@ -93,7 +93,7 @@ watch(() => langStore.currentLang, fetchTheme)
         </div>
 
         <div class="back-link">
-          <router-link :to="{ name: 'istrazi' }">&larr; {{ langStore.currentLang === 'sr' ? 'Назад на истраживање' : 'Back to exploration' }}</router-link>
+          <router-link :to="{ name: 'istrazi' }">&larr; {{ langStore.t('explore.backToExplore') }}</router-link>
         </div>
       </div>
     </div>
