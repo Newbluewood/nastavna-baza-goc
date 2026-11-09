@@ -532,6 +532,16 @@ class ApiService {
     return response;
   }
 
+  async guestRegister(payload) {
+    const response = await this.request('/api/guests/register', {
+      method: 'POST',
+      authMode: 'none',
+      body: JSON.stringify(payload)
+    });
+    localStorage.setItem('guest_token', response.token);
+    return response;
+  }
+
   async getGuestProfile() {
     return this.request('/api/guests/me');
   }

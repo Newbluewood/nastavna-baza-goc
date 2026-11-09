@@ -4,22 +4,44 @@ import { useRoute, useRouter } from 'vue-router'
 import { useGuestStore } from '../../stores/guest'
 import { useLangStore } from '../../stores/lang'
 import api from '../../services/api'
+import PasswordInput from '../../components/ui/PasswordInput.vue'
 
 const router = useRouter()
 const route = useRoute()
 const guestStore = useGuestStore()
 const langStore = useLangStore()
 
+const mode = ref('login') // login | forgot | register
+
 const email = ref('')
 const password = ref('')
 const error = ref('')
 const isLoading = ref(false)
-const showForgot = ref(false)
 
 const forgotEmail = ref('')
 const forgotPhone = ref('')
 const forgotMsg = ref('')
 const forgotLoading = ref(false)
+
+const regName = ref('')
+const regEmail = ref('')
+const regPhone = ref('')
+const regPassword = ref('')
+const regConfirm = ref('')
+const regError = ref('')
+const regLoading = ref(false)
+
+const redirectAfterAuth = () => {
+  const redirectPath = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+  router.push(redirectPath && redirectPath.startsWith('/') ? redirectPath : { name: 'moj-nalog' })
+}
+
+const setMode = (next) => {
+  mode.value = next
+  error.value = ''
+  forgotMsg.value = ''
+  regError.value = ''
+}
 
 const handleLogin = async () => {
   if (!email.value || !password.value) {
@@ -30,8 +52,7 @@ const handleLogin = async () => {
   error.value = ''
   try {
     await guestStore.login(email.value, password.value)
-    const redirectPath = typeof route.query.redirect === 'string' ? route.query.redirect : ''
-    router.push(redirectPath && redirectPath.startsWith('/') ? redirectPath : { name: 'moj-nalog' })
+    redirectAfterAuth()
   } catch (e) {
     error.value = e.message
   } finally {
@@ -55,6 +76,41 @@ const handleForgot = async () => {
     forgotLoading.value = false
   }
 }
+
+const handleRegister = async () => {
+  if (!regName.value || !regEmail.value || !regPassword.value) {
+    regError.value = langStore.t('guest.enterNameEmailPassword')
+    return
+  }
+  if (regPassword.value !== regConfirm.value) {
+    regError.value = langStore.t('guest.passwordMismatch')
+    return
+  }
+  if (regPassword.value.length < 6) {
+    regError.value = langStore.t('guest.passwordTooShort')
+    return
+  }
+
+  regLoading.value = true
+  regError.value = ''
+  try {
+    await guestStore.register({
+      name: regName.value,
+      email: regEmail.value,
+      phone: regPhone.value || undefined,
+      password: regPassword.value
+    })
+    redirectAfterAuth()
+  } catch (e) {
+    if (e.status === 409) {
+      regError.value = langStore.t('guest.emailTaken')
+    } else {
+      regError.value = e.message || langStore.t('guest.registerError')
+    }
+  } finally {
+    regLoading.value = false
+  }
+}
 </script>
 
 <template>
@@ -62,11 +118,13 @@ const handleForgot = async () => {
     <div class="login-box">
 
       <div class="brand-bar">
-        <span>{{ langStore.t('guest.brand') }}</span>
+        <router-link :to="{ name: 'home' }" class="brand-logo-link">
+          <img src="/logo.svg" alt="Наставна база Гоч" class="brand-logo" />
+        </router-link>
       </div>
 
       <!-- Login forma -->
-      <div v-if="!showForgot" class="form-body">
+      <div v-if="mode === 'login'" class="form-body">
         <div class="icon-wrap">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cdac91" stroke-width="1.5">
             <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
@@ -81,7 +139,7 @@ const handleForgot = async () => {
         </div>
         <div class="form-group">
           <label>{{ langStore.t('guest.password') }}</label>
-          <input v-model="password" type="password" placeholder="••••••••" @keyup.enter="handleLogin" />
+          <PasswordInput v-model="password" autocomplete="current-password" @enter="handleLogin" />
         </div>
 
         <p v-if="error" class="error-msg">{{ error }}</p>
@@ -91,11 +149,12 @@ const handleForgot = async () => {
           <span v-else>{{ langStore.t('guest.logIn') }}</span>
         </button>
 
-        <button class="btn-link" @click="showForgot = true">{{ langStore.t('guest.forgotPassword') }}</button>
+        <button class="btn-link" @click="setMode('forgot')">{{ langStore.t('guest.forgotPassword') }}</button>
+        <button class="btn-link" @click="setMode('register')">{{ langStore.t('guest.createAccount') }}</button>
       </div>
 
       <!-- Forgot password forma -->
-      <div v-else class="form-body">
+      <div v-else-if="mode === 'forgot'" class="form-body">
         <h1>{{ langStore.t('guest.resetTitle') }}</h1>
         <p class="subtitle">{{ langStore.t('guest.resetSubtitle') }}</p>
 
@@ -114,7 +173,47 @@ const handleForgot = async () => {
           <span v-if="forgotLoading">{{ langStore.t('guest.sending') }}</span>
           <span v-else>{{ langStore.t('guest.sendLink') }}</span>
         </button>
-        <button class="btn-link" @click="showForgot = false">{{ langStore.t('guest.backToLogin') }}</button>
+        <button class="btn-link" @click="setMode('login')">{{ langStore.t('guest.backToLogin') }}</button>
+      </div>
+
+      <!-- Register forma -->
+      <div v-else class="form-body">
+        <div class="icon-wrap">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cdac91" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+        </div>
+        <h1>{{ langStore.t('guest.registerTitle') }}</h1>
+        <p class="subtitle">{{ langStore.t('guest.registerSubtitle') }}</p>
+
+        <div class="form-group">
+          <label>{{ langStore.t('guest.name') }}</label>
+          <input v-model="regName" type="text" autocomplete="name" @keyup.enter="handleRegister" />
+        </div>
+        <div class="form-group">
+          <label>{{ langStore.t('guest.email') }}</label>
+          <input v-model="regEmail" type="email" placeholder="ime@email.com" autocomplete="email" @keyup.enter="handleRegister" />
+        </div>
+        <div class="form-group">
+          <label>{{ langStore.t('guest.phone') }}</label>
+          <input v-model="regPhone" type="tel" placeholder="+381 6x xxx xxxx" autocomplete="tel" @keyup.enter="handleRegister" />
+        </div>
+        <div class="form-group">
+          <label>{{ langStore.t('guest.password') }}</label>
+          <PasswordInput v-model="regPassword" autocomplete="new-password" @enter="handleRegister" />
+        </div>
+        <div class="form-group">
+          <label>{{ langStore.t('guest.confirmPassword') }}</label>
+          <PasswordInput v-model="regConfirm" autocomplete="new-password" @enter="handleRegister" />
+        </div>
+
+        <p v-if="regError" class="error-msg">{{ regError }}</p>
+
+        <button class="btn-primary" @click="handleRegister" :disabled="regLoading">
+          <span v-if="regLoading">{{ langStore.t('guest.loading') }}</span>
+          <span v-else>{{ langStore.t('guest.register') }}</span>
+        </button>
+        <button class="btn-link" @click="setMode('login')">{{ langStore.t('guest.haveAccount') }}</button>
       </div>
 
       <div class="footer-note">
@@ -139,16 +238,27 @@ const handleForgot = async () => {
   width: 100%;
   max-width: 420px;
   border: 1px solid #e8e0d8;
-  border-top: 5px solid #332317;
 }
 
 .brand-bar {
-  background: #332317;
-  color: #cdac91;
-  padding: 14px 25px;
-  font-size: 0.8rem;
-  font-weight: bold;
-  letter-spacing: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 22px 28px 18px;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+}
+
+.brand-logo-link {
+  display: block;
+  line-height: 0;
+}
+
+.brand-logo {
+  width: 230px;
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 .form-body {

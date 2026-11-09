@@ -5,8 +5,9 @@ const { sendError } = require('../utils/response');
 async function guestLogin(req, res) {
   const { email, password } = req.validated;
   const db = req.app.locals.db;
+  const normalizedEmail = String(email).trim().toLowerCase();
 
-  const [guests] = await db.query('SELECT * FROM guests WHERE email = ?', [email]);
+  const [guests] = await db.query('SELECT * FROM guests WHERE email = ?', [normalizedEmail]);
   if (guests.length === 0) {
     return sendError(res, 401, 'Invalid credentials');
   }
@@ -22,6 +23,34 @@ async function guestLogin(req, res) {
     token,
     guest: { id: guest.id, name: guest.name, email: guest.email }
   });
+}
+
+async function guestRegister(req, res) {
+  const { name, email, phone, password } = req.validated;
+  const db = req.app.locals.db;
+
+  const [existing] = await db.query(
+    'SELECT id FROM guests WHERE email = ? LIMIT 1',
+    [email]
+  );
+  if (existing.length > 0) {
+    return sendError(res, 409, 'Email already registered');
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  const [result] = await db.query(
+    'INSERT INTO guests (name, email, phone, password_hash, created_at) VALUES (?, ?, ?, ?, NOW())',
+    [name.trim(), email.trim().toLowerCase(), phone?.trim() || null, passwordHash]
+  );
+
+  const guest = {
+    id: result.insertId,
+    name: name.trim(),
+    email: email.trim().toLowerCase()
+  };
+  const token = signGuestToken(guest);
+
+  res.status(201).json({ token, guest });
 }
 
 async function getMe(req, res) {
@@ -228,4 +257,4 @@ async function updateReservationDates(req, res) {
   }
 }
 
-module.exports = { guestLogin, getMe, redeemVoucher, changePassword, getReservations, updateReservationDates };
+module.exports = { guestLogin, guestRegister, getMe, redeemVoucher, changePassword, getReservations, updateReservationDates };

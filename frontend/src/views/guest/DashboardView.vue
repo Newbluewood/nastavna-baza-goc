@@ -6,6 +6,7 @@ import { useLangStore } from '../../stores/lang'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import api from '../../services/api'
+import PasswordInput from '../../components/ui/PasswordInput.vue'
 
 const router = useRouter()
 const guestStore = useGuestStore()
@@ -357,15 +358,15 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
         <h2>{{ langStore.t('guest.changePasswordTitle') }}</h2>
         <div class="form-group">
           <label>{{ langStore.t('guest.currentPassword') }}</label>
-          <input v-model="pwForm.current" type="password" placeholder="••••••••" />
+          <PasswordInput v-model="pwForm.current" autocomplete="current-password" />
         </div>
         <div class="form-group">
           <label>{{ langStore.t('guest.newPassword') }}</label>
-          <input v-model="pwForm.new" type="password" :placeholder="langStore.t('guest.minChars')" />
+          <PasswordInput v-model="pwForm.new" :placeholder="langStore.t('guest.minChars')" autocomplete="new-password" />
         </div>
         <div class="form-group">
           <label>{{ langStore.t('guest.confirmPassword') }}</label>
-          <input v-model="pwForm.confirm" type="password" placeholder="••••••••" />
+          <PasswordInput v-model="pwForm.confirm" autocomplete="new-password" />
         </div>
         <p v-if="pwError" class="error-msg">{{ pwError }}</p>
         <p v-if="pwSuccess" class="success-msg">{{ pwSuccess }}</p>

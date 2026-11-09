@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../../services/api'
+import PasswordInput from '../../components/ui/PasswordInput.vue'
 
 const props = defineProps({
   token: { type: String, required: true },
@@ -42,7 +43,11 @@ const handleReset = async () => {
 <template>
   <div class="reset-page">
     <div class="reset-box">
-      <div class="brand-bar">НАСТАВНА БАЗА ГОЧ</div>
+      <div class="brand-bar">
+        <router-link :to="{ name: 'home' }" class="brand-logo-link">
+          <img src="/logo.svg" alt="Наставна база Гоч" class="brand-logo" />
+        </router-link>
+      </div>
       <div class="form-body">
         <h1>Нова лозинка</h1>
 
@@ -55,11 +60,11 @@ const handleReset = async () => {
         <div v-else>
           <div class="form-group">
             <label>Нова лозинка</label>
-            <input v-model="newPassword" type="password" placeholder="Мин. 6 знакова" />
+            <PasswordInput v-model="newPassword" placeholder="Мин. 6 знакова" autocomplete="new-password" />
           </div>
           <div class="form-group">
             <label>Потврди лозинку</label>
-            <input v-model="confirm" type="password" placeholder="••••••••" @keyup.enter="handleReset" />
+            <PasswordInput v-model="confirm" autocomplete="new-password" @enter="handleReset" />
           </div>
           <p v-if="error" class="error-msg">{{ error }}</p>
           <button class="btn-primary" @click="handleReset" :disabled="isLoading">
@@ -73,8 +78,17 @@ const handleReset = async () => {
 
 <style scoped>
 .reset-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f5f3f0; padding: 20px; }
-.reset-box { background: #fff; width: 100%; max-width: 400px; border: 1px solid #e8e0d8; border-top: 5px solid #332317; }
-.brand-bar { background: #332317; color: #cdac91; padding: 14px 25px; font-size: 0.8rem; font-weight: bold; letter-spacing: 2px; }
+.reset-box { background: #fff; width: 100%; max-width: 400px; border: 1px solid #e8e0d8; }
+.brand-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 22px 28px 18px;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+}
+.brand-logo-link { display: block; line-height: 0; }
+.brand-logo { width: 230px; max-width: 100%; height: auto; display: block; }
 .form-body { padding: 35px 30px 30px; }
 h1 { font-size: 1.5rem; color: #332317; margin: 0 0 25px; text-align: center; }
 .success-state { text-align: center; color: #27ae60; }

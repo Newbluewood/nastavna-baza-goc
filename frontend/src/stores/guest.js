@@ -15,6 +15,13 @@ export const useGuestStore = defineStore('guest', () => {
     return data
   }
 
+  const register = async ({ name, email, phone, password }) => {
+    const data = await api.guestRegister({ name, email, phone, password })
+    token.value = data.token
+    guest.value = data.guest || { name, email }
+    return data
+  }
+
   const logout = () => {
     token.value = null
     guest.value = null
@@ -31,5 +38,5 @@ export const useGuestStore = defineStore('guest', () => {
   // Kept for backward compatibility with DashboardView
   const authHeaders = () => ({ Authorization: `Bearer ${token.value}`, 'Content-Type': 'application/json' })
 
-  return { token, guest, isLoggedIn, login, logout, fetchMe, authHeaders }
+  return { token, guest, isLoggedIn, login, register, logout, fetchMe, authHeaders }
 })

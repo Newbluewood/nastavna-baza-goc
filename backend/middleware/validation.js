@@ -71,6 +71,12 @@ const schemas = {
     email: { required: true, type: 'email' },
     password: { required: true, min: 6 }
   },
+  guestRegister: {
+    name: { required: true, min: 2, max: 150 },
+    email: { required: true, type: 'email' },
+    phone: { max: 50 },
+    password: { required: true, min: 6, max: 100 }
+  },
   inquiry: {
     sender_name: { required: true, min: 2, max: 100 },
     email: { required: true, type: 'email' },
