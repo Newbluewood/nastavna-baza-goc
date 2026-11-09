@@ -1,5 +1,6 @@
-const { getForecastForDate } = require('./weatherService');
-const { normalizeJsonArray } = require('../utils/jsonArray');
+// ARCHIVED 2026-11-09 — not mounted. See backend/archive/legacy-chat/README.md
+const { getForecastForDate } = require('../../services/weatherService');
+const { normalizeJsonArray } = require('../../utils/jsonArray');
 
 function parseCapacityRange(label, minValue, maxValue) {
   const fallbackText = String(label || '');

@@ -1,7 +1,9 @@
 'use strict';
 
+// ARCHIVED 2026-11-09 — not mounted. See backend/archive/legacy-chat/README.md
+
 const fetch = require('node-fetch');
-const logger = require('../logger');
+const logger = require('../../logger');
 
 const GEMINI_API_KEY   = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 const GEMINI_CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || 'gemini-2.5-flash';

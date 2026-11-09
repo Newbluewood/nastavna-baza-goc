@@ -1,22 +1,9 @@
 'use strict';
 
-const { planStay, suggestVisit } = require('../services/chatStayService');
 const { createInquiryWithGuest } = require('../services/inquiryService');
 
 function sendError(res, status, message) {
   return res.status(status).json({ error: message });
-}
-
-/** Accommodation assistant: DB-backed planning (no live Anthropic call here). */
-async function planStayChat(req, res) {
-  const db = req.app.locals.db;
-  const result = await planStay(db, req.body || {});
-  return res.json(result);
-}
-
-async function suggestVisitChat(req, res) {
-  const result = await suggestVisit(req.app.locals.db, req.body || {});
-  return res.json(result);
 }
 
 async function reserveStayChat(req, res) {
@@ -116,76 +103,6 @@ async function reserveStayChat(req, res) {
   }
 }
 
-async function siteGuideTurn(req, res) {
-  const { composeSiteGuideTurn } = require('../services/siteGuideService');
-  const { validateAssistantTurn, makeFallbackAssistantTurn } = require('../services/assistantTurnSchema');
-  const { recordSiteGuideQuery } = require('../services/chatAnalyticsService');
-  const body = req.body || {};
-  const message = String(body.message || '').trim();
-  const lang = body.lang === 'en' ? 'en' : 'sr';
-  const sessionId = body.session_id || body.sessionId || null;
-
-  if (!message) {
-    return res.status(400).json({ error: 'message is required' });
-  }
-
-  const userKey = res.locals?.aiBudget?.userKey
-    || (req.user?.id
-      ? `admin:${req.user.id}`
-      : (req.guest?.id
-        ? `guest:${req.guest.id}`
-        : `ip:${req.ip || 'unknown'}`));
-
-  const turn = await composeSiteGuideTurn({ message, lang, userKey });
-
-  try {
-    validateAssistantTurn(turn);
-  } catch (err) {
-    console.error('[siteGuideTurn] invalid turn produced:', err.message);
-    const fallback = makeFallbackAssistantTurn({ lang, reason: 'invalid_turn' });
-    // Best-effort analytics; never blocks the response.
-    void recordSiteGuideQuery({
-      question: message,
-      lang,
-      turn: fallback,
-      sessionId,
-      userKey
-    });
-    return res.status(200).json(fallback);
-  }
-
-  // Best-effort analytics; never blocks the response.
-  void recordSiteGuideQuery({
-    question: message,
-    lang,
-    turn,
-    sessionId,
-    userKey
-  });
-
-  return res.status(200).json(turn);
-}
-
-/** Fallback Chat via Gemini */
-async function fallbackChat(req, res) {
-  const { askGemini } = require('../services/geminiChatService');
-  const body = req.body || {};
-  const message = body.message;
-  const history = body.history || [];
-
-  try {
-    const { reply, action } = await askGemini(message, history);
-    return res.json({ reply, action });
-  } catch (err) {
-    console.error('[fallbackChat] error:', err.message);
-    return res.status(500).json({ error: 'Fallback chat failed' });
-  }
-}
-
 module.exports = {
-  planStayChat,
-  suggestVisitChat,
-  reserveStayChat,
-  siteGuideTurn,
-  fallbackChat
+  reserveStayChat
 };

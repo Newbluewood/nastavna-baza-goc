@@ -1,3 +1,5 @@
+// No longer mounted. It only guarded POST /api/chat/site-guide-turn,
+// which was archived with the legacy chat path (backend/archive/legacy-chat).
 const { sendError } = require('../utils/response');
 
 function toPositiveInt(value, fallback) {

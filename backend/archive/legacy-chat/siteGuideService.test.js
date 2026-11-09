@@ -117,7 +117,7 @@ describe('composeSiteGuideTurn - disabled / mock paths', () => {
     process.env.AI_API_KEY = 'test-key';
     const { fetchFn, searchInCollection } = setupMocks();
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'zdravo',
       lang: 'sr',
@@ -135,7 +135,7 @@ describe('composeSiteGuideTurn - disabled / mock paths', () => {
     process.env.AI_PROVIDER = 'mock';
     const { fetchFn, searchInCollection } = setupMocks();
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'kako si?',
       lang: 'sr',
@@ -165,7 +165,7 @@ describe('composeSiteGuideTurn - disabled / mock paths', () => {
     });
     jest.doMock('../../db', () => ({ query: dbQuery }));
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'volim da pesacim, sta ima tamo za mene',
       lang: 'sr',
@@ -183,7 +183,7 @@ describe('composeSiteGuideTurn - disabled / mock paths', () => {
     process.env.AI_PROVIDER = 'mock';
     const { fetchFn, searchInCollection } = setupMocks();
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'test',
       lang: 'sr',
@@ -201,7 +201,7 @@ describe('composeSiteGuideTurn - disabled / mock paths', () => {
     process.env.AI_PROVIDER = 'mock';
     const { fetchFn, searchInCollection } = setupMocks();
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'sušara',
       lang: 'sr',
@@ -220,7 +220,7 @@ describe('composeSiteGuideTurn - disabled / mock paths', () => {
     process.env.AI_ENABLED = 'false';
     const { fetchFn, searchInCollection } = setupMocks();
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'test',
       lang: 'sr',
@@ -249,7 +249,7 @@ describe('composeSiteGuideTurn - DB facts routing', () => {
       staff: [{ full_name: 'A' }, { full_name: 'B' }],
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'sta sve znas o sajtu',
       lang: 'sr',
@@ -277,7 +277,7 @@ describe('composeSiteGuideTurn - DB facts routing', () => {
       staff: [{ full_name: 'A' }],
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'sta sve znas o vestima i ui bojama',
       lang: 'sr',
@@ -307,7 +307,7 @@ describe('composeSiteGuideTurn - DB facts routing', () => {
       staff: [{ full_name: 'A' }],
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'sta ima zanimljivo',
       lang: 'sr',
@@ -335,7 +335,7 @@ describe('composeSiteGuideTurn - DB facts routing', () => {
       staff: [{ full_name: 'A' }, { full_name: 'B' }],
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'sta sve ima tamo na gocu',
       lang: 'sr',
@@ -357,7 +357,7 @@ describe('composeSiteGuideTurn - DB facts routing', () => {
     const { fetchFn, searchInCollection } = setupMocks();
     setupDbMock();
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'sta pise u headeru i koje su boje dugmadi',
       lang: 'sr',
@@ -383,7 +383,7 @@ describe('composeSiteGuideTurn - DB facts routing', () => {
       occupiedAgg: [{ occupied_rooms: 2 }],
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'koliko je soba slobodno ove nedelje',
       lang: 'sr',
@@ -410,7 +410,7 @@ describe('composeSiteGuideTurn - DB facts routing', () => {
       ],
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'ko su zaposleni',
       lang: 'sr',
@@ -437,7 +437,7 @@ describe('composeSiteGuideTurn - DB facts routing', () => {
       ],
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'ima li neki event skoro',
       lang: 'sr',
@@ -462,7 +462,7 @@ describe('composeSiteGuideTurn - DB facts routing', () => {
       ],
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'ali ne znas sta pise u tim vestima',
       lang: 'sr',
@@ -489,7 +489,7 @@ describe('composeSiteGuideTurn - DB facts routing', () => {
       roomsAgg: [{ rooms: 5, min_cap: 2, max_cap: 4 }],
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'sta je u ponudi smestaja',
       lang: 'sr',
@@ -517,7 +517,7 @@ describe('composeSiteGuideTurn - DB facts routing', () => {
       news: [{ id: 1, title: 'Vest' }],
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'koji je danas dan i sta ima za pesacenje',
       lang: 'sr',
@@ -543,7 +543,7 @@ describe('composeSiteGuideTurn - RAG path failures', () => {
       searchMock: jest.fn().mockRejectedValue(new Error('qdrant down')),
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'zzzxxyyqq',
       lang: 'sr',
@@ -576,7 +576,7 @@ describe('composeSiteGuideTurn - RAG path failures', () => {
       searchMock: jest.fn().mockRejectedValue(new Error('qdrant down')),
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'kontakt',
       lang: 'sr',
@@ -598,7 +598,7 @@ describe('composeSiteGuideTurn - RAG path failures', () => {
       searchMock: jest.fn().mockResolvedValue([]),
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'zzzxxyyqq',
       lang: 'sr',
@@ -628,7 +628,7 @@ describe('composeSiteGuideTurn - RAG path failures', () => {
       searchMock: jest.fn().mockResolvedValue([SAMPLE_HIT]),
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'test',
       lang: 'sr',
@@ -651,7 +651,7 @@ describe('composeSiteGuideTurn - RAG path failures', () => {
       searchMock: jest.fn().mockResolvedValue([SAMPLE_HIT]),
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'test',
       lang: 'sr',
@@ -687,7 +687,7 @@ describe('composeSiteGuideTurn - success path', () => {
       searchMock: jest.fn().mockResolvedValue([SAMPLE_HIT]),
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'test',
       lang: 'sr',
@@ -741,7 +741,7 @@ describe('composeSiteGuideTurn - success path', () => {
       recordSpendMock,
     });
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'test',
       lang: 'sr',

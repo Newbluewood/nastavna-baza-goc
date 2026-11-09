@@ -1,6 +1,9 @@
 'use strict';
 
 /**
+ * ARCHIVED 2026-11-09 — not mounted. Production chat is chat-agent.
+ * See backend/archive/legacy-chat/README.md
+ *
  * siteGuideService.js
  *
  * Composes an AssistantTurn response for the "site guide" feature.
@@ -19,11 +22,11 @@
 const path = require('path');
 const fs = require('fs');
 
-const { makeAssistantTurn } = require('./assistantTurnSchema');
-const { searchInCollection } = require('./vectorSearchService');
-const { recordSpend } = require('./aiBudgetService');
+const { makeAssistantTurn } = require('../../services/assistantTurnSchema');
+const { searchInCollection } = require('../../services/vectorSearchService');
+const { recordSpend } = require('../../services/aiBudgetService');
 
-const DOCS_DIR = path.join(__dirname, '../docs');
+const DOCS_DIR = path.join(__dirname, '../../docs');
 const SITE_KB_COLLECTION = 'site_kb';
 
 function normalizeUserQuestion(raw) {
@@ -203,7 +206,7 @@ function inferWindowDays(message) {
 async function makeAvailabilityFactsTurnIfAsked(message, lang) {
   if (!looksLikeAvailabilityQuestion(message)) return null;
   try {
-    const db = require('../db');
+    const db = require('../../db');
     const days = inferWindowDays(message);
     const now = new Date();
     const end = new Date(now);
@@ -382,7 +385,7 @@ function readJsonSafe(filePath, fallback) {
 }
 
 async function buildKnowledgeSnapshot() {
-  const db = require('../db');
+  const db = require('../../db');
   const [facilityRows] = await db.query("SELECT COUNT(*) AS n FROM facilities WHERE type = 'smestaj'");
   const [roomRows] = await db.query('SELECT COUNT(*) AS n FROM rooms');
   const [newsRows] = await db.query('SELECT COUNT(*) AS n FROM news');
@@ -405,8 +408,8 @@ async function buildKnowledgeSnapshot() {
   const structure = readJsonSafe(path.join(DOCS_DIR, 'site-structure.json'), { routes: [] });
   const routes = Array.isArray(structure.routes) ? structure.routes : [];
 
-  const appVue = fs.readFileSync(path.join(__dirname, '../../frontend/src/App.vue'), 'utf8');
-  const mainCss = fs.readFileSync(path.join(__dirname, '../../frontend/src/assets/main.css'), 'utf8');
+  const appVue = fs.readFileSync(path.join(__dirname, '../../../frontend/src/App.vue'), 'utf8');
+  const mainCss = fs.readFileSync(path.join(__dirname, '../../../frontend/src/assets/main.css'), 'utf8');
 
   const navMatches = Array.from(appVue.matchAll(/to="([^"]+)"/g)).map((m) => m[1]).slice(0, 8);
   const uniqueNavRoutes = Array.from(new Set(navMatches));
@@ -546,7 +549,7 @@ async function makeAllKnowledgeTurnIfAsked(message, lang) {
 async function makeOverviewFactsTurnIfAsked(message, lang) {
   if (!looksLikeOverviewQuestion(message)) return null;
   try {
-    const db = require('../db');
+    const db = require('../../db');
     const [facilityRows] = await db.query("SELECT COUNT(*) AS n FROM facilities WHERE type = 'smestaj'");
     const [roomRows] = await db.query('SELECT COUNT(*) AS n FROM rooms');
     const [newsRows] = await db.query('SELECT COUNT(*) AS n FROM news');
@@ -597,8 +600,8 @@ async function makeOverviewFactsTurnIfAsked(message, lang) {
 async function makeUiContentFactsTurnIfAsked(message, lang) {
   if (!looksLikeUiContentQuestion(message)) return null;
   try {
-    const appVue = fs.readFileSync(path.join(__dirname, '../../frontend/src/App.vue'), 'utf8');
-    const mainCss = fs.readFileSync(path.join(__dirname, '../../frontend/src/assets/main.css'), 'utf8');
+    const appVue = fs.readFileSync(path.join(__dirname, '../../../frontend/src/App.vue'), 'utf8');
+    const mainCss = fs.readFileSync(path.join(__dirname, '../../../frontend/src/assets/main.css'), 'utf8');
 
     const hasHeader = appVue.includes('<header class="header">');
     const hasFooter = appVue.includes('<footer class="footer">');
@@ -646,7 +649,7 @@ async function makeUiContentFactsTurnIfAsked(message, lang) {
 async function makeStaffFactsTurnIfAsked(message, lang) {
   if (!looksLikeStaffQuestion(message)) return null;
   try {
-    const db = require('../db');
+    const db = require('../../db');
     const [rows] = await db.query(
       `SELECT full_name, role
          FROM staff
@@ -737,7 +740,7 @@ function looksLikeHikingQuestion(message) {
 async function makeHikingFactsTurnIfAsked(message, lang) {
   if (!looksLikeHikingQuestion(message)) return null;
   try {
-    const db = require('../db');
+    const db = require('../../db');
     const [rows] = await db.query(
       `SELECT id, name, description, distance_km, distance_minutes
          FROM attractions
@@ -807,7 +810,7 @@ async function makeHikingFactsTurnIfAsked(message, lang) {
 async function makeThemeFactsTurnIfAsked(message, lang) {
   if (!looksLikeThemeQuestion(message)) return null;
   try {
-    const db = require('../db');
+    const db = require('../../db');
     const langParam = lang === 'en' ? 'en' : 'sr';
     const [rows] = await db.query(`
       SELECT t.slug, t.keywords,
@@ -862,7 +865,7 @@ async function makeThemeFactsTurnIfAsked(message, lang) {
 async function makeEventsFactsTurnIfAsked(message, lang) {
   if (!looksLikeEventQuestion(message)) return null;
   try {
-    const db = require('../db');
+    const db = require('../../db');
     const [rows] = await db.query(
       `SELECT id, title, excerpt, content, created_at
          FROM news
@@ -919,7 +922,7 @@ async function makeOfferFactsTurnIfAsked(message, lang) {
   if (!looksLikeOfferQuestion(message)) return null;
   try {
     // Lazy import to keep unit tests lightweight and avoid DB coupling.
-    const db = require('../db');
+    const db = require('../../db');
     const [facilityRows] = await db.query(
       `SELECT id, name, capacity, capacity_min, capacity_max, stay_tags
          FROM facilities

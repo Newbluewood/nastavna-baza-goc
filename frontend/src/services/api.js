@@ -193,28 +193,6 @@ class ApiService {
     });
   }
 
-  async chatPlanStay(payload) {
-    return this.request('/api/chat/plan-stay', {
-      method: 'POST',
-      body: JSON.stringify(payload || {})
-    });
-  }
-
-  async chatSiteGuideTurn({ message, lang = 'sr' }) {
-    return this.request('/api/chat/site-guide-turn', {
-      method: 'POST',
-      authMode: 'guest',
-      body: JSON.stringify({ message, lang })
-    });
-  }
-
-  async chatSuggestVisit(payload) {
-    return this.request('/api/chat/suggest-visit', {
-      method: 'POST',
-      body: JSON.stringify(payload || {})
-    });
-  }
-
   async chatReserveStay(payload) {
     return this.request('/api/chat/reserve-stay', {
       method: 'POST',

@@ -1,30 +1,16 @@
 const express = require('express');
 const asyncHandler = require('../middleware/asyncHandler');
 const { optionalGuestAuthMiddleware } = require('../middleware/auth');
-const { planStayChat, suggestVisitChat, reserveStayChat, siteGuideTurn, fallbackChat } = require('../controllers/chatController');
+const { reserveStayChat } = require('../controllers/chatController');
 const { saveMessage, getHistory } = require('../controllers/chatHistoryController');
-const budgetGate = require('../middleware/budgetGate');
-const { chatRateLimit } = require('../middleware/chatRateLimit');
-const { aiUsageGuard } = require('../middleware/aiUsageGuard');
 
 const router = express.Router();
 
-router.post('/fallback', asyncHandler(fallbackChat));
-
-router.post('/plan-stay', optionalGuestAuthMiddleware, asyncHandler(planStayChat));
-router.post('/suggest-visit', asyncHandler(suggestVisitChat));
+// Widget text goes to chat-agent (SSE). These routes are the site's hands:
+// inquiry insert, and history for a logged-in guest.
+// Legacy AI routes (plan-stay, suggest-visit, site-guide-turn, fallback)
+// are unmounted. Code lives in backend/archive/legacy-chat/.
 router.post('/reserve-stay', optionalGuestAuthMiddleware, asyncHandler(reserveStayChat));
-
-router.post(
-  '/site-guide-turn',
-  optionalGuestAuthMiddleware,
-  chatRateLimit,
-  aiUsageGuard,
-  budgetGate('site_guide'),
-  asyncHandler(siteGuideTurn)
-);
-
-// Chat history endpoints
 router.post('/history', optionalGuestAuthMiddleware, asyncHandler(saveMessage));
 router.get('/history', optionalGuestAuthMiddleware, asyncHandler(getHistory));
 

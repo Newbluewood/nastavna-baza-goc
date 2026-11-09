@@ -86,7 +86,7 @@ describe('site-guide retrieval isolation - runtime', () => {
 
     const { searchInCollectionMock, searchFactsMock } = installMocks();
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       // Keep this neutral so it does not match any deterministic DB/UI fast-path.
       message: 'objasni mi ovo ukratko',
@@ -105,7 +105,7 @@ describe('site-guide retrieval isolation - runtime', () => {
 
     const { searchInCollectionMock, searchFactsMock } = installMocks();
 
-    const { composeSiteGuideTurn } = require('../../services/siteGuideService');
+    const { composeSiteGuideTurn } = require('./siteGuideService');
     const result = await composeSiteGuideTurn({
       message: 'test',
       lang: 'sr',
@@ -121,7 +121,7 @@ describe('site-guide retrieval isolation - runtime', () => {
 describe('site-guide retrieval isolation - static source check', () => {
   it('siteGuideService.js does not reference facts_collection or searchFacts()', () => {
     const src = fs.readFileSync(
-      path.join(__dirname, '../../services/siteGuideService.js'),
+      path.join(__dirname, 'siteGuideService.js'),
       'utf8'
     );
     expect(src).not.toMatch(/facts_collection/);

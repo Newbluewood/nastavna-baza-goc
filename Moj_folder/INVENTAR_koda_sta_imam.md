@@ -70,10 +70,10 @@ Admin view-i: sličan CRUD pattern kopiran (npr. `getImageUrl`), bez zajedničko
 | `/api/guests` | portal gosta |
 | `/api/cancel` | otkaz tokenom |
 | `/api/ai` | admin AI (proofread…) |
-| `/api/chat` | **legacy** in-repo chat — nije glavni widget put |
+| `/api/chat` | inquiry (`reserve-stay`) + history; AI ide na chat-agent |
 
 **Bitni servisi:** `inquiryService`, `emailService`, `aiBudgetService`, `publicController`…  
-**Legacy monolit:** `siteGuideService.js` (~1470 ln) — paralelni AI put u API-ju.  
+**Legacy monolit:** arhiviran u `backend/archive/legacy-chat/` (nije na rutama).  
 **Mrtav kod:** `adminController.js` (nije importovan) — ostatak refaktora.  
 **Joi** u package.json, validacija i dalje ručna.
 
@@ -86,7 +86,8 @@ Admin view-i: sličan CRUD pattern kopiran (npr. `getImageUrl`), bez zajedničko
 | Put | Gde | Status |
 |-----|-----|--------|
 | **Produkcija** | Widget → `VITE_CHAT_API_URL` → chat-agent SSE | Ono što vidiš na sajtu |
-| **Legacy** | `/api/chat/*` + `siteGuideService` + `backend/docs/*.json` | Ostalo u monorepu; ne brisati na brzinu |
+| **Ruke na sajtu** | `POST /api/chat/reserve-stay` + `/api/chat/history` | Forma upisuje inquiry; istorija za ulogovanog gosta |
+| **Arhiva** | `backend/archive/legacy-chat/` | `siteGuideService`, plan-stay, suggest-visit, fallback — rute ugašene 2026-11-09 |
 
 ---
 
