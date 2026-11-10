@@ -73,8 +73,8 @@ Dok CNAME nema: ostaje Netlify URL — ne dirati.
 ---
 
 ## Go-live mini-check (posle CNAME)
-- [ ] `npm run db:snapshot` urađen i odložen  
-- [ ] Render disk na API za `uploads`  
+- [x] `npm run db:snapshot` — **urađeno 2026-11-10** → `backend/backups/2026-11-10T00-03-01-796/` (`defaultdb.sql` ~134 KB, `uploads.zip` ~1.1 MB, `MANIFEST.txt`). **gitignored** — kopirati van repoa (OneDrive/enkriptovan disk).  
+- [ ] Render disk na API za `uploads` — **još ručno** (nema `RENDER_API_KEY` u okruženju; CLI nije podešen)  
 - [ ] `FRONTEND_URL` / `ALLOWED_ORIGINS` na API + agent (fakultetski origin)  
 - [x] Smoke API: `cd backend && npm run smoke:write-flow` — **prošlo 2026-11-10** (lokalni API + Aiven)  
 - [x] Smoke rute: `npm run smoke:routes` — **prošlo 2026-11-10**  
@@ -83,10 +83,12 @@ Dok CNAME nema: ostaje Netlify URL — ne dirati.
 - [ ] Admin CMS login (produkcija)
 
 ### Render disk (uploads) — ručni koraci
-1. Render Dashboard → **baza-goc-api** (site API) → Disks → Add disk  
+1. [Render Dashboard](https://dashboard.render.com) → servis **baza-goc-api** (site API) → **Disks** → **Add disk**  
 2. Mount path: `/opt/render/project/src/backend/public/uploads` (isti path koji Express servirа)  
-3. Size: start 1–2 GB  
-4. Redeploy; upload jednu sliku u CMS i proveri da preživi sledeći deploy  
+3. Size: start **1 GB** (dovoljno za trenutni `uploads.zip` ~1.1 MB + rast)  
+4. Save → **Manual Deploy** / sačekaj redeploy  
+5. U CMS uploaduj test sliku → redeploy ponovo → proveri da slika i dalje postoji na `/uploads/...`  
+6. Opciono: raspakuj lokalni `uploads.zip` na disk (Shell/SFTP) ako produkcija nema sve fajlove  
 
 Bez ovoga: novi deploy briše lokalne upload-e sa ephemeranog FS.
 
@@ -99,10 +101,10 @@ Bez ovoga: novi deploy briše lokalne upload-e sa ephemeranog FS.
 | Chat-agent kod / ugovor | ~9/10 | Cleanup + golden/live scenariji na `main`; P3 sitno ostaje |
 | Sajt API + FE | ~8.5/10 | Backend paket 2 urađen; smoke routes + write-flow zeleni; cold-start fail-open |
 | Chat hardening | ~9/10 | DOMPurify, goc_agent, action contract, origin/burst, PII |
-| Ops / go-live | ~5/10 | Čeka: Render uploads disk, snapshot van repoa, fakultetski CNAME/origins |
+| Ops / go-live | ~6.5/10 | Snapshot lokalno urađen; čeka: Render uploads disk, kopija snapshota van mašine, fakultetski CNAME/origins |
 | Sadržaj MVP | ~3–5/10 | `CHECKLISTA_sadrzaj_i_pustanje.md` još otvorena |
 
-**Ukupno ~8/10** (bilo ~7). Sledeći skok: Render disk + snapshot + Brevo/ručni smoke na Netlify; zatim sadržaj.
+**Ukupno ~8.2/10**. Sledeći skok: **Render disk** (ručno u Dashboardu) + kopija `backend/backups/2026-11-10T00-03-01-796` van repoa; zatim Brevo/Netlify ručni smoke i sadržaj.
 
 ---
 
