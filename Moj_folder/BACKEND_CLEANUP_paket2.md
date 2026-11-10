@@ -89,7 +89,7 @@ Winston ostaje **kasnije** ako zatreba nivoi + fajl/transport na Renderu.
 - [x] Neiskorišćeni deps uklonjeni (`joi`, `handlebars`, `openai`)  
 - [x] Jest za `upsertEnTranslation`  
 - [x] Tanki `utils/logger.js` + email/inquiry  
-- [ ] Commit na `main` kad korisnik potvrdi  
+- [x] Na `main` (crud moduli + deps + upsertEn test + logger već u stablu)
 
 ---
 
@@ -97,7 +97,9 @@ Winston ostaje **kasnije** ako zatreba nivoi + fajl/transport na Renderu.
 
 | Korak | Status |
 |-------|--------|
-| 1 Split crud | **urađeno** 2026-11-09 |
-| 2 Deps | **urađeno** |
-| 3 Jest | **urađeno** |
+| 1 Split crud | **urađeno** 2026-11-09 (`crudController.js` više ne postoji) |
+| 2 Deps | **urađeno** (`joi` / `handlebars` / `openai` nisu u runtime deps) |
+| 3 Jest | **urađeno** (`utils/__tests__/upsertEnTranslation.test.js`) |
 | 4 Logger | **urađeno** (tanki; winston kasnije) |
+
+**2026-11-10:** potvrđeno `smoke:routes` + `smoke:write-flow` OK posle stanja paketa 2.

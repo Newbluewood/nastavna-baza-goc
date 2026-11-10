@@ -75,11 +75,34 @@ Dok CNAME nema: ostaje Netlify URL — ne dirati.
 ## Go-live mini-check (posle CNAME)
 - [ ] `npm run db:snapshot` urađen i odložen  
 - [ ] Render disk na API za `uploads`  
-- [ ] `FRONTEND_URL` / `ALLOWED_ORIGINS` na API + agent  
-- [ ] Smoke API: `cd backend && npm run smoke:write-flow` (inquiry → admin → guest → cancel)  
-- [ ] Smoke rute: `npm run smoke:routes`  
-- [ ] Ručno: home, mejl (Brevo), chat widget  
-- [ ] Admin CMS login  
+- [ ] `FRONTEND_URL` / `ALLOWED_ORIGINS` na API + agent (fakultetski origin)  
+- [x] Smoke API: `cd backend && npm run smoke:write-flow` — **prošlo 2026-11-10** (lokalni API + Aiven)  
+- [x] Smoke rute: `npm run smoke:routes` — **prošlo 2026-11-10**  
+- [x] Chat agent live scenario `reservation_piramida_101` — **prošlo 2026-11-10** vs `https://chat-agent-kbjc.onrender.com` (`npm run test:agent`)  
+- [ ] Ručno: home, mejl (Brevo), chat widget na Netlify  
+- [ ] Admin CMS login (produkcija)
+
+### Render disk (uploads) — ručni koraci
+1. Render Dashboard → **baza-goc-api** (site API) → Disks → Add disk  
+2. Mount path: `/opt/render/project/src/backend/public/uploads` (isti path koji Express servirа)  
+3. Size: start 1–2 GB  
+4. Redeploy; upload jednu sliku u CMS i proveri da preživi sledeći deploy  
+
+Bez ovoga: novi deploy briše lokalne upload-e sa ephemeranog FS.
+
+---
+
+## Scoreboard ka produkcijskom 10/10 (2026-11-10)
+
+| Traka | Ocena | Stanje |
+|-------|------:|--------|
+| Chat-agent kod / ugovor | ~9/10 | Cleanup + golden/live scenariji na `main`; P3 sitno ostaje |
+| Sajt API + FE | ~8.5/10 | Backend paket 2 urađen; smoke routes + write-flow zeleni; cold-start fail-open |
+| Chat hardening | ~9/10 | DOMPurify, goc_agent, action contract, origin/burst, PII |
+| Ops / go-live | ~5/10 | Čeka: Render uploads disk, snapshot van repoa, fakultetski CNAME/origins |
+| Sadržaj MVP | ~3–5/10 | `CHECKLISTA_sadrzaj_i_pustanje.md` još otvorena |
+
+**Ukupno ~8/10** (bilo ~7). Sledeći skok: Render disk + snapshot + Brevo/ručni smoke na Netlify; zatim sadržaj.
 
 ---
 
