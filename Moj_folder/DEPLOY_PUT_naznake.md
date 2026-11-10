@@ -50,10 +50,13 @@ npm run db:snapshot
 Izlaz: `backend/backups/<timestamp>/` (`*.sql` + `uploads.zip` + `MANIFEST.txt`, **gitignored**).  
 Sačuvati van repoa (disk/cloud enkriptovano). Ponoviti pre većih migracija / go-live.
 
-### 2) Render persistent disk (API servis) — **ručno na Renderu**
-- Disk mount npr. `/opt/render/project/src/backend/public/uploads` (isti path koji Express servirа).  
-- Bez diska: novi deploy = gubitak lokalnih upload-a.  
-- Alternativa kasnije: S3/Blob; **ne** BLOB u MySQL.
+### 2) Uploads na Render **free** planu — **nema persistent disk**
+- Free Web Service **ne podržava** Disks → upload-i na FS nestaju posle redeploy-a.  
+- **MVP politika (sada):**
+  1. Kritične slike koje moraju preživeti deploy → u gitu (`backend/public/uploads/…` / statički asseti), ne samo CMS upload na live FS.  
+  2. Posle svakog deploy-a: po potrebi restaurirati iz `backups/.../uploads.zip` (lokalni snapshot) ili ponovo uploadovati kroz CMS.  
+  3. `npm run db:snapshot` pre većih izmena — offline kopija.  
+- **Kasnije (plaćeni plan ili objekat storage):** Render Disk **ili** S3/R2/Blob; **ne** BLOB u MySQL.
 
 ### 3) Env posle CNAME — **čekа IT / DNS**
 Kad poddomen živi (npr. `https://nastavnabazagoc.sfb.bg.ac.rs`):
@@ -74,7 +77,7 @@ Dok CNAME nema: ostaje Netlify URL — ne dirati.
 
 ## Go-live mini-check (posle CNAME)
 - [x] `npm run db:snapshot` — **urađeno 2026-11-10** → `backend/backups/2026-11-10T00-03-01-796/` (`defaultdb.sql` ~134 KB, `uploads.zip` ~1.1 MB, `MANIFEST.txt`). **gitignored** — kopirati van repoa (OneDrive/enkriptovan disk).  
-- [ ] Render disk na API za `uploads` — **još ručno** (nema `RENDER_API_KEY` u okruženju; CLI nije podešen)  
+- [~] Persistent uploads — **N/A na Render free** (nema Disks). Koristiti git + snapshot/re-upload politiku iz §2.  
 - [ ] `FRONTEND_URL` / `ALLOWED_ORIGINS` na API + agent (fakultetski origin)  
 - [x] Smoke API: `cd backend && npm run smoke:write-flow` — **prošlo 2026-11-10** (lokalni API + Aiven)  
 - [x] Smoke rute: `npm run smoke:routes` — **prošlo 2026-11-10**  
@@ -82,15 +85,10 @@ Dok CNAME nema: ostaje Netlify URL — ne dirati.
 - [ ] Ručno: home, mejl (Brevo), chat widget na Netlify  
 - [ ] Admin CMS login (produkcija)
 
-### Render disk (uploads) — ručni koraci
-1. [Render Dashboard](https://dashboard.render.com) → servis **baza-goc-api** (site API) → **Disks** → **Add disk**  
-2. Mount path: `/opt/render/project/src/backend/public/uploads` (isti path koji Express servirа)  
-3. Size: start **1 GB** (dovoljno za trenutni `uploads.zip` ~1.1 MB + rast)  
-4. Save → **Manual Deploy** / sačekaj redeploy  
-5. U CMS uploaduj test sliku → redeploy ponovo → proveri da slika i dalje postoji na `/uploads/...`  
-6. Opciono: raspakuj lokalni `uploads.zip` na disk (Shell/SFTP) ako produkcija nema sve fajlove  
-
-Bez ovoga: novi deploy briše lokalne upload-e sa ephemeranog FS.
+### Kad / ako bude plaćeni plan — Disk koraci
+1. Render Dashboard → **baza-goc-api** → **Disks** → **Add disk**  
+2. Mount: `/opt/render/project/src/backend/public/uploads`  
+3. ~1 GB → redeploy → CMS test upload → drugi redeploy → slika mora ostati
 
 ---
 
@@ -101,10 +99,10 @@ Bez ovoga: novi deploy briše lokalne upload-e sa ephemeranog FS.
 | Chat-agent kod / ugovor | ~9/10 | Cleanup + golden/live scenariji na `main`; P3 sitno ostaje |
 | Sajt API + FE | ~8.5/10 | Backend paket 2 urađen; smoke routes + write-flow zeleni; cold-start fail-open |
 | Chat hardening | ~9/10 | DOMPurify, goc_agent, action contract, origin/burst, PII |
-| Ops / go-live | ~6.5/10 | Snapshot lokalno urađen; čeka: Render uploads disk, kopija snapshota van mašine, fakultetski CNAME/origins |
+| Ops / go-live | ~7/10 | Snapshot OK; uploads = free-plan ograničenje (git+re-upload); čeka CNAME/origins + Brevo/Netlify ručni prolaz |
 | Sadržaj MVP | ~3–5/10 | `CHECKLISTA_sadrzaj_i_pustanje.md` još otvorena |
 
-**Ukupno ~8.2/10**. Sledeći skok: **Render disk** (ručno u Dashboardu) + kopija `backend/backups/2026-11-10T00-03-01-796` van repoa; zatim Brevo/Netlify ručni smoke i sadržaj.
+**Ukupno ~8.3/10**. Disk **nije** blokator go-live na free planu — prihvatamo ephemeran FS + snapshot. Sledeći skok: Brevo/Netlify ručni smoke + sadržaj MVP; objekat storage tek uz budžet.
 
 ---
 
