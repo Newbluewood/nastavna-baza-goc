@@ -83,7 +83,7 @@ Dok CNAME nema: ostaje Netlify URL — ne dirati.
 - [x] Smoke rute: `npm run smoke:routes` — **prošlo 2026-11-10**  
 - [x] Chat agent live scenario `reservation_piramida_101` — **prošlo 2026-11-10** vs `https://chat-agent-kbjc.onrender.com` (`npm run test:agent`)  
 - [x] Ručno/Netlify: home + nav + chat widget — **2026-11-10** (`nastavnabazagoc.netlify.app`)  
-- [~] Mejl (Brevo/SMTP) — provider konfigurisan; **još uraditi** jedan stvarni inbox test (inquiry → Brevo/SMTP → primalac)  
+- [x] Mejl (Brevo/SMTP) — **2026-11-10** stvarni inquiry potvrda stigla odmah, nije spam (gost Nebojsa Simovic; SR+EN telo)  
 - [x] Admin CMS login UI — `/admin/login` živi (produkcija)
 
 ### Kad / ako bude plaćeni plan — Disk koraci
@@ -100,10 +100,10 @@ Dok CNAME nema: ostaje Netlify URL — ne dirati.
 | Chat-agent kod / ugovor | ~9/10 | Cleanup + golden/live scenariji na `main`; P3 sitno ostaje |
 | Sajt API + FE | ~8.5/10 | Backend paket 2 urađen; smoke routes + write-flow zeleni; cold-start fail-open |
 | Chat hardening | ~9/10 | DOMPurify, goc_agent, action contract, origin/burst, PII |
-| Ops / go-live | ~7.5/10 | Netlify+API+admin UI+chat live OK; snapshot OK; free-plan uploads; čeka inbox mejl test + fakultetski CNAME |
+| Ops / go-live | ~8.5/10 | Netlify+API+admin+chat+inquiry mejl OK; snapshot OK; free-plan uploads; čeka fakultetski CNAME/origins |
 | Sadržaj MVP | ~5.5/10 | Struktura/MVP skelet na produkciji; dosta demo teksta/slika; čeka klijentsku saglasnost + CMS naloge + finalne kontakte |
 
-**Ukupno ~8.5/10**. Sledeći skok: **1 stvarni mejl iz inquiry forme** + klijentska zamena demo sadržaja (checklist A). Objekat storage tek uz budžet.
+**Ukupno ~8.7/10**. Mejl tok zatvoren. Sledeći skok: klijentska zamena demo sadržaja (checklist A) + IT CNAME kad bude.
 
 ---
 

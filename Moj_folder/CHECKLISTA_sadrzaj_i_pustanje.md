@@ -30,9 +30,9 @@ Većina teksta/slika je **demo/prezentaciona** — za klijentski go-live treba z
 - [x] Potvrđena pravila: check-in/out, otkazivanje — sistemsko pravilo min. 7 dana (u kodu/UI); klijent da potvrdi tekst za goste
 
 ### Operativa
-- [~] Email na koji stižu upiti/rezervacije — footer `booking.goc@sfb.bg.ac.rs`; app šalje preko konfigurisanog mail providera (Brevo/SMTP u env) — **proveriti da li Render env ima iste vrednosti i da li mail stiže u inbox**
+- [x] Email na koji stižu upiti/rezervacije — potvrda prijema radi (SR+EN); footer i dalje `booking.goc@sfb.bg.ac.rs`
 - [ ] Ko dobija CMS nalog(e) za prvi pust (ime + email) — **čeka klijenta**
-- [~] Potvrda mejl domene / Brevo (ili fakultetski SMTP) — ključevi postoje u lokalnom/dev env; produkcijski inbox test (ne spam) još nije formalno zatvoren
+- [x] Potvrda mejl toka / Brevo (ili SMTP) — **2026-11-10** inquiry potvrda stigla odmah, nije spam
 
 **Blokada developera dok gore nije `[x]`:** **ne** za tehnički rad — sajt već živi na Netlify.  
 **Blokada klijentskog go-live:** da — stavke koje fale: saglasnost MVP, CMS nalazi, potvrda kontakt/mail, zamena demo sadržaja.
@@ -99,6 +99,7 @@ Većina teksta/slika je **demo/prezentaciona** — za klijentski go-live treba z
 | Chat-agent health | `200` |
 | Live reservation scenario | `reservation_piramida_101` prošao vs Render |
 | Smoke write-flow / routes | prošli lokalno vs Aiven |
+| Inquiry mejl potvrda (produkcija) | stigla odmah, nije spam (2026-11-10) |
 | Render persistent uploads disk | **N/A** na free planu (git + snapshot politika) |
 
 ---
