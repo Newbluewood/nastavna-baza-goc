@@ -82,8 +82,9 @@ Dok CNAME nema: ostaje Netlify URL — ne dirati.
 - [x] Smoke API: `cd backend && npm run smoke:write-flow` — **prošlo 2026-11-10** (lokalni API + Aiven)  
 - [x] Smoke rute: `npm run smoke:routes` — **prošlo 2026-11-10**  
 - [x] Chat agent live scenario `reservation_piramida_101` — **prošlo 2026-11-10** vs `https://chat-agent-kbjc.onrender.com` (`npm run test:agent`)  
-- [ ] Ručno: home, mejl (Brevo), chat widget na Netlify  
-- [ ] Admin CMS login (produkcija)
+- [x] Ručno/Netlify: home + nav + chat widget — **2026-11-10** (`nastavnabazagoc.netlify.app`)  
+- [~] Mejl (Brevo/SMTP) — provider konfigurisan; **još uraditi** jedan stvarni inbox test (inquiry → Brevo/SMTP → primalac)  
+- [x] Admin CMS login UI — `/admin/login` živi (produkcija)
 
 ### Kad / ako bude plaćeni plan — Disk koraci
 1. Render Dashboard → **baza-goc-api** → **Disks** → **Add disk**  
@@ -99,10 +100,10 @@ Dok CNAME nema: ostaje Netlify URL — ne dirati.
 | Chat-agent kod / ugovor | ~9/10 | Cleanup + golden/live scenariji na `main`; P3 sitno ostaje |
 | Sajt API + FE | ~8.5/10 | Backend paket 2 urađen; smoke routes + write-flow zeleni; cold-start fail-open |
 | Chat hardening | ~9/10 | DOMPurify, goc_agent, action contract, origin/burst, PII |
-| Ops / go-live | ~7/10 | Snapshot OK; uploads = free-plan ograničenje (git+re-upload); čeka CNAME/origins + Brevo/Netlify ručni prolaz |
-| Sadržaj MVP | ~3–5/10 | `CHECKLISTA_sadrzaj_i_pustanje.md` još otvorena |
+| Ops / go-live | ~7.5/10 | Netlify+API+admin UI+chat live OK; snapshot OK; free-plan uploads; čeka inbox mejl test + fakultetski CNAME |
+| Sadržaj MVP | ~5.5/10 | Struktura/MVP skelet na produkciji; dosta demo teksta/slika; čeka klijentsku saglasnost + CMS naloge + finalne kontakte |
 
-**Ukupno ~8.3/10**. Disk **nije** blokator go-live na free planu — prihvatamo ephemeran FS + snapshot. Sledeći skok: Brevo/Netlify ručni smoke + sadržaj MVP; objekat storage tek uz budžet.
+**Ukupno ~8.5/10**. Sledeći skok: **1 stvarni mejl iz inquiry forme** + klijentska zamena demo sadržaja (checklist A). Objekat storage tek uz budžet.
 
 ---
 
