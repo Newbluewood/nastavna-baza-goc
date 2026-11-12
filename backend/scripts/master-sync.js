@@ -3,9 +3,12 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
 const { getMysqlConnectionOptions } = require('../lib/mysqlConnectionOptions');
+const { assertLegacyContentImportAllowed } = require('./lib/legacyContentImportGuard');
 
-const DOCS_DIR = path.join(__dirname, '../docs');
-const DATA_DIR = path.join(__dirname, '../data');
+assertLegacyContentImportAllowed('scripts/master-sync.js');
+
+const DOCS_DIR = path.join(__dirname, '../data/archive-firecrawl');
+const DATA_DIR = path.join(__dirname, '../data/archive-firecrawl');
 
 function readJsonSafe(dir, filename) {
   try {

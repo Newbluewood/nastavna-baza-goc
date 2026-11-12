@@ -22,7 +22,10 @@
     "restart-site": "node resetSite.js",
     "restart-site:run": "node resetSite.js --execute",
     "restart-site:full": "node resetSite.js --execute --smoke",
-    "seed:site-kb": "node scripts/seed-site-kb.js"
+    "seed:site-kb": "node scripts/seed-site-kb.js",
+    "seed:content:export": "node scripts/export-content-seed.js",
+    "seed:content:first-boot": "node scripts/seed-content-first-boot.js",
+    "seed:content:first-boot:run": "node scripts/seed-content-first-boot.js --execute"
   },
   "keywords": [],
   "author": "",

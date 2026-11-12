@@ -54,11 +54,14 @@ function readJsonDoc(filename) {
   const fs = require('fs');
   const path = require('path');
   try {
-    // Traži u ../docs/ i fallback na ./ ako ne postoji
-    const docsPath = path.join(__dirname, '../docs', filename);
-    const localPath = path.join(__dirname, filename);
-    let filePath = fs.existsSync(docsPath) ? docsPath : localPath;
-    if (!fs.existsSync(filePath)) return null;
+    // Prefer archive (legacy Firecrawl dumps); keep docs/ as optional override.
+    const candidates = [
+      path.join(__dirname, '../data/archive-firecrawl', filename),
+      path.join(__dirname, '../docs', filename),
+      path.join(__dirname, filename),
+    ];
+    const filePath = candidates.find((p) => fs.existsSync(p));
+    if (!filePath) return null;
     const raw = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(raw);
   } catch (e) {

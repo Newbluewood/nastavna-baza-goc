@@ -1,6 +1,9 @@
 const mysql = require('mysql2/promise');
 const fs = require('fs');
 const { getMysqlConnectionOptions } = require('./lib/mysqlConnectionOptions');
+const { assertLegacyContentImportAllowed } = require('./scripts/lib/legacyContentImportGuard');
+
+assertLegacyContentImportAllowed('check_rest.js');
 
 async function addKeywords() {
   const conn = await mysql.createConnection(getMysqlConnectionOptions());
@@ -19,7 +22,7 @@ async function addKeywords() {
   }
 
   // 2. Učitaj podatke iz goc-themes.json
-  const themesData = JSON.parse(fs.readFileSync('./data/goc-themes.json', 'utf-8'));
+  const themesData = JSON.parse(fs.readFileSync('./data/archive-firecrawl/goc-themes.json', 'utf-8'));
 
   // 3. Ažuriraj svaku temu sa ključnim rečima
   for (const t of themesData.themes) {

@@ -1,0 +1,1006 @@
+{
+  "schemaVersion": 1,
+  "purpose": "first-boot content seed (not a production backup)",
+  "exportedAt": "2026-11-12T00:59:32.353Z",
+  "sourceHost": "mysql-9ffa44d-n-baza-goc.g.aivencloud.com",
+  "themes": [
+    {
+      "slug": "biljni_i_zivotinjski_svet",
+      "icon": "/themes/flora.png",
+      "hero_image": "/images/themes/flora.png",
+      "keywords": [
+        "flora",
+        "fauna",
+        "Goč",
+        "Gvozdac",
+        "rezervat"
+      ],
+      "display_order": 0,
+      "name_sr": "Биљни и животињски свет",
+      "article_sr": "Гоч је званично најшумовитија планина у Србији, позната по богатој флори и фауни. Сматра се једном од најбогатијих планина Балканског полуострва по разноврсности биљног света и ендемских врста. На Гочу расте преко 700 различитих биљних врста, од којих је идентификовано око 650, а више од 200 до 250 су лековите врсте. Пролеће је период када су самоникле јестиве биљке најквалитетније и најразноврсније на обронцима Гоча, попут сремуша.\n\nШумски комплекс „Гоч-Гвоздац\" је проглашен специјалним резерватом природе 2014. године. У овом резервату, који је један од најлепших делова гребена Гоча, расте 25 врста дрвећа. Посебно се издвајају ендемске врсте Балканског полуострва – планински јавор и варијетет црног бора. Ретке и угрожене врсте обухватају трешњу, дивљу јабуку, јасику, брезу и бели јасен, док су ретке врсте дивља крушка, планински јасен и планински брест. Посебну реткост представља очувана заједница букових и јелових шума. Гоч је углавном прекривен буковим шумама.",
+      "name_en": "Flora and Fauna",
+      "article_en": "Goč is officially the most forested mountain in Serbia, known for its rich flora and fauna. It is considered one of the richest mountains on the Balkan Peninsula in terms of plant diversity and endemic species. Over 700 different plant species grow on Goč, of which about 650 have been identified, and more than 200 to 250 are medicinal species. Spring is the period when wild edible plants, such as wild garlic (sremuš), are most qualitative and diverse on the slopes of Goč.\n\nThe \"Goč-Gvozdac\" forest complex was declared a special nature reserve in 2014. In this reserve, which is one of the most beautiful parts of the Goč ridge, 25 tree species grow. Endemic species of the Balkan Peninsula, such as mountain maple and a variety of black pine, stand out. Rare and endangered species include cherry, wild apple, aspen, birch, and white ash, while rare species are wild pear, mountain ash, and mountain elm. A preserved community of beech and fir forests represents a special rarity. Goč is mainly covered by beech forests."
+    },
+    {
+      "slug": "lov_i_ribolov",
+      "icon": "/themes/hunting.png",
+      "hero_image": "/images/themes/hunting.png",
+      "keywords": [
+        "lov",
+        "ribolov",
+        "dozvole",
+        "pravila",
+        "Goč"
+      ],
+      "display_order": 1,
+      "name_sr": "Лов и риболов",
+      "article_sr": "Ловиште „Гоч\" налази се у близини Врњачке бање, на падинама планине Гоч. Простире се на површини од 29.298 хектара, на надморској висини од 200 до 1.785 метара. На овом ловишту је могућ лов на срну и дивљу свињу.\n\nШто се тиче риболова, временска прогноза за Гоч укључује и прогнозу за риболов, што указује на могућност ове активности. У дискусијама о Гвоздачкој реци помиње се језерце у којем се могу наћи кленови и бабушке. Риболов је дозвољен искључиво на језеру. Планина Гоч такође има језеро Селиште, што може бити језеро о коме је реч.",
+      "name_en": "Hunting and Fishing",
+      "article_en": "The \"Goč\" hunting ground is located near Vrnjačka Banja, on the slopes of Goč mountain. It spans an area of 29,298 hectares, at altitudes ranging from 200 to 1,785 meters. Hunting for roe deer and wild boar is possible in this hunting ground.\n\nRegarding fishing, the weather forecast for Goč includes a fishing forecast, indicating the possibility of this activity. Discussions about the Gvozdacka river mention a small lake where main components of fresh fish such as chub and carp can be found. Fishing is permitted exclusively on the lake. Goč mountain also features Selište lake, which might be the lake in question."
+    },
+    {
+      "slug": "nastavna_baza_i_osoblje",
+      "icon": "/themes/staff.png",
+      "hero_image": "/images/themes/staff.png",
+      "keywords": [
+        "nastavna baza",
+        "zaposleni",
+        "Sumarski fakultet",
+        "Goc",
+        "Gvozdac"
+      ],
+      "display_order": 2,
+      "name_sr": "Наставна база и особље",
+      "article_sr": "Наставна база Гоч је део Шумарског факултета и налази се у оквиру Центра за наставно-научне објекте. Ова база је повезана са Специјалним резерватом природе „Гоч-Гвоздац“. Шумарски факултет нуди теренску наставу као део својих студијских програма, а наставне базе су истакнуте на сајту факултета. Факултет такође пружа сервисе за наставничко особље.",
+      "name_en": "Teaching Base and Staff",
+      "article_en": "The Goč Teaching Base is part of the Faculty of Forestry and is located within the Center for Teaching and Scientific Facilities. This base is associated with the \"Goč-Gvozdac\" Special Nature Reserve. The Faculty of Forestry offers fieldwork as part of its study programs, and teaching bases are highlighted on the faculty's website. The Faculty also provides services for its teaching staff."
+    },
+    {
+      "slug": "pesacke_i_sumske_staze",
+      "icon": "/themes/trails.png",
+      "hero_image": "/images/themes/trails.png",
+      "keywords": [
+        "staze",
+        "pesacenje",
+        "suma",
+        "planinarenje",
+        "Goč"
+      ],
+      "display_order": 3,
+      "name_sr": "Пешачке и шумске стазе",
+      "article_sr": "Планина Гоч је све популарнија дестинација за туристе током летњег периода, првенствено због могућности шетње и одмора на чистом планинском ваздуху. На Гочу је оформљено и обележено пет рекреативних стаза, које су намењене шетњи кроз прелепе пределе, а нису планинарске нити такмичарске. Поред ових, Гоч нуди и стазе за шетњу и трчање као део спортског центра.\n\nМеђу стазама се издваја кружна стаза Језеро ВЕЛИКА око језера Селиште, која је идеална за планинарску шетњу кроз прелеп шумски амбијент планине Гоч, погодна за спремније спортисте и рекреативце. За породице и рекреативце, краће руте попут стазе до врха Крст (1.35 km) или \"Мале\" кружне стазе око Селишта (2.35 km) су идеалне, нудећи лагане шетње кроз сликовите пределе без значајног успона.\n\nДруге обележене стазе укључују:\n* Видиковац Лисача, дужине 2.41 km, са укупним успоном од 108.9 m, за коју је рекреативцима потребно око 45 минута.\n* Врх Љуктен, дужине 3.69 km, са укупним успоном од 174.5 m.\n\nСтазе на Гочу пролазе кроз густе, древне шуме, посебно букове и јелове, које се сматрају реткошћу и богате су биодиверзитетом. Шумовито подручје Гоч-Гвоздац је 2014. године проглашено Специјалним резерватом природе II категорије, што га чини једним од највреднијих шумских мозаика. Гребен Гоча је динамичан, нудећи комбинацију шумских пролаза и отворених делова са погледима, што га чини одличним избором за шетњу.",
+      "name_en": "Hiking and Forest Trails",
+      "article_en": "Goč mountain is an increasingly popular destination for tourists during the summer, primarily due to the opportunities for walking and relaxation in the clean mountain air. Five recreational trails have been established and marked on Goč, designed for walks through beautiful landscapes, and are not mountaineering or competitive routes. In addition to these, Goč also offers walking and jogging trails as part of its sports center facilities.\n\nAmong the trails, the circular trail Jezero VELIKA around Selište Lake stands out, ideal for hiking through the beautiful forest environment of Goč mountain, suitable for fitter athletes and recreational users. For families and recreational users, shorter routes like the Krst peak trail (1.35 km) or the 'Small' circular trail around Selište Lake (2.35 km) are ideal, offering gentle walks through scenic areas without significant elevation.\n\nOther marked trails include:\n* Vidikovac Lisača, 2.41 km long, with a total elevation gain of 108.9 m, taking approximately 45 minutes for recreational users.\n* Vrh Ljukten, 3.69 km long, with a total elevation gain of 174.5 m.\n\nThe trails on Goč pass through dense, ancient forests, particularly beech and fir, which are considered a rarity and are rich in biodiversity. The Goč-Gvozdac forest complex was declared a Special Nature Reserve of category II in 2014, making it one of the most valuable forest mosaics. Goč's ridge is dynamic, offering a mix of forest passages and open sections with views, making it an excellent choice for walking."
+    },
+    {
+      "slug": "smestaj_i_rezervacije",
+      "icon": "/themes/accommodation.png",
+      "hero_image": "/images/themes/accommodation.png",
+      "keywords": [
+        "smeštaj",
+        "sobe",
+        "rezervacija",
+        "Goč",
+        "Gvozdac",
+        "Univerzitet u Beogradu"
+      ],
+      "display_order": 4,
+      "name_sr": "Смештај и резервације",
+      "article_sr": "Коначиште Пирамида Гоч је смештајно насеље смештено на планини Гоч, на локацији Гоч – Гвоздац. Ово туристичко насеље се налази у оквиру резервата природе Гоч – Гвоздац, који представља наставну базу Шумарског факултета. До насеља се може стићи из правца Краљева (удаљеnost 28 км) или Врњачке Бање.",
+      "name_en": "Accommodation and Reservations",
+      "article_en": "Konačište Piramida Goč is an accommodation complex located on Mount Goč, specifically at Goč – Gvozdac. This tourist settlement is situated within the Goč-Gvozdac nature reserve, which serves as the teaching base for the Faculty of Forestry. The settlement can be reached from Kraljevo (28 km away) or Vrnjačka Banja."
+    },
+    {
+      "slug": "studenti_i_pedagogija",
+      "icon": "/themes/students.png",
+      "hero_image": "/images/themes/flora.png",
+      "keywords": [
+        "studenti",
+        "nastava",
+        "vezbe",
+        "Šumarski fakultet",
+        "Goc",
+        "rezervat"
+      ],
+      "display_order": 5,
+      "name_sr": "Студенти и педагогија на бази",
+      "article_sr": "Наставна база Гоч, која припада Шумарском факултету Универзитета у Београду, представља наставно-научни и истраживачки центар у Србији. Ова база се развија већ педесет година и пружа студентске сервисе и информације. Наставна база Гоч је такође место где се одржавају конкурси за упис, а повезана је и са студијским програмима Факултета. Поред тога, база служи као локација за окупљања академских стручњака и експерата из области шумарства и биодиверзитета.",
+      "name_en": "Students and Education at the Base",
+      "article_en": "The Goč Teaching Base, which belongs to the University of Belgrade's Faculty of Forestry, serves as a teaching, scientific, and research center in Serbia. This base has been developing for fifty years and provides student services and information. The Goč Teaching Base is also where enrollment competitions are held and is connected to the Faculty's study programs. Furthermore, the base serves as a location for gatherings of academic experts and specialists in the fields of forestry and biodiversity."
+    },
+    {
+      "slug": "vesti_i_javni_dogadjaji",
+      "icon": "/themes/news.png",
+      "hero_image": "/images/explore-hero.png",
+      "keywords": [
+        "vesti",
+        "događaji",
+        "javnost",
+        "Goč",
+        "Gvozdac",
+        "Sumarski fakultet"
+      ],
+      "display_order": 6,
+      "name_sr": "Вести и јавни догађаји",
+      "article_sr": "Наставна база Гоч, као део Центра за наставне и научне објекте Шумарског факултета у Београду, повезана је са активностима факултета. Шумарски факултет редовно објављује вести и организује јавне догађаје. Неки од недавних догађаја факултета укључују: „АТРИЈУМ ШУМАРСКОГ ФАКУЛТЕТА НА 48. САЛОНУ АРХИТЕКТУРЕ\", „Зум кафић о мотивацији и самомотивацији\", „Нови курсеви на Отвореном кампусу Circle U.\" и интерактивне радионице за студенте. Наставна база Гоч је такође била део теренске посете за практичне увиде у управљање шумама на Западном Балкану.\nПоред тога, локација Гвоздац, која је део шумског комплекса Гоч-Гвоздац, предмет је планова за развој туризма. ЈП „Скијалишта Србије\" планирају изградњу нових скијашких стаза на локацији Гвоздац.",
+      "name_en": "News and Public Events",
+      "article_en": "The Goč Teaching Base, as part of the Center for Teaching and Scientific Facilities of the Faculty of Forestry in Belgrade, is connected to the faculty's activities. The Faculty of Forestry regularly publishes news and organizes public events. Some of the recent faculty events include: \"ATRIUM OF THE FACULTY OF FORESTRY AT THE 48TH SALON OF ARCHITECTURE\", \"Zoom Coffee Chat on Motivation and Self-Motivation\", \"New Courses at the Circle U. Open Campus\", and interactive workshops for students. The Goč Teaching Base was also part of a field visit for practical insights into forest management in the Western Balkans.\nAdditionally, the Gvozdac location, which is part of the Goč-Gvozdac forest complex, is subject to tourism development plans. Public Enterprise \"Skijališta Srbije\" plans to build new ski slopes at the Gvozdac location."
+    },
+    {
+      "slug": "znamenitosti_i_zanimljivosti",
+      "icon": "/themes/landmarks.png",
+      "hero_image": "/images/themes/landmarks.png",
+      "keywords": [
+        "znamenitosti",
+        "vidikovac",
+        "istorija",
+        "Goč",
+        "Gvozdac"
+      ],
+      "display_order": 7,
+      "name_sr": "Знаменитости и занимљивости",
+      "article_sr": "Планина Гоч, смештена изнад Врњачке Бање, позната је по својој прелепој природи и идеална је дестинација за викенд путовања. Њено подручје је обрасло буковим и јеловим шумама, а присутни су и гочки црни бор, храст китњак, племенито листопадно дрвеће и четинарске егзоте. Гоч је богат дивљим јагодама и лековитим биљем, а његове површине пружају богату медоносну пашу за пчеле.\n\nМеђу најзначајнијим атракцијама је **Видиковац Крст**, који се налази на надморској висини од 1.123 метра. Са овог видиковца пружа се предиван поглед на целу Врњачку Бању и околину Гоча. До њега води широка стаза, а могуће је доћи и преко ски стазе, чији је врх Видиковац Крст уједно и полазна тачка. Пут до видиковца траје око 15-25 минута хода кроз ниску боровu шуму и добро је обележен.\n\nЈедан од симбола Гоча је и вештачко **Селиште језеро**, које се налази на локалитету Гвоздац. Настало је за потребе водоснабдевања Врњачке Бање, због чега су купање и пецање у њему забрањени. Ипак, током летњих месеци језеро је веома популарно за излете и камповање. Поред језера, популарне атракције су и рибњаци, где љубитељи свеже рибе могу уживати у укусној пастрмци.\n\nПодручје Гоча и околине такође обилује културно-историјским споменицима, међу којима се истиче „римско гробље“.\n\nУ подножју Гоча налази се Врњачка Бања, најпопуларнија бања у Србији, која нуди велнес и спа-програме, базене са минералном водом и променаду. Врњачка Бања је такође домаћин фестивала електронске музике.\n\nГостопримљиви домаћини Гоча нуде домаће производе попут сира, кајмака, пршуте, ракије шљивовице, џема и слатка.",
+      "name_en": "Landmarks and Points of Interest",
+      "article_en": "Goč mountain, situated above Vrnjačka Banja, is known for its beautiful nature and is an ideal destination for weekend trips. Its area is covered with beech and fir forests, and Goč black pine, sessile oak, noble deciduous trees, and coniferous exotics are also present. Goč is rich in wild strawberries and medicinal herbs, and its surfaces provide rich honey pasture for bees.\n\nAmong the most significant attractions is **Vidikovac Krst** (Krst Viewpoint), located at an altitude of 1,123 meters above sea level. From this viewpoint, a beautiful panorama of the entire Vrnjačka Banja and the surroundings of Goč unfolds. A wide path leads to it, and it is also possible to reach it via the ski slope, whose peak Vidikovac Krst is also a starting point. The walk to the viewpoint takes about 15-25 minutes through a low pine forest and is well-marked.\n\nOne of Goč's symbols is the artificial **Selište Lake**, located at the Gvozdac site. It was created for the water supply needs of Vrnjačka Banja, which is why swimming and fishing in it are prohibited. Nevertheless, during the summer months, the lake is very popular for trips and camping. Besides the lake, popular attractions also include ponds, where lovers of fresh fish can enjoy delicious trout.\n\nThe area of Goč and its surroundings is also rich in cultural and historical monuments, among which the \"Roman cemetery\" stands out.\n\nAt the foot of Goč lies Vrnjačka Banja, the most popular spa in Serbia, offering wellness and spa programs, mineral water pools, and a promenade. Vrnjačka Banja also hosts an electronic music festival.\n\nThe hospitable hosts of Goč offer homemade products such as cheese, milk cream (kajmak), pršuta, plum brandy (šljivovica), jam, and slatko (fruit preserve)."
+    }
+  ],
+  "pages": [
+    {
+      "slug": "pocetna",
+      "title": "Наставна база Гоч",
+      "content": "<p>Почетна <strong>презентациона</strong> страница.</p>",
+      "hero_image": null,
+      "title_en": "Teaching Base Goč",
+      "content_en": "<p>Home <strong>presentation</strong> page.</p>"
+    },
+    {
+      "slug": "smestaj",
+      "title": "Смештај",
+      "content": "Основне информације о смештају.",
+      "hero_image": null,
+      "title_en": "Accommodation",
+      "content_en": "Basic information about accommodation."
+    },
+    {
+      "slug": "edukacija",
+      "title": "Едукација",
+      "content": "<h2>Наставна база Гвоздац</h2>\n<p>Центар за едукацију студената Шумарског факултета, истраживања и практичне обуке у природи. Пружа садржаје за децу и омладину.</p>\n<h2>Студентски кампус Гоч</h2>\n<p>Кампус са капацитетом за 100 студената, учионице, лабораторије и спортски терени.</p>",
+      "hero_image": "/images/pages/education.png",
+      "title_en": "Education",
+      "content_en": "<h2>Gvozdac Teaching Base</h2>\n<p>A center for educating Faculty of Forestry students, research, and practical training in nature. It offers programs for children and youth.</p>\n<h2>Goč Student Campus</h2>\n<p>A campus with capacity for 100 students, classrooms, laboratories, and sports fields.</p>"
+    },
+    {
+      "slug": "istrazivanje",
+      "title": "Истраживање",
+      "content": "<h2>Лабораторије</h2>\n<ul>\n<li><strong>Лабораторија за шумску екологију</strong>: Опремљена за истраживања из области шумске екологије и биодиверзитета.</li>\n<li><strong>Лабораторија за прераду дрвета</strong>: Савремена лабораторија за тестирање и развој нових технологија у преради дрвета.</li>\n</ul>\n<h2>Индустријски објекти</h2>\n<ul>\n<li><strong>Пилана Гоч</strong>: Пилана са модерним машинама за обраду дрвета, подржава практичну наставу и истраживања.</li>\n<li><strong>Сушара за дрво Гоч</strong>: Индустријска сушара за дрво капацитета 20m3, користи еколошки прихватљиве методе сушења.</li>\n</ul>",
+      "hero_image": "/images/pages/research.png",
+      "title_en": "Research",
+      "content_en": "<h2>Laboratories</h2>\n<ul>\n<li><strong>Forest Ecology Laboratory</strong>: Equipped for research in forest ecology and biodiversity.</li>\n<li><strong>Wood Processing Laboratory</strong>: A modern laboratory for testing and developing new wood processing technologies.</li>\n</ul>\n<h2>Industrial Facilities</h2>\n<ul>\n<li><strong>Goč Sawmill</strong>: A sawmill with modern wood-processing machinery, supporting practical teaching and research.</li>\n<li><strong>Goč Wood Drying Kiln</strong>: An industrial wood kiln with a capacity of 20m³, using environmentally friendly drying methods.</li>\n</ul>"
+    },
+    {
+      "slug": "faq",
+      "title": "Česta pitanja",
+      "content": "### Kako da dođem do Goča?\nGoč se nalazi 12 km od Vrnjačke Banje i 20 km od Kraljeva. Do njega se dolazi lokalnim putem ili organizovanim prevozom.\n\n### Da li postoje sadržaji za decu?\nDa, dostupni su edukativni programi, sportski tereni i radionice u Nastavnoj bazi Gvozdac.\n\n### Koje su najpopularnije aktivnosti?\nSkijanje, planinarenje, posete vidikovcima i degustacija lokalne hrane.\n\n### Da li je moguć smeštaj?\nDa, u Nastavnoj bazi Gvozdac i okolnim planinskim kućama postoji mogućnost smeštaja.\n\n### Kako da rezervišem smeštaj?\nRezervaciju možete izvršiti putem sajta ili pozivom na recepciju.\n\n### Koji su termini za prijavu i odjavu?\nPrijava je od 14h, odjava do 10h.\n\n### Da li je parking besplatan?\nDa, obezbeđen je besplatan parking za goste.\n\n### Ostalo ?\nSve ostalo",
+      "hero_image": "/images/pages/faq.png",
+      "title_en": "FAQ",
+      "content_en": "### How do I get to Goč?\nGoč is located 12 km from Vrnjačka Banja and 20 km from Kraljevo. It can be reached by local road or organized transportation.\n\n### Are there facilities for children?\nYes, educational programs, sports fields, and workshops are available at the Gvozdac Training Base.\n\n### What are the most popular activities?\nSkiing, hiking, visiting viewpoints, and tasting local food.\n\n### Is accommodation available?\nYes, accommodation is available at the Gvozdac Training Base and in surrounding mountain lodges.\n\n### How do I book accommodation?\nYou can make a reservation through the website or by calling the front desk.\n\n### What are the check-in and check-out times?\nCheck-in is from 2 PM, check-out is by 10 AM.\n\n### Is parking free?\nYes, free parking is provided for guests.\n\n### Other?\nAnything else"
+    },
+    {
+      "slug": "restoran",
+      "title": "Ресторан",
+      "content": null,
+      "hero_image": "/images/pages/restoran.png",
+      "title_en": "Restaurant",
+      "content_en": null
+    },
+    {
+      "slug": "vesti",
+      "title": "Вести",
+      "content": "<p>Пратите најновија дешавања, најаве едукативних програма и вести из Наставне базе Гоч.</p>",
+      "hero_image": "/images/pages/vesti.png",
+      "title_en": "News",
+      "content_en": "<p>Follow the latest events, educational program announcements, and news from the Goč Teaching Base.</p>"
+    },
+    {
+      "slug": "kontakt",
+      "title": "Контакт",
+      "content": "<p><strong>Добродошли у Наставну базу Гоч–Гвоздац!</strong></p>\n<p>Шумарски факултет Универзитета у Београду.</p>\n<p>Ту смо за сва ваша питања, резервације и информације у вези са наставним активностима и смештајем.</p>",
+      "hero_image": "https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=2070&auto=format&fit=crop",
+      "title_en": "Contact",
+      "content_en": "<p><strong>Welcome to Teaching Base Goč–Gvozdac!</strong></p>\n<p>Faculty of Forestry, University of Belgrade.</p>\n<p>We are here for all your questions, reservations and information regarding teaching activities and accommodation.</p>"
+    },
+    {
+      "slug": "istrazi",
+      "title": "Истражи Гоч",
+      "content": "<p>Откријте све тајне најшумовитије планине Србије кроз наше тематске водиче.</p>",
+      "hero_image": "/images/pages/istrazi.png",
+      "title_en": "Explore Goč",
+      "content_en": "<p>Discover all the secrets of Serbia's most forested mountain through our thematic guides.</p>"
+    }
+  ],
+  "news": [
+    {
+      "slug": "smestajni-kapaciteti-spremni",
+      "title": "Смештајни капацитети спремни",
+      "excerpt": "Демо објекти и собе су попуњени садржајем за потребе презентације.",
+      "content": "Садржај служи искључиво за приказ корисничког интерфејса и основних токова. Пре производне употребе неопходно је заменити демо податке стварним информацијама.",
+      "cover_image": "https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=1200&q=80",
+      "likes": 0,
+      "created_at": "2026-04-28T20:59:06.000Z",
+      "title_en": "Accommodation Capacities Ready",
+      "excerpt_en": "Demo facilities and rooms populated with content for presentation purposes.",
+      "content_en": "Content is exclusively for UI and basic flow demonstration. Replace with real data before production use."
+    },
+    {
+      "slug": "edukativni-kamp-za-decu",
+      "title": "Едукативни камп за децу",
+      "excerpt": "Једнонедељни камп за децу узраста 10–14 година одржан на Гочу.",
+      "content": "Деца су учила о шумским екосистемима, прављењу хербаријума и оријентацији у природи. Камп је организован у сарадњи са основним школама из Врњачке Бање и Краљева. Следећи камп планиран је за јул.",
+      "cover_image": "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=1200&q=80",
+      "likes": 0,
+      "created_at": "2026-04-28T20:59:06.000Z",
+      "title_en": "Educational Camp for Children",
+      "excerpt_en": "A one-week camp for children ages 10–14 held at Goč.",
+      "content_en": "Children learned about forest ecosystems, herbarium creation, and nature orientation. The camp was organized in cooperation with elementary schools from Vrnjačka Banja and Kraljevo. Next camp planned for July."
+    },
+    {
+      "slug": "zimska-sezona-skijanja",
+      "title": "Зимска сезона скијања отворена",
+      "excerpt": "Ски стазе на Гочу спремне — почиње сезона 2025/26.",
+      "content": "Две ски стазе дужине 1200 метара и 800 метара су уређене и спремне за скијаше свих нивоа. Ноћно скијање доступно петком и суботом. Ски опрема се може изнајмити на лицу места.",
+      "cover_image": "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?auto=format&fit=crop&w=1200&q=80",
+      "likes": 0,
+      "created_at": "2026-04-28T20:59:06.000Z",
+      "title_en": "Winter Ski Season Open",
+      "excerpt_en": "Ski slopes at Goč are ready — the 2025/26 season begins.",
+      "content_en": "Two ski slopes of 1200m and 800m are prepared for skiers of all levels. Night skiing available on Fridays and Saturdays. Ski equipment can be rented on site."
+    },
+    {
+      "slug": "pokrenut-novi-sajt",
+      "title": "Покренут нови веб-сајт базе",
+      "excerpt": "Наставна база Гоч–Гвоздац добила је нови веб-сајт са системом за резервације.",
+      "content": "Нови сајт омогућава преглед смештајних капацитета, онлајн упите за резервацију, праћење статуса и AI асистента за помоћ гостима. Сајт је развијен у сарадњи са Шумарским факултетом.",
+      "cover_image": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
+      "likes": 0,
+      "created_at": "2026-04-28T20:59:06.000Z",
+      "title_en": "New Website Launched",
+      "excerpt_en": "Teaching Base Goč–Gvozdac gets a new website with a reservation system.",
+      "content_en": "The new site enables browsing accommodation, online reservation inquiries, status tracking, and an AI assistant for guest support. Developed in cooperation with the Faculty of Forestry."
+    },
+    {
+      "slug": "master-rad-novi-objekat",
+      "title": "Мастер рад — нови објекат уз печењару",
+      "excerpt": "Студенткиња Шумарског факултета израђује пројекат новог објекта уз постојећу печењару.",
+      "content": "Пројекат је у фази разраде и обухвата техничке цртеже, планове извођења и студију уклапања у постојећи амбијент базе. Нови објекат планирано је да буде изграђен непосредно уз печењару и служиће за додатне смештајно-услужне капацитете. Рад ће бити одбрањен у јунском одбрамбеном року.",
+      "cover_image": "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=80",
+      "likes": 0,
+      "created_at": "2026-04-28T20:59:06.000Z",
+      "title_en": "Master Thesis — New Building Next to the Grill Pavilion",
+      "excerpt_en": "A female student from the Faculty of Forestry is designing a new structure next to the existing grill pavilion.",
+      "content_en": "The project is in the elaboration phase, covering technical drawings, construction plans and a study of integration into the existing base environment. The new building is planned to be constructed directly next to the grill pavilion."
+    },
+    {
+      "slug": "pecenjara-ponovo-radi",
+      "title": "Печењара поново ради",
+      "excerpt": "Обновљен павиљон печењаре — спреман за нову сезону.",
+      "content": "Након темељне реконструкције, павиљон печењаре је поново отворен за госте и посетиоце. Нови роштиљ и проширен простор за седење омогућавају пријем већих група. Домаћа телетина испод сача остаје наша специјалност.",
+      "cover_image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1200&q=80",
+      "likes": 0,
+      "created_at": "2026-04-28T20:59:06.000Z",
+      "title_en": "Grill Pavilion Reopened",
+      "excerpt_en": "Renovated grill pavilion — ready for the new season.",
+      "content_en": "After thorough reconstruction, the grill pavilion has reopened for guests and visitors. A new grill and expanded seating area allow for larger groups. Home-style veal under the bell remains our specialty."
+    },
+    {
+      "slug": "poseta-studenata-iz-inostranstva",
+      "title": "Посета студената из иностранства",
+      "excerpt": "Група од 25 студената шумарства из Аустрије и Немачке провела је недељу дана на Гочу.",
+      "content": "У оквиру програма међународне размене, студенти су учествовали у теренској настави, обишли истраживачке парцеле и упознали се са биодиверзитетом Гоча. Посета је организована у сарадњи са BOKU универзитетом из Беча и укључивала је радионице о одрживом управљању шумама.",
+      "cover_image": "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80",
+      "likes": 0,
+      "created_at": "2026-04-28T20:59:06.000Z",
+      "title_en": "International Student Visit",
+      "excerpt_en": "A group of 25 forestry students from Austria and Germany spent a week at Goč.",
+      "content_en": "As part of an international exchange program, students participated in field teaching, visited research plots and explored the biodiversity of Goč. The visit was organized in cooperation with BOKU University in Vienna."
+    }
+  ],
+  "attractions": [
+    {
+      "type": "restaurant",
+      "name": "Павиљон Печењара",
+      "description": "Ресторанска понуда за ручак и породична окупљања.",
+      "distance_km": "0.40",
+      "distance_minutes": 1,
+      "family_friendly": 1,
+      "weather_tags": [
+        "sunny",
+        "cloudy",
+        "rainy",
+        "cold"
+      ],
+      "season_tags": [
+        "all"
+      ],
+      "suitable_for": [
+        "family",
+        "food"
+      ],
+      "cover_image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=2000&q=80",
+      "is_active": 1,
+      "name_en": "Pavilion Grill Restaurant",
+      "description_en": "Restaurant offer for lunch and family gatherings."
+    },
+    {
+      "type": "trail",
+      "name": "Резерват природе Гоч–Гвоздац",
+      "description": "Наставно-научни центар са преко 650 биљних врста, укључујући ендемичне и ретке врсте. Посебно се истичу планински јавор и варијетет црног бора, као и очуване заједнице буково-јелових шума.",
+      "distance_km": "1.20",
+      "distance_minutes": 2,
+      "family_friendly": 1,
+      "weather_tags": [
+        "sunny",
+        "cloudy"
+      ],
+      "season_tags": [
+        "spring",
+        "summer",
+        "autumn"
+      ],
+      "suitable_for": [
+        "family",
+        "walk"
+      ],
+      "cover_image": "/placeholder.jpg",
+      "is_active": 1,
+      "name_en": "",
+      "description_en": null
+    },
+    {
+      "type": "ski",
+      "name": "Ски стазе Гоча",
+      "description": "Стазе погодне за почетнике и искусне скијаше, укључујући могућност ноћног скијања. Атрактивне током зимских месеци.",
+      "distance_km": "2.60",
+      "distance_minutes": 6,
+      "family_friendly": 1,
+      "weather_tags": [
+        "snow",
+        "cold",
+        "clear"
+      ],
+      "season_tags": [
+        "winter"
+      ],
+      "suitable_for": [
+        "family",
+        "walk"
+      ],
+      "cover_image": "/placeholder.jpg",
+      "is_active": 1,
+      "name_en": "",
+      "description_en": null
+    },
+    {
+      "type": "trail",
+      "name": "Пешачке стазе",
+      "description": "Обележене стазе различите дужине и тежине: Жута стаза (5 km, лагана), Плава стаза (12 km, средње захтевна), Црвена стаза (18,5 km, најзахтевнија). Воде кроз језера, ливаде и речне долине.",
+      "distance_km": "1.20",
+      "distance_minutes": 2,
+      "family_friendly": 1,
+      "weather_tags": [
+        "sunny",
+        "cloudy"
+      ],
+      "season_tags": [
+        "spring",
+        "summer",
+        "autumn"
+      ],
+      "suitable_for": [
+        "family",
+        "walk"
+      ],
+      "cover_image": "/placeholder.jpg",
+      "is_active": 1,
+      "name_en": "",
+      "description_en": null
+    },
+    {
+      "type": "viewpoint",
+      "name": "Видиковац Крст",
+      "description": "Панорамски поглед на Копаоник, Ртањ, Гледићке планине и Рудник. Идеално место за фотографисање и уживање у природи.",
+      "distance_km": "1.00",
+      "distance_minutes": 3,
+      "family_friendly": 1,
+      "weather_tags": [
+        "sunny",
+        "cloudy"
+      ],
+      "season_tags": [
+        "spring",
+        "summer",
+        "autumn"
+      ],
+      "suitable_for": [
+        "family",
+        "walk"
+      ],
+      "cover_image": "/placeholder.jpg",
+      "is_active": 1,
+      "name_en": "",
+      "description_en": null
+    },
+    {
+      "type": "trail",
+      "name": "Велика ливада",
+      "description": "Пространо подручје за одмор и пикник, доступно пешачким стазама. Популарно за породичне излете.",
+      "distance_km": "1.20",
+      "distance_minutes": 2,
+      "family_friendly": 1,
+      "weather_tags": [
+        "sunny",
+        "cloudy"
+      ],
+      "season_tags": [
+        "spring",
+        "summer",
+        "autumn"
+      ],
+      "suitable_for": [
+        "family",
+        "walk"
+      ],
+      "cover_image": "/placeholder.jpg",
+      "is_active": 1,
+      "name_en": "",
+      "description_en": null
+    },
+    {
+      "type": "education",
+      "name": "Наставна база Гвоздац",
+      "description": "Центар за едукацију студената Шумарског факултета, истраживања и практичне обуке у природи. Пружа садржаје за децу и омладину.",
+      "distance_km": "0.70",
+      "distance_minutes": 2,
+      "family_friendly": 1,
+      "weather_tags": [
+        "sunny",
+        "cloudy",
+        "rainy"
+      ],
+      "season_tags": [
+        "spring",
+        "summer",
+        "autumn"
+      ],
+      "suitable_for": [
+        "family",
+        "walk"
+      ],
+      "cover_image": "/placeholder.jpg",
+      "is_active": 1,
+      "name_en": "",
+      "description_en": null
+    }
+  ],
+  "menu": [
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Starters",
+      "name": "Homemade Goč prosciutto and cheese",
+      "description": "Prosciutto, cheese, flatbread.",
+      "price": "850.00",
+      "is_available": 1,
+      "sort_order": 1
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Starters",
+      "name": "Sac-baked flatbread with kaymak",
+      "description": "Flatbread, kaymak cream.",
+      "price": "600.00",
+      "is_available": 1,
+      "sort_order": 2
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Soups and stews",
+      "name": "Veal stew",
+      "description": "Veal, vegetables, spices.",
+      "price": "450.00",
+      "is_available": 1,
+      "sort_order": 3
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Soups and stews",
+      "name": "Mushroom soup",
+      "description": "Forest mushrooms, vegetables, spices.",
+      "price": "400.00",
+      "is_available": 1,
+      "sort_order": 4
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Main courses",
+      "name": "Lamb under the sac",
+      "description": "Lamb, potatoes, onion, spices.",
+      "price": "1600.00",
+      "is_available": 1,
+      "sort_order": 5
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Main courses",
+      "name": "Grilled trout",
+      "description": "Trout, lemon, spices.",
+      "price": "1200.00",
+      "is_available": 1,
+      "sort_order": 6
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Main courses",
+      "name": "Chicken fillet in mushroom sauce",
+      "description": "Chicken fillet, mushrooms, cream, spices.",
+      "price": "950.00",
+      "is_available": 1,
+      "sort_order": 7
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Main courses",
+      "name": "Sarma with homemade sauerkraut",
+      "description": "Cabbage, minced meat, rice, spices.",
+      "price": "900.00",
+      "is_available": 1,
+      "sort_order": 8
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Side dishes",
+      "name": "Roasted potatoes with herbs",
+      "description": "Potatoes, rosemary, olive oil.",
+      "price": "350.00",
+      "is_available": 1,
+      "sort_order": 9
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Side dishes",
+      "name": "Homemade cornbread (proja)",
+      "description": "Cornmeal, cheese, eggs.",
+      "price": "300.00",
+      "is_available": 1,
+      "sort_order": 10
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Side dishes",
+      "name": "Sour milk",
+      "description": "Milk, fermented culture.",
+      "price": "250.00",
+      "is_available": 1,
+      "sort_order": 11
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Salads",
+      "name": "Shopska salad",
+      "description": "Tomato, cucumber, pepper, cheese.",
+      "price": "400.00",
+      "is_available": 1,
+      "sort_order": 12
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Salads",
+      "name": "Cabbage salad",
+      "description": "Cabbage, vinegar, oil.",
+      "price": "250.00",
+      "is_available": 1,
+      "sort_order": 13
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Salads",
+      "name": "Seasonal mixed salad",
+      "description": "Tomato, cucumber, lettuce, onion.",
+      "price": "350.00",
+      "is_available": 1,
+      "sort_order": 14
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Desserts",
+      "name": "Apple and walnut pie",
+      "description": "Apples, walnuts, cinnamon, pastry.",
+      "price": "500.00",
+      "is_available": 1,
+      "sort_order": 15
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Desserts",
+      "name": "Poppy-seed strudel",
+      "description": "Poppy seeds, flour, sugar.",
+      "price": "550.00",
+      "is_available": 1,
+      "sort_order": 16
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Desserts",
+      "name": "Honey and walnuts",
+      "description": "Homemade honey, walnuts.",
+      "price": "400.00",
+      "is_available": 1,
+      "sort_order": 17
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Drinks",
+      "name": "Homemade rakija",
+      "description": "Plum, quince.",
+      "price": "250.00",
+      "is_available": 1,
+      "sort_order": 18
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Drinks",
+      "name": "Wine from Župa",
+      "description": "Grapes.",
+      "price": "450.00",
+      "is_available": 1,
+      "sort_order": 19
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Drinks",
+      "name": "Mountain water",
+      "description": "Spring water.",
+      "price": "150.00",
+      "is_available": 1,
+      "sort_order": 20
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Coffee",
+      "name": "Turkish-style coffee",
+      "description": "Ground coffee.",
+      "price": "200.00",
+      "is_available": 1,
+      "sort_order": 21
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Coffee",
+      "name": "Espresso",
+      "description": "Espresso coffee.",
+      "price": "250.00",
+      "is_available": 1,
+      "sort_order": 22
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Coffee",
+      "name": "Cappuccino",
+      "description": "Espresso, milk, foam.",
+      "price": "300.00",
+      "is_available": 1,
+      "sort_order": 23
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Juices",
+      "name": "Raspberry juice",
+      "description": "Raspberry, sugar, water.",
+      "price": "300.00",
+      "is_available": 1,
+      "sort_order": 24
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Juices",
+      "name": "Blackberry juice",
+      "description": "Blackberry, sugar, water.",
+      "price": "300.00",
+      "is_available": 1,
+      "sort_order": 25
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "en",
+      "category": "Juices",
+      "name": "Blueberry juice",
+      "description": "Blueberry, sugar, water.",
+      "price": "350.00",
+      "is_available": 1,
+      "sort_order": 26
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Предјела",
+      "name": "Домаћа пршута и сир са Гоча",
+      "description": "Пршута, сир, погача.",
+      "price": "850.00",
+      "is_available": 1,
+      "sort_order": 1
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Предјела",
+      "name": "Погача испод сача са кајмаком",
+      "description": "Погача, кајмак.",
+      "price": "600.00",
+      "is_available": 1,
+      "sort_order": 2
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Супе и чорбе",
+      "name": "Телећа чорба",
+      "description": "Телетина, поврће, зачини.",
+      "price": "450.00",
+      "is_available": 1,
+      "sort_order": 3
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Супе и чорбе",
+      "name": "Супа од печурака",
+      "description": "Шумске печурке, поврће, зачини.",
+      "price": "400.00",
+      "is_available": 1,
+      "sort_order": 4
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Главна јела",
+      "name": "Јагњетина испод сача",
+      "description": "Јагњетина, кромпир, лук, зачини.",
+      "price": "1600.00",
+      "is_available": 1,
+      "sort_order": 5
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Главна јела",
+      "name": "Пастрмка са жара",
+      "description": "Пастрмка, лимун, зачини.",
+      "price": "1200.00",
+      "is_available": 1,
+      "sort_order": 6
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Главна јела",
+      "name": "Пилећи филе у сосу од печурака",
+      "description": "Пилећи филе, печурке, павлака, зачини.",
+      "price": "950.00",
+      "is_available": 1,
+      "sort_order": 7
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Главна јела",
+      "name": "Сарма са домаћим киселим купусом",
+      "description": "Купус, млевено месо, пиринач, зачини.",
+      "price": "900.00",
+      "is_available": 1,
+      "sort_order": 8
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Прилози",
+      "name": "Кромпир из рерне са зачинским биљем",
+      "description": "Кромпир, рузмарин, маслиново уље.",
+      "price": "350.00",
+      "is_available": 1,
+      "sort_order": 9
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Прилози",
+      "name": "Домаћа проја",
+      "description": "Кукурузно брашно, сир, јаја.",
+      "price": "300.00",
+      "is_available": 1,
+      "sort_order": 10
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Прилози",
+      "name": "Кисело млеко",
+      "description": "Млеко, ферментисана култура.",
+      "price": "250.00",
+      "is_available": 1,
+      "sort_order": 11
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Салате",
+      "name": "Шопска салата",
+      "description": "Парадајз, краставац, паприка, сир.",
+      "price": "400.00",
+      "is_available": 1,
+      "sort_order": 12
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Салате",
+      "name": "Купус салата",
+      "description": "Купус, сирће, уље.",
+      "price": "250.00",
+      "is_available": 1,
+      "sort_order": 13
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Салате",
+      "name": "Сезонска мешана салата",
+      "description": "Парадајз, краставац, зелена салата, лук.",
+      "price": "350.00",
+      "is_available": 1,
+      "sort_order": 14
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Посластице",
+      "name": "Пита са јабукама и орасима",
+      "description": "Јабуке, орах, цимет, коре.",
+      "price": "500.00",
+      "is_available": 1,
+      "sort_order": 15
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Посластице",
+      "name": "Штрудла са маком",
+      "description": "Мак, брашно, шећер.",
+      "price": "550.00",
+      "is_available": 1,
+      "sort_order": 16
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Посластице",
+      "name": "Мед и ораси",
+      "description": "Домаћи мед, орах.",
+      "price": "400.00",
+      "is_available": 1,
+      "sort_order": 17
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Пића",
+      "name": "Домаћа ракија",
+      "description": "Шљива, дуња.",
+      "price": "250.00",
+      "is_available": 1,
+      "sort_order": 18
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Пића",
+      "name": "Вино из Жупе",
+      "description": "Грожђе.",
+      "price": "450.00",
+      "is_available": 1,
+      "sort_order": 19
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Пића",
+      "name": "Планинска вода",
+      "description": "Изворска вода.",
+      "price": "150.00",
+      "is_available": 1,
+      "sort_order": 20
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Кафе",
+      "name": "Домаћа кафа",
+      "description": "Млевена кафа.",
+      "price": "200.00",
+      "is_available": 1,
+      "sort_order": 21
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Кафе",
+      "name": "Еспресо",
+      "description": "Еспресо кафа.",
+      "price": "250.00",
+      "is_available": 1,
+      "sort_order": 22
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Кафе",
+      "name": "Капућино",
+      "description": "Еспресо кафа, млеко, пена.",
+      "price": "300.00",
+      "is_available": 1,
+      "sort_order": 23
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Сокови",
+      "name": "Сок од малине",
+      "description": "Малина, шећер, вода.",
+      "price": "300.00",
+      "is_available": 1,
+      "sort_order": 24
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Сокови",
+      "name": "Сок од купине",
+      "description": "Купина, шећер, вода.",
+      "price": "300.00",
+      "is_available": 1,
+      "sort_order": 25
+    },
+    {
+      "attraction_name": "Павиљон Печењара",
+      "lang": "sr",
+      "category": "Сокови",
+      "name": "Сок од боровнице",
+      "description": "Боровница, шећер, вода.",
+      "price": "350.00",
+      "is_available": 1,
+      "sort_order": 26
+    }
+  ]
+}
