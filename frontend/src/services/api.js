@@ -457,6 +457,10 @@ class ApiService {
     return this.request('/api/admin/system/purge-cache', { method: 'POST' });
   }
 
+  async refreshAgentKnowledge() {
+    return this.request('/api/admin/ai/refresh-knowledge', { method: 'POST' });
+  }
+
   async getGuests() {
     return this.request('/api/admin/guests');
   }

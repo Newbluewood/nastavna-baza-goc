@@ -8,6 +8,7 @@ const route = useRoute()
 const sidebarOpen = ref(false)
 const smestajOpen = ref(true)
 const isPurging = ref(false)
+const isRefreshingKnowledge = ref(false)
 
 const adminLinks = [
   { name: 'admin-news', label: 'Вести' },
@@ -43,6 +44,19 @@ const handlePurgeCache = async () => {
     alert(err.data?.error || 'Дошло је до грешке приликом чишћења кеша.')
   } finally {
     isPurging.value = false
+  }
+}
+
+const handleRefreshKnowledge = async () => {
+  if (isRefreshingKnowledge.value) return
+  isRefreshingKnowledge.value = true
+  try {
+    const result = await api.refreshAgentKnowledge()
+    alert(result.message || 'Освежавање знања је покренуто.')
+  } catch (err) {
+    alert(err.data?.error || 'Чет агент није прихватио освежавање.')
+  } finally {
+    isRefreshingKnowledge.value = false
   }
 }
 
@@ -84,6 +98,9 @@ defineExpose({ sidebarOpen })
     <div class="sidebar-actions">
       <button class="purge-btn" @click="handlePurgeCache" :disabled="isPurging">
         {{ isPurging ? 'Чистим...' : 'Очисти кеш' }}
+      </button>
+      <button class="knowledge-btn" @click="handleRefreshKnowledge" :disabled="isRefreshingKnowledge">
+        {{ isRefreshingKnowledge ? 'Покрећем...' : 'Освежи знање AI чет агента' }}
       </button>
       <button class="logout-btn" @click="handleLogout">Одјави се</button>
     </div>
@@ -208,6 +225,29 @@ defineExpose({ sidebarOpen })
 }
 
 .purge-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.knowledge-btn {
+  background: transparent;
+  color: #cdac91;
+  border: 1px solid #cdac91;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  transition: all 0.2s;
+}
+
+.knowledge-btn:hover:not(:disabled) {
+  background: #cdac91;
+  color: #332317;
+}
+
+.knowledge-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

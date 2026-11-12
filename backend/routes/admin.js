@@ -3,7 +3,6 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { adminAuthMiddleware } = require('../middleware/auth');
 const { validateRequest, schemas } = require('../middleware/validation');
 const invalidatePublicCacheOnWrite = require('../middleware/invalidatePublicCache');
-const scheduleKnowledgeIngest = require('../middleware/scheduleKnowledgeIngest');
 const {
 	getInquiries,
 	getInquiryActivity,
@@ -48,6 +47,7 @@ const {
 	updateHeroSlide,
 	deleteHeroSlide,
 	purgeCache,
+	refreshAgentKnowledge,
 	uploadImage,
 	getFacilities,
 	updateFacility,
@@ -70,8 +70,6 @@ const router = express.Router();
 
 // Successful admin writes clear the public GET cache (TTL fallback remains).
 router.use(invalidatePublicCacheOnWrite);
-// Content writes (themes, news, pages, rooms, menu) ask the chat-agent to refresh Qdrant.
-router.use(scheduleKnowledgeIngest);
 
 router.get('/inquiries',           adminAuthMiddleware,                                      asyncHandler(getInquiries));
 router.get('/inquiries/:id/activity', adminAuthMiddleware,                                   asyncHandler(getInquiryActivity));
@@ -91,6 +89,7 @@ router.get('/chat-analytics/miss', adminAuthMiddleware,                         
 router.get('/site-stats',          adminAuthMiddleware,                                      asyncHandler(getSiteStats));
 router.get('/ai/usage',            adminAuthMiddleware,                                      asyncHandler(getAiUsage));
 router.post('/ai/seed-site-kb',    adminAuthMiddleware,                                      asyncHandler(seedSiteKbNow));
+router.post('/ai/refresh-knowledge', adminAuthMiddleware,                                    asyncHandler(refreshAgentKnowledge));
 // Projects CRUD
 router.get('/projects',            adminAuthMiddleware,                                      asyncHandler(getProjects));
 router.post('/projects',           adminAuthMiddleware,                                      asyncHandler(createProject));

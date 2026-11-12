@@ -1,7 +1,8 @@
 /**
- * Asks the chat-agent to refresh Qdrant after a CMS content write.
+ * Asks the chat-agent to refresh Qdrant.
+ * Called from the CMS button "Osveži znanje".
  * No-op when INGEST_WEBHOOK_URL or INGEST_WEBHOOK_SECRET is empty.
- * Never throws — a down agent must not fail the CMS save.
+ * Never throws — the admin response maps skipped/failed results.
  */
 function notifyKnowledgeIngest(reason) {
   const url = (process.env.INGEST_WEBHOOK_URL || '').trim();

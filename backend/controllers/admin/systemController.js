@@ -104,6 +104,25 @@ async function purgeCache(req, res) {
   res.json({ message: 'Cache successfully purged' });
 }
 
+async function refreshAgentKnowledge(req, res) {
+  const { notifyKnowledgeIngest } = require('../../services/knowledgeIngestNotify');
+  const result = await notifyKnowledgeIngest('cms-button');
+  if (result.skipped) {
+    return res.status(503).json({
+      error: 'Освежавање знања није подешено на серверу.'
+    });
+  }
+  if (!result.ok) {
+    return res.status(502).json({
+      error: 'Чет агент није прихватио освежавање. Проверите да ли је агент подигнут.'
+    });
+  }
+  return res.status(202).json({
+    ok: true,
+    message: 'Освежавање знања је покренуто. Чет агент преузима садржај сајта за који минут.'
+  });
+}
+
 module.exports = {
   getChatMetrics,
   getChatAnalyticsTop,
@@ -111,5 +130,6 @@ module.exports = {
   getSiteStats,
   getAiUsage,
   seedSiteKbNow,
-  purgeCache
+  purgeCache,
+  refreshAgentKnowledge
 };
