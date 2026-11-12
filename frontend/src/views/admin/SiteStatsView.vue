@@ -389,21 +389,9 @@ onMounted(fetchStats)
   flex-wrap: wrap;
 }
 .days-pills { display: flex; gap: 6px; }
-.day-pill {
-  background: #f5f3f0;
-  color: #332317;
-  border: 1px solid #cdac91;
-  padding: 4px 10px;
-  font-size: 0.82rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-.day-pill.active {
-  background: #332317;
-  color: #fff;
-  border-color: #332317;
-}
-.day-pill:disabled { opacity: 0.6; cursor: wait; }
+/* .day-pill look: buttons.css */
+.day-pill { padding: 4px 10px; }
+.day-pill:disabled { cursor: wait; }
 
 .kpi-grid {
   display: grid;

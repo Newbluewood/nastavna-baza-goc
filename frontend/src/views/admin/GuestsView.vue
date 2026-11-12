@@ -232,8 +232,7 @@ const getActiveVouchersCount = (vouchers) => {
 
 .voucher-indicator { background: #fff0f5; color: #d81b60; padding: 3px 6px; font-weight: bold; font-size: 0.8rem; border: 1px dashed #d81b60; }
 
-.gift-btn { background: #332317; color: #cdac91; border: 1px solid #332317; }
-.gift-btn:hover { background: #cdac91; color: #332317; }
+/* .gift-btn look: buttons.css */
 
 
 /* MODAL */
@@ -254,7 +253,5 @@ const getActiveVouchersCount = (vouchers) => {
 .error-msg { color: #e74c3c; font-size: 0.85rem; margin-bottom: 10px; }
 .success-msg { color: #27ae60; background: #e8f5e9; padding: 10px; font-size: 0.85rem; margin-bottom: 10px; }
 
-.submit-btn { width: 100%; background: #d81b60; color: #fff; padding: 12px; border: none; font-weight: bold; cursor: pointer; letter-spacing: 1px; margin-top: 10px; }
-.submit-btn:disabled { opacity: 0.5; }
-.submit-btn:hover:not(:disabled) { background: #ad1457; }
+.submit-btn { width: 100%; letter-spacing: 1px; margin-top: 10px; }
 </style>

@@ -1,13 +1,18 @@
 /**
  * Official NB Goč staff roster aligned with:
  * https://www.sfb.bg.ac.rs/nastavne-baze/nastavna-baza-goc/zaposleni/
- * CNNO manager from GERLL page (др Ненад Петровић).
+ *
+ * Emails only where published on sfb.bg.ac.rs (zaposleni page has NO per-person emails):
+ * - CNNO: https://www.sfb.bg.ac.rs/nastavne-baze/
+ * - Kontakt NB: booking.goc@… / recepcija.goc.piramida@… (shared mailboxes; reception row)
  *
  * [full_name, role_sr, role_en, contact_email]
  */
 module.exports = [
   ['Игор Чукановић', 'Управник НБ „Гоч“', 'Manager of the Goč Teaching Base', null],
   ['др Ненад Петровић', 'Управник Центра за наставно-научне објекте (ЦННО)', 'Manager of the Center for Teaching and Scientific Facilities (CNNO)', 'nenad.petrovic@sfb.bg.ac.rs'],
+  ['Драгана Милојковић', 'Стручни сарадник за комерцијално-туристичке послове (ЦННО)', 'Commercial and tourism associate (CNNO)', 'dragana.milojkovic@sfb.bg.ac.rs'],
+  ['Марина Коштан', 'Референт за фактурисање робе и услуга (ЦННО)', 'Invoicing officer (CNNO)', 'marina.kostan@sfb.bg.ac.rs'],
   ['Зоран Букара', 'Управник СРП „Гоч-Гвоздац“', 'Manager of SNR Goč-Gvozdac', null],
   ['Мирјана Златковић', 'Управник СРП „Гоч-Гвоздац“', 'Manager of SNR Goč-Gvozdac', null],
 

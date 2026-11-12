@@ -170,20 +170,7 @@ onMounted(() => fetchUsers())
   margin-bottom: 24px;
 }
 .subtitle { color: #666; margin: 6px 0 0; }
-.primary-btn {
-  background: #332317;
-  color: #fff;
-  border: none;
-  padding: 10px 16px;
-  cursor: pointer;
-  font-weight: 600;
-}
-.ghost-btn {
-  background: transparent;
-  border: 1px solid #999;
-  padding: 10px 16px;
-  cursor: pointer;
-}
+/* Button look: buttons.css (.primary-btn, .ghost-btn, .action-btn) */
 .form-card {
   background: #fff;
   border: 1px solid #e5e5e5;
@@ -208,11 +195,4 @@ onMounted(() => fetchUsers())
 }
 .muted { color: #777; }
 .actions { display: flex; gap: 8px; }
-.action-btn {
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  padding: 6px 10px;
-  cursor: pointer;
-}
-.action-btn.danger { color: #c62828; }
 </style>

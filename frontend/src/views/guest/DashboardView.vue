@@ -439,17 +439,7 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
   font-size: 0.9rem;
 }
 
-.btn-logout {
-  background: transparent;
-  border: 1px solid #cdac91;
-  color: #cdac91;
-  padding: 4px 12px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  letter-spacing: 0.5px;
-  border-radius: 0;
-}
-.btn-logout:hover { background: #cdac91; color: #332317; }
+/* .btn-logout look: buttons.css */
 
 .dash-content {
   max-width: 720px;
@@ -538,17 +528,6 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
   flex-wrap: wrap;
 }
 
-.btn-cancel {
-  background: #e74c3c;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: bold;
-  border-radius: 0;
-}
-.btn-cancel:disabled { background: #ccc; cursor: not-allowed; }
 .cancel-note { font-size: 0.78rem; color: #2e7d32; }
 
 .footer-open { background: #f0f9f0; border-top-color: #c8e6c9; }
@@ -586,46 +565,11 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
 }
 .form-group input:focus { border-color: #cdac91; }
 
-.btn-primary-full {
-  width: 100%;
-  background: #332317;
-  color: #cdac91;
-  border: none;
-  padding: 13px;
-  font-weight: bold;
-  font-size: 0.9rem;
-  letter-spacing: 1px;
-  cursor: pointer;
-  border-radius: 0;
-}
-.btn-primary-full:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.btn-primary-sm {
-  display: inline-block;
-  background: #332317;
-  color: #cdac91;
-  padding: 10px 20px;
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: bold;
-  margin-top: 10px;
-}
-
+.btn-primary-full { padding: 13px; letter-spacing: 1px; }
+.btn-primary-sm { margin-top: 10px; }
 .error-msg { color: #e74c3c; font-size: 0.85rem; margin-bottom: 10px; }
 .success-msg { color: #27ae60; font-size: 0.85rem; margin-bottom: 10px; background: #e8f5e9; padding: 10px; }
-
-.btn-change {
-  background: #2196F3;
-  color: #fff;
-  border: none;
-  padding: 8px 14px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: bold;
-  border-radius: 0;
-}
-.btn-change:hover { background: #1976D2; }
-.btn-change:disabled { background: #ccc; cursor: not-allowed; }
+/* .btn-primary-full / .btn-primary-sm / .btn-change / .btn-cancel / .btn-redeem / .btn-secondary: buttons.css */
 
 /* MODAL STYLES */
 .modal-overlay {
@@ -666,17 +610,7 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
 }
 .modal-info p { margin: 5px 0; }
 
-.btn-secondary {
-  width: 100%;
-  background: #ddd;
-  color: #333;
-  border: none;
-  padding: 11px;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 0;
-}
-.btn-secondary:hover { background: #bbb; }
+.btn-secondary { padding: 11px; }
 
 @media (max-width: 600px) {
   .dash-header { padding: 0 15px; }
@@ -701,8 +635,7 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
 .rec-icon { font-size: 2rem; }
 .rec-text h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: #e67e22; }
 .rec-text p { margin: 0; font-size: 0.9rem; color: #555; }
-.btn-primary-sm { background: #e67e22; color: #fff; text-decoration: none; padding: 10px 15px; font-weight: bold; font-size: 0.85rem; white-space: nowrap; transition: 0.2s; }
-.btn-primary-sm:hover { background: #d35400; }
+.recommendation-box .btn-primary-sm { white-space: nowrap; }
 
 /* VOUCHERS */
 .vouchers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
@@ -724,9 +657,6 @@ const handleLogout = () => { guestStore.logout(); router.push({ name: 'home' }) 
 .voucher-card p { margin: 0 0 20px; font-size: 0.9rem; color: #555; flex: 1; }
 .v-footer { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #f0ebe4; padding-top: 15px; }
 .v-code { font-family: monospace; font-size: 0.95rem; font-weight: bold; color: #888; }
-.btn-redeem { background: #d81b60; color: #fff; border: none; padding: 8px 15px; font-weight: bold; cursor: pointer; border-radius: 0; transition: background 0.2s; }
-.btn-redeem:hover { background: #ad1457; }
-.btn-redeem:disabled { opacity: 0.5; }
 .redeem-stamp { font-size: 0.75rem; color: #2e7d32; font-weight: bold; text-align: right; }
 
 .footer-novo {

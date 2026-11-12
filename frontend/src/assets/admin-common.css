@@ -1,7 +1,9 @@
 /* ============================================
    ADMIN SHARED STYLES
    Used by all admin views via AdminLayout.vue
+   Button language: outline (border + text), fill on hover — see buttons.css
    ============================================ */
+@import './buttons.css';
 
 .admin-layout {
   display: flex;
@@ -20,10 +22,6 @@
 /* Mobile top bar */
 @media (max-width: 768px) {
   .mobile-topbar { display: flex; align-items: center; margin-bottom: 20px; }
-  .burger-admin {
-    background: #332317; color: #cdac91; border: none;
-    padding: 10px 16px; font-size: 0.95rem; font-weight: bold; cursor: pointer;
-  }
   .main-content { padding: 20px 16px !important; }
   .page-header { flex-direction: column; gap: 12px; }
   .form-grid { grid-template-columns: 1fr !important; }
@@ -39,13 +37,8 @@
 .page-header h1 { margin: 0 0 5px; font-size: 1.8rem; color: #332317; }
 .subtitle { color: #888; margin: 0; font-size: 0.95rem; }
 
-/* Primary action buttons */
-.add-btn, .refresh-btn {
-  background: #332317; color: #fff; border: none;
-  padding: 10px 20px; cursor: pointer; font-weight: bold; transition: opacity 0.2s;
-}
-.add-btn:hover, .refresh-btn:hover { opacity: 0.85; }
-.refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Button look lives in buttons.css — only layout sizing here */
+.save-btn, .cancel-btn { padding: 10px 24px; }
 
 /* Edit form */
 .edit-form {
@@ -74,15 +67,6 @@
   padding: 10px; border: 1px solid #ddd; font-size: 0.9rem; font-family: inherit;
 }
 .form-actions { display: flex; gap: 10px; margin-top: 16px; }
-.save-btn {
-  background: #332317; color: #fff; border: none;
-  padding: 10px 24px; cursor: pointer; font-weight: bold;
-}
-.save-btn:hover { opacity: 0.85; }
-.cancel-btn {
-  background: transparent; color: #332317; border: 1px solid #332317;
-  padding: 10px 24px; cursor: pointer; font-weight: bold;
-}
 
 /* Data table */
 .data-table { width: 100%; border-collapse: collapse; background: #fff; font-size: 0.92rem; }
@@ -111,31 +95,7 @@ td.actions-cell {
 td.actions-cell .action-btn + .action-btn {
   margin-left: 6px;
 }
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  height: 32px;
-  padding: 0 12px;
-  border: none;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: bold;
-  line-height: 1;
-  transition: opacity 0.2s;
-  white-space: nowrap;
-  vertical-align: middle;
-}
-.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.action-btn:hover { opacity: 0.8; }
-.action-btn.edit { background: #e8f5e9; color: #27ae60; }
-.action-btn.delete { background: #fde8e8; color: #e74c3c; }
-.action-btn.approve { background: #27ae60; color: #fff; }
-.action-btn.reject { background: #e74c3c; color: #fff; }
-.action-btn.cancel { background: #607d8b; color: #fff; }
-.action-btn.voucher { background: #b9770e; color: #fff; }
-.action-btn.timeline { background: #795548; color: #fff; }
+/* .action-btn look + semantic colors: buttons.css */
 
 /* Status */
 .loading-msg, .empty-msg { text-align: center; padding: 40px; color: #999; }

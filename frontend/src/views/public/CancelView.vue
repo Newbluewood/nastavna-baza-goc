@@ -198,42 +198,9 @@ h2 {
   padding: 0 25px 25px;
 }
 
-.btn-danger {
-  background: #e74c3c;
-  color: #fff;
-  border: none;
-  padding: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 0;
-  font-size: 0.95rem;
-  transition: opacity 0.2s;
-}
-.btn-danger:hover { opacity: 0.85; }
-.btn-danger:disabled { background: #ccc; cursor: not-allowed; }
-
-.btn-primary {
-  background: #332317;
-  color: #fff;
-  border: none;
-  padding: 12px 24px;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 0;
-  margin-top: 10px;
-}
-
-.btn-secondary {
-  background: transparent;
-  color: #666;
-  border: 1px solid #ccc;
-  padding: 12px;
-  cursor: pointer;
-  border-radius: 0;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-.btn-secondary:hover { background: #f5f3f0; }
-
+.btn-danger { padding: 13px; font-size: 0.95rem; }
+.btn-primary { padding: 12px 24px; margin-top: 10px; }
+.btn-secondary { padding: 12px; }
+/* Button look: buttons.css */
 .error-msg { color: #e74c3c; font-size: 0.9rem; margin: 0 25px 10px; }
 </style>

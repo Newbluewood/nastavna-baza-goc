@@ -1,0 +1,391 @@
+/**
+ * Single source of truth for site + CMS + guest buttons.
+ *
+ * Language: outline (transparent bg, border + text same color).
+ * Hover: fill with that color, light text.
+ *
+ * Change colors once via :root --btn-* variables.
+ * Prefer class aliases already used in templates (no mass HTML rename).
+ */
+
+:root {
+  --btn-outline: var(--c-braon-6, #332317);
+  --btn-outline-hover-fg: #fff;
+  --btn-on-dark: var(--c-braon-3, #cdac91);
+  --btn-on-dark-hover-fg: var(--c-braon-6, #332317);
+  --btn-danger: #c62828;
+  --btn-success: #2e7d32;
+  --btn-warn: #e67e22;
+  --btn-edit: #27ae60;
+  --btn-muted: #607d8b;
+  --btn-voucher: #b9770e;
+  --btn-timeline: #795548;
+  --btn-radius: 0;
+  --btn-font-weight: 700;
+  --btn-font-size: 0.9rem;
+  --btn-pad-y: 10px;
+  --btn-pad-x: 20px;
+  --btn-transition: background 0.2s, color 0.2s, opacity 0.2s, border-color 0.2s;
+}
+
+/* ------------------------------------------------------------------ */
+/* Base outline + legacy aliases                                       */
+/* ------------------------------------------------------------------ */
+
+.btn-outline,
+button.btn-outline,
+a.btn-outline,
+.add-btn,
+.add-btn-inline,
+.refresh-btn,
+.primary-btn,
+.save-btn,
+.cancel-btn,
+.ghost-btn,
+.upload-btn,
+.translate-btn,
+.ai-btn,
+.ai-toggle-btn,
+.edit-btn,
+.action-btn,
+.expand-btn,
+.gift-btn,
+.delete-btn,
+.remove-gallery-btn,
+.btn-primary,
+.btn-primary-sm,
+.btn-primary-full,
+.btn-secondary,
+.btn-change,
+.btn-redeem,
+.btn-cancel,
+.submit-btn,
+.inquiry-btn,
+.translate-mini,
+.day-pill,
+.burger-admin,
+.purge-btn,
+.knowledge-btn,
+.logout-btn,
+.btn-logout,
+.reserve-link,
+.ac-btn.primary,
+.ac-btn.success,
+.ac-btn.secondary,
+.reserve-btn,
+.btn-danger,
+.btn-account,
+.cta-button,
+.upload-label,
+.login-box button[type='submit'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  background: transparent;
+  color: var(--btn-outline);
+  border: 1px solid var(--btn-outline);
+  padding: var(--btn-pad-y) var(--btn-pad-x);
+  font-family: inherit;
+  font-weight: var(--btn-font-weight);
+  font-size: var(--btn-font-size);
+  line-height: 1.2;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: var(--btn-radius);
+  transition: var(--btn-transition);
+}
+
+.btn-outline:hover:not(:disabled),
+button.btn-outline:hover:not(:disabled),
+a.btn-outline:hover:not(:disabled),
+.add-btn:hover:not(:disabled),
+.add-btn-inline:hover:not(:disabled),
+.refresh-btn:hover:not(:disabled),
+.primary-btn:hover:not(:disabled),
+.save-btn:hover:not(:disabled),
+.cancel-btn:hover:not(:disabled),
+.ghost-btn:hover:not(:disabled),
+.upload-btn:hover,
+.translate-btn:hover:not(:disabled),
+.ai-btn:hover:not(:disabled),
+.ai-toggle-btn:hover:not(:disabled),
+.edit-btn:hover:not(:disabled),
+.action-btn:hover:not(:disabled),
+.expand-btn:hover:not(:disabled),
+.gift-btn:hover:not(:disabled),
+.delete-btn:hover:not(:disabled),
+.remove-gallery-btn:hover:not(:disabled),
+.btn-primary:hover:not(:disabled),
+.btn-primary-sm:hover:not(:disabled),
+.btn-primary-full:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.btn-change:hover:not(:disabled),
+.btn-redeem:hover:not(:disabled),
+.btn-cancel:hover:not(:disabled),
+.submit-btn:hover:not(:disabled),
+.inquiry-btn:hover:not(:disabled),
+.translate-mini:hover:not(:disabled),
+.day-pill:hover:not(:disabled),
+.burger-admin:hover:not(:disabled),
+.purge-btn:hover:not(:disabled),
+.knowledge-btn:hover:not(:disabled),
+.logout-btn:hover:not(:disabled),
+.btn-logout:hover:not(:disabled),
+.reserve-link:hover:not(:disabled),
+.ac-btn.primary:hover:not(:disabled),
+.ac-btn.success:hover:not(:disabled),
+.ac-btn.secondary:hover:not(:disabled),
+.reserve-btn:hover:not(:disabled),
+.btn-danger:hover:not(:disabled),
+.btn-account:hover:not(:disabled),
+.cta-button:hover:not(:disabled),
+.upload-label:hover,
+.login-box button[type='submit']:hover:not(:disabled) {
+  background: var(--btn-outline);
+  color: var(--btn-outline-hover-fg);
+}
+
+.btn-outline:disabled,
+button.btn-outline:disabled,
+.add-btn:disabled,
+.add-btn-inline:disabled,
+.refresh-btn:disabled,
+.primary-btn:disabled,
+.save-btn:disabled,
+.cancel-btn:disabled,
+.translate-btn:disabled,
+.ai-btn:disabled,
+.action-btn:disabled,
+.btn-primary:disabled,
+.btn-primary-full:disabled,
+.btn-change:disabled,
+.btn-redeem:disabled,
+.btn-cancel:disabled,
+.submit-btn:disabled,
+.translate-mini:disabled,
+.day-pill:disabled,
+.purge-btn:disabled,
+.knowledge-btn:disabled,
+.login-box button[type='submit']:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------------ */
+/* Modifiers                                                           */
+/* ------------------------------------------------------------------ */
+
+.btn-outline--on-dark,
+.knowledge-btn,
+.logout-btn,
+.btn-logout,
+.reserve-link {
+  --btn-outline: var(--btn-on-dark);
+  --btn-outline-hover-fg: var(--btn-on-dark-hover-fg);
+}
+
+.btn-outline--danger,
+.action-btn.delete,
+.action-btn.danger,
+.action-btn.reject,
+.btn-cancel,
+.btn-danger,
+.delete-btn,
+.remove-gallery-btn {
+  --btn-outline: var(--btn-danger);
+}
+
+.btn-outline--success,
+.action-btn.edit,
+.action-btn.approve {
+  --btn-outline: var(--btn-edit);
+}
+
+.ac-btn.success {
+  --btn-outline: var(--btn-success);
+}
+
+.btn-outline--warn,
+.purge-btn {
+  --btn-outline: var(--btn-warn);
+}
+
+.action-btn.cancel {
+  --btn-outline: var(--btn-muted);
+}
+
+.action-btn.voucher {
+  --btn-outline: var(--btn-voucher);
+}
+
+.action-btn.timeline {
+  --btn-outline: var(--btn-timeline);
+}
+
+.btn-outline--full,
+.btn-primary-full,
+.translate-btn,
+.ai-btn,
+.ai-toggle-btn,
+.btn-secondary,
+.ac-btn.primary,
+.ac-btn.success,
+.ac-btn.secondary {
+  width: 100%;
+}
+
+.btn-outline--sm,
+.btn-primary-sm,
+.btn-change,
+.btn-redeem,
+.btn-cancel,
+.expand-btn,
+.gift-btn,
+.edit-btn,
+.reserve-btn,
+.btn-account {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
+/* Compact table / toolbar actions */
+.action-btn {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.action-btn.mini {
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.upload-btn {
+  min-width: 80px;
+  padding: 0 15px;
+  font-size: 0.85rem;
+  align-self: stretch;
+}
+
+.upload-btn.small {
+  min-width: 0;
+  padding: 0 10px;
+  font-size: 0.78rem;
+}
+
+.translate-mini {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+}
+
+.day-pill {
+  padding: 6px 12px;
+  font-size: 0.82rem;
+}
+
+.day-pill.active {
+  background: var(--btn-outline);
+  color: var(--btn-outline-hover-fg);
+}
+
+.remove-gallery-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+}
+
+.inquiry-btn {
+  padding: 12px 20px;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.submit-btn {
+  text-transform: uppercase;
+}
+
+.btn-danger,
+.btn-account {
+  width: 100%;
+  letter-spacing: 0.5px;
+}
+
+.btn-account {
+  width: auto;
+}
+
+.ai-toggle-btn {
+  text-align: left;
+  justify-content: flex-start;
+  padding: 12px;
+}
+
+.translate-btn {
+  padding: 15px;
+}
+
+.purge-btn,
+.knowledge-btn,
+.logout-btn {
+  width: 100%;
+  padding: 10px;
+}
+
+.btn-logout {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  width: auto;
+}
+
+.reserve-link {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  width: auto;
+}
+
+.ac-btn.primary,
+.ac-btn.success,
+.ac-btn.secondary {
+  padding: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.ac-btn.success {
+  margin-bottom: 8px;
+}
+
+.login-box button[type='submit'] {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+/* Text / link-style control (not outline) */
+.btn-link {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 12px;
+  text-align: center;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.btn-link:hover {
+  color: var(--c-braon-6, #332317);
+}

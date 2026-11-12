@@ -221,62 +221,15 @@ defineExpose({ sidebarOpen })
   gap: 10px;
 }
 
+/* Sidebar action buttons: buttons.css (.purge-btn, .knowledge-btn, .logout-btn) */
 .purge-btn {
-  background: transparent;
-  color: #e67e22;
-  border: 1px solid #e67e22;
-  padding: 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 0.9rem;
-  transition: all 0.2s;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-size: 0.9rem;
 }
-
-.purge-btn:hover:not(:disabled) {
-  background: #e67e22;
-  color: #fff;
-}
-
-.purge-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .knowledge-btn {
-  background: transparent;
-  color: #cdac91;
-  border: 1px solid #cdac91;
-  padding: 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
   font-size: 0.82rem;
   line-height: 1.35;
-  transition: all 0.2s;
 }
-
-.knowledge-btn:hover:not(:disabled) {
-  background: #cdac91;
-  color: #332317;
-}
-
-.knowledge-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.logout-btn {
-  margin-top: 10px;
-  padding: 10px;
-  background: transparent;
-  color: #cdac91;
-  border: 1px solid #cdac91;
-  cursor: pointer;
-  font-weight: bold;
-  transition: all 0.2s;
-}
-.logout-btn:hover { background: #cdac91; color: #332317; }
+.logout-btn { margin-top: 10px; }
 </style>

@@ -41,28 +41,3 @@ const run = async () => {
   </button>
 </template>
 
-<style scoped>
-.translate-mini {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid #cdac91;
-  background: #fff;
-  color: #67462e;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 2px 8px;
-  line-height: 1.4;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.translate-mini:hover:not(:disabled) {
-  background: #f5f0ea;
-}
-.translate-mini:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-</style>

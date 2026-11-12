@@ -88,14 +88,5 @@ const handleLogin = async () => {
   border: 1px solid #ccc;
   box-sizing: border-box;
 }
-button {
-  width: 100%;
-  padding: 12px;
-  background: var(--color-nav, #333);
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 1rem;
-}
+/* Submit button look: buttons.css (.login-box button[type='submit']) */
 </style>

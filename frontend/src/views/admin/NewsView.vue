@@ -270,9 +270,9 @@ const submitNews = async () => {
               <td><img :src="getImageUrl(n.cover_image)" width="50" height="50" style="object-fit:cover;"></td>
               <td>{{ n.title }}</td>
               <td>{{ new Date(n.created_at).toLocaleDateString() }}</td>
-              <td>
-                <button class="small-btn" @click="startEdit(n)">Измени</button>
-                <button class="small-btn danger" @click="removeNews(n)">Обриши</button>
+              <td class="actions-cell">
+                <button class="action-btn edit" @click="startEdit(n)">Измени</button>
+                <button class="action-btn delete" @click="removeNews(n)">Обриши</button>
               </td>
             </tr>
           </tbody>
@@ -317,7 +317,7 @@ const submitNews = async () => {
             <div class="gallery-editor">
               <div class="gallery-editor-header">
                 <h4>Galerija vesti</h4>
-                <button type="button" class="small-btn" @click="addGalleryItem">+ Dodaj sliku</button>
+                <button type="button" class="action-btn" @click="addGalleryItem">+ Dodaj sliku</button>
               </div>
 
               <div v-if="!form.gallery.length" class="gallery-empty">
@@ -328,9 +328,9 @@ const submitNews = async () => {
                 <div class="gallery-item-toolbar">
                   <strong>Slika {{ index + 1 }}</strong>
                   <div class="gallery-item-actions">
-                    <button type="button" class="mini-btn" @click="moveGalleryItem(index, -1)" :disabled="index === 0">↑</button>
-                    <button type="button" class="mini-btn" @click="moveGalleryItem(index, 1)" :disabled="index === form.gallery.length - 1">↓</button>
-                    <button type="button" class="mini-btn danger" @click="removeGalleryItem(index)">×</button>
+                    <button type="button" class="action-btn mini" @click="moveGalleryItem(index, -1)" :disabled="index === 0">↑</button>
+                    <button type="button" class="action-btn mini" @click="moveGalleryItem(index, 1)" :disabled="index === form.gallery.length - 1">↓</button>
+                    <button type="button" class="action-btn mini delete" @click="removeGalleryItem(index)">×</button>
                   </div>
                 </div>
 
@@ -422,8 +422,8 @@ const submitNews = async () => {
         </div>
 
         <div class="form-actions">
-          <button class="secondary-btn" @click="isCreating = false; editingId = null">Одустани</button>
-          <button class="primary-btn pulse" @click="submitNews" :disabled="!form.title_en">{{ editingId ? '💾 САЧУВАЈ ИЗМЕНЕ' : '💾 САЧУВАЈ ВЕСТ' }}</button>
+          <button class="cancel-btn" @click="isCreating = false; editingId = null">Одустани</button>
+          <button class="primary-btn" @click="submitNews" :disabled="!form.title_en">{{ editingId ? 'САЧУВАЈ ИЗМЕНЕ' : 'САЧУВАЈ ВЕСТ' }}</button>
         </div>
       </div>
   </AdminLayout>
@@ -440,43 +440,7 @@ const submitNews = async () => {
 
 /* TABLE */
 
-/* FORM BUTTONS */
-.primary-btn { background: #27ae60; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 0; font-weight: bold; }
-.primary-btn:disabled { background: #95a5a6; cursor: not-allowed; }
-.secondary-btn { background: #aaa; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 0; }
-.translate-btn {
-  background: #332317;
-  color: #cdac91;
-  border: none;
-  padding: 15px;
-  cursor: pointer;
-  border-radius: 0;
-  width: 100%;
-  font-weight: bold;
-  transition: opacity 0.2s;
-}
-.translate-btn:hover { opacity: 0.85; }
-.ai-btn {
-  width: 100%;
-  border: none;
-  padding: 12px 14px;
-  cursor: pointer;
-  background: #1f4f4f;
-  color: #e8f6f6;
-  font-weight: bold;
-  transition: opacity 0.2s;
-}
-.ai-btn:hover { opacity: 0.9; }
-.ai-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-.ai-btn.secondary {
-  background: #3d3a61;
-  color: #e9e6ff;
-}
-.small-btn { background: #cdac91; color: #332317; border: none; padding: 6px 12px; cursor: pointer; border-radius: 0; margin-right: 5px; font-weight: bold; font-size: 0.82rem; }
-.small-btn.danger { background: #e74c3c; color: #fff; }
+/* Button look: buttons.css */
 
 /* FORM */
 .grid-form { display: flex; gap: 20px; margin-top: 20px; }
@@ -489,20 +453,6 @@ const submitNews = async () => {
 .upload-row input {
   flex: 1;
 }
-.upload-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #332317;
-  color: #cdac91;
-  padding: 0 15px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 0.85rem;
-  transition: opacity 0.2s;
-  min-width: 80px;
-}
-.upload-btn:hover { opacity: 0.85; }
 .actions-col { display: flex; align-items: center; justify-content: center; width: 150px; }
 
 .actions-stack {
@@ -510,16 +460,6 @@ const submitNews = async () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-.ai-toggle-btn {
-  width: 100%;
-  border: 1px solid #c7b8a8;
-  background: #f5ede4;
-  color: #332317;
-  font-weight: bold;
-  padding: 12px;
-  text-align: left;
-  cursor: pointer;
 }
 .ai-collapsible-panel {
   border: 1px solid #ddd;
@@ -630,24 +570,6 @@ const submitNews = async () => {
   display: flex;
   gap: 6px;
 }
-.mini-btn {
-  border: 1px solid #cdb79e;
-  background: #f8efe4;
-  color: #332317;
-  min-width: 32px;
-  height: 32px;
-  cursor: pointer;
-  font-weight: bold;
-}
-.mini-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.mini-btn.danger {
-  background: #fff0ee;
-  border-color: #df9a93;
-  color: #b3392e;
-}
 .gallery-thumb-row {
   display: flex;
   align-items: center;
@@ -681,11 +603,5 @@ const submitNews = async () => {
   color: #4b4540;
   font-size: 0.84rem;
   line-height: 1.5;
-}
-.pulse { animation: pulseAnim 2s infinite; }
-@keyframes pulseAnim {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
 }
 </style>

@@ -88,14 +88,6 @@ onMounted(() => fetchTemplates())
   margin-bottom: 24px;
 }
 .subtitle { color: #666; margin: 6px 0 0; max-width: 42rem; }
-.refresh-btn {
-  background: #332317;
-  color: #fff;
-  border: none;
-  padding: 10px 16px;
-  cursor: pointer;
-  font-weight: 600;
-}
 .error-msg { color: #c62828; margin-bottom: 16px; }
 .loading-msg { color: #666; }
 
@@ -146,17 +138,7 @@ onMounted(() => fetchTemplates())
 }
 .subject span { font-weight: 700; color: #332317; }
 
-.expand-btn {
-  flex-shrink: 0;
-  background: transparent;
-  border: 1px solid #cdac91;
-  color: #332317;
-  padding: 6px 10px;
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-.expand-btn:hover { background: #cdac91; }
+.expand-btn { flex-shrink: 0; }
 
 .preview-frame-wrap {
   border: 1px solid #e8e0d8;

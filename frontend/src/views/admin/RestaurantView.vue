@@ -422,15 +422,7 @@ watch(selectedRestaurantId, () => {
   margin-bottom: 30px;
 }
 
-.add-btn {
-  background: #2ecc71;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
-}
+/* .add-btn look: buttons.css */
 
 .restaurant-selector {
   background: #fdfaf7;
@@ -583,30 +575,7 @@ watch(selectedRestaurantId, () => {
   gap: 10px;
 }
 
-.edit-btn, .delete-btn {
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-weight: bold;
-  font-size: 0.85rem;
-  cursor: pointer;
-  border: 1px solid #ddd;
-}
-
-.edit-btn {
-  background: white;
-  color: #332317;
-}
-
-.delete-btn {
-  background: white;
-  color: #e74c3c;
-  border-color: #fdeaea;
-}
-
-.delete-btn:hover {
-  background: #e74c3c;
-  color: white;
-}
+/* .edit-btn / .delete-btn look: buttons.css */
 
 /* Form Styles */
 .item-edit-form {
@@ -661,25 +630,9 @@ watch(selectedRestaurantId, () => {
   gap: 10px;
 }
 
-.save-btn {
-  background: #2ecc71;
-  color: white;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
-}
+/* .save-btn look: buttons.css */
 
-.cancel-btn {
-  background: #95a5a6;
-  color: white;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
-}
+/* .cancel-btn look: buttons.css */
 
 .empty-msg {
   text-align: center;
@@ -693,13 +646,6 @@ watch(selectedRestaurantId, () => {
 .add-btn-inline {
   display: block;
   margin: 15px auto 0;
-  background: #2ecc71;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
 }
 
 @media (max-width: 600px) {

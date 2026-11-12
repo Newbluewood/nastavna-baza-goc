@@ -320,35 +320,11 @@ h1 {
 
 .btn-primary {
   width: 100%;
-  background: #332317;
-  color: #cdac91;
-  border: none;
   padding: 14px;
-  font-weight: bold;
-  font-size: 0.9rem;
   letter-spacing: 1px;
-  cursor: pointer;
-  border-radius: 0;
   margin-top: 5px;
-  transition: opacity 0.2s;
 }
-
-.btn-primary:hover:not(:disabled) { opacity: 0.85; }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.btn-link {
-  display: block;
-  width: 100%;
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 0.85rem;
-  cursor: pointer;
-  margin-top: 12px;
-  text-align: center;
-  text-decoration: underline;
-}
-.btn-link:hover { color: #332317; }
+/* .btn-primary / .btn-link look: buttons.css */
 
 .error-msg {
   color: #e74c3c;

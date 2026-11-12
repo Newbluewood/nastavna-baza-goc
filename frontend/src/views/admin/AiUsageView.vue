@@ -667,21 +667,9 @@ const setAnalyticsDays = (days) => {
   gap: 6px;
   flex-wrap: wrap;
 }
-.day-pill {
-  background: #f5f3f0;
-  color: #332317;
-  border: 1px solid #cdac91;
-  padding: 4px 10px;
-  font-size: 0.82rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-.day-pill.active {
-  background: #332317;
-  color: #fff;
-  border-color: #332317;
-}
-.day-pill:disabled { opacity: 0.6; cursor: wait; }
+/* .day-pill look: buttons.css */
+.day-pill { padding: 4px 10px; }
+.day-pill:disabled { cursor: wait; }
 .sub-title {
   margin: 0 0 10px 0;
   color: #332317;

@@ -97,7 +97,7 @@ h1 { font-size: 1.5rem; color: #332317; margin: 0 0 25px; text-align: center; }
 .form-group label { display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #666; font-weight: 600; margin-bottom: 6px; }
 .form-group input { width: 100%; padding: 11px 14px; border: 1px solid #ddd; font-size: 0.95rem; outline: none; border-radius: 0; box-sizing: border-box; }
 .form-group input:focus { border-color: #cdac91; }
-.btn-primary { width: 100%; background: #332317; color: #cdac91; border: none; padding: 14px; font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; cursor: pointer; border-radius: 0; }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { width: 100%; padding: 14px; letter-spacing: 1px; }
+/* .btn-primary look: buttons.css */
 .error-msg { color: #e74c3c; font-size: 0.85rem; margin-bottom: 10px; text-align: center; }
 </style>

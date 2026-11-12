@@ -164,18 +164,7 @@ watch(() => langStore.currentLang, fetchTheme)
   margin-bottom: 40px;
 }
 
-.cta-button {
-  background: #332317;
-  color: #fff;
-  padding: 12px 25px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: background 0.3s;
-}
-
-.cta-button:hover {
-  background: #cdac91;
-}
+/* .cta-button look: buttons.css */
 
 .back-link {
   margin-top: 20px;

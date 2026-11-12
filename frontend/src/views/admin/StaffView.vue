@@ -219,20 +219,8 @@ onMounted(() => fetchStaff())
   gap: 4px;
 }
 
-.upload-label {
-  display: inline-block;
-  background: #332317;
-  color: #fff;
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 4px;
-  text-align: center;
-  transition: opacity 0.2s;
-}
-
-.upload-label:hover { opacity: 0.85; }
+/* .upload-label look: buttons.css */
+.upload-label { padding: 6px 14px; font-size: 0.85rem; }
 .file-input { display: none; }
 
 .photo-path {

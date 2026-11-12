@@ -104,27 +104,10 @@
   color: var(--color-text);
 }
 
-.inquiry-btn {
-  background: var(--color-nav);
-  color: #fff;
-  border: none;
-  padding: 12px 20px;
-  font-size: 1rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.3s;
-  border-radius: 0;
-}
-
+/* .inquiry-btn look: buttons.css */
 .facility-card--landscape .inquiry-btn {
   align-self: flex-start;
   margin-top: auto;
-}
-
-.inquiry-btn:hover {
-  background: var(--c-green-5);
-  color: #fff;
 }
 
 .amenities-container {

@@ -150,16 +150,7 @@ onMounted(fetchSettings)
   align-items: center;
 }
 .form-actions { margin-top: 8px; }
-.save-btn {
-  background: #332317;
-  color: #cdac91;
-  border: none;
-  padding: 10px 24px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.save-btn:hover { opacity: 0.85; }
-.save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+/* .save-btn look: buttons.css */
 
 @media (max-width: 640px) {
   .setting-row { grid-template-columns: 1fr; }

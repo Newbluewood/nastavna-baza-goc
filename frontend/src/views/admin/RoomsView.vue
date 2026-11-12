@@ -469,18 +469,6 @@ watch(selectedFacilityId, () => {
 .facility-edit-form h3 { margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
 .upload-row { display: flex; gap: 8px; }
 .upload-row input { flex: 1; padding: 10px; border: 1px solid #ddd; }
-.upload-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #332317;
-  color: #cdac91;
-  padding: 0 15px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 0.85rem;
-}
-.upload-btn:hover { opacity: 0.85; }
 .facility-cover-preview {
   margin-top: 10px;
   width: 220px;
@@ -545,17 +533,6 @@ watch(selectedFacilityId, () => {
 .gallery-item-thumb { width: 60px; height: 45px; object-fit: cover; flex-shrink: 0; background: #f1ede8; }
 .gallery-item-fields { flex: 1; display: flex; flex-direction: column; gap: 6px; }
 .gallery-caption-input { padding: 8px; border: 1px solid #ddd; width: 100%; box-sizing: border-box; }
-.upload-btn.small { padding: 0 10px; font-size: 0.78rem; }
-.remove-gallery-btn {
-  background: transparent;
-  border: 1px solid #e74c3c;
-  color: #e74c3c;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.remove-gallery-btn:hover { background: #e74c3c; color: #fff; }
 .gallery-empty-hint { color: #999; font-size: 0.82rem; }
 
 .room-info h3 {
@@ -603,32 +580,7 @@ watch(selectedFacilityId, () => {
   gap: 8px;
   align-items: stretch;
 }
-.reserve-btn {
-  background: #27ae60;
-  border: 1px solid #27ae60;
-  color: #fff;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 0.85rem;
-}
-.reserve-btn:hover {
-  background: #219150;
-}
-.edit-btn {
-  background: transparent;
-  border: 1px solid #cdac91;
-  color: #332317;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 0.85rem;
-}
-.edit-btn:hover {
-  background: #cdac91;
-  color: white;
-}
-
+/* .reserve-btn look: buttons.css */
 /* Edit Form */
 .room-edit-form h3 {
   margin-top: 0;
@@ -679,22 +631,6 @@ watch(selectedFacilityId, () => {
   display: flex;
   gap: 10px;
 }
-.save-btn {
-  background: #27ae60;
-  color: white;
-  border: none;
-  padding: 10px 25px;
-  cursor: pointer;
-  font-weight: bold;
-}
-.cancel-btn {
-  background: #aaa;
-  color: white;
-  border: none;
-  padding: 10px 25px;
-  cursor: pointer;
-}
-
 @media (max-width: 600px) {
   .form-grid {
     grid-template-columns: 1fr;

@@ -453,24 +453,7 @@ onMounted(async () => {
   gap: 8px;
 }
 
-.reserve-link {
-  font-size: 0.8rem;
-  background: #6e4529;
-  color: white;
-  text-decoration: none;
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-weight: 500;
-  transition: all 0.2s;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.reserve-link:hover {
-  background: #5a3821;
-}
+/* .reserve-link look: buttons.css */
 
 .clear-btn, .close-panel-btn {
   background: transparent;
@@ -734,49 +717,7 @@ onMounted(async () => {
   gap: 0.5rem;
 }
 
-.ac-btn {
-  display: block;
-  text-align: center;
-  padding: 0.6rem;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s;
-  cursor: pointer;
-  border: none;
-  width: 100%;
-}
-
-.ac-btn.primary {
-  background: #6e4529;
-  color: #fff;
-}
-
-.ac-btn.primary:hover {
-  background: #5a3821;
-}
-
-.ac-btn.success {
-  background: #2e7d32;
-  color: #fff;
-  margin-bottom: 8px;
-}
-
-.ac-btn.success:hover {
-  background: #1b5e20;
-}
-
-.ac-btn.secondary {
-  background: transparent;
-  color: #666;
-  border: 1px solid #ddd;
-}
-
-.ac-btn.secondary:hover {
-  background: #f5f5f5;
-  color: #333;
-}
+/* .ac-btn.* look: buttons.css */
 
 .ac-form {
   padding: 0 0.75rem 0.75rem;

@@ -491,23 +491,7 @@ input:focus, textarea:focus {
   border-color: var(--color-nav);
 }
 
-.submit-btn {
-  background: var(--color-nav);
-  color: #fff;
-  padding: 12px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: background 0.3s;
-}
-.submit-btn:hover {
-  background: var(--color-btn-hover);
-}
-.submit-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
+/* .submit-btn look: buttons.css */
 
 .error-msg {
   color: red;
@@ -604,17 +588,7 @@ input:focus, textarea:focus {
   background: #f9f6f2;
 }
 
-.btn-account {
-  display: inline-block;
-  background: #332317;
-  color: #cdac91;
-  padding: 8px 18px;
-  text-decoration: none;
-  font-size: 0.82rem;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-}
-.btn-account:hover { opacity: 0.85; }
+/* .btn-account look: buttons.css */
 
 .cancel-policy {
   border-left: 4px solid #aaa;

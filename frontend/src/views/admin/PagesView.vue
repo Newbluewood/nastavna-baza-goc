@@ -369,17 +369,6 @@ onMounted(loadAll)
 .slug-hint { color: #b94a48; font-size: 0.92em; font-weight: 400; font-style: italic; }
 .upload-row { display: flex; gap: 8px; }
 .upload-row input { flex: 1; }
-.upload-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #332317;
-  color: #cdac91;
-  padding: 0 15px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 0.85rem;
-}
 .hero-preview-image {
   margin-top: 10px;
   width: 220px;
