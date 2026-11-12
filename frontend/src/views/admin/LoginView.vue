@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../../services/api'
+import { defaultAdminRouteName } from '../../auth/permissions'
 
 const router = useRouter()
 const username = ref('')
@@ -13,8 +14,8 @@ const handleLogin = async () => {
   errorMsg.value = ''
   isLoading.value = true
   try {
-    await api.adminLogin({ username: username.value, password: password.value })
-    router.push({ name: 'admin-news' })
+    const response = await api.adminLogin({ username: username.value, password: password.value })
+    router.push({ name: defaultAdminRouteName(response.admin?.role) })
   } catch (err) {
     errorMsg.value = err.data?.error || 'Погрешни подаци'
   } finally {

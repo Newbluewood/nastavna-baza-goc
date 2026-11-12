@@ -18,6 +18,8 @@ async function guestLogin(req, res) {
     return sendError(res, 401, 'Invalid credentials');
   }
 
+  await db.query('UPDATE guests SET last_login_at = NOW() WHERE id = ?', [guest.id]);
+
   const token = signGuestToken(guest);
   res.json({
     token,

@@ -4,10 +4,22 @@ async function getGuests(req, res) {
   const db = req.app.locals.db;
 
   const [guests] = await db.query(`
-    SELECT g.*, COUNT(i.id) as inquiry_count, COUNT(r.id) as reservation_count
+    SELECT
+      g.id,
+      g.email,
+      g.name,
+      g.phone,
+      g.created_at,
+      g.last_login_at,
+      g.is_active,
+      g.vouchers,
+      COUNT(DISTINCT i.id) AS inquiry_count,
+      COUNT(DISTINCT CASE WHEN r.status = 'confirmed' THEN r.id END) AS reservation_count,
+      COUNT(DISTINCT cm.id) AS chat_count
     FROM guests g
     LEFT JOIN inquiries i ON g.id = i.guest_id
-    LEFT JOIN reservations r ON i.id = r.inquiry_id AND r.status = 'confirmed'
+    LEFT JOIN reservations r ON i.id = r.inquiry_id
+    LEFT JOIN chat_messages cm ON g.id = cm.guest_id
     GROUP BY g.id
     ORDER BY g.created_at DESC
   `);

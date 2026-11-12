@@ -1,5 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { isReservedPageSlug } from '../utils/pageRoutes'
+import {
+  ROUTE_PERMISSIONS,
+  canAccess,
+  defaultAdminRouteName,
+  getStoredAdminRole,
+} from '../auth/permissions'
 
 /**
  * Vue Router 4 style (Vue School):
@@ -117,85 +123,91 @@ const router = createRouter({
       path: '/admin/vesti',
       name: 'admin-news',
       component: () => import('../views/admin/NewsView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'news' },
     },
     {
       path: '/admin/stranice',
       name: 'admin-pages',
       component: () => import('../views/admin/PagesView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'pages' },
     },
     {
       path: '/admin/meni',
       name: 'admin-nav',
       component: () => import('../views/admin/NavView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'pages' },
     },
     {
       path: '/admin/projekti',
       name: 'admin-projects',
       component: () => import('../views/admin/ProjectsView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'projects' },
     },
     {
       path: '/admin/osoblje',
       name: 'admin-staff',
       component: () => import('../views/admin/StaffView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'staff' },
     },
     {
       path: '/admin/rezervacije',
       name: 'admin-reservations',
       component: () => import('../views/admin/ReservationsView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'inquiries' },
     },
     {
       path: '/admin/gosti',
       name: 'admin-guests',
       component: () => import('../views/admin/GuestsView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'guests' },
     },
     {
       path: '/admin/mapa-soba',
       name: 'admin-room-map',
       component: () => import('../views/admin/RoomMapView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'room_map' },
     },
     {
       path: '/admin/sobe',
       name: 'admin-rooms',
       component: () => import('../views/admin/RoomsView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'rooms' },
     },
     {
       path: '/admin/statistike',
       name: 'admin-stats',
       component: () => import('../views/admin/SiteStatsView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'stats' },
     },
     {
       path: '/admin/ai',
       name: 'admin-ai',
       component: () => import('../views/admin/AiUsageView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'ai_usage' },
     },
     {
       path: '/admin/restoran',
       name: 'admin-restaurant',
       component: () => import('../views/admin/RestaurantView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'restaurant' },
     },
     {
       path: '/admin/podesavanja',
       name: 'admin-settings',
       component: () => import('../views/admin/SettingsView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'settings' },
     },
     {
       path: '/admin/teme',
       name: 'admin-themes',
       component: () => import('../views/admin/ThemesView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'themes' },
+    },
+    {
+      path: '/admin/korisnici',
+      name: 'admin-cms-users',
+      component: () => import('../views/admin/CmsUsersView.vue'),
+      meta: { requiresAuth: true, permission: 'cms_users' },
     },
 
     // Legacy CMS prefix → short /{slug}
@@ -234,7 +246,16 @@ router.beforeEach((to) => {
   const guestToken = localStorage.getItem('guest_token')
 
   if (to.meta.requiresAuth && !adminToken) return { name: 'admin-login' }
-  if (to.name === 'admin-login' && adminToken) return { name: 'admin-news' }
+  if (to.name === 'admin-login' && adminToken) {
+    return { name: defaultAdminRouteName(getStoredAdminRole()) }
+  }
+  if (to.meta.requiresAuth) {
+    const role = getStoredAdminRole()
+    const permission = to.meta.permission || ROUTE_PERMISSIONS[to.name]
+    if (permission && !canAccess(role, permission)) {
+      return { name: defaultAdminRouteName(role) }
+    }
+  }
   if (to.meta.requiresGuestAuth && !guestToken) return { name: 'prijava' }
   return true
 })

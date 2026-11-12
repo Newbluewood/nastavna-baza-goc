@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sendError } = require('../utils/response');
+const { normalizeRole, ROLES } = require('../auth/permissions');
 
 async function adminLogin(req, res) {
   const { username, password } = req.validated;
@@ -17,13 +18,15 @@ async function adminLogin(req, res) {
     return sendError(res, 401, 'Invalid credentials');
   }
 
+  const role = normalizeRole(admin.role) || ROLES.ADMIN;
+
   const token = jwt.sign(
-    { id: admin.id, username: admin.username },
+    { id: admin.id, username: admin.username, role },
     process.env.JWT_SECRET || 'baza_goc_super_secret_key_123',
     { expiresIn: '8h' }
   );
 
-  res.json({ token, admin: { id: admin.id, username: admin.username } });
+  res.json({ token, admin: { id: admin.id, username: admin.username, role } });
 }
 
 async function translate(req, res) {

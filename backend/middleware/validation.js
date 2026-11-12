@@ -125,6 +125,16 @@ const schemas = {
   passwordChange: {
     current_password: { required: true },
     new_password: { required: true, min: 8 }
+  },
+  cmsUserCreate: {
+    username: { required: true, min: 3, max: 50 },
+    password: { required: true, min: 6, max: 100 },
+    role: { required: true, min: 4, max: 20 }
+  },
+  cmsUserUpdate: {
+    username: { required: false, min: 3, max: 50 },
+    password: { required: false, min: 6, max: 100 },
+    role: { required: false, min: 4, max: 20 }
   }
 };
 

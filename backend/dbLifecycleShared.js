@@ -84,8 +84,8 @@ async function seedAdmin(connection, shouldExecute) {
 
   await executeOrPrint(
     connection,
-    'INSERT INTO admins (username, password_hash, created_at) VALUES (?, ?, NOW())',
-    [username, passwordHash],
+    'INSERT INTO admins (username, password_hash, role, created_at) VALUES (?, ?, ?, NOW())',
+    [username, passwordHash, 'admin'],
     `seed admin user ${username}`,
     shouldExecute
   );

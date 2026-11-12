@@ -111,9 +111,9 @@ const getActiveVouchersCount = (vouchers) => {
             <tr>
               <th>Гост</th>
               <th>Контакт</th>
-              <th>Доласци (Rezervacije)</th>
+              <th>Активност</th>
               <th>Активни Ваучери</th>
-              <th>Датум рег.</th>
+              <th>Рег. / последња пријава</th>
               <th>Акције</th>
             </tr>
           </thead>
@@ -126,8 +126,11 @@ const getActiveVouchersCount = (vouchers) => {
               </td>
               <td>
                 <span class="loyalty-badge" :class="{'loyalty-high': guest.reservation_count > 2, 'loyalty-med': guest.reservation_count > 0}">
-                  {{ guest.reservation_count }} резервација
+                  {{ guest.reservation_count || 0 }} рез.
                 </span>
+                <div class="activity-meta muted">
+                  {{ guest.inquiry_count || 0 }} упита · {{ guest.chat_count || 0 }} чет
+                </div>
               </td>
               <td>
                 <span v-if="getActiveVouchersCount(guest.vouchers) > 0" class="voucher-indicator">
@@ -135,7 +138,10 @@ const getActiveVouchersCount = (vouchers) => {
                 </span>
                 <span v-else class="muted">—</span>
               </td>
-              <td class="muted">{{ fmt(guest.created_at) }}</td>
+              <td class="muted">
+                <div>{{ fmt(guest.created_at) }}</div>
+                <div class="activity-meta">{{ guest.last_login_at ? fmt(guest.last_login_at) : 'није се пријавио' }}</div>
+              </td>
               <td>
                 <button class="action-btn gift-btn" @click="openVoucherModal(guest)">
                   🎁 Поклони Ваучер
@@ -222,6 +228,7 @@ const getActiveVouchersCount = (vouchers) => {
 }
 .loyalty-high { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #2e7d32; }
 .loyalty-med { background: #fff8e1; color: #f57f17; border-left: 3px solid #f57f17; }
+.activity-meta { font-size: 0.8rem; margin-top: 4px; }
 
 .voucher-indicator { background: #fff0f5; color: #d81b60; padding: 3px 6px; font-weight: bold; font-size: 0.8rem; border: 1px dashed #d81b60; }
 

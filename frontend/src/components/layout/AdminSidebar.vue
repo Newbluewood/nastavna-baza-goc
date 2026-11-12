@@ -1,7 +1,8 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '../../services/api'
+import { canAccess, getStoredAdminRole } from '../../auth/permissions'
 
 const router = useRouter()
 const route = useRoute()
@@ -10,24 +11,36 @@ const smestajOpen = ref(true)
 const isPurging = ref(false)
 const isRefreshingKnowledge = ref(false)
 
-const adminLinks = [
-  { name: 'admin-news', label: 'Вести' },
-  { name: 'admin-pages', label: 'Странице и мени' },
-  { name: 'admin-staff', label: 'Особље' },
-  { name: 'admin-projects', label: 'Пројекти' },
-  { name: 'admin-stats', label: 'Статистике сајта' },
-  { name: 'admin-ai', label: 'AI Потрошња' },
-  { name: 'admin-restaurant', label: 'Ресторан' },
-  { name: 'admin-themes', label: 'Теме (Истражи Гоч)' },
-  { name: 'admin-settings', label: 'Подешавања' },
+const role = computed(() => getStoredAdminRole())
+
+const allAdminLinks = [
+  { name: 'admin-news', label: 'Вести', permission: 'news' },
+  { name: 'admin-pages', label: 'Странице и мени', permission: 'pages' },
+  { name: 'admin-staff', label: 'Особље', permission: 'staff' },
+  { name: 'admin-projects', label: 'Пројекти', permission: 'projects' },
+  { name: 'admin-stats', label: 'Статистике сајта', permission: 'stats' },
+  { name: 'admin-ai', label: 'AI Потрошња', permission: 'ai_usage' },
+  { name: 'admin-restaurant', label: 'Ресторан', permission: 'restaurant' },
+  { name: 'admin-themes', label: 'Теме (Истражи Гоч)', permission: 'themes' },
+  { name: 'admin-settings', label: 'Подешавања', permission: 'settings' },
+  { name: 'admin-cms-users', label: 'CMS корисници', permission: 'cms_users' },
 ]
 
-const smestajLinks = [
-  { name: 'admin-reservations', label: 'Упити / Резервације' },
-  { name: 'admin-guests', label: 'Гости и CRM' },
-  { name: 'admin-room-map', label: 'Мапа Соба' },
-  { name: 'admin-rooms', label: 'Уређивање соба' },
+const allSmestajLinks = [
+  { name: 'admin-reservations', label: 'Упити / Резервације', permission: 'inquiries' },
+  { name: 'admin-guests', label: 'Гости и CRM', permission: 'guests' },
+  { name: 'admin-room-map', label: 'Мапа Соба', permission: 'room_map' },
+  { name: 'admin-rooms', label: 'Уређивање соба', permission: 'rooms' },
 ]
+
+const adminLinks = computed(() =>
+  allAdminLinks.filter((link) => canAccess(role.value, link.permission))
+)
+const smestajLinks = computed(() =>
+  allSmestajLinks.filter((link) => canAccess(role.value, link.permission))
+)
+const canPurge = computed(() => canAccess(role.value, 'system'))
+const canRefreshKnowledge = computed(() => canAccess(role.value, 'system'))
 
 function handleLogout() {
   api.logout()
@@ -35,7 +48,7 @@ function handleLogout() {
 }
 
 const handlePurgeCache = async () => {
-  if (isPurging.value) return
+  if (isPurging.value || !canPurge.value) return
   isPurging.value = true
   try {
     await api.purgeCache()
@@ -48,7 +61,7 @@ const handlePurgeCache = async () => {
 }
 
 const handleRefreshKnowledge = async () => {
-  if (isRefreshingKnowledge.value) return
+  if (isRefreshingKnowledge.value || !canRefreshKnowledge.value) return
   isRefreshingKnowledge.value = true
   try {
     const result = await api.refreshAgentKnowledge()
@@ -60,7 +73,7 @@ const handleRefreshKnowledge = async () => {
   }
 }
 
-const isSmestajActive = () => smestajLinks.some((link) => route.name === link.name)
+const isSmestajActive = () => smestajLinks.value.some((link) => route.name === link.name)
 
 defineExpose({ sidebarOpen })
 </script>
@@ -82,24 +95,26 @@ defineExpose({ sidebarOpen })
       </router-link>
 
       <!-- Смештај група -->
-      <button class="nav-group-toggle" :class="{ 'group-active': isSmestajActive() }" @click="smestajOpen = !smestajOpen">
-        Смештај <span class="toggle-arrow">{{ smestajOpen ? '▾' : '▸' }}</span>
-      </button>
-      <div v-show="smestajOpen" class="nav-group-items">
-        <router-link
-          v-for="link in smestajLinks"
-          :key="link.name"
-          :to="{ name: link.name }"
-        >
-          {{ link.label }}
-        </router-link>
-      </div>
+      <template v-if="smestajLinks.length">
+        <button class="nav-group-toggle" :class="{ 'group-active': isSmestajActive() }" @click="smestajOpen = !smestajOpen">
+          Смештај <span class="toggle-arrow">{{ smestajOpen ? '▾' : '▸' }}</span>
+        </button>
+        <div v-show="smestajOpen" class="nav-group-items">
+          <router-link
+            v-for="link in smestajLinks"
+            :key="link.name"
+            :to="{ name: link.name }"
+          >
+            {{ link.label }}
+          </router-link>
+        </div>
+      </template>
     </nav>
     <div class="sidebar-actions">
-      <button class="purge-btn" @click="handlePurgeCache" :disabled="isPurging">
+      <button v-if="canPurge" class="purge-btn" @click="handlePurgeCache" :disabled="isPurging">
         {{ isPurging ? 'Чистим...' : 'Очисти кеш' }}
       </button>
-      <button class="knowledge-btn" @click="handleRefreshKnowledge" :disabled="isRefreshingKnowledge">
+      <button v-if="canRefreshKnowledge" class="knowledge-btn" @click="handleRefreshKnowledge" :disabled="isRefreshingKnowledge">
         {{ isRefreshingKnowledge ? 'Покрећем...' : 'Освежи знање AI чет агента' }}
       </button>
       <button class="logout-btn" @click="handleLogout">Одјави се</button>

@@ -41,7 +41,12 @@ class ApiService {
       if (response.status === 401) {
         // Stale/expired token — clear it so the router guard doesn't bounce
         // the redirect-to-login straight back to an admin page in a loop.
-        localStorage.removeItem(authMode === 'guest' ? 'guest_token' : 'admin_token');
+        if (authMode === 'guest') {
+          localStorage.removeItem('guest_token');
+        } else {
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_role');
+        }
       }
       throw error;
     }
@@ -233,7 +238,32 @@ class ApiService {
       body: JSON.stringify(credentials)
     });
     localStorage.setItem('admin_token', response.token);
+    localStorage.setItem('admin_role', response.admin?.role || 'admin');
     return response;
+  }
+
+  async getCmsUsers() {
+    return this.request('/api/admin/cms-users');
+  }
+
+  async createCmsUser(data) {
+    return this.request('/api/admin/cms-users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCmsUser(id, data) {
+    return this.request(`/api/admin/cms-users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCmsUser(id) {
+    return this.request(`/api/admin/cms-users/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   async getInquiries() {
@@ -640,6 +670,7 @@ class ApiService {
   // Utility
   logout() {
     localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_role');
     localStorage.removeItem('guest_token');
   }
 }

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { canAccess, normalizeRole, ROLES } = require('../auth/permissions');
 
 const createAuthMiddleware = (secret, errorMsg) => (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -22,6 +23,19 @@ const adminAuthMiddleware = createAuthMiddleware(
     invalidToken: "Invalid token"
   }
 );
+
+/**
+ * Require a CMS module permission. Must run after adminAuthMiddleware.
+ * Tokens without role (pre-RBAC) are treated as admin for the remaining TTL.
+ */
+const requirePermission = (module) => (req, res, next) => {
+  const role = normalizeRole(req.user?.role) || ROLES.ADMIN;
+  if (!canAccess(role, module)) {
+    return res.status(403).json({ error: 'Nemate dozvolu za ovu akciju.' });
+  }
+  req.user.role = role;
+  next();
+};
 
 const guestAuthMiddleware = createAuthMiddleware(
   process.env.GUEST_JWT_SECRET || 'guest_secret_change_in_production',
@@ -62,6 +76,7 @@ const signGuestToken = (guest) => {
 
 module.exports = {
   adminAuthMiddleware,
+  requirePermission,
   guestAuthMiddleware,
   optionalGuestAuthMiddleware,
   signGuestToken

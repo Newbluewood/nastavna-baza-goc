@@ -161,6 +161,14 @@ async function run() {
     );
 
     await ensureColumn(conn, 'guests', 'vouchers', 'vouchers JSON NULL');
+    await ensureColumn(conn, 'guests', 'last_login_at', 'last_login_at DATETIME NULL');
+
+    await ensureColumn(
+      conn,
+      'admins',
+      'role',
+      "role ENUM('admin','editor','reception') NOT NULL DEFAULT 'admin'"
+    );
 
     await ensureColumn(conn, 'inquiries', 'guest_id', 'guest_id INT NULL');
     await ensureColumn(conn, 'inquiries', 'source', "source VARCHAR(32) NOT NULL DEFAULT 'web'");

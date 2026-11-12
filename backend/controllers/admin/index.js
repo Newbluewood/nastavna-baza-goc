@@ -17,6 +17,7 @@ const systemController = require('./systemController');
 const uploadController = require('./uploadController');
 const restaurantController = require('./restaurantController');
 const navController = require('./navController');
+const cmsUsersController = require('./cmsUsersController');
 
 module.exports = {
   ...inquiryController,
@@ -33,4 +34,5 @@ module.exports = {
   ...uploadController,
   ...restaurantController,
   ...navController,
+  ...cmsUsersController,
 };
