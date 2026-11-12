@@ -1,14 +1,15 @@
 /* ============================================
    ADMIN SHARED STYLES
    Used by all admin views via AdminLayout.vue
-   Button language: outline (border + text), fill on hover — see buttons.css
+   Tokens + button language: tokens.css / buttons.css
    ============================================ */
+@import './tokens.css';
 @import './buttons.css';
 
 .admin-layout {
   display: flex;
   min-height: 100vh;
-  background: #f5f3f0;
+  background: var(--color-background, #f5f3f0);
   font-family: inherit;
   position: relative;
 }

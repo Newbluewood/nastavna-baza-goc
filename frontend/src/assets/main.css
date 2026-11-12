@@ -1,3 +1,4 @@
+@import './tokens.css';
 @import './buttons.css';
 @import './typography.css';
 
@@ -30,40 +31,7 @@
   font-style: normal;
 }
 
-:root {
-  /* Color Palette - Braon */
-  --c-braon-1: #fff1e6;
-  --c-braon-2: #e3c4ad;
-  --c-braon-3: #cdac91;
-  --c-braon-4: #9a714e;
-  --c-braon-5: #67462e;
-  --c-braon-6: #332317;
-
-  /* Color Palette - Zelena (Forest) */
-  --c-green-1: #d1e8d6;
-  --c-green-2: #ADEAC0;
-  --c-green-3: #00D48F;
-  --c-green-4: #00865A;
-  --c-green-5: #03563A;
-  --c-green-6: #0D3018;
-
-  /* Forest Vibe Variables */
-  --color-background: #fdfbf7; /* Very subtle earthy white */
-  --color-text: var(--c-braon-6);
-  --color-heading: var(--c-green-6); /* Deep forest green for headings */
-  --color-link: var(--c-green-4);
-  --color-nav: var(--c-green-6);
-  --color-border: var(--c-braon-6);
-  --color-social: var(--c-green-4);
-  --color-accent: var(--c-green-4);
-
-  --font-base: "FOF24", sans-serif;
-  --content-max-width: 1200px;
-
-  /* Hero Section Variables */
-  --hero-height: 500px;
-  --hero-height-mobile: 380px;
-}
+/* Design tokens (:root palette, type, space, buttons): tokens.css */
 
 *,
 *::before,

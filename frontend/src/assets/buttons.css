@@ -1,32 +1,12 @@
 /**
- * Single source of truth for site + CMS + guest buttons.
+ * Site + CMS + guest buttons.
  *
  * Language: outline (transparent bg, border + text same color).
  * Hover: fill with that color, light text.
  *
- * Change colors once via :root --btn-* variables.
+ * Token values live in tokens.css (--btn-*). Edit there for brand changes.
  * Prefer class aliases already used in templates (no mass HTML rename).
  */
-
-:root {
-  --btn-outline: var(--c-braon-6, #332317);
-  --btn-outline-hover-fg: #fff;
-  --btn-on-dark: var(--c-braon-3, #cdac91);
-  --btn-on-dark-hover-fg: var(--c-braon-6, #332317);
-  --btn-danger: #c62828;
-  --btn-success: #2e7d32;
-  --btn-warn: #e67e22;
-  --btn-edit: #27ae60;
-  --btn-muted: #607d8b;
-  --btn-voucher: #b9770e;
-  --btn-timeline: #795548;
-  --btn-radius: 0;
-  --btn-font-weight: 700;
-  --btn-font-size: 0.9rem;
-  --btn-pad-y: 10px;
-  --btn-pad-x: 20px;
-  --btn-transition: background 0.2s, color 0.2s, opacity 0.2s, border-color 0.2s;
-}
 
 /* ------------------------------------------------------------------ */
 /* Base outline + legacy aliases                                       */

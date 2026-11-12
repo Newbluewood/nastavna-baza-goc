@@ -1,0 +1,121 @@
+/**
+ * Design tokens — single place to change site look.
+ *
+ * Order of use:
+ *   1. Edit values here when brand/design instructions arrive
+ *   2. Component sheets (buttons.css, typography.css, main.css) read these vars
+ *   3. Views should prefer tokens / shared classes, not hard-coded hex
+ *
+ * Layers:
+ *   --c-*           raw palette
+ *   --color-*       semantic UI colors
+ *   --font-*        type
+ *   --space-*       spacing
+ *   --radius-*      corners
+ *   --btn-*         button language (consumed by buttons.css)
+ *   --hero-*, --content-max-width  layout chrome
+ */
+
+:root {
+  /* ------------------------------------------------------------------ */
+  /* Palette                                                             */
+  /* ------------------------------------------------------------------ */
+  --c-braon-1: #fff1e6;
+  --c-braon-2: #e3c4ad;
+  --c-braon-3: #cdac91;
+  --c-braon-4: #9a714e;
+  --c-braon-5: #67462e;
+  --c-braon-6: #332317;
+
+  --c-green-1: #d1e8d6;
+  --c-green-2: #adeac0;
+  --c-green-3: #00d48f;
+  --c-green-4: #00865a;
+  --c-green-5: #03563a;
+  --c-green-6: #0d3018;
+
+  --c-white: #ffffff;
+  --c-danger: #c62828;
+  --c-success: #2e7d32;
+  --c-warn: #e67e22;
+  --c-edit: #27ae60;
+  --c-muted: #607d8b;
+  --c-voucher: #b9770e;
+  --c-timeline: #795548;
+
+  /* ------------------------------------------------------------------ */
+  /* Semantic                                                            */
+  /* ------------------------------------------------------------------ */
+  --color-background: #fdfbf7;
+  --color-surface: #ffffff;
+  --color-text: var(--c-braon-6);
+  --color-text-muted: #666666;
+  --color-heading: var(--c-green-6);
+  --color-link: var(--c-green-4);
+  --color-nav: var(--c-green-6);
+  --color-border: var(--c-braon-6);
+  --color-border-soft: #e8e0d8;
+  --color-social: var(--c-green-4);
+  --color-accent: var(--c-green-4);
+  --color-on-dark: var(--c-braon-3);
+  --color-danger: var(--c-danger);
+  --color-success: var(--c-success);
+  --color-warn: var(--c-warn);
+
+  /* ------------------------------------------------------------------ */
+  /* Typography                                                          */
+  /* ------------------------------------------------------------------ */
+  --font-base: 'FOF24', sans-serif;
+  --font-size-body: 1rem;
+  --line-height-body: 1.65;
+  --font-weight-body: 300;
+  --font-size-h2: 1.35rem;
+  --font-size-h3: 1.15rem;
+  --font-size-h4: 1.05rem;
+  --font-size-sm: 0.85rem;
+  --font-size-xs: 0.78rem;
+
+  /* ------------------------------------------------------------------ */
+  /* Spacing + shape                                                     */
+  /* ------------------------------------------------------------------ */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+
+  --radius-none: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-pill: 999px;
+
+  --content-max-width: 1200px;
+  --hero-height: 500px;
+  --hero-height-mobile: 380px;
+
+  --shadow-soft: 0 4px 12px rgba(51, 35, 23, 0.08);
+
+  /* ------------------------------------------------------------------ */
+  /* Buttons (buttons.css reads these)                                  */
+  /* ------------------------------------------------------------------ */
+  --btn-outline: var(--color-text);
+  --btn-outline-hover-fg: var(--c-white);
+  --btn-on-dark: var(--color-on-dark);
+  --btn-on-dark-hover-fg: var(--color-text);
+  --btn-danger: var(--color-danger);
+  --btn-success: var(--color-success);
+  --btn-warn: var(--color-warn);
+  --btn-edit: var(--c-edit);
+  --btn-muted: var(--c-muted);
+  --btn-voucher: var(--c-voucher);
+  --btn-timeline: var(--c-timeline);
+  --btn-radius: var(--radius-none);
+  --btn-font-weight: 700;
+  --btn-font-size: 0.9rem;
+  --btn-pad-y: 10px;
+  --btn-pad-x: 20px;
+  --btn-transition: background 0.2s, color 0.2s, opacity 0.2s, border-color 0.2s;
+}

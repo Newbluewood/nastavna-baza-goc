@@ -1,18 +1,9 @@
 /**
- * Public page body type — single source of truth.
+ * Public page body type.
  *
- * Change --font-size-body / --line-height-body once → CMS intro,
- * news article, theme article, and global paragraphs stay aligned.
+ * Scale tokens live in tokens.css (--font-size-body, --line-height-body, …).
+ * Edit there once → CMS intro, news, themes, and global paragraphs stay aligned.
  */
-
-:root {
-  --font-size-body: 1rem;
-  --line-height-body: 1.65;
-  --font-weight-body: 300;
-  --font-size-h2: 1.35rem;
-  --font-size-h3: 1.15rem;
-  --font-size-h4: 1.05rem;
-}
 
 /* Global paragraph = same body scale (no page-to-page drift) */
 p {
