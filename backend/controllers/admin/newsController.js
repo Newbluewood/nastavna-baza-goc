@@ -1,5 +1,6 @@
 const { sendError } = require('../../utils/response');
 const { replaceEntityGallery } = require('../../utils/galleryShape');
+const { scheduleKnowledgeIngest } = require('../../services/knowledgeIngestNotify');
 
 // Shared SELECT for news with translations
 const NEWS_BASE_SELECT = `
@@ -71,6 +72,7 @@ async function createNews(req, res) {
     await replaceNewsGallery(connection, result.insertId, gallery);
     await connection.commit();
 
+    scheduleKnowledgeIngest('news-create');
     res.json({ message: 'News created successfully', newsId: result.insertId, slug });
   } catch (err) {
     await connection.rollback();
@@ -110,6 +112,7 @@ async function updateNews(req, res) {
     await replaceNewsGallery(connection, newsId, gallery);
     await connection.commit();
 
+    scheduleKnowledgeIngest('news-update');
     res.json({ message: 'News updated successfully' });
   } catch (err) {
     await connection.rollback();
@@ -132,6 +135,7 @@ async function deleteNews(req, res) {
     if (deleted.affectedRows === 0) return sendError(res, 404, 'News not found');
 
     await connection.commit();
+    scheduleKnowledgeIngest('news-delete');
     res.json({ message: 'News deleted successfully' });
   } catch (err) {
     await connection.rollback();

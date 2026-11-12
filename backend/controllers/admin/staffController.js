@@ -1,10 +1,5 @@
 const { sendError } = require('../../utils/response');
-const { notifyKnowledgeIngest } = require('../../services/knowledgeIngestNotify');
-
-function scheduleStaffIngest(reason) {
-  // Fire-and-forget: staff save must not wait on Qdrant refresh.
-  void notifyKnowledgeIngest(reason || 'staff-cms');
-}
+const { scheduleKnowledgeIngest } = require('../../services/knowledgeIngestNotify');
 
 async function getStaff(req, res) {
   const db = req.app.locals.db;
@@ -32,7 +27,7 @@ async function createStaffMember(req, res) {
       [result.insertId, 'en', role_en]
     );
   }
-  scheduleStaffIngest('staff-create');
+  scheduleKnowledgeIngest('staff-create');
   res.json({ message: 'Staff member created', staffId: result.insertId });
 }
 
@@ -51,7 +46,7 @@ async function updateStaffMember(req, res) {
     'INSERT INTO staff_translations (entity_id, lang, role) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE role = VALUES(role)',
     [req.params.id, 'en', role_en || null]
   );
-  scheduleStaffIngest('staff-update');
+  scheduleKnowledgeIngest('staff-update');
   res.json({ message: 'Staff member updated' });
 }
 
@@ -59,7 +54,7 @@ async function deleteStaffMember(req, res) {
   const db = req.app.locals.db;
   const [result] = await db.query('DELETE FROM staff WHERE id = ?', [req.params.id]);
   if (result.affectedRows === 0) return sendError(res, 404, 'Staff member not found');
-  scheduleStaffIngest('staff-delete');
+  scheduleKnowledgeIngest('staff-delete');
   res.json({ message: 'Staff member deleted' });
 }
 

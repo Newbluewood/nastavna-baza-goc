@@ -1,4 +1,5 @@
 const { sendError } = require('../../utils/response');
+const { scheduleKnowledgeIngest } = require('../../services/knowledgeIngestNotify');
 
 async function getSettings(req, res) {
   const db = req.app.locals.db;
@@ -18,6 +19,7 @@ async function updateSettings(req, res) {
       [s.value_sr || '', s.value_en || '', s.setting_key]
     );
   }
+  scheduleKnowledgeIngest('settings-update');
   res.json({ message: 'Settings updated' });
 }
 
@@ -51,6 +53,7 @@ async function createHeroSlide(req, res) {
       [result.insertId, 'en', title_en || null, subtitle_en || null]
     );
   }
+  scheduleKnowledgeIngest('hero-create');
   res.json({ message: 'Hero slide created', slideId: result.insertId });
 }
 
@@ -69,6 +72,7 @@ async function updateHeroSlide(req, res) {
     'INSERT INTO hero_slides_translations (entity_id, lang, title, subtitle) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE title = VALUES(title), subtitle = VALUES(subtitle)',
     [req.params.id, 'en', title_en || null, subtitle_en || null]
   );
+  scheduleKnowledgeIngest('hero-update');
   res.json({ message: 'Hero slide updated' });
 }
 
@@ -76,6 +80,7 @@ async function deleteHeroSlide(req, res) {
   const db = req.app.locals.db;
   const [result] = await db.query('DELETE FROM hero_slides WHERE id = ?', [req.params.id]);
   if (result.affectedRows === 0) return sendError(res, 404, 'Hero slide not found');
+  scheduleKnowledgeIngest('hero-delete');
   res.json({ message: 'Hero slide deleted' });
 }
 

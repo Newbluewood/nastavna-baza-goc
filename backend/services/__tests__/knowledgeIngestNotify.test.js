@@ -32,4 +32,20 @@ describe('notifyKnowledgeIngest', () => {
       headers: expect.objectContaining({ Authorization: 'Bearer tajna' }),
     }));
   });
+
+  test('scheduleKnowledgeIngest fires notify without awaiting', async () => {
+    process.env.INGEST_WEBHOOK_URL = 'https://agent.example/api/ingest';
+    process.env.INGEST_WEBHOOK_SECRET = 'tajna';
+    jest.resetModules();
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 202,
+      text: async () => '',
+    });
+    const { scheduleKnowledgeIngest } = require('../knowledgeIngestNotify');
+
+    expect(() => scheduleKnowledgeIngest('page-update')).not.toThrow();
+    await new Promise((r) => setImmediate(r));
+    expect(fetchMock).toHaveBeenCalled();
+  });
 });

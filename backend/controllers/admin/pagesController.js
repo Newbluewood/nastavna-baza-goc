@@ -1,5 +1,6 @@
 const { sendError } = require('../../utils/response');
 const { addNavForNewPage, syncNavLabelsForPage } = require('../../services/navSync');
+const { scheduleKnowledgeIngest } = require('../../services/knowledgeIngestNotify');
 const {
   isValidPageSlugFormat,
   isReservedPageSlug,
@@ -68,6 +69,7 @@ async function createPage(req, res) {
     title,
     titleEn: title_en || null,
   });
+  scheduleKnowledgeIngest('page-create');
   res.json({ message: 'Page created', pageId: result.insertId });
 }
 
@@ -94,6 +96,7 @@ async function updatePage(req, res) {
     titleEn: title_en || null,
     slug: pageRows[0]?.slug || null,
   });
+  scheduleKnowledgeIngest('page-update');
   res.json({ message: 'Page updated' });
 }
 
@@ -101,6 +104,7 @@ async function deletePage(req, res) {
   const db = req.app.locals.db;
   const [result] = await db.query('DELETE FROM pages WHERE id = ?', [req.params.id]);
   if (result.affectedRows === 0) return sendError(res, 404, 'Page not found');
+  scheduleKnowledgeIngest('page-delete');
   res.json({ message: 'Page deleted' });
 }
 

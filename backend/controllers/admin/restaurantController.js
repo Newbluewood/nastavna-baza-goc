@@ -1,4 +1,5 @@
 const { sendError } = require('../../utils/response');
+const { scheduleKnowledgeIngest } = require('../../services/knowledgeIngestNotify');
 
 async function upsertEnTranslation(db, table, entityId, fields) {
   const [rows] = await db.query(
@@ -55,6 +56,7 @@ async function updateRestaurant(req, res) {
     name: name_en || null,
     description: description_en || null
   });
+  scheduleKnowledgeIngest('restaurant-update');
   res.json({ message: 'Restaurant updated' });
 }
 
@@ -101,6 +103,7 @@ async function createMenuItem(req, res) {
     );
   }
 
+  scheduleKnowledgeIngest('menu-create');
   res.json({ message: 'Menu item created', id: result.insertId });
 }
 
@@ -156,6 +159,7 @@ async function updateMenuItem(req, res) {
     );
   }
 
+  scheduleKnowledgeIngest('menu-update');
   res.json({ message: 'Menu item updated' });
 }
 
@@ -170,6 +174,7 @@ async function deleteMenuItem(req, res) {
     'DELETE FROM restaurant_menu_items WHERE id = ? OR (attraction_id = ? AND lang = ? AND sort_order = ? AND id <> ?)',
     [item.id, item.attraction_id, 'en', item.sort_order, item.id]
   );
+  scheduleKnowledgeIngest('menu-delete');
   res.json({ message: 'Menu item deleted' });
 }
 

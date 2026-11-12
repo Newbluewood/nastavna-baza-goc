@@ -2,6 +2,7 @@ const { sendError } = require('../../utils/response');
 const { replaceEntityGallery } = require('../../utils/galleryShape');
 const { upsertEnTranslation } = require('../../utils/upsertEnTranslation');
 const { slugify } = require('../../utils/slugify');
+const { scheduleKnowledgeIngest } = require('../../services/knowledgeIngestNotify');
 
 async function getFacilities(req, res) {
   const db = req.app.locals.db;
@@ -53,6 +54,7 @@ async function updateFacility(req, res) {
     name: name_en || null,
     description: description_en || null,
   });
+  scheduleKnowledgeIngest('facility-update');
   res.json({ message: 'Facility updated', slug: nextSlug });
 }
 
@@ -119,6 +121,7 @@ async function updateRoom(req, res) {
     await replaceEntityGallery(db, 'room', req.params.id, gallery);
   }
 
+  scheduleKnowledgeIngest('room-update');
   res.json({ message: 'Room updated' });
 }
 

@@ -1,6 +1,6 @@
 /**
  * Asks the chat-agent to refresh Qdrant.
- * Called from the CMS button "Osveži znanje".
+ * Used by CMS button "Osveži znanje" and content CRUD (pages, staff, …).
  * No-op when INGEST_WEBHOOK_URL or INGEST_WEBHOOK_SECRET is empty.
  * Never throws — the admin response maps skipped/failed results.
  */
@@ -33,4 +33,9 @@ function notifyKnowledgeIngest(reason) {
   });
 }
 
-module.exports = { notifyKnowledgeIngest };
+/** Fire-and-forget helper for CMS write paths (must not delay the HTTP response). */
+function scheduleKnowledgeIngest(reason) {
+  void notifyKnowledgeIngest(reason || 'cms');
+}
+
+module.exports = { notifyKnowledgeIngest, scheduleKnowledgeIngest };

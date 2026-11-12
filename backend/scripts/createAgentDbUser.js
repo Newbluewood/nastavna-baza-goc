@@ -49,6 +49,11 @@ const SELECT_TABLES = [
   'restaurant_menu_items',
   'news',
   'news_translations',
+  'site_settings',
+  'projects',
+  'project_translations',
+  'hero_slides',
+  'hero_slides_translations',
 ]
 
 function quoteIdent(name) {

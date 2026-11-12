@@ -1,4 +1,5 @@
 const { sendError } = require('../../utils/response');
+const { scheduleKnowledgeIngest } = require('../../services/knowledgeIngestNotify');
 
 async function getThemes(req, res) {
   const db = req.app.locals.db;
@@ -54,6 +55,7 @@ async function createTheme(req, res) {
       [themeId, 'en', name_en || null, article_en || null]
     );
   }
+  scheduleKnowledgeIngest('theme-create');
   res.json({ message: 'Theme created', themeId });
 }
 
@@ -76,6 +78,7 @@ async function updateTheme(req, res) {
     'INSERT INTO theme_translations (entity_id, lang, name, article) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), article = VALUES(article)',
     [req.params.id, 'en', name_en || null, article_en || null]
   );
+  scheduleKnowledgeIngest('theme-update');
   res.json({ message: 'Theme updated' });
 }
 
@@ -83,6 +86,7 @@ async function deleteTheme(req, res) {
   const db = req.app.locals.db;
   const [result] = await db.query('DELETE FROM themes WHERE id = ?', [req.params.id]);
   if (result.affectedRows === 0) return sendError(res, 404, 'Theme not found');
+  scheduleKnowledgeIngest('theme-delete');
   res.json({ message: 'Theme deleted' });
 }
 
