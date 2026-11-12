@@ -5,6 +5,7 @@
  *   SELECT  rooms/facilities (+ translations), reservations, guests, chat_messages
  *           + content tables used by Qdrant ingest (pages, themes, news, attractions, menu)
  *   INSERT  chat_messages
+ *   INSERT  chat_query_events   (CMS chat top/miss analytics)
  *   INSERT/UPDATE ai_budget_monthly
  *
  * Does NOT get write on inquiries / CMS / reservations.
@@ -77,6 +78,7 @@ function escapeSqlString(value) {
       (table) => `GRANT SELECT ON ${dbIdent}.${quoteIdent(table)} TO ${userIdent}`
     ),
     `GRANT INSERT ON ${dbIdent}.${quoteIdent('chat_messages')} TO ${userIdent}`,
+    `GRANT INSERT ON ${dbIdent}.${quoteIdent('chat_query_events')} TO ${userIdent}`,
     `GRANT INSERT, UPDATE ON ${dbIdent}.${quoteIdent('ai_budget_monthly')} TO ${userIdent}`,
     'FLUSH PRIVILEGES',
   ]

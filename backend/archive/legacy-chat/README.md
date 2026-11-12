@@ -16,11 +16,12 @@ Still live on the site API:
 - `POST /api/chat/reserve-stay` — creates the inquiry (the form's hands)
 - `GET` / `POST /api/chat/history` — history for a logged-in guest
 
-`budgetGate.js` and `chatRateLimit.js` stayed in `backend/middleware/` but nothing imports them after the route was removed.
+`budgetGate.js` and `chatRateLimit.js` stayed in `backend/middleware/` but nothing imports them on the **site** API after the route was removed (**orphan na sajtu**).
 
 **2026-11-13:** Behaviour re-ported on **chat-agent** (live path):
-- `middleware/chatRateLimit.js` — ~12/min + relief cooldown + warning headers
-- `middleware/budgetGate.js` + `services/aiBudget.js` — monthly EUR hard stop before LLM
+- `middleware/chatRateLimit.js` — ~12/min + relief cooldown ~2 min + warning headers
+- `middleware/budgetGate.js` + `services/aiBudget.js` (site mirror: `aiBudgetService.js`) — monthly EUR hard stop before LLM (default 20 € global / 2 € per user → graceful fallback)
+- CMS `chat_query_events` writes — `services/chatQueryAnalytics.js` (was `recordSiteGuideQuery` in archived `chatController.siteGuideTurn`)
 
 To run the archived tests from `backend/`:
 
