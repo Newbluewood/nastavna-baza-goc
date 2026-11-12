@@ -3,6 +3,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { adminAuthMiddleware } = require('../middleware/auth');
 const { validateRequest, schemas } = require('../middleware/validation');
 const invalidatePublicCacheOnWrite = require('../middleware/invalidatePublicCache');
+const scheduleKnowledgeIngest = require('../middleware/scheduleKnowledgeIngest');
 const {
 	getInquiries,
 	getInquiryActivity,
@@ -69,6 +70,8 @@ const router = express.Router();
 
 // Successful admin writes clear the public GET cache (TTL fallback remains).
 router.use(invalidatePublicCacheOnWrite);
+// Content writes (themes, news, pages, rooms, menu) ask the chat-agent to refresh Qdrant.
+router.use(scheduleKnowledgeIngest);
 
 router.get('/inquiries',           adminAuthMiddleware,                                      asyncHandler(getInquiries));
 router.get('/inquiries/:id/activity', adminAuthMiddleware,                                   asyncHandler(getInquiryActivity));
