@@ -109,12 +109,30 @@ async function refreshAgentKnowledge(req, res) {
   const result = await notifyKnowledgeIngest('cms-button');
   if (result.skipped) {
     return res.status(503).json({
-      error: 'Освежавање знања није подешено на серверу.'
+      error: 'Освежавање знања није подешено на серверу. Поставите INGEST_WEBHOOK_URL и INGEST_WEBHOOK_SECRET на site API (Render).'
     });
   }
   if (!result.ok) {
+    if (result.status === 401 || result.status === 403) {
+      return res.status(502).json({
+        error: 'Чет агент је одбио освежавање (неисправан INGEST_WEBHOOK_SECRET). Исти secret мора бити на baza-goc-api и chat-agent.'
+      });
+    }
+    if (result.status === 404) {
+      return res.status(502).json({
+        error: 'INGEST_WEBHOOK_URL не показује на /api/ingest чет агента. Очекивано: https://chat-agent-psjk.onrender.com/api/ingest'
+      });
+    }
+    if (result.status === 503) {
+      return res.status(502).json({
+        error: 'Чет агент нема подешен INGEST_WEBHOOK_SECRET (503). Додајте га на Render → chat-agent → Environment.'
+      });
+    }
+    const detail = result.status
+      ? `HTTP ${result.status}`
+      : (result.error || 'мрежа/timeout');
     return res.status(502).json({
-      error: 'Чет агент није прихватио освежавање. Проверите да ли је агент подигнут.'
+      error: `Чет агент није прихватио освежавање (${detail}). Проверите да ли је агент подигнут и да ли webhook env одговара.`
     });
   }
   return res.status(202).json({

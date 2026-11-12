@@ -53,5 +53,6 @@ describe('refreshAgentKnowledge', () => {
     await refreshAgentKnowledge({}, res);
 
     expect(res.statusCode).toBe(502);
+    expect(res.body.error).toMatch(/INGEST_WEBHOOK_SECRET/);
   });
 });
