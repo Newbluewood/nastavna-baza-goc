@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useSettingsStore } from '../../stores/settings'
 import api from '../../services/api'
 import PageTemplate from '../../components/layout/PageTemplate.vue'
@@ -19,7 +19,19 @@ const { page, extra, isLoading, langStore } = useCmsPage('kontakt', {
   fallbackPage: contactFallback,
 })
 
+const STAFF_PAGE = 10
 const staff = computed(() => extra.value?.staff || [])
+const visibleCount = ref(STAFF_PAGE)
+const visibleStaff = computed(() => staff.value.slice(0, visibleCount.value))
+const hasMoreStaff = computed(() => visibleCount.value < staff.value.length)
+
+watch(staff, () => {
+  visibleCount.value = STAFF_PAGE
+})
+
+const showMoreStaff = () => {
+  visibleCount.value += STAFF_PAGE
+}
 const projects = computed(() => extra.value?.projects || [])
 const contactTitle = computed(() => page.value?.title || contactFallback(langStore).title)
 const slides = computed(() => buildHeroSlide(page.value, contactTitle.value))
@@ -78,7 +90,7 @@ const statusClass = (s) => ({
       <section class="staff-section" v-if="staff.length">
         <h2>{{ langStore.t('contact.ourTeam') }}</h2>
         <div class="staff-grid">
-          <div v-for="member in staff" :key="member.id" class="staff-card">
+          <div v-for="member in visibleStaff" :key="member.id" class="staff-card">
             <div class="staff-photo">
               <img :src="resolveStaffPhotoUrl(member.photo_url)" :alt="member.full_name" />
             </div>
@@ -89,6 +101,9 @@ const statusClass = (s) => ({
             </div>
           </div>
         </div>
+        <button v-if="hasMoreStaff" type="button" class="btn-outline staff-more" @click="showMoreStaff">
+          {{ langStore.t('contact.showMore') }}
+        </button>
       </section>
 
       <!-- PROJECTS -->
@@ -175,6 +190,9 @@ const statusClass = (s) => ({
 .staff-role { color: #67462e; font-size: 0.82rem; }
 .staff-email { color: #9a714e; font-size: 0.8rem; text-decoration: none; border-bottom: 1px solid transparent; }
 .staff-email:hover { border-bottom-color: #cdac91; }
+.staff-more {
+  margin-top: 20px;
+}
 
 /* PROJECTS */
 .projects-list {
