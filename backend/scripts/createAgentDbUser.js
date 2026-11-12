@@ -3,7 +3,7 @@
  *
  * Runtime needs:
  *   SELECT  rooms/facilities (+ translations), reservations, guests, chat_messages
- *           + content tables used by Qdrant ingest (pages, themes, news, attractions, menu)
+ *           + content tables used by Qdrant ingest (pages, themes, news, attractions, menu, staff)
  *   INSERT  chat_messages
  *   INSERT  chat_query_events   (CMS chat top/miss analytics)
  *   INSERT/UPDATE ai_budget_monthly
@@ -38,6 +38,8 @@ const SELECT_TABLES = [
   'guests',
   'chat_messages',
   'ai_budget_monthly',
+  'staff',
+  'staff_translations',
   'pages',
   'page_translations',
   'themes',
