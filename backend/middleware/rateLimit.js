@@ -106,8 +106,24 @@ const inquiryRateLimit = createRateLimit({
   message: 'Previše zahteva za rezervaciju. Sačekajte minut pa pokušajte ponovo.',
 });
 
+const likeRateLimit = createRateLimit({
+  name: 'like',
+  max: 30,
+  windowMs: 60_000,
+  message: 'Previše lajkova. Sačekajte minut pa pokušajte ponovo.',
+});
+
+const chatHistoryRateLimit = createRateLimit({
+  name: 'chat_history',
+  max: 60,
+  windowMs: 60_000,
+  message: 'Previše chat zahteva. Sačekajte minut pa pokušajte ponovo.',
+});
+
 module.exports = {
   createRateLimit,
   loginRateLimit,
   inquiryRateLimit,
+  likeRateLimit,
+  chatHistoryRateLimit,
 };

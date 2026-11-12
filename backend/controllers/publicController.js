@@ -3,6 +3,7 @@ const { sendError } = require('../utils/response');
 const { normalizeJsonArray } = require('../utils/jsonArray');
 const { parseConcatGallery } = require('../utils/galleryShape');
 const { getForecastForUpcomingDays } = require('../services/weatherService');
+const { getDefaultAvailabilityWindow } = require('../utils/availabilityWindow');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -257,12 +258,16 @@ async function getRoomAvailability(req, res) {
   const { start, end } = req.query;
 
   if (!start || !end) {
+    // Calendar dump for InquiryModal — capped window, not full history.
+    const { windowStart, windowEnd } = getDefaultAvailabilityWindow();
     const [reservations] = await db.query(`
       SELECT start_date, end_date
       FROM reservations
       WHERE room_id = ? AND status IN ('pending', 'confirmed')
+        AND end_date >= ?
+        AND start_date <= ?
       ORDER BY start_date ASC
-    `, [roomId]);
+    `, [roomId, windowStart, windowEnd]);
 
     return res.json(reservations);
   }

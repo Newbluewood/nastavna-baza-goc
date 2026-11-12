@@ -41,7 +41,8 @@ Kad budemo **korake za deploy / produkcijski checklist**, uraditi ili eksplicitn
 | **P2** | Stroža `action` schema | whitelist tipova/polja — **urađeno** (FE `sanitizeChatAction` + chat-agent `sanitizeReservationAction`) |
 | **P2** | Javni agent endpoint | Origin allowlist + burst/hourly chat limit — **urađeno** (`ALLOWED_ORIGINS`, `chatBurstLimiter`); kapča / short-lived token ostaju opciono kasnije |
 | **P2** | PII u LLM | UI upozorenje + agent redakcija JMBG/pasoš/kartica + persona zabrana — **urađeno**; formalna politika/stranica ostaje opciono |
-| **P2** | API abuse limit | Express in-memory rate limit na admin/guest login+register i inquiry/reserve-stay — **urađeno 2026-11-12** (`middleware/rateLimit.js`) |
+| **P2** | API abuse limit | Express in-memory rate limit na admin/guest login+register, inquiry/reserve-stay, news like, chat history — **urađeno 2026-11-12** (`middleware/rateLimit.js`) |
+| **P2** | Helmet + availability window | `helmet` na API; availability bez `start`/`end` ograničen na ~7d/18m — **urađeno 2026-11-12** |
 
 ### Render: zalepi `goc_agent` (obavezno — dashboard)
 
@@ -60,6 +61,34 @@ Kad budemo **korake za deploy / produkcijski checklist**, uraditi ili eksplicitn
 [`CHAT_AGENT_pristup_i_bezbednost.md`](CHAT_AGENT_pristup_i_bezbednost.md)
 
 **Kada ući u plan izvršenja:** posle izabranog hosting scenarija (I2), **pre** ili **uz** prvi klijentski go-live — bar P1 (DOMPurify + DB user) ne ostavljati „za nekad“ ako chat ide uživo.
+
+---
+
+## Preostali rizici — mi vs cloud (2026-11-12)
+
+### Već pokriveno
+`goc_agent` (Aiven+Render), JWT rotacija (Render+lokal usklađeno), login/inquiry rate limit, DOMPurify, action sanitize, agent origin/burst, **helmet** na API, like/chat-history rate limit, availability kalendar **prozor** (~7d unazad / 18m unapred).
+
+### Još možemo mi (kod / proces) — kasnije / opciono
+| Stavka | Status |
+|--------|--------|
+| Formalna AI/privacy napomena na sajtu | otvoreno (sadržaj/pravni) |
+| Redovan `db:snapshot` + kopija van laptopa | proces — ponavljati pre migracija |
+| Short-lived chat token (API→agent) | odloženo (veći posao) |
+| Zatvaranje javnih CMS GET API key-em | **ne** — lomi sajt |
+
+### Ostalo cloud / dashboard
+| Stavka | Gde | Prioritet |
+|--------|-----|-----------|
+| **2FA** Render, GitHub, Aiven, Netlify, Brevo | nalozi | visok |
+| Render **Starter** (bez sleep) API + agent | pouzdanost 100–300 posetilaca | visok ako peak saobraćaj |
+| **Persistent Disk** ili S3/R2 za upload-e | free gubi slike na redeploy | visok pre CMS predaje |
+| Aiven backup / retention | DB restore | srednji |
+| Posle fakultetskog **CNAME**: `ALLOWED_ORIGINS` + `FRONTEND_URL` na API i agent | CORS | kad IT da DNS |
+| Netlify custom domain | DNS/IT | kad CNAME |
+| Rotacija Brevo / DeepL / LLM ključeva; ko vidi env | ops | srednji |
+
+Bezbednosno: dovoljno za go-live. Preostalo je uglavnom **ops/pouzdanost**, ne rupa ka bazi.
 
 ---
 
