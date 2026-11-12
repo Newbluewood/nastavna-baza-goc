@@ -262,9 +262,7 @@ watch(() => props.slug, () => {
   padding: 0 20px;
 }
 .news-text {
-  font-size: 1.1rem;
-  line-height: 1.6;
-  color: var(--color-text);
+  /* type scale: typography.css */
   margin-bottom: 40px;
 }
 

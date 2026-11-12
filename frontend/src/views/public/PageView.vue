@@ -118,9 +118,9 @@ const toggleFaq = (index) => {
   line-height: 1;
 }
 .faq-answer {
+  /* type scale: typography.css */
   padding: 0 20px 20px;
   color: #666;
-  line-height: 1.6;
 }
 .faq-slide-enter-active, .faq-slide-leave-active {
   transition: max-height 0.3s ease, opacity 0.3s ease;

@@ -1,0 +1,203 @@
+/**
+ * Public page body type — single source of truth.
+ *
+ * Change --font-size-body / --line-height-body once → CMS intro,
+ * news article, theme article, and global paragraphs stay aligned.
+ */
+
+:root {
+  --font-size-body: 1rem;
+  --line-height-body: 1.65;
+  --font-weight-body: 300;
+  --font-size-h2: 1.35rem;
+  --font-size-h3: 1.15rem;
+  --font-size-h4: 1.05rem;
+}
+
+/* Global paragraph = same body scale (no page-to-page drift) */
+p {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  font-size: inherit;
+  font-weight: var(--font-weight-body);
+  line-height: var(--line-height-body);
+}
+
+body {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+
+/*
+ * Prose blocks below the hero (CMS HTML + article bodies).
+ * Keep class aliases so existing markup does not need a mass rename.
+ */
+.page-prose,
+.text-content,
+.news-text,
+.theme-article {
+  color: var(--color-text);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-body);
+  line-height: var(--line-height-body);
+}
+
+.page-prose :where(p, li, td, th, span, a, strong, em, b, i, label),
+.text-content :where(p, li, td, th, span, a, strong, em, b, i, label),
+.news-text :where(p, li, td, th, span, a, strong, em, b, i, label),
+.theme-article :where(p, li, td, th, span, a, strong, em, b, i, label) {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Kill legacy/CMS inline font-size so pages don't drift */
+.page-prose [style*='font-size'],
+.text-content [style*='font-size'],
+.news-text [style*='font-size'],
+.theme-article [style*='font-size'] {
+  font-size: inherit !important;
+}
+
+.page-prose > *:first-child,
+.text-content > *:first-child,
+.news-text > *:first-child,
+.theme-article > *:first-child {
+  margin-top: 0;
+}
+
+.page-prose > *:last-child,
+.text-content > *:last-child,
+.news-text > *:last-child,
+.theme-article > *:last-child {
+  margin-bottom: 0;
+}
+
+.page-prose h1,
+.page-prose h2,
+.page-prose h3,
+.page-prose h4,
+.text-content h1,
+.text-content h2,
+.text-content h3,
+.text-content h4,
+.news-text h1,
+.news-text h2,
+.news-text h3,
+.news-text h4,
+.theme-article h1,
+.theme-article h2,
+.theme-article h3,
+.theme-article h4 {
+  color: var(--color-nav);
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.4em 0 0.6em;
+}
+
+.page-prose h2,
+.text-content h2,
+.news-text h2,
+.theme-article h2 {
+  font-size: var(--font-size-h2);
+}
+
+.page-prose h3,
+.text-content h3,
+.news-text h3,
+.theme-article h3 {
+  font-size: var(--font-size-h3);
+}
+
+.page-prose h4,
+.text-content h4,
+.news-text h4,
+.theme-article h4 {
+  font-size: var(--font-size-h4);
+}
+
+.page-prose p,
+.text-content p,
+.news-text p,
+.theme-article p {
+  margin: 0 0 1em;
+}
+
+.page-prose ul,
+.page-prose ol,
+.text-content ul,
+.text-content ol,
+.news-text ul,
+.news-text ol,
+.theme-article ul,
+.theme-article ol {
+  margin: 0 0 1em;
+  padding-left: 1.25em;
+}
+
+/* WordPress / legacy CMS chrome inside prose */
+.text-content hr {
+  display: none;
+}
+
+.page-prose img,
+.page-prose video,
+.page-prose iframe,
+.text-content img,
+.text-content video,
+.text-content iframe,
+.news-text img,
+.news-text video,
+.news-text iframe,
+.theme-article img,
+.theme-article video,
+.theme-article iframe {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0;
+}
+
+.page-prose figure,
+.text-content figure,
+.news-text figure,
+.theme-article figure {
+  max-width: 100%;
+  margin: 1.5rem 0;
+}
+
+.page-prose figure img,
+.text-content figure img,
+.news-text figure img,
+.theme-article figure img {
+  margin: 0;
+}
+
+.text-content .blocks-gallery-grid,
+.text-content .wp-block-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+  margin: 1.5rem 0;
+}
+
+.text-content .wp-block-image {
+  margin-bottom: 1rem;
+}
+
+/* CMS intro band layout (PageTemplate) */
+.text-content {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 12px 20px 16px;
+}
+
+/* Card / teaser copy under hero lists — same body size */
+.facility-card .description,
+.card-content .desc,
+.faq-answer {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  font-weight: var(--font-weight-body);
+}

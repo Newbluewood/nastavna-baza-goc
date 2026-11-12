@@ -221,9 +221,8 @@ const closeMenu = () => {
 }
 
 .desc {
+  /* type scale: typography.css (.card-content .desc) */
   color: #666;
-  font-size: 0.95rem;
-  line-height: 1.6;
   margin-bottom: 20px;
   display: -webkit-box;
   -webkit-line-clamp: 3;

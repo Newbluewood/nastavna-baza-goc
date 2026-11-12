@@ -98,8 +98,7 @@
 
 .facility-card .description {
   flex: 1;
-  font-size: 0.95rem;
-  line-height: 1.6;
+  /* font-size/line-height: typography.css */
   margin-bottom: 20px;
   color: var(--color-text);
 }

@@ -102,29 +102,15 @@ watch(() => langStore.currentLang, fetchTheme)
 
 <style scoped>
 .theme-article {
-  max-width: 1200px;
+  /* type scale: typography.css */
+  max-width: var(--content-max-width, 1200px);
   margin: 0 auto;
   padding: 0 20px;
-  line-height: 1.8;
-  font-size: 1.1rem;
-  color: #444;
 }
 
-.theme-article :deep(p) {
-  margin-bottom: 25px;
-}
-
-.theme-article :deep(ul) {
-  margin-bottom: 25px;
-  padding-left: 20px;
-}
-
-.theme-article :deep(li) {
-  margin-bottom: 10px;
-}
-
-.theme-article :deep(strong), .theme-article :deep(b) {
-  color: #332317;
+.theme-article :deep(strong),
+.theme-article :deep(b) {
+  color: var(--c-braon-6, #332317);
 }
 
 .theme-footer {
