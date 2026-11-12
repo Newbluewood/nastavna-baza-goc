@@ -1,11 +1,18 @@
 class AgentService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_CHAT_API_URL || 'https://chat-agent-kbjc.onrender.com';
+    this.baseURL = (import.meta.env.VITE_CHAT_API_URL || '').trim().replace(/\/$/, '');
+  }
+
+  requireBaseURL() {
+    if (!this.baseURL) {
+      throw new Error('VITE_CHAT_API_URL is not set');
+    }
+    return this.baseURL;
   }
 
   async sendMessage(message, history = [], lang = 'sr', options = {}) {
     const { sessionId, userContext } = options;
-    const response = await fetch(`${this.baseURL}/api/chat`, {
+    const response = await fetch(`${this.requireBaseURL()}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -26,7 +33,7 @@ class AgentService {
 
   async sendMessageStream(message, history = [], lang = 'sr', onChunk, onAction, options = {}) {
     const { sessionId, userContext } = options;
-    const response = await fetch(`${this.baseURL}/api/chat/stream`, {
+    const response = await fetch(`${this.requireBaseURL()}/api/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -87,13 +94,13 @@ class AgentService {
     const params = new URLSearchParams({ name: String(name || '').trim() });
     if (checkIn) params.set('check_in', checkIn);
     if (checkOut) params.set('check_out', checkOut);
-    const response = await fetch(`${this.baseURL}/api/rooms/resolve?${params}`);
+    const response = await fetch(`${this.requireBaseURL()}/api/rooms/resolve?${params}`);
     if (!response.ok) return { certain: null, candidates: [], room_options: [], needs_choice: true };
     return response.json();
   }
 
   async linkSession(sessionId, guestId) {
-    const response = await fetch(`${this.baseURL}/api/chat/link-session`, {
+    const response = await fetch(`${this.requireBaseURL()}/api/chat/link-session`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId, guestId }),

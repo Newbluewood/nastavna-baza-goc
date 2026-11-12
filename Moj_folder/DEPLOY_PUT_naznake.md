@@ -26,7 +26,7 @@ Ponuda / troškovi / pouzdanost: ostali fajlovi u `Moj_folder/`.
 
 | Komponenta | Gde živi | Dokaz |
 |------------|----------|-------|
-| FE chat widget | Netlify → **Render** `https://chat-agent-kbjc.onrender.com` | live bundle `agentService-*.js` `baseURL`; lokalni `VITE_CHAT_API_URL` |
+| FE chat widget | Netlify → **Render** `https://chat-agent-psjk.onrender.com` | `VITE_CHAT_API_URL` na Netlify (nema rezervne adrese u kodu) |
 | Site API | Render `baza-goc-api` | env / deploy |
 | MySQL | **Aiven** (`*.aivencloud.com`) | `DB_HOST` — baza, **nije** chat-agent |
 
@@ -51,7 +51,7 @@ Kad budemo **korake za deploy / produkcijski checklist**, uraditi ili eksplicitn
 3. Postavi / zameni: `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_NAME`, `DB_PORT`, `DB_SSL=true` (vrednosti iz fajla).  
    Ako agent koristi samo `DATABASE_URL`, zameni user/password u URI-ju na `goc_agent` + novu lozinku; ukloni ili uskladi diskretne `DB_*` da ne pobede jedni druge.
 4. **Save** → Manual Deploy / Auto redeploy.
-5. Smoke: `GET https://chat-agent-kbjc.onrender.com/api/health` → 200; jedan chat / resolve sobe sa sajta.
+5. Smoke: `GET https://chat-agent-psjk.onrender.com/api/health` → 200; jedan chat / resolve sobe sa sajta.
 6. Ako chat pukne na DB auth — vrati stari user privremeno, pa proveri da Aiven dozvoljava remote `goc_agent@%` (već kreiran).
 
 **Site API ostaje na punom DB useru** (`avnadmin` / postojeći `DATABASE_URL`).
@@ -133,7 +133,7 @@ Dok CNAME nema: ostaje Netlify URL — ne dirati.
 - [ ] `FRONTEND_URL` / `ALLOWED_ORIGINS` na API + agent (fakultetski origin)  
 - [x] Smoke API: `cd backend && npm run smoke:write-flow` — **prošlo 2026-11-10** (lokalni API + Aiven)  
 - [x] Smoke rute: `npm run smoke:routes` — **prošlo 2026-11-10**  
-- [x] Chat agent live scenario `reservation_piramida_101` — **prošlo 2026-11-10** vs `https://chat-agent-kbjc.onrender.com` (`npm run test:agent`)  
+- [x] Chat agent live scenario `reservation_piramida_101` — **prošlo 2026-11-10** (`npm run test:agent`). Produkcija od 2026-11-12: `https://chat-agent-psjk.onrender.com`.  
 - [x] Ručno/Netlify: home + nav + chat widget — **2026-11-10** (`nastavnabazagoc.netlify.app`)  
 - [x] Mejl (Brevo/SMTP) — **2026-11-10** stvarni inquiry potvrda stigla odmah, nije spam (gost Nebojsa Simovic; SR+EN telo)  
 - [x] Admin CMS login UI — `/admin/login` živi (produkcija)

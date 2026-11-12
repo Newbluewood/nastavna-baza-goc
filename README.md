@@ -25,7 +25,7 @@ Nastavna baza Goč nije statičan prezentacioni sajt. Ima tri jasno odvojena del
 | **CMS** | Uređivanje stranica, vesti, soba, menija, osoblja, tema, rezervacija i CRM-a. DeepL pomaže prevod SR → EN. | ovaj repo → `/admin` |
 | **Chat agent** | Razgovor sa posetiocem (RAG + alati). Predlaže akcije; sajt ih izvršava. | **poseban mikroservis**, nije u ovom repou |
 
-Backend u ovom repou (`backend/`) je API sajta: sadržaj, rezervacije, gosti, mejlovi, keš. Chat agent je odvojen servis na Renderu (`chat-agent-kbjc.onrender.com`) i sa sajtom komunicira preko HTTP/SSE.
+Backend u ovom repou (`backend/`) je API sajta: sadržaj, rezervacije, gosti, mejlovi, keš. Chat agent je odvojen servis na Renderu. Sajt ga zove samo preko `VITE_CHAT_API_URL`.
 
 ---
 
