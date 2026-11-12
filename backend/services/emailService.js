@@ -5,16 +5,28 @@ const { formatDate } = require('../utils/dateUtils');
 const logger = require('../utils/logger');
 
 const templatesDir = path.join(__dirname, '../email-templates');
+const DEFAULT_FRONTEND_URL = 'https://nastavnabazagoc.netlify.app';
+
+const getFrontendUrl = () => process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL;
+
+const brandingVars = () => {
+  const frontendUrl = getFrontendUrl().replace(/\/$/, '');
+  return {
+    frontendUrl,
+    logoUrl: `${frontendUrl}/logo-email.png`,
+  };
+};
 
 // Simple template replacement
-const renderTemplate = (templateName, data) => {
+const renderTemplate = (templateName, data = {}) => {
   const templatePath = path.join(templatesDir, `${templateName}.html`);
   let template = fs.readFileSync(templatePath, 'utf8');
+  const merged = { ...brandingVars(), ...data };
 
   // Replace {{variable}} with data.variable
-  Object.keys(data).forEach(key => {
+  Object.keys(merged).forEach(key => {
     const regex = new RegExp(`{{${key}}}`, 'g');
-    template = template.replace(regex, data[key] || '');
+    template = template.replace(regex, merged[key] ?? '');
   });
 
   return template;
@@ -121,7 +133,7 @@ const emailService = {
       d.setDate(d.getDate() - 7);
       return formatDate(d);
     })();
-    const cancelUrl = `${process.env.FRONTEND_URL || 'https://nastavnabazagoc.netlify.app'}/cancel/${cancelToken}`;
+    const cancelUrl = `${getFrontendUrl()}/cancel/${cancelToken}`;
 
     const html = renderTemplate('approved', {
       name,
@@ -148,8 +160,7 @@ const emailService = {
       facility: facility || '—',
       room: room || '—',
       checkIn: checkIn ? formatDate(checkIn) : '—',
-      checkOut: checkOut ? formatDate(checkOut) : '—',
-      frontendUrl: process.env.FRONTEND_URL || 'https://nastavnabazagoc.netlify.app'
+      checkOut: checkOut ? formatDate(checkOut) : '—'
     });
 
     return sendEmail(to, {
@@ -164,8 +175,7 @@ const emailService = {
       facility,
       room,
       checkIn: formatDate(checkIn),
-      checkOut: formatDate(checkOut),
-      frontendUrl: process.env.FRONTEND_URL || 'https://nastavnabazagoc.netlify.app'
+      checkOut: formatDate(checkOut)
     });
 
     return sendEmail(to, {
@@ -178,8 +188,7 @@ const emailService = {
     const html = renderTemplate('guestCreated', {
       name,
       email,
-      password,
-      frontendUrl: process.env.FRONTEND_URL || 'https://nastavnabazagoc.netlify.app'
+      password
     });
 
     return sendEmail(to, {
@@ -190,8 +199,7 @@ const emailService = {
 
   sendGuestExists: async (to, { name }) => {
     const html = renderTemplate('guestExists', {
-      name,
-      frontendUrl: process.env.FRONTEND_URL || 'https://nastavnabazagoc.netlify.app'
+      name
     });
 
     return sendEmail(to, {
@@ -207,7 +215,100 @@ const emailService = {
       subject: 'Nastavna baza Goč — Resetovanje lozinke',
       html
     });
-  }
+  },
+
+  /** Admin CMS preview — sample-filled templates (does not send mail). */
+  listTemplatePreviews() {
+    const frontendUrl = getFrontendUrl().replace(/\/$/, '');
+    const catalog = [
+      {
+        id: 'confirmation',
+        title: 'Потврда пријема упита',
+        when: 'Одмах после слања упита за смештај',
+        subject: 'Nastavna baza Goč — Потврда пријема упита',
+        sample: { name: 'Марко Марковић' },
+      },
+      {
+        id: 'guestCreated',
+        title: 'Креиран налог',
+        when: 'Нови гост — привремена лозинка + пријава',
+        subject: 'Nastavna baza Goč — Kreiran Vam je nalog',
+        sample: {
+          name: 'Марко Марковић',
+          email: 'marko.markovic@example.com',
+          password: 'Privremena123',
+        },
+      },
+      {
+        id: 'guestExists',
+        title: 'Упит (налог већ постоји)',
+        when: 'Гост већ има налог — линк „Мој налог“',
+        subject: 'Nastavna baza Goč — Prijem Vašeg upita',
+        sample: { name: 'Марко Марковић' },
+      },
+      {
+        id: 'approved',
+        title: 'Резервација потврђена',
+        when: 'Админ одобри — детаљи + отказивање',
+        subject: 'Nastavna baza Goč — Ваша резервација је ПОТВРЂЕНА ✅',
+        sample: {
+          name: 'Марко Марковић',
+          facility: 'Хотел Пирамида',
+          room: 'Једнокреветна соба 101',
+          checkIn: '13.11.2026.',
+          checkOut: '15.11.2026.',
+          cancelDeadline: '06.11.2026.',
+          cancelUrl: `${frontendUrl}/cancel/demo-token`,
+          guestCount: '2',
+        },
+      },
+      {
+        id: 'rejected',
+        title: 'Одговор / није потврђено',
+        when: 'Админ не потврди период — разлог + смештај',
+        subject: 'Nastavna baza Goč — Одговор на Ваш упит',
+        sample: {
+          name: 'Марко Марковић',
+          reasonText: 'Za traženi period trenutno nema raspoloživih kapaciteta.',
+          facility: 'Хотел Пирамида',
+          room: 'Једнокреветна соба 101',
+          checkIn: '13.11.2026.',
+          checkOut: '15.11.2026.',
+        },
+      },
+      {
+        id: 'cancelConfirmed',
+        title: 'Резервација отказана',
+        when: 'Успешно отказивање преко линка',
+        subject: 'Nastavna baza Goč — Резервација отказана',
+        sample: {
+          name: 'Марко Марковић',
+          facility: 'Хотел Пирамида',
+          room: 'Једнокреветна соба 101',
+          checkIn: '13.11.2026.',
+          checkOut: '15.11.2026.',
+        },
+      },
+      {
+        id: 'reset_password',
+        title: 'Ресет лозинке',
+        when: 'Захтев за нову лозинку (линк ~1 сат)',
+        subject: 'Nastavna baza Goč — Resetovanje lozinke',
+        sample: {
+          name: 'Марко Марковић',
+          resetUrl: `${frontendUrl}/reset-lozinka/demo-token`,
+        },
+      },
+    ];
+
+    return catalog.map((item) => ({
+      id: item.id,
+      title: item.title,
+      when: item.when,
+      subject: item.subject,
+      html: renderTemplate(item.id, item.sample),
+    }));
+  },
 };
 
 module.exports = emailService;

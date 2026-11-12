@@ -198,6 +198,12 @@ const router = createRouter({
       meta: { requiresAuth: true, permission: 'settings' },
     },
     {
+      path: '/admin/mejl-sabloni',
+      name: 'admin-email-templates',
+      component: () => import('../views/admin/EmailTemplatesView.vue'),
+      meta: { requiresAuth: true, permission: 'settings' },
+    },
+    {
       path: '/admin/teme',
       name: 'admin-themes',
       component: () => import('../views/admin/ThemesView.vue'),

@@ -242,6 +242,10 @@ class ApiService {
     return response;
   }
 
+  async getEmailTemplates() {
+    return this.request('/api/admin/email-templates');
+  }
+
   async getCmsUsers() {
     return this.request('/api/admin/cms-users');
   }

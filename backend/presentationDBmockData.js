@@ -413,19 +413,15 @@ async function seedProjectsAndStaff(connection, shouldExecute) {
     );
   }
 
-  const staff = [
-    ['Проф. др Милан Петровић', 'Управник базе', 'uprava@goc.rs', placeholder],
-    ['Јелена Јовановић', 'Рецепција и резервације', 'recepcija@goc.rs', placeholder],
-    ['Марко Николић', 'Одржавање и логистика', 'tehnicka@goc.rs', placeholder],
-    ['Ана Стојановић', 'Ресторан и угоститељство', 'restoran@goc.rs', placeholder],
-    ['Драган Ђорђевић', 'Ски сервис и активности', 'aktivnosti@goc.rs', placeholder]
-  ];
+  const officialStaff = require('./data/officialStaff');
 
-  for (const s of staff) {
+  for (const [full_name, role, , contact_email] of officialStaff) {
     await executeOrPrint(
       connection,
       'INSERT INTO staff (full_name, role, contact_email, photo_url) VALUES (?, ?, ?, ?)',
-      s, `seed staff ${s[0]}`, shouldExecute
+      [full_name, role, contact_email, placeholder],
+      `seed staff ${full_name}`,
+      shouldExecute
     );
   }
 }

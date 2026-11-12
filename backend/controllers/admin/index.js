@@ -18,6 +18,7 @@ const uploadController = require('./uploadController');
 const restaurantController = require('./restaurantController');
 const navController = require('./navController');
 const cmsUsersController = require('./cmsUsersController');
+const emailTemplatesController = require('./emailTemplatesController');
 
 module.exports = {
   ...inquiryController,
@@ -35,4 +36,5 @@ module.exports = {
   ...restaurantController,
   ...navController,
   ...cmsUsersController,
+  ...emailTemplatesController,
 };

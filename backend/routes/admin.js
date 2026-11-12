@@ -68,6 +68,7 @@ const {
 	createCmsUser,
 	updateCmsUser,
 	deleteCmsUser,
+	listEmailTemplates,
 } = require('../controllers/admin');
 
 const router = express.Router();
@@ -161,6 +162,9 @@ router.get('/restaurants/:id/menu', ...guard('restaurant'),                     
 router.post('/menu-items',        ...guard('restaurant'),                                      asyncHandler(createMenuItem));
 router.put('/menu-items/:id',     ...guard('restaurant'),                                      asyncHandler(updateMenuItem));
 router.delete('/menu-items/:id',  ...guard('restaurant'),                                      asyncHandler(deleteMenuItem));
+
+// Transactional email template previews (Admin)
+router.get('/email-templates',    ...guard('settings'),                                      asyncHandler(listEmailTemplates));
 
 // CMS users (Admin only)
 router.get('/cms-users',          ...guard('cms_users'),                                     asyncHandler(listCmsUsers));

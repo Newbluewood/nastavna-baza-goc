@@ -66,6 +66,7 @@ export const ROUTE_PERMISSIONS = Object.freeze({
   'admin-ai': 'ai_usage',
   'admin-restaurant': 'restaurant',
   'admin-settings': 'settings',
+  'admin-email-templates': 'settings',
   'admin-themes': 'themes',
   'admin-cms-users': 'cms_users',
 })

@@ -23,6 +23,7 @@ const allAdminLinks = [
   { name: 'admin-restaurant', label: 'Ресторан', permission: 'restaurant' },
   { name: 'admin-themes', label: 'Теме (Истражи Гоч)', permission: 'themes' },
   { name: 'admin-settings', label: 'Подешавања', permission: 'settings' },
+  { name: 'admin-email-templates', label: 'Мејл шаблони', permission: 'settings' },
   { name: 'admin-cms-users', label: 'CMS корисници', permission: 'cms_users' },
 ]
 
