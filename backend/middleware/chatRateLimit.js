@@ -1,5 +1,5 @@
-// No longer mounted. It only guarded POST /api/chat/site-guide-turn,
-// which was archived with the legacy chat path (backend/archive/legacy-chat).
+// No longer mounted on the site API (legacy site-guide-turn archived).
+// Live behaviour lives on chat-agent: middleware/chatRateLimit.js
 const { sendError } = require('../utils/response');
 
 function toPositiveInt(value, fallback) {

@@ -18,6 +18,10 @@ Still live on the site API:
 
 `budgetGate.js` and `chatRateLimit.js` stayed in `backend/middleware/` but nothing imports them after the route was removed.
 
+**2026-11-13:** Behaviour re-ported on **chat-agent** (live path):
+- `middleware/chatRateLimit.js` — ~12/min + relief cooldown + warning headers
+- `middleware/budgetGate.js` + `services/aiBudget.js` — monthly EUR hard stop before LLM
+
 To run the archived tests from `backend/`:
 
 ```bash

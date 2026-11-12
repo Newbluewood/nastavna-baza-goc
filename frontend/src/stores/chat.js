@@ -315,7 +315,11 @@ export const useChatStore = defineStore('chat', {
         console.error('Chat Agent error:', err);
         this.error = err.message;
         if (assistantMsg) {
-          assistantMsg.content = 'Žao mi je, došlo je do greške. Molim vas pokušajte ponovo.';
+          const msg = String(err?.message || '');
+          assistantMsg.content =
+            /previše poruka|rate limit|429/i.test(msg)
+              ? msg
+              : 'Žao mi je, došlo je do greške. Molim vas pokušajte ponovo.';
         }
       } finally {
         this.isLoading = false;

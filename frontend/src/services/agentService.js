@@ -21,10 +21,10 @@ class AgentService {
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-         throw new Error('Rate limit exceeded. Please try again later.');
-      }
       const errorData = await response.json().catch(() => ({}));
+      if (response.status === 429) {
+        throw new Error(errorData.error || 'Previše poruka u kratkom roku. Pokušajte ponovo uskoro.');
+      }
       throw new Error(errorData.error || `HTTP error ${response.status}`);
     }
 
@@ -48,7 +48,11 @@ class AgentService {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 429) {
+        throw new Error(errorData.error || 'Previše poruka u kratkom roku. Pokušajte ponovo uskoro.');
+      }
+      throw new Error(errorData.error || `HTTP error ${response.status}`);
     }
 
     const reader = response.body.getReader();
