@@ -32,6 +32,18 @@ Ponuda / troškovi / pouzdanost: ostali fajlovi u `Moj_folder/`.
 
 Aiven ≠ stari agent. Agent je Render; Aiven je shared MySQL za API + agent.
 
+**Env mapa (koja varijabla na kom servisu):** [`ENV_SERVISI_mapa.md`](ENV_SERVISI_mapa.md)
+
+### Ingest / „Osveži znanje“ (oba Render servisa)
+
+| Servis | Varijabla | Vrednost |
+|--------|-----------|----------|
+| **baza-goc-api** | `INGEST_WEBHOOK_URL` | `https://chat-agent-psjk.onrender.com/api/ingest` |
+| **baza-goc-api** | `INGEST_WEBHOOK_SECRET` | isti string kao na agentu |
+| **chat-agent** | `INGEST_WEBHOOK_SECRET` | isti string kao na API-ju |
+
+Bez ova dva para CMS vraća 502 „agent nije prihvatio“.
+
 Kad budemo **korake za deploy / produkcijski checklist**, uraditi ili eksplicitno odložiti:
 
 | Prioritet | Stavka | Detalj |
@@ -39,7 +51,7 @@ Kad budemo **korake za deploy / produkcijski checklist**, uraditi ili eksplicitn
 | **P1** | Sanitize chat markdown | `marked` + `v-html` u `AgentChatWidget` → **DOMPurify** (XSS preko odgovora) — **urađeno** |
 | **P1** | Uži MySQL user za agenta | least privilege — **Aiven + Render verifikovano 2026-11-12**: `goc_agent` (SELECT rooms OK; DELETE inquiries blocked); posle Render rebuild: health 200, `/api/rooms/resolve?name=101` vraća sobe, chat čita cene iz MySQL. Skripta: `backend/scripts/createAgentDbUser.js`. Kredencijali: `backend/.agent-db-credentials.local` (gitignored). |
 | **P2** | Stroža `action` schema | whitelist tipova/polja — **urađeno** (FE `sanitizeChatAction` + chat-agent `sanitizeReservationAction`) |
-| **P2** | Javni agent endpoint | Origin allowlist + burst/hourly chat limit — **urađeno** (`ALLOWED_ORIGINS`, `chatBurstLimiter`); kapča / short-lived token ostaju opciono kasnije |
+| **P2** | Javni agent endpoint | Origin allowlist + short-window relief + hourly chat limit — **urađeno** (`ALLOWED_ORIGINS`, `chatRateLimit`, `chatLimiter`); kapča / short-lived token ostaju opciono kasnije |
 | **P2** | PII u LLM | UI upozorenje + agent redakcija JMBG/pasoš/kartica + persona zabrana — **urađeno**; formalna politika/stranica ostaje opciono |
 | **P2** | API abuse limit | Express in-memory rate limit na admin/guest login+register, inquiry/reserve-stay, news like, chat history — **urađeno 2026-11-12** (`middleware/rateLimit.js`) |
 | **P2** | Helmet + availability window | `helmet` na API; availability bez `start`/`end` ograničen na ~7d/18m — **urađeno 2026-11-12** |
