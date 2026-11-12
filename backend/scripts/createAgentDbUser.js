@@ -17,8 +17,12 @@
  */
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') })
 const crypto = require('crypto')
+const fs = require('fs')
+const path = require('path')
 const mysql = require('mysql2/promise')
 const { getMysqlConnectionOptions } = require('../lib/mysqlConnectionOptions')
+
+const CREDENTIALS_FILE = path.join(__dirname, '..', '.agent-db-credentials.local')
 
 const EXECUTE = process.argv.includes('--execute')
 const AGENT_USER = process.env.AGENT_DB_USER || 'goc_agent'
@@ -122,13 +126,29 @@ function escapeSqlString(value) {
     }
     await agent.end()
 
+    const lines = [
+      `# Generated ${new Date().toISOString()} — DO NOT COMMIT (*.local is gitignored)`,
+      `# Paste into Render → chat-agent → Environment (not baza-goc-api).`,
+      `DB_USER=${AGENT_USER}`,
+      `DB_PASSWORD=${password}`,
+      `DB_HOST=${process.env.DB_HOST}`,
+      `DB_NAME=${dbName}`,
+      `DB_PORT=${process.env.DB_PORT || 3306}`,
+      'DB_SSL=true',
+      '# If chat-agent uses DATABASE_URL instead of discrete vars, rebuild it with this user/password.',
+      '# Site API (baza-goc-api) must keep the existing full-privilege DB user.',
+    ]
+    fs.writeFileSync(CREDENTIALS_FILE, `${lines.join('\n')}\n`, { encoding: 'utf8', mode: 0o600 })
+    console.log(`\nWrote ${CREDENTIALS_FILE}`)
     console.log('\n--- Set these on chat-agent Render (do not commit) ---')
-    console.log(`DB_USER=${AGENT_USER}`)
-    console.log(`DB_PASSWORD=${password}`)
-    console.log(`DB_HOST=${process.env.DB_HOST}`)
-    console.log(`DB_NAME=${dbName}`)
-    console.log(`DB_PORT=${process.env.DB_PORT || 3306}`)
-    console.log('DB_SSL=true')
+    for (const line of lines) {
+      if (line.startsWith('#') || !line.includes('=')) continue
+      if (line.startsWith('DB_PASSWORD=')) {
+        console.log('DB_PASSWORD=*** (see .agent-db-credentials.local)')
+      } else {
+        console.log(line)
+      }
+    }
     console.log('Site API should keep the existing full-privilege DB user.')
   } else {
     console.log('\nDry-run only. Re-run with --execute to create/update the user.')

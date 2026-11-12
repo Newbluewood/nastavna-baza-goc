@@ -9,6 +9,7 @@ const {
   getRestaurantsPublic, getRestaurantMenu, getPageBySlug, getNav, getSiteSettings
 } = require('../controllers/publicController');
 const cacheMiddleware = require('../middleware/cacheMiddleware');
+const { inquiryRateLimit } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -52,7 +53,7 @@ router.get('/home',                           cacheMiddleware(CACHE_TTL), asyncH
 router.get('/smestaj',                        cacheMiddleware(CACHE_TTL), asyncHandler(getFacilities));
 router.get('/smestaj/:id',                    cacheMiddleware(CACHE_TTL), asyncHandler(getFacility));
 router.get('/rooms/:id/availability',         asyncHandler(getRoomAvailability)); // Do not cache availability heavily
-router.post('/inquiries', optionalGuestAuthMiddleware, validateInquiryRequest(), asyncHandler(submitInquiry));
+router.post('/inquiries', inquiryRateLimit, optionalGuestAuthMiddleware, validateInquiryRequest(), asyncHandler(submitInquiry));
 router.get('/news',                           cacheMiddleware(CACHE_TTL), asyncHandler(getNewsList));
 router.get('/news/:id',                       cacheMiddleware(CACHE_TTL), asyncHandler(getSingleNews));
 router.post('/news/:id/like',                 asyncHandler(likeNews));

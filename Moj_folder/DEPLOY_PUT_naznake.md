@@ -22,15 +22,38 @@ Ponuda / troškovi / pouzdanost: ostali fajlovi u `Moj_folder/`.
 
 **Ne objašnjavati IT-u na sastanku** osim ako pitaju „da li AI piše u bazu rezervacija“ → kratko: *ne, samo predlaže formu; upis ide preko API-ja.*
 
+### Potvrda hostinga (2026-11-12)
+
+| Komponenta | Gde živi | Dokaz |
+|------------|----------|-------|
+| FE chat widget | Netlify → **Render** `https://chat-agent-kbjc.onrender.com` | live bundle `agentService-*.js` `baseURL`; lokalni `VITE_CHAT_API_URL` |
+| Site API | Render `baza-goc-api` | env / deploy |
+| MySQL | **Aiven** (`*.aivencloud.com`) | `DB_HOST` — baza, **nije** chat-agent |
+
+Aiven ≠ stari agent. Agent je Render; Aiven je shared MySQL za API + agent.
+
 Kad budemo **korake za deploy / produkcijski checklist**, uraditi ili eksplicitno odložiti:
 
 | Prioritet | Stavka | Detalj |
 |-----------|--------|--------|
 | **P1** | Sanitize chat markdown | `marked` + `v-html` u `AgentChatWidget` → **DOMPurify** (XSS preko odgovora) — **urađeno** |
-| **P1** | Uži MySQL user za agenta | least privilege — **urađeno** (`goc_agent` na Aiven + Render chat-agent). Skripta: `backend/scripts/createAgentDbUser.js` |
+| **P1** | Uži MySQL user za agenta | least privilege — **Aiven + Render verifikovano 2026-11-12**: `goc_agent` (SELECT rooms OK; DELETE inquiries blocked); posle Render rebuild: health 200, `/api/rooms/resolve?name=101` vraća sobe, chat čita cene iz MySQL. Skripta: `backend/scripts/createAgentDbUser.js`. Kredencijali: `backend/.agent-db-credentials.local` (gitignored). |
 | **P2** | Stroža `action` schema | whitelist tipova/polja — **urađeno** (FE `sanitizeChatAction` + chat-agent `sanitizeReservationAction`) |
 | **P2** | Javni agent endpoint | Origin allowlist + burst/hourly chat limit — **urađeno** (`ALLOWED_ORIGINS`, `chatBurstLimiter`); kapča / short-lived token ostaju opciono kasnije |
 | **P2** | PII u LLM | UI upozorenje + agent redakcija JMBG/pasoš/kartica + persona zabrana — **urađeno**; formalna politika/stranica ostaje opciono |
+| **P2** | API abuse limit | Express in-memory rate limit na admin/guest login+register i inquiry/reserve-stay — **urađeno 2026-11-12** (`middleware/rateLimit.js`) |
+
+### Render: zalepi `goc_agent` (obavezno — dashboard)
+
+1. Otvori `backend/.agent-db-credentials.local` (lokalno, ne commit).
+2. Render Dashboard → servis **chat-agent** (ne `baza-goc-api`) → **Environment**.
+3. Postavi / zameni: `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_NAME`, `DB_PORT`, `DB_SSL=true` (vrednosti iz fajla).  
+   Ako agent koristi samo `DATABASE_URL`, zameni user/password u URI-ju na `goc_agent` + novu lozinku; ukloni ili uskladi diskretne `DB_*` da ne pobede jedni druge.
+4. **Save** → Manual Deploy / Auto redeploy.
+5. Smoke: `GET https://chat-agent-kbjc.onrender.com/api/health` → 200; jedan chat / resolve sobe sa sajta.
+6. Ako chat pukne na DB auth — vrati stari user privremeno, pa proveri da Aiven dozvoljava remote `goc_agent@%` (već kreiran).
+
+**Site API ostaje na punom DB useru** (`avnadmin` / postojeći `DATABASE_URL`).
 
 **Primeri i dubina:**  
 [`CHAT_AGENT_rizici_primeri.md`](CHAT_AGENT_rizici_primeri.md)  
@@ -99,7 +122,7 @@ Dok CNAME nema: ostaje Netlify URL — ne dirati.
 |-------|------:|--------|
 | Chat-agent kod / ugovor | ~9/10 | Cleanup + golden/live scenariji na `main`; P3 sitno ostaje |
 | Sajt API + FE | ~8.5/10 | Backend paket 2 urađen; smoke routes + write-flow zeleni; cold-start fail-open |
-| Chat hardening | ~9/10 | DOMPurify, goc_agent, action contract, origin/burst, PII |
+| Chat hardening | ~9.5/10 | DOMPurify, `goc_agent` Aiven+Render (2026-11-12 smoke OK), action/origin/burst/PII; API login/inquiry rate limit |
 | Ops / go-live | ~8.5/10 | Netlify+API+admin+chat+inquiry mejl OK; snapshot OK; free-plan uploads; čeka fakultetski CNAME/origins |
 | Sadržaj MVP | ~5.5/10 | Struktura/MVP skelet na produkciji; dosta demo teksta/slika; čeka klijentsku saglasnost + CMS naloge + finalne kontakte |
 
