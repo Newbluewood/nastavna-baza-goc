@@ -170,7 +170,8 @@ async function getTopQueries({ days = 30, limit = 20 } = {}) {
         SUM(outcome = 'miss') AS miss_count,
         SUM(outcome = 'fallback') AS fallback_count,
         AVG(confidence) AS avg_confidence,
-        MAX(created_at) AS last_asked_at
+        MAX(created_at) AS last_asked_at,
+        SUBSTRING_INDEX(GROUP_CONCAT(outcome ORDER BY created_at DESC, id DESC SEPARATOR ','), ',', 1) AS latest_outcome
       FROM chat_query_events
       WHERE created_at >= (NOW() - INTERVAL ? DAY)
         AND outcome IN ('hit', 'miss', 'fallback')
@@ -183,6 +184,11 @@ async function getTopQueries({ days = 30, limit = 20 } = {}) {
   return rows;
 }
 
+/**
+ * Open knowledge gaps only: a miss that was later answered (hit) for the same
+ * question_hash drops off this list so CMS "Bez odgovora" stays actionable.
+ * A new miss after that hit brings it back.
+ */
 async function getMissQueries({ days = 30, limit = 20 } = {}) {
   const d = parseDays(days);
   const lim = parseLimit(limit);
@@ -197,34 +203,65 @@ async function getMissQueries({ days = 30, limit = 20 } = {}) {
         SUBSTRING_INDEX(GROUP_CONCAT(reason ORDER BY created_at DESC SEPARATOR '\n'), '\n', 1) AS last_reason,
         SUBSTRING_INDEX(GROUP_CONCAT(source ORDER BY created_at DESC SEPARATOR '\n'), '\n', 1) AS last_source,
         MAX(created_at) AS last_asked_at
-      FROM chat_query_events
-      WHERE created_at >= (NOW() - INTERVAL ? DAY)
-        AND outcome = 'miss'
+      FROM chat_query_events q
+      WHERE q.created_at >= (NOW() - INTERVAL ? DAY)
+        AND q.outcome = 'miss'
+        AND NOT EXISTS (
+          SELECT 1
+            FROM chat_query_events h
+           WHERE h.question_hash = q.question_hash
+             AND h.outcome = 'hit'
+             AND h.created_at >= q.created_at
+             AND h.created_at >= (NOW() - INTERVAL ? DAY)
+        )
       GROUP BY question_hash
       ORDER BY miss_count DESC, last_asked_at DESC
       LIMIT ?
     `,
-    [d, lim]
+    [d, d, lim]
   );
   return rows;
 }
 
 async function getAnalyticsSummary({ days = 30 } = {}) {
   const d = parseDays(days);
-  const [rows] = await db.query(
-    `
-      SELECT
-        COUNT(*) AS total,
-        SUM(outcome = 'hit') AS hits,
-        SUM(outcome = 'miss') AS misses,
-        SUM(outcome = 'fallback') AS fallbacks,
-        SUM(outcome = 'skip') AS skips
-      FROM chat_query_events
-      WHERE created_at >= (NOW() - INTERVAL ? DAY)
-    `,
-    [d]
-  );
-  return rows[0] || { total: 0, hits: 0, misses: 0, fallbacks: 0, skips: 0 };
+  const [[totals], [openMiss]] = await Promise.all([
+    db.query(
+      `
+        SELECT
+          COUNT(*) AS total,
+          SUM(outcome = 'hit') AS hits,
+          SUM(outcome = 'miss') AS misses,
+          SUM(outcome = 'fallback') AS fallbacks,
+          SUM(outcome = 'skip') AS skips
+        FROM chat_query_events
+        WHERE created_at >= (NOW() - INTERVAL ? DAY)
+      `,
+      [d]
+    ),
+    db.query(
+      `
+        SELECT COUNT(DISTINCT q.question_hash) AS open_misses
+        FROM chat_query_events q
+        WHERE q.created_at >= (NOW() - INTERVAL ? DAY)
+          AND q.outcome = 'miss'
+          AND NOT EXISTS (
+            SELECT 1
+              FROM chat_query_events h
+             WHERE h.question_hash = q.question_hash
+               AND h.outcome = 'hit'
+               AND h.created_at >= q.created_at
+               AND h.created_at >= (NOW() - INTERVAL ? DAY)
+          )
+      `,
+      [d, d]
+    ),
+  ]);
+  const base = totals[0] || { total: 0, hits: 0, misses: 0, fallbacks: 0, skips: 0 };
+  return {
+    ...base,
+    open_misses: Number(openMiss[0]?.open_misses) || 0,
+  };
 }
 
 module.exports = {

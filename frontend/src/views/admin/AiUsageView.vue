@@ -243,7 +243,9 @@ const setAnalyticsDays = (days) => {
           </div>
           <p class="muted analytics-hint">
             Питања која су корисници поставили асистенту.
-            „Без одговора“ = нема доброг поготка или је ниска поузданост (&lt; {{ formatConfidence(analyticsMiss?.missConfidenceMax ?? 0.35) }}).
+            „Без одговора“ = отворене рупе (miss који још нема каснији hit за исто питање).
+            Кад база почне да одговара, стари miss нестаје са ове листе.
+            Слична питања са другачијим формулацијама остају одвојена.
           </p>
 
           <p v-if="analyticsError" class="error-banner">{{ analyticsError }}</p>
@@ -258,8 +260,8 @@ const setAnalyticsDays = (days) => {
               <span class="stat-value">{{ formatTokens(analyticsSummary.hits) }}</span>
             </div>
             <div class="stat">
-              <span class="stat-label">Без одговора</span>
-              <span class="stat-value miss">{{ formatTokens(analyticsSummary.misses) }}</span>
+              <span class="stat-label">Без одговора (отворено)</span>
+              <span class="stat-value miss">{{ formatTokens(analyticsSummary.open_misses ?? analyticsSummary.misses) }}</span>
             </div>
             <div class="stat">
               <span class="stat-label">Fallback</span>
@@ -293,6 +295,7 @@ const setAnalyticsDays = (days) => {
                       <th>Питање</th>
                       <th>Број</th>
                       <th>Без одг.</th>
+                      <th>Последњи</th>
                       <th>Поузданост</th>
                     </tr>
                   </thead>
@@ -301,6 +304,11 @@ const setAnalyticsDays = (days) => {
                       <td class="question-cell">{{ item.sample_question || item.question_norm }}</td>
                       <td>{{ formatTokens(item.ask_count) }}</td>
                       <td>{{ formatTokens(item.miss_count) }}</td>
+                      <td>
+                        <code :class="{ 'outcome-miss': item.latest_outcome === 'miss', 'outcome-hit': item.latest_outcome === 'hit' }">
+                          {{ item.latest_outcome || '—' }}
+                        </code>
+                      </td>
                       <td>{{ formatConfidence(item.avg_confidence) }}</td>
                     </tr>
                   </tbody>
@@ -309,7 +317,7 @@ const setAnalyticsDays = (days) => {
             </div>
 
             <div>
-              <h3 class="sub-title">Без одговора — допунити знање</h3>
+              <h3 class="sub-title">Без одговора — још отворено</h3>
               <div
                 v-if="analyticsLoading && !analyticsMiss"
                 class="empty-msg small"
@@ -662,6 +670,8 @@ const setAnalyticsDays = (days) => {
 }
 .analytics-stats { margin-top: 0; }
 .stat-value.miss { color: #c62828; }
+.outcome-miss { color: #c62828; }
+.outcome-hit { color: #2e7d32; }
 .days-pills {
   display: flex;
   gap: 6px;

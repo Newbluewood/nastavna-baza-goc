@@ -4,11 +4,14 @@ jest.mock('../../db', () => ({
   query: jest.fn()
 }));
 
+const db = require('../../db');
 const {
   normalizeQuestion,
   hashQuestion,
   classifySiteGuideTurn,
-  missConfidenceMax
+  missConfidenceMax,
+  getMissQueries,
+  getAnalyticsSummary,
 } = require('../../services/chatAnalyticsService');
 
 describe('chatAnalyticsService', () => {
@@ -65,5 +68,23 @@ describe('chatAnalyticsService', () => {
     });
     expect(result.outcome).toBe('hit');
     expect(result.source).toBe('rag');
+  });
+
+  test('getMissQueries asks only for open misses (no later hit)', async () => {
+    db.query.mockResolvedValueOnce([[]]);
+    await getMissQueries({ days: 30, limit: 10 });
+    const sql = String(db.query.mock.calls[0][0]);
+    expect(sql).toMatch(/NOT EXISTS/i);
+    expect(sql).toMatch(/h\.outcome = 'hit'/);
+    expect(sql).toMatch(/h\.created_at >= q\.created_at/);
+  });
+
+  test('getAnalyticsSummary includes open_misses', async () => {
+    db.query
+      .mockResolvedValueOnce([[{ total: 5, hits: 2, misses: 3, fallbacks: 0, skips: 0 }]])
+      .mockResolvedValueOnce([[{ open_misses: 1 }]]);
+    const summary = await getAnalyticsSummary({ days: 7 });
+    expect(summary.open_misses).toBe(1);
+    expect(summary.misses).toBe(3);
   });
 });
