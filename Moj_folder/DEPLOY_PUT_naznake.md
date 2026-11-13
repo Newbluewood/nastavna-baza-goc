@@ -32,7 +32,16 @@ Ponuda / troškovi / pouzdanost: ostali fajlovi u `Moj_folder/`.
 
 Aiven ≠ stari agent. Agent je Render; Aiven je shared MySQL za API + agent.
 
-**Env mapa (koja varijabla na kom servisu):** [`ENV_SERVISI_mapa.md`](ENV_SERVISI_mapa.md)
+**Env mapa (koja varijabla na kom servisu):** [`ENV_SERVISI_mapa.md`](ENV_SERVISI_mapa.md)  
+**Kanonski ključevi:** `backend/env.manifest.json` · **diff imena:** `npm run env:diff -- --service=api|agent|fe`
+
+### Pre-deploy ritual (lokal ↔ Render/Netlify)
+
+1. `git status` / push **oba** repoa ako treba (`baza-goc-priprema` + `chat-agent`)
+2. Iz `backend/`: `npm run env:diff -- --service=api` i `--service=agent` (opciono `--remote=render-….keys.txt` — samo imena sa Render UI)
+3. Ako je env menjan na Renderu → Manual Redeploy odgovarajućeg servisa
+4. Smoke: `GET …/api/health` na **site** i **agent**
+5. Ako je menjan sadržaj / ingest putanja → CMS **Osveži znanje** (očekuj 202, ne 502)
 
 ### Ingest / „Osveži znanje“ (oba Render servisa)
 

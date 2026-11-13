@@ -25,7 +25,8 @@
     "seed:site-kb": "node scripts/seed-site-kb.js",
     "seed:content:export": "node scripts/export-content-seed.js",
     "seed:content:first-boot": "node scripts/seed-content-first-boot.js",
-    "seed:content:first-boot:run": "node scripts/seed-content-first-boot.js --execute"
+    "seed:content:first-boot:run": "node scripts/seed-content-first-boot.js --execute",
+    "env:diff": "node scripts/diffEnvKeys.js"
   },
   "keywords": [],
   "author": "",

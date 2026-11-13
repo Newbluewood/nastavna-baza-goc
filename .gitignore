@@ -5,6 +5,9 @@ dist/
 dist-ssr/
 *.local
 backend/backups/
+# Paste-from-Render key-name lists for npm run env:diff (never commit secrets)
+*.keys.txt
+backend/render-*.keys.txt
 
 # Editor directories and files
 .vscode/*
